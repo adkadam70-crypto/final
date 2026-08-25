@@ -17,7 +17,13 @@ import OpenAI from 'openai'
 import { zodTextFormat } from 'openai/helpers/zod'
 
 async function getUserId() {
-  const session = await auth.api.getSession({ headers: await headers() })
+  let session
+  try {
+    session = await auth.api.getSession({ headers: await headers() })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Session lookup failed'
+    throw new Error(`Session lookup failed: ${message}`)
+  }
   if (!session?.user) throw new Error('Unauthorized')
   return session.user.id
 }
