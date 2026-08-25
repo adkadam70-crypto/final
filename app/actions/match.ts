@@ -157,95 +157,108 @@ export async function runMatch(input: StudentInput): Promise<{
 }> {
   const userId = await getUserId()
 
-  const catalog = await db
-    .select()
-    .from(universities)
-    .where(eq(universities.country, input.targetCountry))
+  // Everything below can throw non-plain error objects (the Neon driver's
+  // NeonDbError class, the OpenAI SDK's error classes) that fail to
+  // serialize across the Server Action boundary in production, surfacing
+  // only as an opaque "Minified React error #441". Normalize to a plain
+  // Error before it can cross that boundary.
+  try {
+    const catalog = await db
+      .select()
+      .from(universities)
+      .where(eq(universities.country, input.targetCountry))
 
-  const badge = gradeBadge(input.curriculum, input.gradeValue)
-  const norm = normalizeGrade(input.curriculum, input.gradeValue)
+    const badge = gradeBadge(input.curriculum, input.gradeValue)
+    const norm = normalizeGrade(input.curriculum, input.gradeValue)
 
-  if (catalog.length === 0) {
-    return { gradeBadge: badge, summary: 'No universities in the catalog for this country yet.', results: [] }
-  }
+    if (catalog.length === 0) {
+      return { gradeBadge: badge, summary: 'No universities in the catalog for this country yet.', results: [] }
+    }
 
-  const contextByCountry: Record<string, string> = {
-    US: 'US universities weigh academics ~50% and holistic factors (essays, leadership, passion projects) ~50%.',
-    UK: 'UK universities weigh subject mastery and course-relevant depth heavily (~85%).',
-    AU: 'Australia admits almost entirely on academic cutoff thresholds / ATAR equivalents (~100%). Extracurriculars barely matter.',
-    SG: 'Singapore weighs strong academics first, with essays and interviews as secondary factors.',
-    HK: 'Hong Kong weighs strong academics and interviews, with some holistic review.',
-    IN: 'Holistic Indian universities blend board marks with essays and interviews; IITs are purely exam-driven.',
-  }
+    const contextByCountry: Record<string, string> = {
+      US: 'US universities weigh academics ~50% and holistic factors (essays, leadership, passion projects) ~50%.',
+      UK: 'UK universities weigh subject mastery and course-relevant depth heavily (~85%).',
+      AU: 'Australia admits almost entirely on academic cutoff thresholds / ATAR equivalents (~100%). Extracurriculars barely matter.',
+      SG: 'Singapore weighs strong academics first, with essays and interviews as secondary factors.',
+      HK: 'Hong Kong weighs strong academics and interviews, with some holistic review.',
+      IN: 'Holistic Indian universities blend board marks with essays and interviews; IITs are purely exam-driven.',
+    }
 
-  const { object } = await generateOpenAIMatch({
-    studentProfile: {
-      badge,
-      tier: norm.tier,
+    const { object } = await generateOpenAIMatch({
+      studentProfile: {
+        badge,
+        tier: norm.tier,
+        preferredClimate: input.preferredClimate,
+        preferredSector: input.preferredSector,
+        preferredRank: input.preferredRank,
+        extracurriculars: input.extracurriculars,
+      },
+      catalog: catalog.map((u) => ({
+        universityId: u.id,
+        name: u.name,
+        baselineSelectivity: u.baselineSelectivity,
+        sectors: u.sectors,
+        climate: u.climate,
+      })),
+      targetCountry: input.targetCountry,
+      contextByCountry,
+    })
+
+    // Merge AI output back with DB records (source of truth for display fields).
+    const byId = new Map(catalog.map((u) => [String(u.id), u]))
+    const results: MatchResult[] = object.results
+      .filter((r) => {
+        const idStr = String(r.universityId)
+        return byId.has(idStr)
+      })
+      .map((r) => {
+        const idStr = String(r.universityId)
+        const u = byId.get(idStr)!
+        return {
+          universityId: idStr,
+          name: u.name,
+          location: u.location,
+          climate: u.climate,
+          matchTier: r.matchTier,
+          acceptanceProbability: r.acceptanceProbability,
+          internshipProgram: u.internshipProgram,
+          requirements: u.requirements,
+          link: u.link,
+          rationale: r.rationale,
+        }
+      })
+      .sort((a, b) => b.acceptanceProbability - a.acceptanceProbability)
+
+    // Persist the run (profile snapshot + match results), scoped to this user.
+    await db.insert(profiles).values({
+      userId,
+      targetCountry: input.targetCountry,
+      curriculum: input.curriculum,
+      gradeValue: input.gradeValue,
       preferredClimate: input.preferredClimate,
       preferredSector: input.preferredSector,
       preferredRank: input.preferredRank,
       extracurriculars: input.extracurriculars,
-    },
-    catalog: catalog.map((u) => ({
-      universityId: u.id,
-      name: u.name,
-      baselineSelectivity: u.baselineSelectivity,
-      sectors: u.sectors,
-      climate: u.climate,
-    })),
-    targetCountry: input.targetCountry,
-    contextByCountry,
-  })
-
-  // Merge AI output back with DB records (source of truth for display fields).
-  const byId = new Map(catalog.map((u) => [String(u.id), u]))
-  const results: MatchResult[] = object.results
-    .filter((r) => {
-      const idStr = String(r.universityId)
-      return byId.has(idStr)
     })
-    .map((r) => {
-      const idStr = String(r.universityId)
-      const u = byId.get(idStr)!
-      return {
-        universityId: idStr,
-        name: u.name,
-        location: u.location,
-        climate: u.climate,
-        matchTier: r.matchTier,
-        acceptanceProbability: r.acceptanceProbability,
-        internshipProgram: u.internshipProgram,
-        requirements: u.requirements,
-        link: u.link,
-        rationale: r.rationale,
-      }
+
+    await db.insert(matches).values({
+      userId,
+      targetCountry: input.targetCountry,
+      gradeBadge: badge,
+      results,
+      summary: object.summary,
     })
-    .sort((a, b) => b.acceptanceProbability - a.acceptanceProbability)
 
-  // Persist the run (profile snapshot + match results), scoped to this user.
-  await db.insert(profiles).values({
-    userId,
-    targetCountry: input.targetCountry,
-    curriculum: input.curriculum,
-    gradeValue: input.gradeValue,
-    preferredClimate: input.preferredClimate,
-    preferredSector: input.preferredSector,
-    preferredRank: input.preferredRank,
-    extracurriculars: input.extracurriculars,
-  })
+    revalidatePath('/')
 
-  await db.insert(matches).values({
-    userId,
-    targetCountry: input.targetCountry,
-    gradeBadge: badge,
-    results,
-    summary: object.summary,
-  })
-
-  revalidatePath('/')
-
-  return { gradeBadge: badge, summary: object.summary, results }
+    return { gradeBadge: badge, summary: object.summary, results }
+  } catch (err) {
+    if (err instanceof Error && err.message.startsWith('OpenAI request failed')) {
+      throw err
+    }
+    const message = err instanceof Error ? err.message : 'Match request failed'
+    throw new Error(`Match request failed: ${message}`)
+  }
 }
 
 export type SavedMatch = {
