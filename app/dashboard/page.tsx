@@ -6,6 +6,7 @@ import { profiles, matches, savedSchools } from '@/lib/db/schema'
 import { eq, desc, count } from 'drizzle-orm'
 import Link from 'next/link'
 import { TrendingUp, Search, Bookmark, User, ArrowRight, GraduationCap, Target, Sparkles } from 'lucide-react'
+import { tierBadgeClass } from '@/lib/match-tier'
 
 export const dynamic = 'force-dynamic'
 
@@ -72,7 +73,7 @@ export default async function DashboardPage() {
                 <h3 className="text-sm font-bold mb-1 text-balance">{uni.name}</h3>
                 <p className="text-xs text-muted-foreground mb-3">{uni.location}</p>
                 <div className="flex items-center justify-between">
-                  <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${uni.matchTier === 'Safety' ? 'bg-primary/15 text-primary border-primary/25' : uni.matchTier === 'Target' ? 'bg-chart-2/15 text-chart-2 border-chart-2/25' : uni.matchTier === 'Reach' ? 'bg-chart-3/15 text-chart-3 border-chart-3/25' : 'bg-chart-4/15 text-chart-4 border-chart-4/25'}`}>{uni.matchTier}</span>
+                  <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${tierBadgeClass(uni.matchTier)}`}>{uni.matchTier}</span>
                   <span className="text-sm font-mono font-bold text-primary">{uni.acceptanceProbability}%</span>
                 </div>
               </div>

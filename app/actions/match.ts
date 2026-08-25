@@ -3,27 +3,18 @@
 import { db } from '@/lib/db'
 import {
   universities,
-  profiles,
   matches,
   type MatchResult,
 } from '@/lib/db/schema'
 import { and, desc, eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-import { normalizeGrade, gradeBadge } from '@/lib/grade'
+import { gradeTier, gradeBadge } from '@/lib/grade'
 import { getUserId } from '@/lib/get-user-id'
+import { getLatestProfile } from '@/app/actions/profile'
 import OpenAI from 'openai'
 import { zodTextFormat } from 'openai/helpers/zod'
-
-export type StudentInput = {
-  targetCountry: string
-  curriculum: string
-  gradeValue: number
-  preferredClimate: string
-  preferredSector: string
-  preferredRank: string
-  extracurriculars: string[]
-}
+import { BIAS_INSTRUCTION } from '@/lib/bias-instruction'
 
 const resultSchema = z.object({
   summary: z
@@ -34,7 +25,7 @@ const resultSchema = z.object({
   results: z.array(
     z.object({
       universityId: z.union([z.string(), z.number()]).describe('The id of the university from the provided list.'),
-      matchTier: z.enum(['Safety', 'Target', 'Reach', 'Ultra Reach']),
+      matchTier: z.enum(['Safety', 'Good Chance', 'Reach', 'Ultra Reach']),
       acceptanceProbability: z
         .number()
         .min(1)
@@ -43,6 +34,9 @@ const resultSchema = z.object({
       rationale: z
         .string()
         .describe('One concise sentence explaining the tier and probability for this student.'),
+      improvementTips: z
+        .array(z.string())
+        .describe('1-3 short, specific actions the student could take to strengthen their odds at this particular school.'),
     }),
   ),
 })
@@ -63,6 +57,7 @@ async function generateOpenAIMatch({
     preferredClimate: string
     preferredSector: string
     preferredRank: string
+    intendedField: string
     extracurriculars: string[]
   }
   catalog: Array<{
@@ -98,6 +93,8 @@ async function generateOpenAIMatch({
 
   const userPrompt = `You are an expert college admissions analyst. Assess this student against the provided universities and assign match tiers.
 
+${BIAS_INSTRUCTION}
+
 ADMISSIONS CONTEXT for ${targetCountry}: ${contextByCountry[targetCountry] ?? 'Standard competitive admissions environment.'}
 
 STUDENT PROFILE:
@@ -105,11 +102,12 @@ STUDENT PROFILE:
 - Preferred climate: ${studentProfile.preferredClimate}
 - Preferred industry hub: ${studentProfile.preferredSector}
 - Preferred university ranking: ${studentProfile.preferredRank} (soft preference — weigh it alongside fit, don't treat it as a hard filter)
+- Intended field of study: ${studentProfile.intendedField}
 - Extracurriculars: ${studentProfile.extracurriculars.length ? studentProfile.extracurriculars.join('; ') : 'None provided'}
 
 TIER DEFINITIONS:
 - Safety: student clearly exceeds the bar (prob ~75-95%).
-- Target: student is competitive/on par (prob ~45-70%).
+- Good Chance: student is competitive/on par (prob ~45-70%).
 - Reach: student is below typical bar but plausible (prob ~15-40%).
 - Ultra Reach: extremely selective, long odds (prob ~3-15%).
 
@@ -126,7 +124,7 @@ ${JSON.stringify(
   2,
 )}
 
-Assess every university in the list above and return one result per university.`
+Assess every university in the list above and return one result per university, including 1-3 specific improvementTips per school.`
 
   let response
   try {
@@ -153,30 +151,28 @@ Assess every university in the list above and return one result per university.`
 }
 
 /**
- * Runs AI matching: pulls the DB catalog for the target country, asks the model
- * to tier + estimate + explain each option for this specific student, persists
- * the run, and returns the enriched results.
+ * Runs AI matching against the user's most recently saved profile — pulled
+ * server-side rather than trusted from the client. Persists the run and
+ * returns the enriched results.
  */
-export async function runMatch(input: StudentInput): Promise<{
-  gradeBadge: string
-  summary: string
-  results: MatchResult[]
-}> {
+export async function runMatch(): Promise<
+  | { needsProfile: true }
+  | { needsProfile?: false; gradeBadge: string; summary: string; results: MatchResult[] }
+> {
   const userId = await getUserId()
+  const profile = await getLatestProfile()
+  if (!profile || !profile.academicDetail) {
+    return { needsProfile: true }
+  }
 
-  // Everything below can throw non-plain error objects (the Neon driver's
-  // NeonDbError class, the OpenAI SDK's error classes) that fail to
-  // serialize across the Server Action boundary in production, surfacing
-  // only as an opaque "Minified React error #441". Normalize to a plain
-  // Error before it can cross that boundary.
   try {
     const catalog = await db
       .select()
       .from(universities)
-      .where(eq(universities.country, input.targetCountry))
+      .where(eq(universities.country, profile.targetCountry))
 
-    const badge = gradeBadge(input.curriculum, input.gradeValue)
-    const norm = normalizeGrade(input.curriculum, input.gradeValue)
+    const badge = gradeBadge(profile.academicDetail)
+    const tier = gradeTier(profile.gradeValue)
 
     if (catalog.length === 0) {
       return { gradeBadge: badge, summary: 'No universities in the catalog for this country yet.', results: [] }
@@ -194,11 +190,12 @@ export async function runMatch(input: StudentInput): Promise<{
     const { object } = await generateOpenAIMatch({
       studentProfile: {
         badge,
-        tier: norm.tier,
-        preferredClimate: input.preferredClimate,
-        preferredSector: input.preferredSector,
-        preferredRank: input.preferredRank,
-        extracurriculars: input.extracurriculars,
+        tier,
+        preferredClimate: profile.preferredClimate,
+        preferredSector: profile.preferredSector,
+        preferredRank: profile.preferredRank,
+        intendedField: profile.intendedField,
+        extracurriculars: profile.extracurriculars,
       },
       catalog: catalog.map((u) => ({
         universityId: u.id,
@@ -207,7 +204,7 @@ export async function runMatch(input: StudentInput): Promise<{
         sectors: u.sectors,
         climate: u.climate,
       })),
-      targetCountry: input.targetCountry,
+      targetCountry: profile.targetCountry,
       contextByCountry,
     })
 
@@ -232,25 +229,14 @@ export async function runMatch(input: StudentInput): Promise<{
           requirements: u.requirements,
           link: u.link,
           rationale: r.rationale,
+          improvementTips: r.improvementTips,
         }
       })
       .sort((a, b) => b.acceptanceProbability - a.acceptanceProbability)
 
-    // Persist the run (profile snapshot + match results), scoped to this user.
-    await db.insert(profiles).values({
-      userId,
-      targetCountry: input.targetCountry,
-      curriculum: input.curriculum,
-      gradeValue: input.gradeValue,
-      preferredClimate: input.preferredClimate,
-      preferredSector: input.preferredSector,
-      preferredRank: input.preferredRank,
-      extracurriculars: input.extracurriculars,
-    })
-
     await db.insert(matches).values({
       userId,
-      targetCountry: input.targetCountry,
+      targetCountry: profile.targetCountry,
       gradeBadge: badge,
       results,
       summary: object.summary,

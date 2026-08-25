@@ -1,16 +1,14 @@
 'use client'
 
-import { MapPin, Sun, ArrowRight, Lightbulb } from 'lucide-react'
+import { useState } from 'react'
+import { MapPin, Sun, ArrowRight, Lightbulb, ChevronDown, Sparkles } from 'lucide-react'
 import type { MatchResult } from '@/lib/db/schema'
-
-const TIER_BADGE: Record<MatchResult['matchTier'], string> = {
-  Safety: 'bg-primary/15 text-primary border-primary/25',
-  Target: 'bg-chart-2/15 text-chart-2 border-chart-2/25',
-  Reach: 'bg-chart-3/15 text-chart-3 border-chart-3/25',
-  'Ultra Reach': 'bg-chart-4/15 text-chart-4 border-chart-4/25',
-}
+import { tierBadgeClass } from '@/lib/match-tier'
 
 export function UniversityCard({ uni }: { uni: MatchResult }) {
+  const [tipsOpen, setTipsOpen] = useState(false)
+  const tips = uni.improvementTips ?? []
+
   return (
     <article className="bg-card border border-border rounded-3xl p-6 transition-colors hover:border-foreground/20">
       <div className="flex justify-between items-start gap-4 mb-4">
@@ -26,7 +24,7 @@ export function UniversityCard({ uni }: { uni: MatchResult }) {
           </div>
         </div>
         <span
-          className={`text-xs font-bold px-3 py-1.5 rounded-xl border whitespace-nowrap ${TIER_BADGE[uni.matchTier]}`}
+          className={`text-xs font-bold px-3 py-1.5 rounded-xl border whitespace-nowrap ${tierBadgeClass(uni.matchTier)}`}
         >
           {uni.matchTier} · {uni.acceptanceProbability}%
         </span>
@@ -52,6 +50,24 @@ export function UniversityCard({ uni }: { uni: MatchResult }) {
           ))}
         </div>
       </div>
+
+      {tips.length > 0 && (
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={() => setTipsOpen((v) => !v)}
+            className="w-full flex items-center justify-between text-[11px] font-semibold text-primary uppercase tracking-wider py-1"
+          >
+            <span className="flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" /> Improve your odds here</span>
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${tipsOpen ? 'rotate-180' : ''}`} />
+          </button>
+          {tipsOpen && (
+            <ul className="text-xs text-muted-foreground space-y-1.5 list-disc list-inside mt-2">
+              {tips.map((tip, idx) => <li key={idx}>{tip}</li>)}
+            </ul>
+          )}
+        </div>
+      )}
 
       <div className="pt-4 border-t border-border flex flex-wrap justify-between items-center gap-2 text-xs">
         <span className="flex items-center gap-1.5 text-muted-foreground">

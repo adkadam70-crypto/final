@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { Bookmark, Trash2, GraduationCap, ExternalLink } from 'lucide-react'
 import { updateApplicationStatus, unsaveSchool } from '@/app/actions/saved-schools'
 import type { ApplicationStatus } from '@/lib/db/schema'
+import { tierBadgeClass } from '@/lib/match-tier'
 
 type SavedSchool = {
   id: number
@@ -17,13 +18,6 @@ type SavedSchool = {
 }
 
 const STATUSES: ApplicationStatus[] = ['Researching', 'Applying', 'Submitted']
-
-const TIER_COLORS: Record<string, string> = {
-  Safety: 'bg-primary/15 text-primary border-primary/25',
-  Target: 'bg-chart-2/15 text-chart-2 border-chart-2/25',
-  Reach: 'bg-chart-3/15 text-chart-3 border-chart-3/25',
-  'Ultra Reach': 'bg-chart-4/15 text-chart-4 border-chart-4/25',
-}
 
 export function SavedSchoolsView({ initialSchools }: { initialSchools: SavedSchool[] }) {
   const [pending, startTransition] = useTransition()
@@ -91,7 +85,7 @@ export function SavedSchoolsView({ initialSchools }: { initialSchools: SavedScho
                 </div>
 
                 <div className="flex items-center justify-between mb-4">
-                  <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${TIER_COLORS[school.matchTier] ?? 'bg-secondary text-muted-foreground border-border'}`}>{school.matchTier}</span>
+                  <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${tierBadgeClass(school.matchTier)}`}>{school.matchTier}</span>
                   <span className="text-sm font-mono font-bold text-primary">{school.acceptanceProbability}% match</span>
                 </div>
 

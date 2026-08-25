@@ -92,3 +92,9 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Momentary highlight when a probability-graph bar links to its card. */
+.match-card-target:target {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
