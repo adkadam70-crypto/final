@@ -121,13 +121,22 @@ ${JSON.stringify(
 
 Assess every university in the list above and return one result per university.`
 
-  const response = await client.responses.parse({
-    model: 'gpt-5.6-terra',
-    input: [{ role: 'user', content: userPrompt }],
-    text: {
-      format: zodTextFormat(resultSchema, 'match_results'),
-    },
-  })
+  let response
+  try {
+    response = await client.responses.parse({
+      model: 'gpt-5.6-terra',
+      input: [{ role: 'user', content: userPrompt }],
+      text: {
+        format: zodTextFormat(resultSchema, 'match_results'),
+      },
+    })
+  } catch (err) {
+    // Server Actions must throw plain, serializable Errors — the OpenAI SDK's
+    // error classes carry extra non-serializable fields that fail silently
+    // in production (surfaces as an opaque React error #441).
+    const message = err instanceof Error ? err.message : 'OpenAI request failed'
+    throw new Error(`OpenAI request failed: ${message}`)
+  }
 
   if (!response.output_parsed) {
     throw new Error('OpenAI returned no parseable output for the match request')
