@@ -13,8 +13,7 @@ import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { normalizeGrade, gradeBadge } from '@/lib/grade'
-import Anthropic from '@anthropic-ai/sdk'
-import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
+import { GoogleGenAI } from '@google/genai'
 
 async function getUserId() {
   const session = await auth.api.getSession({ headers: await headers() })
@@ -54,11 +53,32 @@ const resultSchema = z.object({
   ),
 })
 
+const responseSchema = {
+  type: 'object',
+  properties: {
+    summary: { type: 'string' },
+    results: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          universityId: { type: 'integer' },
+          matchTier: { type: 'string', enum: ['Safety', 'Target', 'Reach', 'Ultra Reach'] },
+          acceptanceProbability: { type: 'integer' },
+          rationale: { type: 'string' },
+        },
+        required: ['universityId', 'matchTier', 'acceptanceProbability', 'rationale'],
+      },
+    },
+  },
+  required: ['summary', 'results'],
+} as const
+
 /**
- * Calls Claude (claude-opus-5) to generate university match assessments.
+ * Calls Gemini (gemini-2.5-flash) to generate university match assessments.
  * Queries database for student profiles and finds best-matching colleges.
  */
-async function generateClaudeMatch({
+async function generateGeminiMatch({
   studentProfile,
   catalog,
   targetCountry,
@@ -82,12 +102,12 @@ async function generateClaudeMatch({
   targetCountry: string
   contextByCountry: Record<string, string>
 }): Promise<{ object: z.infer<typeof resultSchema> }> {
-  const apiKey = process.env.ANTHROPIC_API_KEY
+  const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
-    throw new Error('ANTHROPIC_API_KEY environment variable is not set')
+    throw new Error('GEMINI_API_KEY environment variable is not set')
   }
 
-  const client = new Anthropic({ apiKey })
+  const client = new GoogleGenAI({ apiKey })
 
   const userPrompt = `You are an expert college admissions analyst. Assess this student against the provided universities and assign match tiers.
 
@@ -121,20 +141,24 @@ ${JSON.stringify(
 
 Assess every university in the list above and return one result per university.`
 
-  const response = await client.messages.parse({
-    model: 'claude-opus-5',
-    max_tokens: 4096,
-    messages: [{ role: 'user', content: userPrompt }],
-    output_config: {
-      format: zodOutputFormat(resultSchema),
+  const response = await client.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents: userPrompt,
+    config: {
+      responseMimeType: 'application/json',
+      responseSchema,
     },
   })
 
-  if (!response.parsed_output) {
-    throw new Error('Claude returned no parseable output for the match request')
+  const text = response.text
+  if (!text) {
+    throw new Error('Gemini returned no output for the match request')
   }
 
-  return { object: response.parsed_output }
+  const parsed = JSON.parse(text)
+  const validated = resultSchema.parse(parsed)
+
+  return { object: validated }
 }
 
 /**
@@ -170,7 +194,7 @@ export async function runMatch(input: StudentInput): Promise<{
     IN: 'Holistic Indian universities blend board marks with essays and interviews; IITs are purely exam-driven.',
   }
 
-  const { object } = await generateClaudeMatch({
+  const { object } = await generateGeminiMatch({
     studentProfile: {
       badge,
       tier: norm.tier,
