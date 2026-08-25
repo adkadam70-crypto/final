@@ -93,6 +93,20 @@ async function generateOpenAIMatch({
     throw new Error('OPENAI_API_KEY environment variable is not set')
   }
 
+  // Diagnostic: pinpoint any character that can't go in an HTTP header
+  // (valid ByteString range is 0-255), rather than let the SDK's fetch
+  // call fail with only an index number and no context.
+  for (let i = 0; i < apiKey.length; i++) {
+    const code = apiKey.charCodeAt(i)
+    if (code > 255) {
+      const before = apiKey.slice(Math.max(0, i - 6), i)
+      const after = apiKey.slice(i + 1, i + 7)
+      throw new Error(
+        `OPENAI_API_KEY has an invalid character at position ${i} (code ${code}, key length ${apiKey.length}). Context: "${before}[BAD]${after}"`,
+      )
+    }
+  }
+
   const client = new OpenAI({ apiKey })
 
   const userPrompt = `You are an expert college admissions analyst. Assess this student against the provided universities and assign match tiers.
