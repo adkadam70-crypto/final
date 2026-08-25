@@ -1,16 +1,9 @@
 'use server'
 
-import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { profiles } from '@/lib/db/schema'
-import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
-
-async function getUserId() {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session?.user) throw new Error('Unauthorized')
-  return session.user.id
-}
+import { getUserId } from '@/lib/get-user-id'
 
 export type SaveProfileInput = {
   targetCountry: string

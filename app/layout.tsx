@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'AuraAdmit — Gen Z Admissions AI',
+  title: 'Shortlist — Gen Z Admissions AI',
   description:
     'AI-powered university matching. Convert your grades, filter by vibe, and get real acceptance-probability estimates across the US, UK, AU, SG, HK, and India.',
   generator: 'v0.app',

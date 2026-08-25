@@ -16,7 +16,7 @@ export function Landing() {
             Find your perfect <span className="text-primary">university match</span> with AI
           </h1>
           <p className="text-base md:text-lg text-muted-foreground leading-relaxed text-pretty mb-10 max-w-xl mx-auto">
-            AuraAdmit analyzes your grades, extracurriculars, and preferences to estimate your real acceptance probability across universities worldwide.
+            Shortlist analyzes your grades, extracurriculars, and preferences to estimate your real acceptance probability across universities worldwide.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/sign-up" className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold text-sm px-6 py-3.5 rounded-2xl hover:brightness-110 transition-all">

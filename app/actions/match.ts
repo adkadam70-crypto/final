@@ -1,6 +1,5 @@
 'use server'
 
-import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import {
   universities,
@@ -9,24 +8,12 @@ import {
   type MatchResult,
 } from '@/lib/db/schema'
 import { and, desc, eq } from 'drizzle-orm'
-import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { normalizeGrade, gradeBadge } from '@/lib/grade'
+import { getUserId } from '@/lib/get-user-id'
 import OpenAI from 'openai'
 import { zodTextFormat } from 'openai/helpers/zod'
-
-async function getUserId() {
-  let session
-  try {
-    session = await auth.api.getSession({ headers: await headers() })
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Session lookup failed'
-    throw new Error(`Session lookup failed: ${message}`)
-  }
-  if (!session?.user) throw new Error('Unauthorized')
-  return session.user.id
-}
 
 export type StudentInput = {
   targetCountry: string
