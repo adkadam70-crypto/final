@@ -1,4 +1,5 @@
 import { pgTable, text, integer, timestamp, jsonb, uuid } from "drizzle-orm/pg-core";
+import type { AcademicDetail, AcademicField } from "@/lib/academic-detail";
 
 // Better Auth owns its own auth tables in Neon (typically in a separate schema),
 // so we only model the app-specific tables here. User IDs must remain UUIDs so
@@ -18,6 +19,9 @@ export const universities = pgTable('universities', {
   internshipProgram: text('internshipProgram').notNull(),
   requirements: jsonb('requirements').$type<string[]>().notNull().default([]),
   link: text('link').notNull(),
+  academicFields: jsonb('academicFields').$type<AcademicField[]>().notNull().default([]),
+  rankSource: text('rankSource'), // e.g. 'QS World University Rankings 2026' — nullable, curated (unverified) rows have no source yet
+  rankValue: integer('rankValue'), // the cited rank number from rankSource — nullable
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
 
@@ -31,6 +35,8 @@ export const profiles = pgTable('profiles', {
   preferredClimate: text('preferredClimate').notNull(),
   preferredSector: text('preferredSector').notNull(),
   preferredRank: text('preferredRank').notNull().default('No preference'), // 'Top 50' | 'Top 100' | 'Top 200' | 'No preference'
+  intendedField: text('intendedField').notNull().default('No preference'), // one of ACADEMIC_FIELDS, or 'No preference'
+  academicDetail: jsonb('academicDetail').$type<AcademicDetail | null>(), // real per-curriculum structure; gradeValue above is computed from this
   extracurriculars: jsonb('extracurriculars').$type<string[]>().notNull().default([]),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
@@ -72,15 +78,32 @@ export type SavedSchool = {
   createdAt: Date
 }
 
+// A saved single-university deep-dive analysis. Scoped by userId.
+export const universityAnalyses = pgTable('universityAnalyses', {
+  id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
+  userId: uuid('userId').notNull(),
+  universityName: text('universityName').notNull(),
+  universityId: integer('universityId'), // nullable — null if not resolved against the catalog
+  usedCatalogGrounding: integer('usedCatalogGrounding').notNull().default(0), // 0/1 boolean (no boolean type churn needed)
+  acceptanceProbability: integer('acceptanceProbability'),
+  matchTier: text('matchTier'),
+  admissionChanceSummary: text('admissionChanceSummary').notNull(),
+  strengths: jsonb('strengths').$type<string[]>().notNull().default([]),
+  weaknesses: jsonb('weaknesses').$type<string[]>().notNull().default([]),
+  actionSteps: jsonb('actionSteps').$type<string[]>().notNull().default([]),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+})
+
 export type MatchResult = {
   universityId: string
   name: string
   location: string
   climate: string
-  matchTier: 'Safety' | 'Target' | 'Reach' | 'Ultra Reach'
+  matchTier: 'Safety' | 'Good Chance' | 'Reach' | 'Ultra Reach'
   acceptanceProbability: number
   internshipProgram: string
   requirements: string[]
   link: string
   rationale: string
+  improvementTips: string[]
 }

@@ -2,8 +2,10 @@
 
 import { useState, useTransition } from 'react'
 import { GraduationCap, Globe, Flame, Compass, Loader2, Save, CheckCircle2 } from 'lucide-react'
-import { saveProfile, type SaveProfileInput } from '@/app/actions/save-profile'
+import { saveProfile, type SaveProfileInput } from '@/app/actions/profile'
 import { gradeBadge } from '@/lib/grade'
+import { AcademicDetailInput } from '@/components/academic-detail-input'
+import { defaultAcademicDetail, ACADEMIC_FIELDS, type AcademicDetail } from '@/lib/academic-detail'
 
 type Curriculum = 'CBSE' | 'IB_DIPLOMA' | 'A_LEVELS' | 'US_GPA_PCT'
 
@@ -25,15 +27,20 @@ export function ProfileForm({ initialProfiles }: { initialProfiles: ProfileRow[]
 
   const [targetCountry, setTargetCountry] = useState('US')
   const [curriculum, setCurriculum] = useState<Curriculum>('CBSE')
-  const [gradeValue, setGradeValue] = useState(92)
+  const [academicDetail, setAcademicDetail] = useState<AcademicDetail>(defaultAcademicDetail('CBSE'))
   const [preferredClimate, setPreferredClimate] = useState('Warm')
   const [preferredSector, setPreferredSector] = useState('Tech Hub')
   const [preferredRank, setPreferredRank] = useState('No preference')
+  const [intendedField, setIntendedField] = useState('No preference')
   const [ec1, setEc1] = useState('')
   const [ec2, setEc2] = useState('')
 
-  const isIB = curriculum === 'IB_DIPLOMA'
-  const badge = gradeBadge(curriculum, gradeValue)
+  const badge = gradeBadge(academicDetail)
+
+  function handleCurriculumChange(next: Curriculum) {
+    setCurriculum(next)
+    setAcademicDetail(defaultAcademicDetail(next))
+  }
 
   async function handleSave() {
     setError(null)
@@ -41,23 +48,22 @@ export function ProfileForm({ initialProfiles }: { initialProfiles: ProfileRow[]
     const input: SaveProfileInput = {
       targetCountry,
       curriculum,
-      gradeValue,
+      academicDetail,
       preferredClimate,
       preferredSector,
       preferredRank,
+      intendedField,
       extracurriculars: [ec1, ec2].map((s) => s.trim()).filter(Boolean),
     }
     startTransition(async () => {
       try {
-        const result = await saveProfile(input)
+        await saveProfile(input)
         setSaved(true)
-        // Auto-clear success message after 3 seconds
         setTimeout(() => setSaved(false), 3000)
       } catch (e) {
         const message = e instanceof Error ? e.message : 'Something went wrong saving your profile.'
         console.error('Profile save failed:', message)
         setError(message)
-        // Clear error after 5 seconds
         setTimeout(() => setError(null), 5000)
       }
     })
@@ -94,21 +100,20 @@ export function ProfileForm({ initialProfiles }: { initialProfiles: ProfileRow[]
           <div className="space-y-4">
             <div>
               <label htmlFor="curriculum" className="text-xs text-muted-foreground block mb-2">Curriculum / board</label>
-              <select id="curriculum" value={curriculum} onChange={(e) => { const next = e.target.value as Curriculum; setCurriculum(next); if (next === 'IB_DIPLOMA') setGradeValue((g) => Math.min(45, Math.max(24, Math.round((g / 100) * 45) || 38))); else setGradeValue((g) => (g <= 45 ? 90 : g)); }} className="w-full bg-secondary border border-border rounded-xl p-3 text-xs text-foreground focus:outline-none focus:border-primary">
+              <select id="curriculum" value={curriculum} onChange={(e) => handleCurriculumChange(e.target.value as Curriculum)} className="w-full bg-secondary border border-border rounded-xl p-3 text-xs text-foreground focus:outline-none focus:border-primary">
                 <option value="CBSE">CBSE / ISC (India)</option>
                 <option value="IB_DIPLOMA">IB Diploma</option>
                 <option value="A_LEVELS">A-Levels</option>
-                <option value="US_GPA_PCT">US (percentage)</option>
+                <option value="US_GPA_PCT">US (GPA)</option>
               </select>
             </div>
-            <div>
-              <div className="flex justify-between text-xs text-muted-foreground mb-2"><span>Grade / score</span><span className="text-primary font-mono font-bold">{isIB ? `${gradeValue} / 45` : `${gradeValue}%`}</span></div>
-              <input type="range" min={isIB ? 24 : 60} max={isIB ? 45 : 100} value={gradeValue} onChange={(e) => setGradeValue(Number(e.target.value))} className="w-full accent-primary h-2 rounded-lg cursor-pointer" aria-label="Grade or score" />
-            </div>
+
+            <AcademicDetailInput detail={academicDetail} onChange={setAcademicDetail} />
+
             <div className="p-3 bg-accent/60 border border-primary/25 rounded-2xl flex items-center gap-3">
               <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
               <div>
-                <div className="text-[10px] text-primary/90 uppercase tracking-wider font-semibold">Grade translation</div>
+                <div className="text-[10px] text-primary/90 uppercase tracking-wider font-semibold">Grade summary</div>
                 <div className="text-xs font-mono text-accent-foreground font-semibold">{badge}</div>
               </div>
             </div>
@@ -144,7 +149,14 @@ export function ProfileForm({ initialProfiles }: { initialProfiles: ProfileRow[]
                 <option>Tech Hub</option><option>Finance Capital</option><option>Creative Hub</option><option>Research</option>
               </select>
             </div>
-            <div className="col-span-2">
+            <div>
+              <label htmlFor="field" className="text-[11px] text-muted-foreground block mb-1">Intended field of study</label>
+              <select id="field" value={intendedField} onChange={(e) => setIntendedField(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none focus:border-primary">
+                <option>No preference</option>
+                {ACADEMIC_FIELDS.map((f) => <option key={f}>{f}</option>)}
+              </select>
+            </div>
+            <div>
               <label htmlFor="rank" className="text-[11px] text-muted-foreground block mb-1">Preferred university ranking</label>
               <select id="rank" value={preferredRank} onChange={(e) => setPreferredRank(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none focus:border-primary">
                 <option>No preference</option><option>Top 50</option><option>Top 100</option><option>Top 200</option>
@@ -166,7 +178,7 @@ export function ProfileForm({ initialProfiles }: { initialProfiles: ProfileRow[]
           <div className="space-y-2">
             {initialProfiles.map((p) => (
               <div key={p.id} className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between text-xs">
-                <span className="font-medium">{p.targetCountry} · {p.curriculum} · {p.gradeValue}{p.curriculum === 'IB_DIPLOMA' ? '/45' : '%'}</span>
+                <span className="font-medium">{p.targetCountry} · {p.curriculum} · grade score {p.gradeValue}</span>
                 <span className="text-muted-foreground">{new Date(p.createdAt).toLocaleDateString('en-US')}</span>
               </div>
             ))}
