@@ -18,6 +18,7 @@ export type SaveProfileInput = {
   gradeValue: number
   preferredClimate: string
   preferredSector: string
+  preferredRank: string
   extracurriculars: string[]
 }
 
@@ -38,6 +39,7 @@ export async function saveProfile(input: SaveProfileInput): Promise<{ success: b
         gradeValue: input.gradeValue,
         preferredClimate: input.preferredClimate,
         preferredSector: input.preferredSector,
+        preferredRank: input.preferredRank,
         extracurriculars: input.extracurriculars,
       })
       .returning()

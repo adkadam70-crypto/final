@@ -28,6 +28,7 @@ export function ProfileForm({ initialProfiles }: { initialProfiles: ProfileRow[]
   const [gradeValue, setGradeValue] = useState(92)
   const [preferredClimate, setPreferredClimate] = useState('Warm')
   const [preferredSector, setPreferredSector] = useState('Tech Hub')
+  const [preferredRank, setPreferredRank] = useState('No preference')
   const [ec1, setEc1] = useState('')
   const [ec2, setEc2] = useState('')
 
@@ -43,6 +44,7 @@ export function ProfileForm({ initialProfiles }: { initialProfiles: ProfileRow[]
       gradeValue,
       preferredClimate,
       preferredSector,
+      preferredRank,
       extracurriculars: [ec1, ec2].map((s) => s.trim()).filter(Boolean),
     }
     startTransition(async () => {
@@ -128,7 +130,7 @@ export function ProfileForm({ initialProfiles }: { initialProfiles: ProfileRow[]
         )}
 
         <section className="bg-card border border-border rounded-3xl p-6">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2"><Compass className="w-4 h-4 text-chart-4" /> Climate & sector</h2>
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2"><Compass className="w-4 h-4 text-chart-4" /> Climate, sector & ranking</h2>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label htmlFor="climate" className="text-[11px] text-muted-foreground block mb-1">Preferred climate</label>
@@ -140,6 +142,12 @@ export function ProfileForm({ initialProfiles }: { initialProfiles: ProfileRow[]
               <label htmlFor="sector" className="text-[11px] text-muted-foreground block mb-1">Industry hub</label>
               <select id="sector" value={preferredSector} onChange={(e) => setPreferredSector(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none focus:border-primary">
                 <option>Tech Hub</option><option>Finance Capital</option><option>Creative Hub</option><option>Research</option>
+              </select>
+            </div>
+            <div className="col-span-2">
+              <label htmlFor="rank" className="text-[11px] text-muted-foreground block mb-1">Preferred university ranking</label>
+              <select id="rank" value={preferredRank} onChange={(e) => setPreferredRank(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none focus:border-primary">
+                <option>No preference</option><option>Top 50</option><option>Top 100</option><option>Top 200</option>
               </select>
             </div>
           </div>
@@ -159,7 +167,7 @@ export function ProfileForm({ initialProfiles }: { initialProfiles: ProfileRow[]
             {initialProfiles.map((p) => (
               <div key={p.id} className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between text-xs">
                 <span className="font-medium">{p.targetCountry} · {p.curriculum} · {p.gradeValue}{p.curriculum === 'IB_DIPLOMA' ? '/45' : '%'}</span>
-                <span className="text-muted-foreground">{new Date(p.createdAt).toLocaleDateString()}</span>
+                <span className="text-muted-foreground">{new Date(p.createdAt).toLocaleDateString('en-US')}</span>
               </div>
             ))}
           </div>

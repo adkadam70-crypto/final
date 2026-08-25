@@ -30,6 +30,7 @@ export const profiles = pgTable('profiles', {
   gradeValue: integer('gradeValue').notNull(),
   preferredClimate: text('preferredClimate').notNull(),
   preferredSector: text('preferredSector').notNull(),
+  preferredRank: text('preferredRank').notNull().default('No preference'), // 'Top 50' | 'Top 100' | 'Top 200' | 'No preference'
   extracurriculars: jsonb('extracurriculars').$type<string[]>().notNull().default([]),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })

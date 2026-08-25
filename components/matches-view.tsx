@@ -43,6 +43,7 @@ export function MatchesView({ initialSaved }: { initialSaved: SavedMatch[] }) {
   const [gradeValue, setGradeValue] = useState(92)
   const [preferredClimate, setPreferredClimate] = useState('Warm')
   const [preferredSector, setPreferredSector] = useState('Tech Hub')
+  const [preferredRank, setPreferredRank] = useState('No preference')
   const [ec1, setEc1] = useState('')
   const [ec2, setEc2] = useState('')
 
@@ -57,7 +58,7 @@ export function MatchesView({ initialSaved }: { initialSaved: SavedMatch[] }) {
     setError(null)
     setIsRunning(true)
     const input: StudentInput = {
-      targetCountry, curriculum, gradeValue, preferredClimate, preferredSector,
+      targetCountry, curriculum, gradeValue, preferredClimate, preferredSector, preferredRank,
       extracurriculars: [ec1, ec2].map((s) => s.trim()).filter(Boolean),
     }
     try {
@@ -150,7 +151,7 @@ export function MatchesView({ initialSaved }: { initialSaved: SavedMatch[] }) {
           )}
 
           <section className="bg-card border border-border rounded-3xl p-6">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2"><Compass className="w-4 h-4 text-chart-4" /> 4. Climate & sector</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2"><Compass className="w-4 h-4 text-chart-4" /> 4. Climate, sector & ranking</h2>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label htmlFor="climate" className="text-[11px] text-muted-foreground block mb-1">Preferred climate</label>
@@ -159,6 +160,10 @@ export function MatchesView({ initialSaved }: { initialSaved: SavedMatch[] }) {
               <div>
                 <label htmlFor="sector" className="text-[11px] text-muted-foreground block mb-1">Industry hub</label>
                 <select id="sector" value={preferredSector} onChange={(e) => setPreferredSector(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none focus:border-primary"><option>Tech Hub</option><option>Finance Capital</option><option>Creative Hub</option><option>Research</option></select>
+              </div>
+              <div className="col-span-2">
+                <label htmlFor="rank" className="text-[11px] text-muted-foreground block mb-1">Preferred university ranking</label>
+                <select id="rank" value={preferredRank} onChange={(e) => setPreferredRank(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none focus:border-primary"><option>No preference</option><option>Top 50</option><option>Top 100</option><option>Top 200</option></select>
               </div>
             </div>
           </section>

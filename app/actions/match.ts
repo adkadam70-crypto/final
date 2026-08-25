@@ -13,7 +13,8 @@ import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { normalizeGrade, gradeBadge } from '@/lib/grade'
-import OpenAI from 'openai'
+import Anthropic from '@anthropic-ai/sdk'
+import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 
 async function getUserId() {
   const session = await auth.api.getSession({ headers: await headers() })
@@ -27,6 +28,7 @@ export type StudentInput = {
   gradeValue: number
   preferredClimate: string
   preferredSector: string
+  preferredRank: string
   extracurriculars: string[]
 }
 
@@ -53,10 +55,10 @@ const resultSchema = z.object({
 })
 
 /**
- * Calls OpenAI API (gpt-4o-mini) to generate university match assessments
- * Queries database for student profiles and finds best-matching colleges
+ * Calls Claude (claude-opus-5) to generate university match assessments.
+ * Queries database for student profiles and finds best-matching colleges.
  */
-async function generateOpenAIMatch({
+async function generateClaudeMatch({
   studentProfile,
   catalog,
   targetCountry,
@@ -67,6 +69,7 @@ async function generateOpenAIMatch({
     tier: number
     preferredClimate: string
     preferredSector: string
+    preferredRank: string
     extracurriculars: string[]
   }
   catalog: Array<{
@@ -79,18 +82,14 @@ async function generateOpenAIMatch({
   targetCountry: string
   contextByCountry: Record<string, string>
 }): Promise<{ object: z.infer<typeof resultSchema> }> {
-  const apiKey = process.env.OPENAI_API_KEY
+  const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
-    throw new Error('OPENAI_API_KEY environment variable is not set')
+    throw new Error('ANTHROPIC_API_KEY environment variable is not set')
   }
 
-  const client = new OpenAI({ apiKey })
+  const client = new Anthropic({ apiKey })
 
-  const systemPrompt = `You are an expert college admissions analyst. Your role is to assess a student's profile against a list of universities and assign appropriate match tiers with honest acceptance probability estimates.
-
-You must return ONLY valid JSON, no other text.`
-
-  const userPrompt = `Assess this student against the provided universities and assign match tiers:
+  const userPrompt = `You are an expert college admissions analyst. Assess this student against the provided universities and assign match tiers.
 
 ADMISSIONS CONTEXT for ${targetCountry}: ${contextByCountry[targetCountry] ?? 'Standard competitive admissions environment.'}
 
@@ -98,6 +97,7 @@ STUDENT PROFILE:
 - Normalized academics: ${studentProfile.badge} (internal academic tier ${studentProfile.tier}/4, higher is stronger)
 - Preferred climate: ${studentProfile.preferredClimate}
 - Preferred industry hub: ${studentProfile.preferredSector}
+- Preferred university ranking: ${studentProfile.preferredRank} (soft preference — weigh it alongside fit, don't treat it as a hard filter)
 - Extracurriculars: ${studentProfile.extracurriculars.length ? studentProfile.extracurriculars.join('; ') : 'None provided'}
 
 TIER DEFINITIONS:
@@ -119,51 +119,22 @@ ${JSON.stringify(
   2,
 )}
 
-Return JSON matching this structure:
-{
-  "summary": "1-2 sentence overview of the student's list strength and positioning",
-  "results": [
-    {
-      "universityId": <number>,
-      "matchTier": "Safety|Target|Reach|Ultra Reach",
-      "acceptanceProbability": <1-99>,
-      "rationale": "<one sentence explaining the tier and probability>"
-    }
-  ]
-}`
+Assess every university in the list above and return one result per university.`
 
-  const response = await client.chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages: [
-      {
-        role: 'system',
-        content: systemPrompt,
-      },
-      {
-        role: 'user',
-        content: userPrompt,
-      },
-    ],
-    temperature: 0.7,
-    max_tokens: 2000,
+  const response = await client.messages.parse({
+    model: 'claude-opus-5',
+    max_tokens: 4096,
+    messages: [{ role: 'user', content: userPrompt }],
+    output_config: {
+      format: zodOutputFormat(resultSchema),
+    },
   })
 
-  const content = response.choices[0]?.message?.content
-  if (!content) {
-    throw new Error('No response from OpenAI API')
+  if (!response.parsed_output) {
+    throw new Error('Claude returned no parseable output for the match request')
   }
 
-  // Extract JSON from response (handle potential markdown formatting)
-  let jsonText = content
-  const jsonMatch = content.match(/\{[\s\S]*\}/)
-  if (jsonMatch) {
-    jsonText = jsonMatch[0]
-  }
-
-  const parsed = JSON.parse(jsonText)
-  const validated = resultSchema.parse(parsed)
-
-  return { object: validated }
+  return { object: response.parsed_output }
 }
 
 /**
@@ -199,12 +170,13 @@ export async function runMatch(input: StudentInput): Promise<{
     IN: 'Holistic Indian universities blend board marks with essays and interviews; IITs are purely exam-driven.',
   }
 
-  const { object } = await generateOpenAIMatch({
+  const { object } = await generateClaudeMatch({
     studentProfile: {
       badge,
       tier: norm.tier,
       preferredClimate: input.preferredClimate,
       preferredSector: input.preferredSector,
+      preferredRank: input.preferredRank,
       extracurriculars: input.extracurriculars,
     },
     catalog: catalog.map((u) => ({
@@ -251,6 +223,7 @@ export async function runMatch(input: StudentInput): Promise<{
     gradeValue: input.gradeValue,
     preferredClimate: input.preferredClimate,
     preferredSector: input.preferredSector,
+    preferredRank: input.preferredRank,
     extracurriculars: input.extracurriculars,
   })
 

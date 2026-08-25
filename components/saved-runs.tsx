@@ -55,7 +55,7 @@ export function SavedRuns({
               </div>
               <div className="text-[10px] text-muted-foreground/70 truncate">
                 {m.results.length} schools ·{' '}
-                {new Date(m.createdAt).toLocaleDateString()}
+                {new Date(m.createdAt).toLocaleDateString('en-US')}
               </div>
             </button>
             <button
