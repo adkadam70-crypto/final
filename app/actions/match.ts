@@ -13,7 +13,8 @@ import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { normalizeGrade, gradeBadge } from '@/lib/grade'
-import { GoogleGenAI } from '@google/genai'
+import OpenAI from 'openai'
+import { zodTextFormat } from 'openai/helpers/zod'
 
 async function getUserId() {
   const session = await auth.api.getSession({ headers: await headers() })
@@ -53,32 +54,11 @@ const resultSchema = z.object({
   ),
 })
 
-const responseSchema = {
-  type: 'object',
-  properties: {
-    summary: { type: 'string' },
-    results: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          universityId: { type: 'integer' },
-          matchTier: { type: 'string', enum: ['Safety', 'Target', 'Reach', 'Ultra Reach'] },
-          acceptanceProbability: { type: 'integer' },
-          rationale: { type: 'string' },
-        },
-        required: ['universityId', 'matchTier', 'acceptanceProbability', 'rationale'],
-      },
-    },
-  },
-  required: ['summary', 'results'],
-} as const
-
 /**
- * Calls Gemini (gemini-2.5-flash) to generate university match assessments.
+ * Calls OpenAI (gpt-5.6-terra) to generate university match assessments.
  * Queries database for student profiles and finds best-matching colleges.
  */
-async function generateGeminiMatch({
+async function generateOpenAIMatch({
   studentProfile,
   catalog,
   targetCountry,
@@ -102,12 +82,12 @@ async function generateGeminiMatch({
   targetCountry: string
   contextByCountry: Record<string, string>
 }): Promise<{ object: z.infer<typeof resultSchema> }> {
-  const apiKey = process.env.GEMINI_API_KEY
+  const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) {
-    throw new Error('GEMINI_API_KEY environment variable is not set')
+    throw new Error('OPENAI_API_KEY environment variable is not set')
   }
 
-  const client = new GoogleGenAI({ apiKey })
+  const client = new OpenAI({ apiKey })
 
   const userPrompt = `You are an expert college admissions analyst. Assess this student against the provided universities and assign match tiers.
 
@@ -141,24 +121,19 @@ ${JSON.stringify(
 
 Assess every university in the list above and return one result per university.`
 
-  const response = await client.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: userPrompt,
-    config: {
-      responseMimeType: 'application/json',
-      responseSchema,
+  const response = await client.responses.parse({
+    model: 'gpt-5.6-terra',
+    input: [{ role: 'user', content: userPrompt }],
+    text: {
+      format: zodTextFormat(resultSchema, 'match_results'),
     },
   })
 
-  const text = response.text
-  if (!text) {
-    throw new Error('Gemini returned no output for the match request')
+  if (!response.output_parsed) {
+    throw new Error('OpenAI returned no parseable output for the match request')
   }
 
-  const parsed = JSON.parse(text)
-  const validated = resultSchema.parse(parsed)
-
-  return { object: validated }
+  return { object: response.output_parsed }
 }
 
 /**
@@ -194,7 +169,7 @@ export async function runMatch(input: StudentInput): Promise<{
     IN: 'Holistic Indian universities blend board marks with essays and interviews; IITs are purely exam-driven.',
   }
 
-  const { object } = await generateGeminiMatch({
+  const { object } = await generateOpenAIMatch({
     studentProfile: {
       badge,
       tier: norm.tier,
