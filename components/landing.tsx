@@ -1,8 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowRight, Sparkles } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Sparkles } from 'lucide-react'
 import { HeroScrollVideoReveal, type TagItem } from '@/components/ui/hero-scroll-video-pin-reveal'
+import { LiquidMetalButton } from '@/components/ui/liquid-metal-button'
 import { marigold } from '@/lib/fonts'
 
 const CAMPUS_BACKGROUND_URL = 'https://upload.wikimedia.org/wikipedia/commons/e/e1/Main_quad_looking_east_at_the_University_of_Rochester.jpg'
@@ -55,6 +57,7 @@ const CENTERPIECE_UNIVERSITIES = [
 ]
 
 export function Landing() {
+  const router = useRouter()
   return (
     <main className="min-h-svh bg-background text-foreground">
       <HeroScrollVideoReveal
@@ -91,13 +94,8 @@ export function Landing() {
         }
       >
         <section className="px-4 pb-24 pt-4 flex flex-col items-center">
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link
-              href="/sign-up"
-              className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold text-sm px-6 py-3.5 rounded-2xl hover:brightness-110 hover:-translate-y-0.5 transition-all"
-            >
-              Get Started <ArrowRight className="w-4 h-4" />
-            </Link>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+            <LiquidMetalButton label="Get Started" onClick={() => router.push('/sign-up')} />
             <Link
               href="/sign-in"
               className="inline-flex items-center justify-center gap-2 border border-border text-foreground font-semibold text-sm px-6 py-3.5 rounded-2xl hover:bg-muted hover:-translate-y-0.5 transition-all"

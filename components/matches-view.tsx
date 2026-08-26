@@ -13,6 +13,7 @@ import { SavedRuns } from '@/components/saved-runs'
 import { TargetUniversityAnalysis } from '@/components/target-university-analysis'
 import { LoadingDots } from '@/components/loading-dots'
 import { RevealGroup } from '@/components/reveal-group'
+import { LiquidMetalButton } from '@/components/ui/liquid-metal-button'
 import { saveSchool, unsaveSchool, getSavedSchoolIds } from '@/app/actions/saved-schools'
 
 const CONTEXT: Record<string, string> = {
@@ -132,9 +133,13 @@ export function MatchesView({ initialSaved, profile }: { initialSaved: SavedMatc
             )}
           </section>
 
-          <button onClick={handleRun} disabled={isRunning || !profile?.academicDetail} className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold text-sm py-4 rounded-2xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
-            {isRunning ? <><LoadingDots /> Analyzing your profile…</> : <><Wand2 className="w-4 h-4" /> Run match</>}
-          </button>
+          {isRunning ? (
+            <button disabled className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold text-sm py-4 rounded-2xl opacity-60 cursor-not-allowed">
+              <LoadingDots /> Analyzing your profile…
+            </button>
+          ) : (
+            <LiquidMetalButton label="Run match" onClick={handleRun} disabled={!profile?.academicDetail} fullWidth />
+          )}
 
           {error && <p ref={errorRef} tabIndex={-1} className="text-xs text-destructive text-center outline-none" role="alert">{error}</p>}
 

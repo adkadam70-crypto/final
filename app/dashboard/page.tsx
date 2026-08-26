@@ -9,6 +9,7 @@ import { TrendingUp, Search, Bookmark, User, ArrowRight, GraduationCap, Target, 
 import { tierBadgeClass } from '@/lib/match-tier'
 import { StatCard } from '@/components/stat-card'
 import { RevealGroup } from '@/components/reveal-group'
+import { GlowCard } from '@/components/ui/spotlight-card'
 
 export const dynamic = 'force-dynamic'
 
@@ -71,14 +72,16 @@ export default async function DashboardPage() {
         ) : (
           <RevealGroup className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {featured.map((uni: any) => (
-              <div key={uni.universityId} className="bg-card border border-border rounded-3xl p-5">
-                <h3 className="text-sm font-bold mb-1 text-balance">{uni.name}</h3>
-                <p className="text-xs text-muted-foreground mb-3">{uni.location}</p>
-                <div className="flex items-center justify-between">
-                  <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${tierBadgeClass(uni.matchTier)}`}>{uni.matchTier}</span>
-                  <span className="text-sm font-mono font-bold text-primary">{uni.acceptanceProbability}%</span>
+              <GlowCard key={uni.universityId} className="rounded-3xl block">
+                <div className="bg-card border border-border rounded-3xl p-5">
+                  <h3 className="text-sm font-bold mb-1 text-balance">{uni.name}</h3>
+                  <p className="text-xs text-muted-foreground mb-3">{uni.location}</p>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${tierBadgeClass(uni.matchTier)}`}>{uni.matchTier}</span>
+                    <span className="text-sm font-mono font-bold text-primary">{uni.acceptanceProbability}%</span>
+                  </div>
                 </div>
-              </div>
+              </GlowCard>
             ))}
           </RevealGroup>
         )}
@@ -89,13 +92,15 @@ export default async function DashboardPage() {
 
 function QuickActionCard({ href, icon, title, description }: { href: string; icon: React.ReactNode; title: string; description: string }) {
   return (
-    <Link href={href} className="group bg-card border border-border rounded-3xl p-6 hover:border-primary/30 transition-colors">
-      <div className="flex items-start justify-between mb-4">
-        <div className="bg-primary/10 p-2.5 rounded-xl">{icon}</div>
-        <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-      </div>
-      <h3 className="text-sm font-bold mb-1">{title}</h3>
-      <p className="text-xs text-muted-foreground leading-relaxed text-pretty">{description}</p>
-    </Link>
+    <GlowCard className="rounded-3xl block">
+      <Link href={href} className="group bg-card border border-border rounded-3xl p-6 hover:border-primary/30 transition-colors block">
+        <div className="flex items-start justify-between mb-4">
+          <div className="bg-primary/10 p-2.5 rounded-xl">{icon}</div>
+          <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+        </div>
+        <h3 className="text-sm font-bold mb-1">{title}</h3>
+        <p className="text-xs text-muted-foreground leading-relaxed text-pretty">{description}</p>
+      </Link>
+    </GlowCard>
   )
 }

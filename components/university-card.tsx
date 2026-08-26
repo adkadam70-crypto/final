@@ -4,12 +4,14 @@ import { useState } from 'react'
 import { MapPin, Sun, ArrowRight, Lightbulb, ChevronDown, Sparkles } from 'lucide-react'
 import type { MatchResult } from '@/lib/db/schema'
 import { tierBadgeClass } from '@/lib/match-tier'
+import { GlowCard } from '@/components/ui/spotlight-card'
 
 export function UniversityCard({ uni }: { uni: MatchResult }) {
   const [tipsOpen, setTipsOpen] = useState(false)
   const tips = uni.improvementTips ?? []
 
   return (
+    <GlowCard className="rounded-3xl block">
     <article className="bg-card border border-border rounded-3xl p-6 transition-colors hover:border-foreground/20">
       <div className="flex justify-between items-start gap-4 mb-4">
         <div>
@@ -85,5 +87,6 @@ export function UniversityCard({ uni }: { uni: MatchResult }) {
         </a>
       </div>
     </article>
+    </GlowCard>
   )
 }
