@@ -21,7 +21,18 @@ type ProfileRow = {
   createdAt: Date
 }
 
-export function ProfileForm({ initialProfiles }: { initialProfiles: ProfileRow[] }) {
+type LatestProfile = {
+  targetCountry: string
+  curriculum: string
+  preferredClimate: string
+  preferredSector: string
+  preferredRank: string
+  intendedField: string
+  academicDetail: AcademicDetail | null
+  extracurriculars: string[]
+} | null
+
+export function ProfileForm({ initialProfiles, latestProfile }: { initialProfiles: ProfileRow[]; latestProfile: LatestProfile }) {
   const [pending, startTransition] = useTransition()
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -33,15 +44,19 @@ export function ProfileForm({ initialProfiles }: { initialProfiles: ProfileRow[]
     if (error) errorRef.current?.focus()
   }, [error])
 
-  const [targetCountry, setTargetCountry] = useState('US')
-  const [curriculum, setCurriculum] = useState<Curriculum>('CBSE')
-  const [academicDetail, setAcademicDetail] = useState<AcademicDetail>(defaultAcademicDetail('CBSE'))
-  const [preferredClimate, setPreferredClimate] = useState('Warm')
-  const [preferredSector, setPreferredSector] = useState('Tech Hub')
-  const [preferredRank, setPreferredRank] = useState('No preference')
-  const [intendedField, setIntendedField] = useState('No preference')
-  const [ec1, setEc1] = useState('')
-  const [ec2, setEc2] = useState('')
+  // Seed every field from the user's last saved profile so the form always
+  // reflects what's actually saved, rather than resetting to defaults —
+  // still fully editable, and saving again just makes the edited version
+  // the new latest profile.
+  const [targetCountry, setTargetCountry] = useState(latestProfile?.targetCountry ?? 'US')
+  const [curriculum, setCurriculum] = useState<Curriculum>((latestProfile?.curriculum as Curriculum) ?? 'CBSE')
+  const [academicDetail, setAcademicDetail] = useState<AcademicDetail>(latestProfile?.academicDetail ?? defaultAcademicDetail('CBSE'))
+  const [preferredClimate, setPreferredClimate] = useState(latestProfile?.preferredClimate ?? 'Warm')
+  const [preferredSector, setPreferredSector] = useState(latestProfile?.preferredSector ?? 'Tech Hub')
+  const [preferredRank, setPreferredRank] = useState(latestProfile?.preferredRank ?? 'No preference')
+  const [intendedField, setIntendedField] = useState(latestProfile?.intendedField ?? 'No preference')
+  const [ec1, setEc1] = useState(latestProfile?.extracurriculars?.[0] ?? '')
+  const [ec2, setEc2] = useState(latestProfile?.extracurriculars?.[1] ?? '')
 
   const badge = gradeBadge(academicDetail)
 

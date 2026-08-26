@@ -5,9 +5,10 @@ import { db } from '@/lib/db'
 import { profiles, matches, savedSchools } from '@/lib/db/schema'
 import { eq, desc, count } from 'drizzle-orm'
 import Link from 'next/link'
-import { TrendingUp, Search, Bookmark, User, ArrowRight, GraduationCap, Target, Sparkles } from 'lucide-react'
+import { Search, Bookmark, User, ArrowRight, GraduationCap, Target, Sparkles } from 'lucide-react'
 import { tierBadgeClass } from '@/lib/match-tier'
 import { StatCard } from '@/components/stat-card'
+import { ProfileStrengthCard } from '@/components/profile-strength-card'
 import { RevealGroup } from '@/components/reveal-group'
 import { GlowCard } from '@/components/ui/spotlight-card'
 
@@ -35,7 +36,6 @@ export default async function DashboardPage() {
   const matchCount = matchCountRes[0]?.count ?? 0
   const savedCount = savedCountRes[0]?.count ?? 0
 
-  const profileStrength = Math.min(100, profileCount > 0 ? 40 + Math.min(profileCount * 15, 60) : 0)
   const featured = (recentMatches[0]?.results ?? []).slice(0, 3)
 
   return (
@@ -46,7 +46,7 @@ export default async function DashboardPage() {
       </div>
 
       <RevealGroup className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <StatCard icon={<TrendingUp className="w-5 h-5 text-primary" />} label="Profile Strength" value={profileStrength} suffix="%" hint={profileCount === 0 ? 'Set up your profile to get started' : 'Looking good — keep adding details'} />
+        <ProfileStrengthCard hasProfile={profileCount > 0} />
         <StatCard icon={<Search className="w-5 h-5 text-primary" />} label="Matches Found" value={matchCount} hint={matchCount === 0 ? 'Run your first match' : 'Keep exploring'} />
         <StatCard icon={<Bookmark className="w-5 h-5 text-primary" />} label="Saved Schools" value={savedCount} hint={savedCount === 0 ? 'Bookmark schools you like' : 'Track your apps'} />
       </RevealGroup>

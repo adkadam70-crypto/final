@@ -3,13 +3,12 @@
 import { useState, useTransition, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Sparkles, GraduationCap, Wand2, Bookmark, BookmarkCheck, User, ArrowRight } from 'lucide-react'
-import { runMatch, type SavedMatch } from '@/app/actions/match'
+import { runMatch } from '@/app/actions/match'
 import { gradeBadge } from '@/lib/grade'
 import type { AcademicDetail } from '@/lib/academic-detail'
 import type { MatchResult } from '@/lib/db/schema'
 import { ProbabilityGraph } from '@/components/probability-graph'
 import { UniversityCard } from '@/components/university-card'
-import { SavedRuns } from '@/components/saved-runs'
 import { TargetUniversityAnalysis } from '@/components/target-university-analysis'
 import { LoadingDots } from '@/components/loading-dots'
 import { RevealGroup } from '@/components/reveal-group'
@@ -36,7 +35,7 @@ type ProfileRow = {
   extracurriculars: string[]
 } | null
 
-export function MatchesView({ initialSaved, profile }: { initialSaved: SavedMatch[]; profile: ProfileRow }) {
+export function MatchesView({ profile }: { profile: ProfileRow }) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [isRunning, setIsRunning] = useState(false)
@@ -50,7 +49,6 @@ export function MatchesView({ initialSaved, profile }: { initialSaved: SavedMatc
 
   const [results, setResults] = useState<MatchResult[]>([])
   const [summary, setSummary] = useState('')
-  const [saved, setSaved] = useState<SavedMatch[]>(initialSaved)
 
   const targetCountry = profile?.targetCountry ?? 'US'
   const badge = profile?.academicDetail ? gradeBadge(profile.academicDetail) : null
@@ -67,7 +65,6 @@ export function MatchesView({ initialSaved, profile }: { initialSaved: SavedMatc
       setResults(res.results)
       setSummary(res.summary)
       startTransition(() => router.refresh())
-      setSaved((prev) => [{ id: Date.now(), targetCountry, gradeBadge: res.gradeBadge, summary: res.summary, results: res.results, createdAt: new Date() }, ...prev])
       const ids = await getSavedSchoolIds()
       setSavedIds(new Set(ids))
     } catch (e) {
@@ -87,11 +84,6 @@ export function MatchesView({ initialSaved, profile }: { initialSaved: SavedMatc
     }
   }
 
-  function loadSaved(m: SavedMatch) {
-    setResults(m.results)
-    setSummary(m.summary)
-  }
-
   return (
     <main className="max-w-6xl mx-auto px-4 py-8">
       <div className="mb-8">
@@ -102,7 +94,7 @@ export function MatchesView({ initialSaved, profile }: { initialSaved: SavedMatc
       <TargetUniversityAnalysis hasProfile={!!profile?.academicDetail} />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
-        <div className="lg:col-span-5 space-y-5">
+        <div className="lg:col-span-4 space-y-5">
           <section className="bg-card border border-border rounded-3xl p-6">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2"><User className="w-4 h-4 text-primary" /> Your profile</h2>
             {profile?.academicDetail ? (
@@ -142,11 +134,9 @@ export function MatchesView({ initialSaved, profile }: { initialSaved: SavedMatc
           )}
 
           {error && <p ref={errorRef} tabIndex={-1} className="text-xs text-destructive text-center outline-none" role="alert">{error}</p>}
-
-          <SavedRuns saved={saved} onLoad={loadSaved} />
         </div>
 
-        <div className="lg:col-span-7 space-y-6">
+        <div className="lg:col-span-8 space-y-6">
           <section className="bg-card border border-border rounded-3xl p-6">
             <div className="text-xs font-semibold text-primary uppercase tracking-widest mb-1.5">Admissions context: {targetCountry}</div>
             <p className="text-xs text-muted-foreground leading-relaxed text-pretty">{CONTEXT[targetCountry]}</p>
@@ -174,7 +164,7 @@ export function MatchesView({ initialSaved, profile }: { initialSaved: SavedMatc
               <ProbabilityGraph results={results} />
               <div>
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">Recommended universities ({results.length})</h3>
-                <RevealGroup className="space-y-4" replay={results} stagger={0.08}>
+                <RevealGroup className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-start" replay={results} stagger={0.08}>
                   {results.map((r) => (
                     <div key={r.universityId} id={`university-${r.universityId}`} className="relative scroll-mt-24 match-card-target rounded-3xl">
                       <UniversityCard uni={r} />

@@ -13,5 +13,5 @@ export default async function ProfilePage() {
 
   const recentProfiles = await db.select().from(profiles).where(eq(profiles.userId, userId)).orderBy(desc(profiles.createdAt)).limit(5)
 
-  return <ProfileForm initialProfiles={recentProfiles} />
+  return <ProfileForm initialProfiles={recentProfiles} latestProfile={recentProfiles[0] ?? null} />
 }

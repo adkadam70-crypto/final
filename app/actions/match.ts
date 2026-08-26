@@ -6,7 +6,7 @@ import {
   matches,
   type MatchResult,
 } from '@/lib/db/schema'
-import { and, desc, eq } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { gradeTier, gradeBadge } from '@/lib/grade'
@@ -272,37 +272,3 @@ export async function runMatch(): Promise<
   }
 }
 
-export type SavedMatch = {
-  id: number
-  targetCountry: string
-  gradeBadge: string
-  summary: string
-  results: MatchResult[]
-  createdAt: Date
-}
-
-export async function getSavedMatches(): Promise<SavedMatch[]> {
-  const userId = await getUserId()
-  const rows = await db
-    .select()
-    .from(matches)
-    .where(eq(matches.userId, userId))
-    .orderBy(desc(matches.createdAt))
-    .limit(10)
-  return rows.map((r) => ({
-    id: r.id,
-    targetCountry: r.targetCountry,
-    gradeBadge: r.gradeBadge,
-    summary: r.summary,
-    results: r.results,
-    createdAt: r.createdAt,
-  }))
-}
-
-export async function deleteMatch(id: number) {
-  const userId = await getUserId()
-  await db
-    .delete(matches)
-    .where(and(eq(matches.id, id), eq(matches.userId, userId)))
-  revalidatePath('/')
-}
