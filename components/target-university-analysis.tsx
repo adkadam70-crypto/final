@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Search, Loader2, TrendingUp, AlertTriangle, ListChecks, Sparkles } from 'lucide-react'
 import { analyzeTargetUniversity, type TargetAnalysisResult } from '@/app/actions/analyze-target-university'
 import { tierBadgeClass } from '@/lib/match-tier'
@@ -9,7 +9,12 @@ export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }
   const [name, setName] = useState('')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const errorRef = useRef<HTMLParagraphElement>(null)
   const [result, setResult] = useState<TargetAnalysisResult | null>(null)
+
+  useEffect(() => {
+    if (error) errorRef.current?.focus()
+  }, [error])
 
   async function handleAnalyze() {
     if (!name.trim()) return
@@ -54,7 +59,7 @@ export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }
       </div>
 
       {!hasProfile && <p className="text-[11px] text-muted-foreground mt-2">Set up your profile below to use this.</p>}
-      {error && <p className="text-xs text-destructive mt-3" role="alert">{error}</p>}
+      {error && <p ref={errorRef} tabIndex={-1} className="text-xs text-destructive mt-3 outline-none" role="alert">{error}</p>}
 
       {result && (
         <div className="mt-5 pt-5 border-t border-border space-y-4">

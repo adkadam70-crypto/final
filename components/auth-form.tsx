@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { authClient } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
@@ -14,9 +14,14 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const errorRef = useRef<HTMLParagraphElement>(null)
   const [loading, setLoading] = useState(false)
 
   const isSignUp = mode === 'sign-up'
+
+  useEffect(() => {
+    if (error) errorRef.current?.focus()
+  }, [error])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -96,7 +101,7 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
           </div>
 
           {error && (
-            <p className="text-sm text-destructive" role="alert">
+            <p ref={errorRef} tabIndex={-1} className="text-sm text-destructive outline-none" role="alert">
               {error}
             </p>
           )}

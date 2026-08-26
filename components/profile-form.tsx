@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useRef, useEffect } from 'react'
 import { GraduationCap, Globe, Flame, Compass, Loader2, Save, CheckCircle2 } from 'lucide-react'
 import { saveProfile, type SaveProfileInput } from '@/app/actions/profile'
 import { gradeBadge } from '@/lib/grade'
@@ -24,6 +24,13 @@ export function ProfileForm({ initialProfiles }: { initialProfiles: ProfileRow[]
   const [pending, startTransition] = useTransition()
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const errorRef = useRef<HTMLParagraphElement>(null)
+
+  // Move focus to the error on failure so keyboard/screen-reader users find
+  // it immediately instead of having to hunt for it after a failed submit.
+  useEffect(() => {
+    if (error) errorRef.current?.focus()
+  }, [error])
 
   const [targetCountry, setTargetCountry] = useState('US')
   const [curriculum, setCurriculum] = useState<Curriculum>('CBSE')
@@ -169,7 +176,7 @@ export function ProfileForm({ initialProfiles }: { initialProfiles: ProfileRow[]
           {pending ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving profile…</> : saved ? <><CheckCircle2 className="w-4 h-4" /> Saved!</> : <><Save className="w-4 h-4" /> Save profile</>}
         </button>
 
-        {error && <p className="text-xs text-destructive text-center" role="alert">{error}</p>}
+        {error && <p ref={errorRef} tabIndex={-1} className="text-xs text-destructive text-center outline-none" role="alert">{error}</p>}
       </div>
 
       {initialProfiles.length > 0 && (

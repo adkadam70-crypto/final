@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Sparkles, GraduationCap, Loader2, Wand2, Bookmark, BookmarkCheck, User, ArrowRight } from 'lucide-react'
 import { runMatch, type SavedMatch } from '@/app/actions/match'
@@ -38,7 +38,12 @@ export function MatchesView({ initialSaved, profile }: { initialSaved: SavedMatc
   const [pending, startTransition] = useTransition()
   const [isRunning, setIsRunning] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const errorRef = useRef<HTMLParagraphElement>(null)
   const [savedIds, setSavedIds] = useState<Set<string | number>>(new Set())
+
+  useEffect(() => {
+    if (error) errorRef.current?.focus()
+  }, [error])
 
   const [results, setResults] = useState<MatchResult[]>([])
   const [summary, setSummary] = useState('')
@@ -129,7 +134,7 @@ export function MatchesView({ initialSaved, profile }: { initialSaved: SavedMatc
             {isRunning ? <><Loader2 className="w-4 h-4 animate-spin" /> Analyzing your profile…</> : <><Wand2 className="w-4 h-4" /> Run match</>}
           </button>
 
-          {error && <p className="text-xs text-destructive text-center" role="alert">{error}</p>}
+          {error && <p ref={errorRef} tabIndex={-1} className="text-xs text-destructive text-center outline-none" role="alert">{error}</p>}
 
           <SavedRuns saved={saved} onLoad={loadSaved} />
         </div>
