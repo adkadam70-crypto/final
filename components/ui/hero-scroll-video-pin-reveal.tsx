@@ -15,12 +15,16 @@ export interface TagItem {
 }
 
 export interface HeroScrollRevealProps {
+  /** Small brand mark shown above topText. */
+  topBrand?: React.ReactNode
   topText?: React.ReactNode
   headingText?: React.ReactNode
   tags?: TagItem[]
   subText?: string
   /** Real names rendered as a dense text field inside the pinned reveal circle. */
   centerpieceNames?: string[]
+  /** Faded photo shown behind the centerpiece name field. */
+  centerpieceBackgroundUrl?: string
   bottomText?: React.ReactNode
   /** Rendered after the bottom text — e.g. sign in / sign up CTAs. */
   children?: React.ReactNode
@@ -37,11 +41,13 @@ const NAME_VARIANTS = [
 ]
 
 export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
+  topBrand,
   topText,
   headingText,
   tags = [],
   subText,
   centerpieceNames = [],
+  centerpieceBackgroundUrl,
   bottomText,
   children,
   className = '',
@@ -152,8 +158,9 @@ export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
   return (
     <div className={`w-full bg-background text-foreground ${className}`}>
       {topText && (
-        <section className="w-full min-h-screen flex justify-center items-center text-center px-4 sm:px-8 py-8 text-[clamp(1.8rem,4.5vw,4.5rem)] font-bold tracking-tight text-balance leading-tight">
-          {topText}
+        <section className="relative w-full min-h-screen flex flex-col justify-center items-center text-center px-4 sm:px-8 py-8">
+          {topBrand && <div className="absolute top-6 sm:top-10">{topBrand}</div>}
+          <div className="text-[clamp(1.8rem,4.5vw,4.5rem)] font-bold tracking-tight text-balance leading-tight">{topText}</div>
         </section>
       )}
 
@@ -189,6 +196,13 @@ export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
 
         <div ref={pinWrapperRef} className="w-full h-screen flex justify-center items-center relative overflow-hidden">
           <div ref={revealBoxRef} className="relative w-full h-full overflow-hidden flex justify-center items-center bg-background will-change-[clip-path]">
+            {centerpieceBackgroundUrl && (
+              <div
+                className="absolute inset-0 bg-cover bg-center opacity-25"
+                style={{ backgroundImage: `url(${centerpieceBackgroundUrl})` }}
+              />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/50 to-background/85" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--primary)/12%,transparent_65%)]" />
             <div className="relative w-full h-full flex flex-wrap content-center justify-center gap-x-5 gap-y-3 px-8 sm:px-16 md:px-28 py-16 overflow-hidden">
               {centerpieceNames.map((name, idx) => {

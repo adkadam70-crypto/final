@@ -1,8 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Sparkles } from 'lucide-react'
 import { HeroScrollVideoReveal, type TagItem } from '@/components/ui/hero-scroll-video-pin-reveal'
+import { marigold } from '@/lib/fonts'
+
+const CAMPUS_BACKGROUND_URL = 'https://upload.wikimedia.org/wikipedia/commons/e/e1/Main_quad_looking_east_at_the_University_of_Rochester.jpg'
 
 const FEATURE_TAGS: TagItem[] = [
   { text: 'US · UK · AU · SG · HK · India', background: 'var(--primary)', color: 'var(--primary-foreground)' },
@@ -55,29 +58,36 @@ export function Landing() {
   return (
     <main className="min-h-svh bg-background text-foreground">
       <HeroScrollVideoReveal
+        topBrand={
+          <div className="flex items-center gap-2 text-primary">
+            <Sparkles className="w-5 h-5" />
+            <span className="text-lg font-bold tracking-tight">Shortlisted</span>
+          </div>
+        }
         topText={
-          <>
+          <span className={marigold.className}>
             Admissions season is full of guesses.
             <br />
             We replaced ours with data.
-          </>
+          </span>
         }
         headingText={
-          <>
+          <span className={marigold.className}>
             Real odds. Real universities.
             <br />
             Across six countries.
-          </>
+          </span>
         }
         tags={FEATURE_TAGS}
         subText="Every recommendation is grounded in real selectivity data for real universities — not vibes, and not guesswork."
         centerpieceNames={CENTERPIECE_UNIVERSITIES}
+        centerpieceBackgroundUrl={CAMPUS_BACKGROUND_URL}
         bottomText={
-          <>
+          <span className={marigold.className}>
             Stop guessing.
             <br />
             See exactly where you stand.
-          </>
+          </span>
         }
       >
         <section className="px-4 pb-24 pt-4 flex justify-center">
@@ -95,6 +105,7 @@ export function Landing() {
               Sign In
             </Link>
           </div>
+          <p className="w-full text-center text-xs font-semibold text-primary mt-10">Shortlisted</p>
         </section>
       </HeroScrollVideoReveal>
     </main>
