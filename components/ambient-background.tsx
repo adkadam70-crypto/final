@@ -8,7 +8,7 @@ export function AmbientBackground() {
   return (
     <div
       aria-hidden="true"
-      className="fixed inset-0 z-0 overflow-hidden pointer-events-none bg-background"
+      className="fixed inset-0 -z-10 overflow-hidden pointer-events-none bg-background"
       style={{
         backgroundImage:
           'radial-gradient(ellipse 60% 85% at 6% 45%, color-mix(in oklab, var(--primary) 55%, var(--background)) 0%, var(--background) 68%)',
