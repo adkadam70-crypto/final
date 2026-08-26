@@ -59,9 +59,9 @@ export function Landing() {
     <main className="min-h-svh bg-background text-foreground">
       <HeroScrollVideoReveal
         topBrand={
-          <div className="flex items-center gap-2 text-primary">
-            <Sparkles className="w-5 h-5" />
-            <span className="text-lg font-bold tracking-tight">Shortlisted</span>
+          <div className="flex items-center gap-2.5 text-primary">
+            <Sparkles className="w-7 h-7" />
+            <span className="text-2xl font-bold tracking-tight">Shortlisted</span>
           </div>
         }
         topText={
@@ -90,7 +90,7 @@ export function Landing() {
           </span>
         }
       >
-        <section className="px-4 pb-24 pt-4 flex justify-center">
+        <section className="px-4 pb-24 pt-4 flex flex-col items-center">
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/sign-up"
@@ -105,7 +105,7 @@ export function Landing() {
               Sign In
             </Link>
           </div>
-          <p className="w-full text-center text-xs font-semibold text-primary mt-10">Shortlisted</p>
+          <p className="text-center text-sm font-semibold text-primary mt-10">Shortlisted</p>
         </section>
       </HeroScrollVideoReveal>
     </main>
