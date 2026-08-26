@@ -53,29 +53,42 @@ export function LiquidMetalButton({ label = 'Get Started', onClick, type = 'butt
     }
 
     if (shaderRef.current) {
-      shaderMount.current = new ShaderMount(
-        shaderRef.current,
-        liquidMetalFragmentShader,
-        {
-          u_repetition: 4,
-          u_softness: 0.5,
-          u_shiftRed: 0.3,
-          u_shiftBlue: 0.3,
-          u_distortion: 0,
-          u_contour: 0,
-          u_angle: 45,
-          u_scale: 8,
-          u_shape: 1,
-          u_offsetX: 0.1,
-          u_offsetY: -0.1,
-        },
-        undefined,
-        0.6,
-      )
+      // WebGL2 can legitimately be unavailable (older GPUs/drivers, some
+      // mobile browsers, privacy settings) — ShaderMount throws
+      // synchronously when it is. This is a purely decorative effect, so a
+      // failure here must never take the rest of the page down with it.
+      try {
+        shaderMount.current = new ShaderMount(
+          shaderRef.current,
+          liquidMetalFragmentShader,
+          {
+            u_repetition: 4,
+            u_softness: 0.5,
+            u_shiftRed: 0.3,
+            u_shiftBlue: 0.3,
+            u_distortion: 0,
+            u_contour: 0,
+            u_angle: 45,
+            u_scale: 8,
+            u_shape: 1,
+            u_offsetX: 0.1,
+            u_offsetY: -0.1,
+          },
+          undefined,
+          0.6,
+        )
+      } catch (err) {
+        console.error('LiquidMetalButton: shader unavailable, falling back to plain button.', err)
+        shaderMount.current = null
+      }
     }
 
     return () => {
-      shaderMount.current?.destroy?.()
+      try {
+        shaderMount.current?.destroy?.()
+      } catch {
+        // already torn down or never initialized — nothing to clean up
+      }
       shaderMount.current = null
     }
   }, [])
