@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Sparkles, GraduationCap, Loader2, Wand2, Bookmark, BookmarkCheck, User, ArrowRight } from 'lucide-react'
+import { Sparkles, GraduationCap, Wand2, Bookmark, BookmarkCheck, User, ArrowRight } from 'lucide-react'
 import { runMatch, type SavedMatch } from '@/app/actions/match'
 import { gradeBadge } from '@/lib/grade'
 import type { AcademicDetail } from '@/lib/academic-detail'
@@ -11,6 +11,8 @@ import { ProbabilityGraph } from '@/components/probability-graph'
 import { UniversityCard } from '@/components/university-card'
 import { SavedRuns } from '@/components/saved-runs'
 import { TargetUniversityAnalysis } from '@/components/target-university-analysis'
+import { LoadingDots } from '@/components/loading-dots'
+import { RevealGroup } from '@/components/reveal-group'
 import { saveSchool, unsaveSchool, getSavedSchoolIds } from '@/app/actions/saved-schools'
 
 const CONTEXT: Record<string, string> = {
@@ -131,7 +133,7 @@ export function MatchesView({ initialSaved, profile }: { initialSaved: SavedMatc
           </section>
 
           <button onClick={handleRun} disabled={isRunning || !profile?.academicDetail} className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold text-sm py-4 rounded-2xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
-            {isRunning ? <><Loader2 className="w-4 h-4 animate-spin" /> Analyzing your profile…</> : <><Wand2 className="w-4 h-4" /> Run match</>}
+            {isRunning ? <><LoadingDots /> Analyzing your profile…</> : <><Wand2 className="w-4 h-4" /> Run match</>}
           </button>
 
           {error && <p ref={errorRef} tabIndex={-1} className="text-xs text-destructive text-center outline-none" role="alert">{error}</p>}
@@ -153,8 +155,8 @@ export function MatchesView({ initialSaved, profile }: { initialSaved: SavedMatc
             </section>
           ) : isRunning && results.length === 0 ? (
             <section className="bg-card border border-border rounded-3xl p-12 text-center">
-              <Loader2 className="w-7 h-7 text-primary animate-spin mx-auto mb-4" />
-              <p className="text-xs text-muted-foreground">Our model is weighing your academics, extracurriculars, and each school&apos;s selectivity…</p>
+              <LoadingDots className="justify-center text-primary mb-4" />
+              <p className="text-xs text-muted-foreground">Weighing your academics, extracurriculars, and each school&apos;s selectivity…</p>
             </section>
           ) : (
             <>
@@ -165,16 +167,18 @@ export function MatchesView({ initialSaved, profile }: { initialSaved: SavedMatc
                 </div>
               )}
               <ProbabilityGraph results={results} />
-              <div className="space-y-4">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Recommended universities ({results.length})</h3>
-                {results.map((r) => (
-                  <div key={r.universityId} id={`university-${r.universityId}`} className="relative scroll-mt-24 match-card-target rounded-3xl">
-                    <UniversityCard uni={r} />
-                    <button onClick={() => toggleSave(r)} className="absolute top-4 right-4 p-2 rounded-xl bg-secondary border border-border hover:border-primary/30 transition-colors" aria-label={savedIds.has(r.universityId) ? 'Unsave school' : 'Save school'}>
-                      {savedIds.has(r.universityId) ? <BookmarkCheck className="w-4 h-4 text-primary" /> : <Bookmark className="w-4 h-4 text-muted-foreground" />}
-                    </button>
-                  </div>
-                ))}
+              <div>
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">Recommended universities ({results.length})</h3>
+                <RevealGroup className="space-y-4" replay={results} stagger={0.08}>
+                  {results.map((r) => (
+                    <div key={r.universityId} id={`university-${r.universityId}`} className="relative scroll-mt-24 match-card-target rounded-3xl">
+                      <UniversityCard uni={r} />
+                      <button onClick={() => toggleSave(r)} className="absolute top-4 right-4 p-2 rounded-xl bg-secondary border border-border hover:border-primary/30 transition-colors" aria-label={savedIds.has(r.universityId) ? 'Unsave school' : 'Save school'}>
+                        {savedIds.has(r.universityId) ? <BookmarkCheck className="w-4 h-4 text-primary" /> : <Bookmark className="w-4 h-4 text-muted-foreground" />}
+                      </button>
+                    </div>
+                  ))}
+                </RevealGroup>
               </div>
             </>
           )}

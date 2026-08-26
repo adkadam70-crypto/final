@@ -7,6 +7,8 @@ import { eq, desc, count } from 'drizzle-orm'
 import Link from 'next/link'
 import { TrendingUp, Search, Bookmark, User, ArrowRight, GraduationCap, Target, Sparkles } from 'lucide-react'
 import { tierBadgeClass } from '@/lib/match-tier'
+import { StatCard } from '@/components/stat-card'
+import { RevealGroup } from '@/components/reveal-group'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,11 +44,11 @@ export default async function DashboardPage() {
         <p className="text-sm text-muted-foreground">Here&apos;s your admissions overview at a glance.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <StatCard icon={<TrendingUp className="w-5 h-5 text-primary" />} label="Profile Strength" value={`${profileStrength}%`} hint={profileCount === 0 ? 'Set up your profile to get started' : 'Looking good — keep adding details'} />
-        <StatCard icon={<Search className="w-5 h-5 text-primary" />} label="Matches Found" value={String(matchCount)} hint={matchCount === 0 ? 'Run your first match' : 'Keep exploring'} />
-        <StatCard icon={<Bookmark className="w-5 h-5 text-primary" />} label="Saved Schools" value={String(savedCount)} hint={savedCount === 0 ? 'Bookmark schools you like' : 'Track your apps'} />
-      </div>
+      <RevealGroup className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <StatCard icon={<TrendingUp className="w-5 h-5 text-primary" />} label="Profile Strength" value={profileStrength} suffix="%" hint={profileCount === 0 ? 'Set up your profile to get started' : 'Looking good — keep adding details'} />
+        <StatCard icon={<Search className="w-5 h-5 text-primary" />} label="Matches Found" value={matchCount} hint={matchCount === 0 ? 'Run your first match' : 'Keep exploring'} />
+        <StatCard icon={<Bookmark className="w-5 h-5 text-primary" />} label="Saved Schools" value={savedCount} hint={savedCount === 0 ? 'Bookmark schools you like' : 'Track your apps'} />
+      </RevealGroup>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <QuickActionCard href="/profile" icon={<User className="w-5 h-5 text-primary" />} title="Set Up Profile" description="Enter your GPA, test scores, and extracurriculars." />
@@ -67,7 +69,7 @@ export default async function DashboardPage() {
             <Link href="/matches" className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold text-sm px-5 py-2.5 rounded-2xl hover:brightness-110 transition-all">Find Matches <ArrowRight className="w-4 h-4" /></Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <RevealGroup className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {featured.map((uni: any) => (
               <div key={uni.universityId} className="bg-card border border-border rounded-3xl p-5">
                 <h3 className="text-sm font-bold mb-1 text-balance">{uni.name}</h3>
@@ -78,23 +80,10 @@ export default async function DashboardPage() {
                 </div>
               </div>
             ))}
-          </div>
+          </RevealGroup>
         )}
       </section>
     </main>
-  )
-}
-
-function StatCard({ icon, label, value, hint }: { icon: React.ReactNode; label: string; value: string; hint: string }) {
-  return (
-    <div className="bg-card border border-border rounded-3xl p-6">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="bg-primary/10 p-2.5 rounded-xl">{icon}</div>
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{label}</span>
-      </div>
-      <div className="text-3xl font-bold mb-1">{value}</div>
-      <p className="text-xs text-muted-foreground">{hint}</p>
-    </div>
   )
 }
 

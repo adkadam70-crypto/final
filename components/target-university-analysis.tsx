@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Search, Loader2, TrendingUp, AlertTriangle, ListChecks, Sparkles } from 'lucide-react'
+import { Search, TrendingUp, AlertTriangle, ListChecks, Sparkles } from 'lucide-react'
 import { analyzeTargetUniversity, type TargetAnalysisResult } from '@/app/actions/analyze-target-university'
 import { tierBadgeClass } from '@/lib/match-tier'
+import { LoadingDots } from '@/components/loading-dots'
+import { RevealGroup } from '@/components/reveal-group'
 
 export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }) {
   const [name, setName] = useState('')
@@ -54,7 +56,7 @@ export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }
           disabled={pending || !hasProfile || !name.trim()}
           className="flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold text-xs px-5 py-3 rounded-xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed shrink-0"
         >
-          {pending ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Analyzing…</> : 'Analyze'}
+          {pending ? <><LoadingDots /> Analyzing…</> : 'Analyze'}
         </button>
       </div>
 
@@ -62,7 +64,7 @@ export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }
       {error && <p ref={errorRef} tabIndex={-1} className="text-xs text-destructive mt-3 outline-none" role="alert">{error}</p>}
 
       {result && (
-        <div className="mt-5 pt-5 border-t border-border space-y-4">
+        <RevealGroup className="mt-5 pt-5 border-t border-border space-y-4" replay={result} y={12}>
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <h3 className="text-sm font-bold">{result.resolvedUniversityName}</h3>
             <span className={`text-xs font-bold px-3 py-1.5 rounded-xl border whitespace-nowrap ${tierBadgeClass(result.matchTier)}`}>
@@ -96,7 +98,7 @@ export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }
               </ul>
             </div>
           </div>
-        </div>
+        </RevealGroup>
       )}
 
       {!result && !error && (
