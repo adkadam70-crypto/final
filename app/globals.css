@@ -93,6 +93,25 @@
   }
 }
 
+/* Ambient glow for the authenticated app shell (dashboard/matches/profile/
+   saved). Applied as the layout <main>'s own background rather than a
+   separate fixed sibling — that guarantees it paints behind all of main's
+   content with no z-index/stacking-context ambiguity. Deliberately NOT
+   background-attachment: fixed — that mode is notoriously unreliable across
+   browsers (iOS Safari in particular). Vertical size/position use vh, not %:
+   main's height grows unboundedly with page content (long forms, big result
+   grids), and a % there resolves against that whole (huge) box, pushing the
+   visible part of the glow far down the document until it's effectively
+   invisible on any page taller than one screen. vh keeps it anchored near
+   the top of the viewport regardless of how tall the page gets. */
+.app-shell-background {
+  background-image: radial-gradient(
+    ellipse 60% 85vh at 6% 45vh,
+    color-mix(in oklab, var(--primary) 55%, var(--background)) 0%,
+    var(--background) 68%
+  );
+}
+
 /* Momentary highlight when a probability-graph bar links to its card. */
 .match-card-target:target {
   outline: 2px solid var(--primary);

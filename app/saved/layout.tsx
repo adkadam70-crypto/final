@@ -2,7 +2,6 @@ import { auth } from '@/lib/auth'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Navbar } from '@/components/navbar'
-import { AmbientBackground } from '@/components/ambient-background'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,9 +11,8 @@ export default async function SavedLayout({ children }: { children: React.ReactN
 
   return (
     <>
-      <AmbientBackground />
       <Navbar userName={session.user.name} />
-      <main className="min-h-screen text-foreground pt-16">
+      <main className="app-shell-background min-h-screen text-foreground pt-16">
         {children}
       </main>
     </>
