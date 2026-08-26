@@ -88,7 +88,7 @@ export function MatchesView({ initialSaved, profile }: { initialSaved: SavedMatc
     <main className="max-w-6xl mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-1">Find Matches</h1>
-        <p className="text-sm text-muted-foreground">AI analysis powered by your saved profile.</p>
+        <p className="text-sm text-muted-foreground">Powered by your saved profile.</p>
       </div>
 
       <TargetUniversityAnalysis hasProfile={!!profile?.academicDetail} />
@@ -126,7 +126,7 @@ export function MatchesView({ initialSaved, profile }: { initialSaved: SavedMatc
           </section>
 
           <button onClick={handleRun} disabled={isRunning || !profile?.academicDetail} className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold text-sm py-4 rounded-2xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
-            {isRunning ? <><Loader2 className="w-4 h-4 animate-spin" /> Analyzing your profile…</> : <><Wand2 className="w-4 h-4" /> Run AI match</>}
+            {isRunning ? <><Loader2 className="w-4 h-4 animate-spin" /> Analyzing your profile…</> : <><Wand2 className="w-4 h-4" /> Run match</>}
           </button>
 
           {error && <p className="text-xs text-destructive text-center" role="alert">{error}</p>}
@@ -144,7 +144,7 @@ export function MatchesView({ initialSaved, profile }: { initialSaved: SavedMatc
             <section className="bg-card border border-border border-dashed rounded-3xl p-12 text-center">
               <div className="inline-flex bg-secondary p-3 rounded-2xl mb-4"><Wand2 className="w-6 h-6 text-primary" /></div>
               <h3 className="text-base font-bold mb-1">No matches yet</h3>
-              <p className="text-xs text-muted-foreground max-w-xs mx-auto text-pretty">Set your profile and hit <span className="text-foreground font-medium">Run AI match</span> to get tiered, AI-estimated acceptance odds.</p>
+              <p className="text-xs text-muted-foreground max-w-xs mx-auto text-pretty">Set your profile and hit <span className="text-foreground font-medium">Run match</span> to get tiered acceptance odds.</p>
             </section>
           ) : isRunning && results.length === 0 ? (
             <section className="bg-card border border-border rounded-3xl p-12 text-center">

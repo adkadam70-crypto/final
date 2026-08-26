@@ -46,14 +46,14 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
             <div className="bg-primary text-primary-foreground p-1.5 rounded-xl">
               <Sparkles className="w-4 h-4" />
             </div>
-            <span className="text-base font-bold tracking-tight">Shortlist</span>
+            <span className="text-base font-bold tracking-tight">Shortlisted</span>
           </div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground text-balance">
             {isSignUp ? 'Create your account' : 'Welcome back'}
           </h1>
           <p className="text-sm text-muted-foreground mt-1 text-pretty">
             {isSignUp
-              ? 'Save your profile and AI university matches.'
+              ? 'Save your profile and get matched to universities.'
               : 'Sign in to see your saved matches.'}
           </p>
         </div>

@@ -44,13 +44,13 @@ export default async function DashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <StatCard icon={<TrendingUp className="w-5 h-5 text-primary" />} label="Profile Strength" value={`${profileStrength}%`} hint={profileCount === 0 ? 'Set up your profile to get started' : 'Looking good — keep adding details'} />
-        <StatCard icon={<Search className="w-5 h-5 text-primary" />} label="Matches Found" value={String(matchCount)} hint={matchCount === 0 ? 'Run your first AI match' : 'Keep exploring'} />
+        <StatCard icon={<Search className="w-5 h-5 text-primary" />} label="Matches Found" value={String(matchCount)} hint={matchCount === 0 ? 'Run your first match' : 'Keep exploring'} />
         <StatCard icon={<Bookmark className="w-5 h-5 text-primary" />} label="Saved Schools" value={String(savedCount)} hint={savedCount === 0 ? 'Bookmark schools you like' : 'Track your apps'} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <QuickActionCard href="/profile" icon={<User className="w-5 h-5 text-primary" />} title="Set Up Profile" description="Enter your GPA, test scores, and extracurriculars." />
-        <QuickActionCard href="/matches" icon={<Target className="w-5 h-5 text-primary" />} title="Find Matches" description="Run AI matching to discover your best-fit universities." />
+        <QuickActionCard href="/matches" icon={<Target className="w-5 h-5 text-primary" />} title="Find Matches" description="Run a match to discover your best-fit universities." />
         <QuickActionCard href="/saved" icon={<Bookmark className="w-5 h-5 text-primary" />} title="Saved Schools" description="Track your application status for bookmarked schools." />
       </div>
 
@@ -63,7 +63,7 @@ export default async function DashboardPage() {
           <div className="bg-card border border-border border-dashed rounded-3xl p-12 text-center">
             <div className="inline-flex bg-secondary p-3 rounded-2xl mb-4"><GraduationCap className="w-6 h-6 text-primary" /></div>
             <h3 className="text-base font-bold mb-1">No matches yet</h3>
-            <p className="text-xs text-muted-foreground max-w-xs mx-auto text-pretty mb-4">Run your first AI match to see personalized university recommendations here.</p>
+            <p className="text-xs text-muted-foreground max-w-xs mx-auto text-pretty mb-4">Run your first match to see personalized university recommendations here.</p>
             <Link href="/matches" className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold text-sm px-5 py-2.5 rounded-2xl hover:brightness-110 transition-all">Find Matches <ArrowRight className="w-4 h-4" /></Link>
           </div>
         ) : (

@@ -82,7 +82,7 @@ export function ProfileForm({ initialProfiles }: { initialProfiles: ProfileRow[]
     <main className="max-w-3xl mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-1">Your Profile</h1>
-        <p className="text-sm text-muted-foreground">Tell us about your academics and preferences. This powers your AI match results and university recommendations.</p>
+        <p className="text-sm text-muted-foreground">Tell us about your academics and preferences. This powers your match results and university recommendations.</p>
       </div>
 
       <div className="space-y-5">

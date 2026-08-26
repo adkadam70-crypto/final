@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Shortlist — Gen Z Admissions AI',
+  title: 'Shortlisted — College Predictor',
   description:
-    'AI-powered university matching. Convert your grades, filter by vibe, and get real acceptance-probability estimates across the US, UK, AU, SG, HK, and India.',
+    'College admission predictor for the US, UK, Australia, Singapore, Hong Kong, and India. Match your profile against real admissions data and get acceptance-probability estimates.',
   generator: 'v0.app',
 }
 

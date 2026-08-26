@@ -71,7 +71,7 @@ This document details the three major features implemented:
 - All layouts include the persistent `<Navbar />` component
 - Navbar is `sticky top-0 z-50` - stays fixed at top while content scrolls
 - Navbar includes:
-  - Shortlist logo (links to dashboard)
+  - Shortlisted logo (links to dashboard)
   - Navigation links to all main sections
   - User profile with initials
   - Sign out button

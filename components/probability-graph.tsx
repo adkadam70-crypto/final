@@ -13,7 +13,7 @@ export function ProbabilityGraph({ results }: { results: MatchResult[] }) {
         <div>
           <h3 className="text-base font-bold">Acceptance probability</h3>
           <p className="text-xs text-muted-foreground">
-            AI estimates plotted by match strength — click a bar to jump to that school
+            Estimates plotted by match strength — click a bar to jump to that school
           </p>
         </div>
         <div className="flex flex-wrap gap-1.5 text-[10px] font-medium">

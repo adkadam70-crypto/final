@@ -33,8 +33,8 @@ export function Navbar({ userName }: { userName: string }) {
             <Sparkles className="w-5 h-5" />
           </div>
           <div className="flex flex-col leading-tight">
-            <span className="text-lg font-bold tracking-tight">Shortlist</span>
-            <span className="text-[11px] text-muted-foreground hidden sm:block">Gen Z Admissions AI</span>
+            <span className="text-lg font-bold tracking-tight">Shortlisted</span>
+            <span className="text-[11px] text-muted-foreground hidden sm:block">College Predictor: US, UK, AU, SG, HK & India</span>
           </div>
         </Link>
 
