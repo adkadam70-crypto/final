@@ -1,6 +1,7 @@
 /**
- * Inverse-vignette background: solid dark center fading out to a vivid teal
- * glow at the edges and corners. Fixed behind page content, purely
+ * Teal glow contained to the left edge, fading to near-black across most of
+ * the viewport — a restrained accent rather than a full-screen wash, so it
+ * doesn't compete with card content. Fixed behind page content, purely
  * decorative — no effect on layout or content.
  */
 export function AmbientBackground() {
@@ -10,7 +11,7 @@ export function AmbientBackground() {
       className="fixed inset-0 z-0 overflow-hidden pointer-events-none bg-background"
       style={{
         backgroundImage:
-          'radial-gradient(ellipse 75% 75% at 50% 50%, transparent 15%, color-mix(in oklab, var(--primary) 85%, var(--background)) 100%)',
+          'radial-gradient(ellipse 60% 85% at 6% 45%, color-mix(in oklab, var(--primary) 55%, var(--background)) 0%, var(--background) 68%)',
       }}
     />
   )

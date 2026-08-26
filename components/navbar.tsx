@@ -26,7 +26,13 @@ export function Navbar({ userName }: { userName: string }) {
   const initials = userName.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-md">
+    <header
+      className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-md"
+      style={{
+        maskImage: 'linear-gradient(to bottom, black 75%, transparent 100%)',
+        WebkitMaskImage: 'linear-gradient(to bottom, black 75%, transparent 100%)',
+      }}
+    >
       <nav className="max-w-6xl mx-auto flex items-center justify-between px-4 h-16">
         <Link href="/dashboard" className="flex items-center gap-2.5 shrink-0">
           <div className="bg-primary text-primary-foreground p-2 rounded-xl">
