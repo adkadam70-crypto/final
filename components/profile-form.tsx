@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useTransition, useRef, useEffect } from 'react'
-import { GraduationCap, Globe, Flame, Compass, Loader2, Save, CheckCircle2 } from 'lucide-react'
+import { GraduationCap, Globe, Flame, Compass, Loader2, CheckCircle2 } from 'lucide-react'
 import { saveProfile, type SaveProfileInput } from '@/app/actions/profile'
+import { LiquidMetalButton } from '@/components/ui/liquid-metal-button'
 import { gradeBadge } from '@/lib/grade'
 import { AcademicDetailInput } from '@/components/academic-detail-input'
 import { defaultAcademicDetail, ACADEMIC_FIELDS, type AcademicDetail } from '@/lib/academic-detail'
@@ -172,9 +173,13 @@ export function ProfileForm({ initialProfiles }: { initialProfiles: ProfileRow[]
           </div>
         </section>
 
-        <button onClick={handleSave} disabled={pending} className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold text-sm py-4 rounded-2xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
-          {pending ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving profile…</> : saved ? <><CheckCircle2 className="w-4 h-4" /> Saved!</> : <><Save className="w-4 h-4" /> Save profile</>}
-        </button>
+        {pending || saved ? (
+          <button disabled className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold text-sm py-4 rounded-2xl opacity-90 cursor-not-allowed">
+            {pending ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving profile…</> : <><CheckCircle2 className="w-4 h-4" /> Saved!</>}
+          </button>
+        ) : (
+          <LiquidMetalButton label="Save profile" onClick={handleSave} fullWidth />
+        )}
 
         {error && <p ref={errorRef} tabIndex={-1} className="text-xs text-destructive text-center outline-none" role="alert">{error}</p>}
       </div>

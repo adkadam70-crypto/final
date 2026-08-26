@@ -16,6 +16,22 @@ import OpenAI from 'openai'
 import { zodTextFormat } from 'openai/helpers/zod'
 import { BIAS_INSTRUCTION } from '@/lib/bias-instruction'
 
+// Caps how many universities go to the model in one call. Measured: ~24s for
+// 2 universities, ~50s for 30, ~62s for 60 — there's a large fixed-latency
+// floor with this model/schema that doesn't shrink much with catalog size,
+// so even moderate caps sit uncomfortably close to Vercel's Hobby-tier 60s
+// function ceiling. 20 trades some breadth for a real safety margin.
+// Sampling evenly across selectivity (rather than truncating) keeps a
+// representative spread from Safety through Ultra Reach regardless of size.
+const MAX_CATALOG_FOR_AI = 20
+
+function sampleAcrossSelectivity<T extends { baselineSelectivity: number }>(items: T[], max: number): T[] {
+  if (items.length <= max) return items
+  const sorted = [...items].sort((a, b) => a.baselineSelectivity - b.baselineSelectivity)
+  const step = sorted.length / max
+  return Array.from({ length: max }, (_, i) => sorted[Math.floor(i * step)])
+}
+
 const resultSchema = z.object({
   summary: z
     .string()
@@ -187,6 +203,8 @@ export async function runMatch(): Promise<
       IN: 'Holistic Indian universities blend board marks with essays and interviews; IITs are purely exam-driven.',
     }
 
+    const catalogForAI = sampleAcrossSelectivity(catalog, MAX_CATALOG_FOR_AI)
+
     const { object } = await generateOpenAIMatch({
       studentProfile: {
         badge,
@@ -197,7 +215,7 @@ export async function runMatch(): Promise<
         intendedField: profile.intendedField,
         extracurriculars: profile.extracurriculars,
       },
-      catalog: catalog.map((u) => ({
+      catalog: catalogForAI.map((u) => ({
         universityId: u.id,
         name: u.name,
         baselineSelectivity: u.baselineSelectivity,

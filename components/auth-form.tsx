@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { authClient } from '@/lib/auth-client'
-import { Button } from '@/components/ui/button'
+import { LiquidMetalButton } from '@/components/ui/liquid-metal-button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
@@ -106,13 +106,12 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
             </p>
           )}
 
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading
-              ? 'Please wait...'
-              : isSignUp
-                ? 'Create account'
-                : 'Sign in'}
-          </Button>
+          <LiquidMetalButton
+            type="submit"
+            disabled={loading}
+            fullWidth
+            label={loading ? 'Please wait…' : isSignUp ? 'Create account' : 'Sign in'}
+          />
         </form>
 
         <p className="text-sm text-muted-foreground text-center mt-6">
