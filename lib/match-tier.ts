@@ -19,8 +19,19 @@ const TIER_BAR_CLASSES: Record<MatchTier, string> = {
   'Ultra Reach': 'bg-chart-3',
 }
 
+// Same palette, as SVG fill utilities — for the scatter-plot dots in
+// probability-graph.tsx (Tailwind's fill-* utilities read the same
+// --color-* tokens as bg-*, so these stay in sync automatically).
+const TIER_DOT_CLASSES: Record<MatchTier, string> = {
+  Safety: 'fill-primary',
+  'Good Chance': 'fill-chart-5',
+  Reach: 'fill-chart-2',
+  'Ultra Reach': 'fill-chart-3',
+}
+
 const FALLBACK_BADGE = 'bg-secondary text-muted-foreground border-border'
 const FALLBACK_BAR = 'bg-muted-foreground'
+const FALLBACK_DOT = 'fill-muted-foreground'
 
 // Old saved rows may still carry the pre-rename 'Target' tier (or any other
 // unrecognized string) — degrade to a neutral fallback instead of an
@@ -31,4 +42,8 @@ export function tierBadgeClass(tier: string): string {
 
 export function tierBarClass(tier: string): string {
   return TIER_BAR_CLASSES[tier as MatchTier] ?? FALLBACK_BAR
+}
+
+export function tierDotClass(tier: string): string {
+  return TIER_DOT_CLASSES[tier as MatchTier] ?? FALLBACK_DOT
 }

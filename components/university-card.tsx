@@ -13,7 +13,7 @@ export function UniversityCard({ uni }: { uni: MatchResult }) {
   return (
     <GlowCard className="rounded-3xl block">
     <article className="bg-card border border-border rounded-3xl p-6 transition-colors hover:border-foreground/20">
-      <div className="flex justify-between items-start gap-4 mb-4">
+      <div className="flex justify-between items-start gap-4 mb-4 pr-9">
         <div>
           <h4 className="text-lg font-bold text-balance">{uni.name}</h4>
           <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-1">

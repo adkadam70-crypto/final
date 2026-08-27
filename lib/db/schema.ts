@@ -101,6 +101,7 @@ export type MatchResult = {
   climate: string
   matchTier: 'Safety' | 'Good Chance' | 'Reach' | 'Ultra Reach'
   acceptanceProbability: number
+  baselineSelectivity: number
   internshipProgram: string
   requirements: string[]
   link: string

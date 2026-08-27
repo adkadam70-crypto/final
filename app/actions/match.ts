@@ -243,6 +243,7 @@ export async function runMatch(): Promise<
           climate: u.climate,
           matchTier: r.matchTier,
           acceptanceProbability: r.acceptanceProbability,
+          baselineSelectivity: u.baselineSelectivity,
           internshipProgram: u.internshipProgram,
           requirements: u.requirements,
           link: u.link,
