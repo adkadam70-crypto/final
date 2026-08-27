@@ -12,17 +12,21 @@ type Curriculum = 'CBSE' | 'IB_DIPLOMA' | 'A_LEVELS' | 'US_GPA_PCT'
 
 type ProfileRow = {
   id: number
-  targetCountry: string
+  targetCountries: string[]
   curriculum: string
   gradeValue: number
   preferredClimate: string
   preferredSector: string
+  preferredRank: string
+  intendedField: string
+  academicDetail: AcademicDetail | null
   extracurriculars: string[]
   createdAt: Date
 }
 
 type LatestProfile = {
-  targetCountry: string
+  id: number
+  targetCountries: string[]
   curriculum: string
   preferredClimate: string
   preferredSector: string
@@ -48,7 +52,7 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
   // reflects what's actually saved, rather than resetting to defaults —
   // still fully editable, and saving again just makes the edited version
   // the new latest profile.
-  const [targetCountry, setTargetCountry] = useState(latestProfile?.targetCountry ?? 'US')
+  const [targetCountries, setTargetCountries] = useState<string[]>(latestProfile?.targetCountries?.length ? latestProfile.targetCountries : ['US'])
   const [curriculum, setCurriculum] = useState<Curriculum>((latestProfile?.curriculum as Curriculum) ?? 'CBSE')
   const [academicDetail, setAcademicDetail] = useState<AcademicDetail>(latestProfile?.academicDetail ?? defaultAcademicDetail('CBSE'))
   const [preferredClimate, setPreferredClimate] = useState(latestProfile?.preferredClimate ?? 'Warm')
@@ -57,6 +61,7 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
   const [intendedField, setIntendedField] = useState(latestProfile?.intendedField ?? 'No preference')
   const [ec1, setEc1] = useState(latestProfile?.extracurriculars?.[0] ?? '')
   const [ec2, setEc2] = useState(latestProfile?.extracurriculars?.[1] ?? '')
+  const [loadedProfileId, setLoadedProfileId] = useState<number | null>(latestProfile?.id ?? null)
 
   const badge = gradeBadge(academicDetail)
 
@@ -65,11 +70,32 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
     setAcademicDetail(defaultAcademicDetail(next))
   }
 
+  function toggleCountry(code: string) {
+    setTargetCountries((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]))
+  }
+
+  // Reload every field from a previously saved profile — lets the user pick
+  // an older version from "Recent profiles" and pick up editing from there.
+  // Saving afterwards makes this the new latest profile, it doesn't touch
+  // the row it was loaded from.
+  function loadProfile(p: ProfileRow) {
+    setTargetCountries(p.targetCountries.length ? p.targetCountries : ['US'])
+    setCurriculum(p.curriculum as Curriculum)
+    setAcademicDetail(p.academicDetail ?? defaultAcademicDetail(p.curriculum as Curriculum))
+    setPreferredClimate(p.preferredClimate)
+    setPreferredSector(p.preferredSector)
+    setPreferredRank(p.preferredRank)
+    setIntendedField(p.intendedField)
+    setEc1(p.extracurriculars?.[0] ?? '')
+    setEc2(p.extracurriculars?.[1] ?? '')
+    setLoadedProfileId(p.id)
+  }
+
   async function handleSave() {
     setError(null)
     setSaved(false)
     const input: SaveProfileInput = {
-      targetCountry,
+      targetCountries,
       curriculum,
       academicDetail,
       preferredClimate,
@@ -101,6 +127,8 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
     { code: 'IN', label: 'India' },
   ]
 
+  const onlyAustralia = targetCountries.length === 1 && targetCountries[0] === 'AU'
+
   return (
     <main className="max-w-3xl mx-auto px-4 py-8">
       <div className="mb-8">
@@ -110,11 +138,15 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
 
       <div className="space-y-5">
         <section className="bg-card border border-border rounded-3xl p-6">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2"><Globe className="w-4 h-4 text-primary" /> Target country</h2>
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-2"><Globe className="w-4 h-4 text-primary" /> Target countries</h2>
+          <p className="text-[11px] text-muted-foreground/70 mb-3">Select one or more — matches run across every country you pick.</p>
           <div className="grid grid-cols-3 gap-2">
-            {COUNTRIES.map((c) => (
-              <button key={c.code} onClick={() => setTargetCountry(c.code)} className={`p-3 rounded-2xl text-xs font-medium transition-all border ${targetCountry === c.code ? 'bg-accent border-primary text-accent-foreground' : 'bg-secondary border-border text-muted-foreground hover:border-foreground/20'}`}>{c.label}</button>
-            ))}
+            {COUNTRIES.map((c) => {
+              const active = targetCountries.includes(c.code)
+              return (
+                <button key={c.code} onClick={() => toggleCountry(c.code)} aria-pressed={active} className={`p-3 rounded-2xl text-xs font-medium transition-all border ${active ? 'bg-accent border-primary text-accent-foreground' : 'bg-secondary border-border text-muted-foreground hover:border-foreground/20'}`}>{c.label}</button>
+              )
+            })}
           </div>
         </section>
 
@@ -143,7 +175,7 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
           </div>
         </section>
 
-        {targetCountry !== 'AU' && (
+        {!onlyAustralia && (
           <section className="bg-card border border-border rounded-3xl p-6">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2"><Flame className="w-4 h-4 text-chart-2" /> Extracurricular flexes</h2>
             <div className="space-y-3">
@@ -163,13 +195,21 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
             <div>
               <label htmlFor="climate" className="text-[11px] text-muted-foreground block mb-1">Preferred climate</label>
               <select id="climate" value={preferredClimate} onChange={(e) => setPreferredClimate(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none focus:border-primary">
-                <option>Warm</option><option>Balanced</option><option>Cold</option>
+                <option>No preference</option><option>Warm</option><option>Balanced</option><option>Cold</option>
               </select>
             </div>
             <div>
               <label htmlFor="sector" className="text-[11px] text-muted-foreground block mb-1">Industry hub</label>
               <select id="sector" value={preferredSector} onChange={(e) => setPreferredSector(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none focus:border-primary">
-                <option>Tech Hub</option><option>Finance Capital</option><option>Creative Hub</option><option>Research</option>
+                <option>No preference</option>
+                <option>Tech Hub</option>
+                <option>Finance Capital</option>
+                <option>Business</option>
+                <option>Creative Hub</option>
+                <option>Research</option>
+                <option>Healthcare & Biotech Hub</option>
+                <option>Government & Policy Hub</option>
+                <option>Manufacturing & Engineering Hub</option>
               </select>
             </div>
             <div>
@@ -201,14 +241,25 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
 
       {initialProfiles.length > 0 && (
         <section className="mt-8">
-          <h2 className="text-sm font-bold mb-4">Recent profiles</h2>
+          <h2 className="text-sm font-bold mb-1">Recent profiles</h2>
+          <p className="text-[11px] text-muted-foreground/70 mb-4">Pick an older version to load it back into the form above and keep editing.</p>
           <div className="space-y-2">
-            {initialProfiles.map((p) => (
-              <div key={p.id} className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between text-xs">
-                <span className="font-medium">{p.targetCountry} · {p.curriculum} · grade score {p.gradeValue}</span>
-                <span className="text-muted-foreground">{new Date(p.createdAt).toLocaleDateString('en-US')}</span>
-              </div>
-            ))}
+            {initialProfiles.map((p) => {
+              const isLoaded = p.id === loadedProfileId
+              return (
+                <div key={p.id} className={`bg-card border rounded-2xl p-4 flex items-center justify-between text-xs gap-3 ${isLoaded ? 'border-primary' : 'border-border'}`}>
+                  <div>
+                    <span className="font-medium">{p.targetCountries.join(', ')} · {p.curriculum} · grade score {p.gradeValue}</span>
+                    <span className="text-muted-foreground block sm:inline sm:ml-2">{new Date(p.createdAt).toLocaleDateString('en-US')}</span>
+                  </div>
+                  {isLoaded ? (
+                    <span className="text-primary font-semibold shrink-0">Loaded</span>
+                  ) : (
+                    <button onClick={() => loadProfile(p)} className="shrink-0 text-primary font-medium hover:brightness-125">Use this version</button>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </section>
       )}

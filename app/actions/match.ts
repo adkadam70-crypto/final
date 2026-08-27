@@ -6,7 +6,7 @@ import {
   matches,
   type MatchResult,
 } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { inArray } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { gradeTier, gradeBadge } from '@/lib/grade'
@@ -25,11 +25,24 @@ import { BIAS_INSTRUCTION } from '@/lib/bias-instruction'
 // representative spread from Safety through Ultra Reach regardless of size.
 const MAX_CATALOG_FOR_AI = 20
 
+// That fixed floor means one call for N schools is slower than two parallel
+// calls for N/2 each (wall-clock time ≈ the slower of the two, not the sum).
+// Split into interleaved halves — not first-half/second-half — so each
+// batch independently spans the full selectivity range instead of one batch
+// getting all the reaches and the other all the safeties.
+const PARALLEL_BATCHES = 2
+
 function sampleAcrossSelectivity<T extends { baselineSelectivity: number }>(items: T[], max: number): T[] {
   if (items.length <= max) return items
   const sorted = [...items].sort((a, b) => a.baselineSelectivity - b.baselineSelectivity)
   const step = sorted.length / max
   return Array.from({ length: max }, (_, i) => sorted[Math.floor(i * step)])
+}
+
+function interleaveChunks<T>(items: T[], chunkCount: number): T[][] {
+  const chunks: T[][] = Array.from({ length: chunkCount }, () => [])
+  items.forEach((item, i) => chunks[i % chunkCount].push(item))
+  return chunks.filter((c) => c.length > 0)
 }
 
 const resultSchema = z.object({
@@ -49,10 +62,11 @@ const resultSchema = z.object({
         .describe('Estimated probability (%) this student is admitted.'),
       rationale: z
         .string()
-        .describe('One concise sentence explaining the tier and probability for this student.'),
+        .describe('Under 20 words explaining the tier and probability for this student.'),
       improvementTips: z
         .array(z.string())
-        .describe('1-3 short, specific actions the student could take to strengthen their odds at this particular school.'),
+        .max(2)
+        .describe('Exactly 2 short, specific actions the student could take to strengthen their odds at this particular school.'),
     }),
   ),
 })
@@ -64,7 +78,7 @@ const resultSchema = z.object({
 async function generateOpenAIMatch({
   studentProfile,
   catalog,
-  targetCountry,
+  targetCountries,
   contextByCountry,
 }: {
   studentProfile: {
@@ -79,11 +93,12 @@ async function generateOpenAIMatch({
   catalog: Array<{
     universityId: string | number
     name: string
+    country: string
     baselineSelectivity: number
     sectors: string[]
     climate: string
   }>
-  targetCountry: string
+  targetCountries: string[]
   contextByCountry: Record<string, string>
 }): Promise<{ object: z.infer<typeof resultSchema> }> {
   const apiKey = process.env.OPENAI_API_KEY
@@ -107,11 +122,16 @@ async function generateOpenAIMatch({
 
   const client = new OpenAI({ apiKey })
 
+  const admissionsContextBlock = targetCountries
+    .map((c) => `- ${c}: ${contextByCountry[c] ?? 'Standard competitive admissions environment.'}`)
+    .join('\n')
+
   const userPrompt = `You are an expert college admissions analyst. Assess this student against the provided universities and assign match tiers.
 
 ${BIAS_INSTRUCTION}
 
-ADMISSIONS CONTEXT for ${targetCountry}: ${contextByCountry[targetCountry] ?? 'Standard competitive admissions environment.'}
+ADMISSIONS CONTEXT (per country — each university below is tagged with its own country, weigh it against the matching context here):
+${admissionsContextBlock}
 
 STUDENT PROFILE:
 - Normalized academics: ${studentProfile.badge} (internal academic tier ${studentProfile.tier}/4, higher is stronger)
@@ -132,6 +152,7 @@ ${JSON.stringify(
   catalog.map((u) => ({
     universityId: u.universityId,
     name: u.name,
+    country: u.country,
     baselineSelectivity: u.baselineSelectivity,
     sectors: u.sectors,
     climate: u.climate,
@@ -140,7 +161,7 @@ ${JSON.stringify(
   2,
 )}
 
-Assess every university in the list above and return one result per university, including 1-3 specific improvementTips per school.`
+Assess every university in the list above and return one result per university, including exactly 2 specific improvementTips per school. Keep rationale and tips terse — brevity over completeness.`
 
   let response
   try {
@@ -177,7 +198,7 @@ export async function runMatch(): Promise<
 > {
   const userId = await getUserId()
   const profile = await getLatestProfile()
-  if (!profile || !profile.academicDetail) {
+  if (!profile || !profile.academicDetail || profile.targetCountries.length === 0) {
     return { needsProfile: true }
   }
 
@@ -185,13 +206,13 @@ export async function runMatch(): Promise<
     const catalog = await db
       .select()
       .from(universities)
-      .where(eq(universities.country, profile.targetCountry))
+      .where(inArray(universities.country, profile.targetCountries))
 
     const badge = gradeBadge(profile.academicDetail)
     const tier = gradeTier(profile.gradeValue)
 
     if (catalog.length === 0) {
-      return { gradeBadge: badge, summary: 'No universities in the catalog for this country yet.', results: [] }
+      return { gradeBadge: badge, summary: 'No universities in the catalog for these countries yet.', results: [] }
     }
 
     const contextByCountry: Record<string, string> = {
@@ -204,27 +225,40 @@ export async function runMatch(): Promise<
     }
 
     const catalogForAI = sampleAcrossSelectivity(catalog, MAX_CATALOG_FOR_AI)
+    const batches = interleaveChunks(catalogForAI, PARALLEL_BATCHES)
 
-    const { object } = await generateOpenAIMatch({
-      studentProfile: {
-        badge,
-        tier,
-        preferredClimate: profile.preferredClimate,
-        preferredSector: profile.preferredSector,
-        preferredRank: profile.preferredRank,
-        intendedField: profile.intendedField,
-        extracurriculars: profile.extracurriculars,
-      },
-      catalog: catalogForAI.map((u) => ({
-        universityId: u.id,
-        name: u.name,
-        baselineSelectivity: u.baselineSelectivity,
-        sectors: u.sectors,
-        climate: u.climate,
-      })),
-      targetCountry: profile.targetCountry,
-      contextByCountry,
-    })
+    const studentProfile = {
+      badge,
+      tier,
+      preferredClimate: profile.preferredClimate,
+      preferredSector: profile.preferredSector,
+      preferredRank: profile.preferredRank,
+      intendedField: profile.intendedField,
+      extracurriculars: profile.extracurriculars,
+    }
+
+    const batchResults = await Promise.all(
+      batches.map((batch) =>
+        generateOpenAIMatch({
+          studentProfile,
+          catalog: batch.map((u) => ({
+            universityId: u.id,
+            name: u.name,
+            country: u.country,
+            baselineSelectivity: u.baselineSelectivity,
+            sectors: u.sectors,
+            climate: u.climate,
+          })),
+          targetCountries: profile.targetCountries,
+          contextByCountry,
+        }),
+      ),
+    )
+
+    const object = {
+      summary: batchResults[0].object.summary,
+      results: batchResults.flatMap((b) => b.object.results),
+    }
 
     // Merge AI output back with DB records (source of truth for display fields).
     const byId = new Map(catalog.map((u) => [String(u.id), u]))
@@ -239,6 +273,7 @@ export async function runMatch(): Promise<
         return {
           universityId: idStr,
           name: u.name,
+          country: u.country,
           location: u.location,
           climate: u.climate,
           matchTier: r.matchTier,
@@ -255,7 +290,7 @@ export async function runMatch(): Promise<
 
     await db.insert(matches).values({
       userId,
-      targetCountry: profile.targetCountry,
+      targetCountries: profile.targetCountries,
       gradeBadge: badge,
       results,
       summary: object.summary,
@@ -272,4 +307,3 @@ export async function runMatch(): Promise<
     throw new Error(`Match request failed: ${message}`)
   }
 }
-

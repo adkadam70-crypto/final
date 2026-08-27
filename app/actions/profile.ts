@@ -8,7 +8,7 @@ import { getUserId } from '@/lib/get-user-id'
 import { computeGradeValue, validateAcademicDetail, type AcademicDetail } from '@/lib/academic-detail'
 
 export type SaveProfileInput = {
-  targetCountry: string
+  targetCountries: string[]
   curriculum: string
   academicDetail: AcademicDetail
   preferredClimate: string
@@ -25,6 +25,8 @@ export type SaveProfileInput = {
 export async function saveProfile(input: SaveProfileInput): Promise<{ success: boolean; message: string }> {
   const userId = await getUserId()
 
+  if (input.targetCountries.length === 0) throw new Error('Select at least one target country.')
+
   const validationError = validateAcademicDetail(input.academicDetail)
   if (validationError) throw new Error(validationError)
 
@@ -33,7 +35,7 @@ export async function saveProfile(input: SaveProfileInput): Promise<{ success: b
       .insert(profiles)
       .values({
         userId,
-        targetCountry: input.targetCountry,
+        targetCountries: input.targetCountries,
         curriculum: input.curriculum,
         gradeValue: computeGradeValue(input.academicDetail),
         academicDetail: input.academicDetail,
@@ -51,7 +53,7 @@ export async function saveProfile(input: SaveProfileInput): Promise<{ success: b
 
     return {
       success: true,
-      message: `Profile saved successfully for ${input.targetCountry}.`,
+      message: `Profile saved successfully for ${input.targetCountries.join(', ')}.`,
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Failed to save profile'

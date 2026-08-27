@@ -51,7 +51,7 @@ ${BIAS_INSTRUCTION}
 
 STUDENT PROFILE:
 - Academics: ${badge}
-- Target country: ${profile.targetCountry}
+- Target countries: ${profile.targetCountries.join(', ')}
 - Intended field: ${profile.intendedField}
 - Extracurriculars: ${profile.extracurriculars.length ? profile.extracurriculars.join('; ') : 'None provided'}
 

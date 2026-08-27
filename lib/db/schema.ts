@@ -29,7 +29,7 @@ export const universities = pgTable('universities', {
 export const profiles = pgTable('profiles', {
   id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
   userId: uuid('userId').notNull(),
-  targetCountry: text('targetCountry').notNull(),
+  targetCountries: jsonb('targetCountries').$type<string[]>().notNull().default([]), // one or more of 'US' | 'UK' | 'AU' | 'SG' | 'HK' | 'IN'
   curriculum: text('curriculum').notNull(),
   gradeValue: integer('gradeValue').notNull(),
   preferredClimate: text('preferredClimate').notNull(),
@@ -45,7 +45,7 @@ export const profiles = pgTable('profiles', {
 export const matches = pgTable('matches', {
   id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
   userId: uuid('userId').notNull(),
-  targetCountry: text('targetCountry').notNull(),
+  targetCountries: jsonb('targetCountries').$type<string[]>().notNull().default([]),
   gradeBadge: text('gradeBadge').notNull(),
   // The full AI result payload: per-university tier, probability, and rationale.
   results: jsonb('results').$type<MatchResult[]>().notNull().default([]),
@@ -97,6 +97,7 @@ export const universityAnalyses = pgTable('universityAnalyses', {
 export type MatchResult = {
   universityId: string
   name: string
+  country: string
   location: string
   climate: string
   matchTier: 'Safety' | 'Good Chance' | 'Reach' | 'Ultra Reach'

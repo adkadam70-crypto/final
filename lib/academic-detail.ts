@@ -158,11 +158,20 @@ export function defaultAcademicDetail(curriculum: AcademicDetail['curriculum']):
 
 export const ACADEMIC_FIELDS = [
   'Science & Technology / Research',
+  'Computer Science & IT',
   'Engineering',
+  'Mathematics & Statistics',
   'Business',
   'Medicine & Health Sciences',
+  'Law',
+  'Education',
   'Humanities',
   'Social Sciences',
+  'Psychology',
   'Arts',
+  'Architecture & Design',
+  'Communications & Media',
+  'Environmental Science & Sustainability',
+  'Agriculture & Natural Resources',
 ] as const
 export type AcademicField = (typeof ACADEMIC_FIELDS)[number]

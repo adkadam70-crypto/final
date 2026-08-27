@@ -25,7 +25,7 @@ const CONTEXT: Record<string, string> = {
 }
 
 type ProfileRow = {
-  targetCountry: string
+  targetCountries: string[]
   curriculum: string
   academicDetail: AcademicDetail | null
   preferredClimate: string
@@ -50,7 +50,7 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
   const [results, setResults] = useState<MatchResult[]>([])
   const [summary, setSummary] = useState('')
 
-  const targetCountry = profile?.targetCountry ?? 'US'
+  const targetCountries = profile?.targetCountries?.length ? profile.targetCountries : ['US']
   const badge = profile?.academicDetail ? gradeBadge(profile.academicDetail) : null
 
   async function handleRun() {
@@ -99,7 +99,9 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
           {profile?.academicDetail ? (
             <div className="space-y-3">
               <div className="flex flex-wrap gap-2">
-                <span className="text-[11px] bg-secondary border border-border px-2.5 py-1 rounded-lg text-foreground/90">{profile.targetCountry}</span>
+                {profile.targetCountries.map((c) => (
+                  <span key={c} className="text-[11px] bg-secondary border border-border px-2.5 py-1 rounded-lg text-foreground/90">{c}</span>
+                ))}
                 <span className="text-[11px] bg-secondary border border-border px-2.5 py-1 rounded-lg text-foreground/90">{profile.preferredClimate}</span>
                 <span className="text-[11px] bg-secondary border border-border px-2.5 py-1 rounded-lg text-foreground/90">{profile.preferredSector}</span>
                 {profile.intendedField !== 'No preference' && <span className="text-[11px] bg-secondary border border-border px-2.5 py-1 rounded-lg text-foreground/90">{profile.intendedField}</span>}
@@ -138,9 +140,13 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
       </div>
 
       <div className="mt-6 space-y-6">
-        <section className="bg-card border border-border rounded-3xl p-6">
-          <div className="text-xs font-semibold text-primary uppercase tracking-widest mb-1.5">Admissions context: {targetCountry}</div>
-          <p className="text-xs text-muted-foreground leading-relaxed text-pretty">{CONTEXT[targetCountry]}</p>
+        <section className="bg-card border border-border rounded-3xl p-6 space-y-4">
+          {targetCountries.map((c) => (
+            <div key={c}>
+              <div className="text-xs font-semibold text-primary uppercase tracking-widest mb-1.5">Admissions context: {c}</div>
+              <p className="text-xs text-muted-foreground leading-relaxed text-pretty">{CONTEXT[c] ?? 'Standard competitive admissions environment.'}</p>
+            </div>
+          ))}
         </section>
 
         {results.length === 0 && !isRunning ? (

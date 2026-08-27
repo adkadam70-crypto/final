@@ -13,11 +13,28 @@ const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
 })
 
+const SITE_URL = 'https://auraadmit-smoky.vercel.app'
+const SITE_NAME = 'Shortlisted — College Predictor'
+const SITE_DESCRIPTION =
+  'College admission predictor for the US, UK, Australia, Singapore, Hong Kong, and India. Match your profile against real admissions data and get acceptance-probability estimates.'
+
 export const metadata: Metadata = {
-  title: 'Shortlisted — College Predictor',
-  description:
-    'College admission predictor for the US, UK, Australia, Singapore, Hong Kong, and India. Match your profile against real admissions data and get acceptance-probability estimates.',
+  metadataBase: new URL(SITE_URL),
+  title: SITE_NAME,
+  description: SITE_DESCRIPTION,
   generator: 'v0.app',
+  openGraph: {
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+    siteName: 'Shortlisted',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+  },
 }
 
 export const viewport: Viewport = {
