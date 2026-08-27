@@ -86,6 +86,16 @@ export default async function DashboardPage() {
           </RevealGroup>
         )}
       </section>
+
+      <footer className="mt-12 pt-6 border-t border-border">
+        <p className="text-xs text-muted-foreground text-center text-pretty">
+          This app is in testing mode. Feel free to contact us at{' '}
+          <a href="mailto:mail-adkadam70@gmail.com" className="text-primary font-semibold hover:brightness-125">
+            mail-adkadam70@gmail.com
+          </a>{' '}
+          with any feedback about a feature, or if something felt off — we&apos;d love to hear from you and make it better. Thank you!
+        </p>
+      </footer>
     </main>
   )
 }
