@@ -1,13 +1,15 @@
 'use client'
 
 import { useState, useTransition, useRef, useEffect } from 'react'
-import { GraduationCap, Globe, Flame, Compass, Loader2, CheckCircle2, Award, ChevronDown } from 'lucide-react'
+import Link from 'next/link'
+import { GraduationCap, Globe, Flame, Compass, Loader2, CheckCircle2, Award, ChevronDown, History, ArrowRight } from 'lucide-react'
 import { saveProfile, type SaveProfileInput } from '@/app/actions/profile'
 import { LiquidMetalButton } from '@/components/ui/liquid-metal-button'
 import { gradeBadge } from '@/lib/grade'
 import { AcademicDetailInput } from '@/components/academic-detail-input'
 import { defaultAcademicDetail, ACADEMIC_FIELDS, type AcademicDetail } from '@/lib/academic-detail'
 import { satComposite, type StandardizedTests } from '@/lib/standardized-tests'
+import { GRADE_RELEVANCE, type PriorGrade } from '@/lib/prior-grades'
 import { HowWeAnalyze } from '@/components/how-we-analyze'
 
 type Curriculum = 'CBSE' | 'IB_DIPLOMA' | 'A_LEVELS' | 'US_GPA_PCT'
@@ -23,6 +25,7 @@ type ProfileRow = {
   intendedField: string
   academicDetail: AcademicDetail | null
   standardizedTests: StandardizedTests
+  priorGrades: PriorGrade[]
   extracurriculars: string[]
   createdAt: Date
 }
@@ -37,8 +40,11 @@ type LatestProfile = {
   intendedField: string
   academicDetail: AcademicDetail | null
   standardizedTests: StandardizedTests
+  priorGrades: PriorGrade[]
   extracurriculars: string[]
 } | null
+
+const DEFAULT_PRIOR_GRADES: PriorGrade[] = [{ grade: 9 }, { grade: 10 }, { grade: 11 }]
 
 const HONORS_EXAMPLES = [
   'International/National Olympiad medal (Math, Science, Informatics, etc.)',
@@ -95,7 +101,12 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
   const [ec1, setEc1] = useState(latestProfile?.extracurriculars?.[0] ?? '')
   const [ec2, setEc2] = useState(latestProfile?.extracurriculars?.[1] ?? '')
   const [standardizedTests, setStandardizedTests] = useState<StandardizedTests>(latestProfile?.standardizedTests ?? {})
+  const [priorGrades, setPriorGrades] = useState<PriorGrade[]>(latestProfile?.priorGrades?.length ? latestProfile.priorGrades : DEFAULT_PRIOR_GRADES)
   const [loadedProfileId, setLoadedProfileId] = useState<number | null>(latestProfile?.id ?? null)
+
+  function updatePriorGrade(grade: 9 | 10 | 11, patch: Partial<PriorGrade>) {
+    setPriorGrades((prev) => prev.map((g) => (g.grade === grade ? { ...g, ...patch } : g)))
+  }
 
   const badge = gradeBadge(academicDetail)
 
@@ -123,6 +134,7 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
     setEc1(p.extracurriculars?.[0] ?? '')
     setEc2(p.extracurriculars?.[1] ?? '')
     setStandardizedTests(p.standardizedTests ?? {})
+    setPriorGrades(p.priorGrades?.length ? p.priorGrades : DEFAULT_PRIOR_GRADES)
     setLoadedProfileId(p.id)
   }
 
@@ -134,6 +146,7 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
       curriculum,
       academicDetail,
       standardizedTests,
+      priorGrades: priorGrades.filter((g) => g.overallScore !== undefined || (g.note ?? '').trim()),
       preferredClimate,
       preferredSector,
       preferredRank,
@@ -186,6 +199,10 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
               )
             })}
           </div>
+          <Link href="/application-info" className="mt-4 flex items-center justify-between gap-2 p-3 bg-accent/40 border border-primary/25 rounded-2xl text-xs text-accent-foreground hover:bg-accent/60 transition-colors">
+            <span>Want the specifics for your selected countries — how to apply, what to submit, what each one prioritizes?</span>
+            <span className="flex items-center gap-1 text-primary font-semibold shrink-0"><ArrowRight className="w-3.5 h-3.5" /></span>
+          </Link>
         </section>
 
         <section className="bg-card border border-border rounded-3xl p-6">
@@ -208,6 +225,45 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
               <div>
                 <div className="text-[10px] text-primary/90 uppercase tracking-wider font-semibold">Grade summary</div>
                 <div className="text-xs font-mono text-accent-foreground font-semibold">{badge}</div>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-border">
+              <div className="flex items-center gap-2 mb-1">
+                <History className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Earlier grades (9th–11th, optional)</span>
+              </div>
+              {targetCountries.length > 0 && (
+                <ul className="text-[11px] text-muted-foreground/80 mb-3 space-y-1">
+                  {targetCountries.map((c) => GRADE_RELEVANCE[c] && (
+                    <li key={c}><strong className="text-foreground/80">{c}:</strong> {GRADE_RELEVANCE[c]}</li>
+                  ))}
+                </ul>
+              )}
+              <p className="text-[11px] text-muted-foreground/70 mb-3">Grade 12 above is what actually powers your matches — this is just extra context, so fill in whichever years are worth including.</p>
+              <div className="space-y-2">
+                {priorGrades.map((g) => (
+                  <div key={g.grade} className="flex gap-2 items-start">
+                    <span className="text-[11px] text-muted-foreground w-14 shrink-0 mt-2">Grade {g.grade}</span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      placeholder="Overall %"
+                      value={g.overallScore ?? ''}
+                      onChange={(e) => updatePriorGrade(g.grade, { overallScore: e.target.value ? Number(e.target.value) : undefined })}
+                      className="w-24 shrink-0 bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary"
+                    />
+                    <input
+                      type="text"
+                      maxLength={150}
+                      placeholder="Any context worth noting? e.g. grades dipped after a family move, recovered next year"
+                      value={g.note ?? ''}
+                      onChange={(e) => updatePriorGrade(g.grade, { note: e.target.value })}
+                      className="flex-1 min-w-0 bg-secondary border border-border rounded-lg p-2 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary"
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           </div>

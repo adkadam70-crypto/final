@@ -7,12 +7,14 @@ import { revalidatePath } from 'next/cache'
 import { getUserId } from '@/lib/get-user-id'
 import { computeGradeValue, validateAcademicDetail, type AcademicDetail } from '@/lib/academic-detail'
 import { validateStandardizedTests, type StandardizedTests } from '@/lib/standardized-tests'
+import { validatePriorGrades, type PriorGrade } from '@/lib/prior-grades'
 
 export type SaveProfileInput = {
   targetCountries: string[]
   curriculum: string
   academicDetail: AcademicDetail
   standardizedTests: StandardizedTests
+  priorGrades: PriorGrade[]
   preferredClimate: string
   preferredSector: string
   preferredRank: string
@@ -29,7 +31,10 @@ export async function saveProfile(input: SaveProfileInput): Promise<{ success: b
 
   if (input.targetCountries.length === 0) throw new Error('Select at least one target country.')
 
-  const validationError = validateAcademicDetail(input.academicDetail) ?? validateStandardizedTests(input.standardizedTests)
+  const validationError =
+    validateAcademicDetail(input.academicDetail) ??
+    validateStandardizedTests(input.standardizedTests) ??
+    validatePriorGrades(input.priorGrades)
   if (validationError) throw new Error(validationError)
 
   try {
@@ -42,6 +47,7 @@ export async function saveProfile(input: SaveProfileInput): Promise<{ success: b
         gradeValue: computeGradeValue(input.academicDetail),
         academicDetail: input.academicDetail,
         standardizedTests: input.standardizedTests,
+        priorGrades: input.priorGrades,
         preferredClimate: input.preferredClimate,
         preferredSector: input.preferredSector,
         preferredRank: input.preferredRank,
