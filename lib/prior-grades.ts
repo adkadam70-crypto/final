@@ -46,13 +46,11 @@ export type NinthTenthGrades = {
 export type PriorGrades = {
   ninthTenth: NinthTenthGrades
   eleventh: AcademicDetail | null
-  additionalContext: string
 }
 
 export const EMPTY_PRIOR_GRADES: PriorGrades = {
   ninthTenth: { curriculum: null, grade9: {}, grade10: {} },
   eleventh: null,
-  additionalContext: '',
 }
 
 // A student's 11th-grade curriculum should follow whatever their 12th
@@ -125,10 +123,6 @@ export function formatPriorGrades(p: PriorGrades): string {
 
   if (p.eleventh) {
     parts.push(`11th: ${gradeBadge(p.eleventh)}`)
-  }
-
-  if (p.additionalContext.trim()) {
-    parts.push(`Additional context: ${p.additionalContext.trim()}`)
   }
 
   return parts.length ? parts.join('; ') : 'None provided'

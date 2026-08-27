@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { GraduationCap, Globe, Flame, Compass, Loader2, CheckCircle2, Award, ChevronDown, History, ArrowRight, Plus, X, NotebookPen } from 'lucide-react'
+import { GraduationCap, Globe, Flame, Compass, Loader2, CheckCircle2, Award, ChevronDown, History, ArrowRight, Plus, X } from 'lucide-react'
 import { saveProfile, type SaveProfileInput } from '@/app/actions/profile'
 import { LiquidMetalButton } from '@/components/ui/liquid-metal-button'
 import { gradeBadge } from '@/lib/grade'
@@ -103,7 +103,7 @@ function NinthTenthInput({ value, onChange }: { value: NinthTenthGrades; onChang
         <input
           type="text"
           maxLength={150}
-          placeholder="Any context worth noting?"
+          placeholder="Changes worth flagging? We'd love to know your trajectory"
           value={y.note ?? ''}
           onChange={(e) => updateYear(year, { note: e.target.value })}
           className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary"
@@ -198,7 +198,6 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
     },
   )
   const [eleventh, setEleventh] = useState<AcademicDetail | null>(latestProfile?.priorGrades?.eleventh ?? null)
-  const [additionalContext, setAdditionalContext] = useState(latestProfile?.priorGrades?.additionalContext ?? '')
   const [loadedProfileId, setLoadedProfileId] = useState<number | null>(latestProfile?.id ?? null)
 
   const badge = gradeBadge(academicDetail)
@@ -232,14 +231,13 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
     setStandardizedTests(p.standardizedTests ?? {})
     setNinthTenth(p.priorGrades?.ninthTenth ?? { curriculum: defaultNinthTenthCurriculum(p.curriculum as Curriculum), grade9: {}, grade10: {} })
     setEleventh(p.priorGrades?.eleventh ?? null)
-    setAdditionalContext(p.priorGrades?.additionalContext ?? '')
     setLoadedProfileId(p.id)
   }
 
   async function handleSave() {
     setError(null)
     setSaved(false)
-    const priorGrades: PriorGrades = { ninthTenth, eleventh, additionalContext: additionalContext.trim() }
+    const priorGrades: PriorGrades = { ninthTenth, eleventh }
     const input: SaveProfileInput = {
       targetCountries,
       curriculum,
@@ -344,11 +342,6 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
 
               <div className="space-y-4">
                 <div className="bg-secondary/40 border border-border rounded-2xl p-3">
-                  <span className="text-[11px] font-semibold text-foreground/80 block mb-2">9th &amp; 10th grade</span>
-                  <NinthTenthInput value={ninthTenth} onChange={setNinthTenth} />
-                </div>
-
-                <div className="bg-secondary/40 border border-border rounded-2xl p-3">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[11px] font-semibold text-foreground/80">11th grade</span>
                     {eleventh && (
@@ -362,24 +355,18 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
                       <AcademicDetailInput detail={eleventh} onChange={setEleventh} />
                     </div>
                   ) : (
-                    <button type="button" onClick={() => setEleventh(defaultAcademicDetail(curriculum))} className="text-[11px] text-primary font-medium flex items-center gap-1">
-                      <Plus className="w-3 h-3" /> Add 11th grade detail ({CURRICULUM_LABELS[curriculum]})
-                    </button>
+                    <div>
+                      <p className="text-[10px] text-primary/80 font-medium mb-1.5">Optional — adding this helps strengthen your analysis.</p>
+                      <button type="button" onClick={() => setEleventh(defaultAcademicDetail(curriculum))} className="text-[11px] text-primary font-medium flex items-center gap-1">
+                        <Plus className="w-3 h-3" /> Add 11th grade detail ({CURRICULUM_LABELS[curriculum]})
+                      </button>
+                    </div>
                   )}
                 </div>
 
-                <div>
-                  <label className="text-[11px] text-muted-foreground flex items-center gap-1.5 mb-1.5">
-                    <NotebookPen className="w-3.5 h-3.5" /> Any major changes worth flagging? (e.g. a big grade jump, a tough year, a school change)
-                  </label>
-                  <textarea
-                    maxLength={300}
-                    rows={2}
-                    placeholder="Optional — anything that adds context to your academic story"
-                    value={additionalContext}
-                    onChange={(e) => setAdditionalContext(e.target.value)}
-                    className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary resize-none"
-                  />
+                <div className="bg-secondary/40 border border-border rounded-2xl p-3">
+                  <span className="text-[11px] font-semibold text-foreground/80 block mb-2">9th &amp; 10th grade</span>
+                  <NinthTenthInput value={ninthTenth} onChange={setNinthTenth} />
                 </div>
               </div>
             </div>
