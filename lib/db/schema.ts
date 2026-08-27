@@ -1,5 +1,6 @@
 import { pgTable, text, integer, timestamp, jsonb, uuid } from "drizzle-orm/pg-core";
 import type { AcademicDetail, AcademicField } from "@/lib/academic-detail";
+import type { StandardizedTests } from "@/lib/standardized-tests";
 
 // Better Auth owns its own auth tables in Neon (typically in a separate schema),
 // so we only model the app-specific tables here. User IDs must remain UUIDs so
@@ -37,6 +38,7 @@ export const profiles = pgTable('profiles', {
   preferredRank: text('preferredRank').notNull().default('No preference'), // 'Top 50' | 'Top 100' | 'Top 200' | 'No preference'
   intendedField: text('intendedField').notNull().default('No preference'), // one of ACADEMIC_FIELDS, or 'No preference'
   academicDetail: jsonb('academicDetail').$type<AcademicDetail | null>(), // real per-curriculum structure; gradeValue above is computed from this
+  standardizedTests: jsonb('standardizedTests').$type<StandardizedTests>().notNull().default({}), // orthogonal to curriculum — SAT/ACT, JEE/NEET etc.
   extracurriculars: jsonb('extracurriculars').$type<string[]>().notNull().default([]),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })

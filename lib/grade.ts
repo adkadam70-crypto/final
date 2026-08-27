@@ -22,12 +22,8 @@ export function gradeBadge(detail: AcademicDetail): string {
       const grades = detail.subjects.map((s) => s.grade).join('')
       return `${detail.subjects.length} A-Levels: ${grades} (${points} UCAS pts)`
     }
-    case 'US_GPA_PCT': {
-      const parts = [`GPA ${detail.unweightedGPA.toFixed(2)}`]
-      if (detail.satScore) parts.push(`SAT ${detail.satScore}`)
-      if (detail.actScore) parts.push(`ACT ${detail.actScore}`)
-      return parts.join(' | ')
-    }
+    case 'US_GPA_PCT':
+      return `GPA ${detail.unweightedGPA.toFixed(2)}`
     case 'IB_DIPLOMA': {
       const total = ibTotal(detail)
       return total === 'FAIL' ? 'IB — EE/TOK combination fails diploma' : `IB Diploma: ${total} / 45`

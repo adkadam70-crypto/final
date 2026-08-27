@@ -12,6 +12,7 @@ import { z } from 'zod'
 import { gradeTier, gradeBadge } from '@/lib/grade'
 import { getUserId } from '@/lib/get-user-id'
 import { getLatestProfile } from '@/app/actions/profile'
+import { formatStandardizedTests } from '@/lib/standardized-tests'
 import OpenAI from 'openai'
 import { zodTextFormat } from 'openai/helpers/zod'
 import { BIAS_INSTRUCTION } from '@/lib/bias-instruction'
@@ -84,6 +85,7 @@ async function generateOpenAIMatch({
   studentProfile: {
     badge: string
     tier: number
+    standardizedTests: string
     preferredClimate: string
     preferredSector: string
     preferredRank: string
@@ -135,6 +137,7 @@ ${admissionsContextBlock}
 
 STUDENT PROFILE:
 - Normalized academics: ${studentProfile.badge} (internal academic tier ${studentProfile.tier}/4, higher is stronger)
+- Standardized tests: ${studentProfile.standardizedTests}
 - Preferred climate: ${studentProfile.preferredClimate}
 - Preferred industry hub: ${studentProfile.preferredSector}
 - Preferred university ranking: ${studentProfile.preferredRank} (soft preference — weigh it alongside fit, don't treat it as a hard filter)
@@ -230,6 +233,7 @@ export async function runMatch(): Promise<
     const studentProfile = {
       badge,
       tier,
+      standardizedTests: formatStandardizedTests(profile.standardizedTests),
       preferredClimate: profile.preferredClimate,
       preferredSector: profile.preferredSector,
       preferredRank: profile.preferredRank,

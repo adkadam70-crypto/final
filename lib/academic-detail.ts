@@ -25,7 +25,7 @@ export type IBSubject = {
 export type AcademicDetail =
   | { curriculum: 'CBSE'; subjects: { name: string; marks: number }[] } // marks 0-100 each
   | { curriculum: 'A_LEVELS'; subjects: { name: string; grade: ALevelGrade }[] }
-  | { curriculum: 'US_GPA_PCT'; unweightedGPA: number; satScore?: number; actScore?: number }
+  | { curriculum: 'US_GPA_PCT'; unweightedGPA: number }
   | {
       curriculum: 'IB_DIPLOMA'
       subjects: IBSubject[] // exactly 6
@@ -105,8 +105,6 @@ export function validateAcademicDetail(detail: AcademicDetail): string | null {
       return null
     case 'US_GPA_PCT':
       if (detail.unweightedGPA < 0 || detail.unweightedGPA > 4.0) return 'GPA must be between 0.0 and 4.0.'
-      if (detail.satScore !== undefined && (detail.satScore < 400 || detail.satScore > 1600)) return 'SAT score must be between 400 and 1600.'
-      if (detail.actScore !== undefined && (detail.actScore < 1 || detail.actScore > 36)) return 'ACT score must be between 1 and 36.'
       return null
     case 'IB_DIPLOMA':
       if (detail.subjects.length !== 6) return 'Enter all 6 IB subjects.'

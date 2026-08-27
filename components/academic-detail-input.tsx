@@ -86,21 +86,10 @@ function ALevelsInput({ detail, onChange }: { detail: Extract<AcademicDetail, { 
 
 function USInput({ detail, onChange }: { detail: Extract<AcademicDetail, { curriculum: 'US_GPA_PCT' }>; onChange: (d: AcademicDetail) => void }) {
   return (
-    <div className="space-y-3">
-      <div>
-        <label className="text-[11px] text-muted-foreground block mb-1">Unweighted GPA (0.0–4.0)</label>
-        <input className={`${inputClass} w-full`} type="number" min={0} max={4} step={0.01} value={detail.unweightedGPA} onChange={(e) => onChange({ ...detail, unweightedGPA: Number(e.target.value) })} />
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        <div>
-          <label className="text-[11px] text-muted-foreground block mb-1">SAT (optional)</label>
-          <input className={`${inputClass} w-full`} type="number" min={400} max={1600} placeholder="400–1600" value={detail.satScore ?? ''} onChange={(e) => onChange({ ...detail, satScore: e.target.value ? Number(e.target.value) : undefined })} />
-        </div>
-        <div>
-          <label className="text-[11px] text-muted-foreground block mb-1">ACT (optional)</label>
-          <input className={`${inputClass} w-full`} type="number" min={1} max={36} placeholder="1–36" value={detail.actScore ?? ''} onChange={(e) => onChange({ ...detail, actScore: e.target.value ? Number(e.target.value) : undefined })} />
-        </div>
-      </div>
+    <div>
+      <label className="text-[11px] text-muted-foreground block mb-1">Unweighted GPA (0.0–4.0)</label>
+      <input className={`${inputClass} w-full`} type="number" min={0} max={4} step={0.01} value={detail.unweightedGPA} onChange={(e) => onChange({ ...detail, unweightedGPA: Number(e.target.value) })} />
+      <p className="text-[11px] text-muted-foreground/70 mt-2">SAT/ACT (if you&apos;re targeting the US) has its own section below, since it applies regardless of curriculum.</p>
     </div>
   )
 }

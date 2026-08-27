@@ -6,11 +6,13 @@ import { eq, desc } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { getUserId } from '@/lib/get-user-id'
 import { computeGradeValue, validateAcademicDetail, type AcademicDetail } from '@/lib/academic-detail'
+import { validateStandardizedTests, type StandardizedTests } from '@/lib/standardized-tests'
 
 export type SaveProfileInput = {
   targetCountries: string[]
   curriculum: string
   academicDetail: AcademicDetail
+  standardizedTests: StandardizedTests
   preferredClimate: string
   preferredSector: string
   preferredRank: string
@@ -27,7 +29,7 @@ export async function saveProfile(input: SaveProfileInput): Promise<{ success: b
 
   if (input.targetCountries.length === 0) throw new Error('Select at least one target country.')
 
-  const validationError = validateAcademicDetail(input.academicDetail)
+  const validationError = validateAcademicDetail(input.academicDetail) ?? validateStandardizedTests(input.standardizedTests)
   if (validationError) throw new Error(validationError)
 
   try {
@@ -39,6 +41,7 @@ export async function saveProfile(input: SaveProfileInput): Promise<{ success: b
         curriculum: input.curriculum,
         gradeValue: computeGradeValue(input.academicDetail),
         academicDetail: input.academicDetail,
+        standardizedTests: input.standardizedTests,
         preferredClimate: input.preferredClimate,
         preferredSector: input.preferredSector,
         preferredRank: input.preferredRank,

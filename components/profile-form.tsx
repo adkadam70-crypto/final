@@ -1,12 +1,14 @@
 'use client'
 
 import { useState, useTransition, useRef, useEffect } from 'react'
-import { GraduationCap, Globe, Flame, Compass, Loader2, CheckCircle2 } from 'lucide-react'
+import { GraduationCap, Globe, Flame, Compass, Loader2, CheckCircle2, Award, ChevronDown } from 'lucide-react'
 import { saveProfile, type SaveProfileInput } from '@/app/actions/profile'
 import { LiquidMetalButton } from '@/components/ui/liquid-metal-button'
 import { gradeBadge } from '@/lib/grade'
 import { AcademicDetailInput } from '@/components/academic-detail-input'
 import { defaultAcademicDetail, ACADEMIC_FIELDS, type AcademicDetail } from '@/lib/academic-detail'
+import { satComposite, type StandardizedTests } from '@/lib/standardized-tests'
+import { HowWeAnalyze } from '@/components/how-we-analyze'
 
 type Curriculum = 'CBSE' | 'IB_DIPLOMA' | 'A_LEVELS' | 'US_GPA_PCT'
 
@@ -20,6 +22,7 @@ type ProfileRow = {
   preferredRank: string
   intendedField: string
   academicDetail: AcademicDetail | null
+  standardizedTests: StandardizedTests
   extracurriculars: string[]
   createdAt: Date
 }
@@ -33,8 +36,38 @@ type LatestProfile = {
   preferredRank: string
   intendedField: string
   academicDetail: AcademicDetail | null
+  standardizedTests: StandardizedTests
   extracurriculars: string[]
 } | null
+
+const HONORS_EXAMPLES = [
+  'International/National Olympiad medal (Math, Science, Informatics, etc.)',
+  'National Merit Scholar / state topper',
+  'First place at a national-level debate, MUN, or hackathon',
+  'State or national sports team representation',
+  'Published research paper or patent',
+]
+
+const SERVICE_EXAMPLES = [
+  'Founded or led a school club or student organization',
+  'Regular volunteering with an NGO or community org (with hours/duration)',
+  'Organized a fundraiser, awareness campaign, or community event',
+  'Peer tutoring or mentoring program',
+  'Internship or part-time work with measurable impact',
+]
+
+function ExamplesHint({ examples }: { examples: string[] }) {
+  return (
+    <details className="group mt-1.5">
+      <summary className="cursor-pointer list-none text-[11px] text-primary font-medium flex items-center gap-1 w-fit">
+        What can I add here? <ChevronDown className="w-3 h-3 transition-transform group-open:rotate-180" />
+      </summary>
+      <ul className="mt-1.5 text-[11px] text-muted-foreground space-y-1 list-disc list-inside">
+        {examples.map((ex) => <li key={ex}>{ex}</li>)}
+      </ul>
+    </details>
+  )
+}
 
 export function ProfileForm({ initialProfiles, latestProfile }: { initialProfiles: ProfileRow[]; latestProfile: LatestProfile }) {
   const [pending, startTransition] = useTransition()
@@ -61,6 +94,7 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
   const [intendedField, setIntendedField] = useState(latestProfile?.intendedField ?? 'No preference')
   const [ec1, setEc1] = useState(latestProfile?.extracurriculars?.[0] ?? '')
   const [ec2, setEc2] = useState(latestProfile?.extracurriculars?.[1] ?? '')
+  const [standardizedTests, setStandardizedTests] = useState<StandardizedTests>(latestProfile?.standardizedTests ?? {})
   const [loadedProfileId, setLoadedProfileId] = useState<number | null>(latestProfile?.id ?? null)
 
   const badge = gradeBadge(academicDetail)
@@ -88,6 +122,7 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
     setIntendedField(p.intendedField)
     setEc1(p.extracurriculars?.[0] ?? '')
     setEc2(p.extracurriculars?.[1] ?? '')
+    setStandardizedTests(p.standardizedTests ?? {})
     setLoadedProfileId(p.id)
   }
 
@@ -98,6 +133,7 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
       targetCountries,
       curriculum,
       academicDetail,
+      standardizedTests,
       preferredClimate,
       preferredSector,
       preferredRank,
@@ -137,6 +173,8 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
       </div>
 
       <div className="space-y-5">
+        <HowWeAnalyze />
+
         <section className="bg-card border border-border rounded-3xl p-6">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-2"><Globe className="w-4 h-4 text-primary" /> Target countries</h2>
           <p className="text-[11px] text-muted-foreground/70 mb-3">Select one or more — matches run across every country you pick.</p>
@@ -175,16 +213,72 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
           </div>
         </section>
 
+        {(targetCountries.includes('US') || targetCountries.includes('IN')) && (
+          <section className="bg-card border border-border rounded-3xl p-6">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-2"><Award className="w-4 h-4 text-chart-4" /> Standardized tests</h2>
+            <p className="text-[11px] text-muted-foreground/70 mb-4">Shown because of your selected countries — these apply regardless of curriculum. All optional.</p>
+            <div className="space-y-4">
+              {targetCountries.includes('US') && (
+                <div>
+                  <div className="text-[11px] text-muted-foreground mb-1.5">SAT / ACT (United States)</div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="text-[10px] text-muted-foreground/70 block mb-1">SAT Math</label>
+                      <input type="number" min={200} max={800} placeholder="200–800" value={standardizedTests.satMath ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, satMath: e.target.value ? Number(e.target.value) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-muted-foreground/70 block mb-1">SAT Reading & Writing</label>
+                      <input type="number" min={200} max={800} placeholder="200–800" value={standardizedTests.satReadingWriting ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, satReadingWriting: e.target.value ? Number(e.target.value) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-muted-foreground/70 block mb-1">ACT</label>
+                      <input type="number" min={1} max={36} placeholder="1–36" value={standardizedTests.act ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, act: e.target.value ? Number(e.target.value) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                    </div>
+                  </div>
+                  {satComposite(standardizedTests) !== null && (
+                    <p className="text-[11px] text-muted-foreground mt-1.5">SAT composite: <span className="text-primary font-mono font-semibold">{satComposite(standardizedTests)}</span> / 1600</p>
+                  )}
+                </div>
+              )}
+              {targetCountries.includes('IN') && (
+                <div>
+                  <div className="text-[11px] text-muted-foreground mb-1.5">JEE / NEET (India) — if applying to engineering or medical programs</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] text-muted-foreground/70 block mb-1">JEE Main percentile</label>
+                      <input type="number" min={0} max={100} step={0.01} placeholder="0–100" value={standardizedTests.jeePercentile ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, jeePercentile: e.target.value ? Number(e.target.value) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-muted-foreground/70 block mb-1">NEET score</label>
+                      <input type="number" min={0} max={720} placeholder="0–720" value={standardizedTests.neetScore ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, neetScore: e.target.value ? Number(e.target.value) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
         {!onlyAustralia && (
           <section className="bg-card border border-border rounded-3xl p-6">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2"><Flame className="w-4 h-4 text-chart-2" /> Extracurricular flexes</h2>
-            <div className="space-y-3">
-              {[{ v: ec1, set: setEc1, ph: 'e.g. Founded an AI non-profit, scaled to 5k users' }, { v: ec2, set: setEc2, ph: 'e.g. National debate finalist / published research' }].map((f, i) => (
-                <div key={i}>
-                  <input type="text" maxLength={200} placeholder={f.ph} value={f.v} onChange={(e) => f.set(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-chart-2" />
-                  <div className="text-[10px] text-muted-foreground/70 text-right mt-1">{f.v.length}/200</div>
+            <div className="space-y-4">
+              <div>
+                <label className="text-[11px] text-muted-foreground block mb-1.5">Honors & national-level achievements</label>
+                <input type="text" maxLength={200} placeholder="e.g. National Physics Olympiad medalist" value={ec1} onChange={(e) => setEc1(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-chart-2" />
+                <div className="flex items-start justify-between gap-2">
+                  <ExamplesHint examples={HONORS_EXAMPLES} />
+                  <div className="text-[10px] text-muted-foreground/70 shrink-0 mt-1.5">{ec1.length}/200</div>
                 </div>
-              ))}
+              </div>
+              <div>
+                <label className="text-[11px] text-muted-foreground block mb-1.5">Community & service activities</label>
+                <input type="text" maxLength={200} placeholder="e.g. 2 years volunteering with a local literacy NGO" value={ec2} onChange={(e) => setEc2(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-chart-2" />
+                <div className="flex items-start justify-between gap-2">
+                  <ExamplesHint examples={SERVICE_EXAMPLES} />
+                  <div className="text-[10px] text-muted-foreground/70 shrink-0 mt-1.5">{ec2.length}/200</div>
+                </div>
+              </div>
             </div>
           </section>
         )}
