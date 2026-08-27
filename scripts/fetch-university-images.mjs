@@ -54,7 +54,7 @@ function pickBestFilename(images) {
   return withHint[0] ?? candidates[0] ?? null
 }
 
-async function findImageFilename(universityName) {
+async function findImageUrl(universityName) {
   const data = await wikiFetch({
     action: 'query',
     titles: universityName,
@@ -65,40 +65,37 @@ async function findImageFilename(universityName) {
   const pages = Object.values(data.query?.pages ?? {})
   const page = pages[0]
   if (!page || page.missing !== undefined || !page.images) return null
-  return pickBestFilename(page.images)
-}
+  const filename = pickBestFilename(page.images)
+  if (!filename) return null
 
-async function resolveFilenamesToUrls(filenames) {
-  if (filenames.length === 0) return new Map()
-  const data = await wikiFetch({
+  await sleep(5000)
+  const infoData = await wikiFetch({
     action: 'query',
-    titles: filenames.map((f) => `File:${f}`).join('|'),
+    titles: `File:${filename}`,
     prop: 'imageinfo',
     iiprop: 'url',
     iiurlwidth: '640',
   })
-  const pages = Object.values(data.query?.pages ?? {})
-  const map = new Map()
-  for (const p of pages) {
-    const info = p.imageinfo?.[0]
-    if (info?.thumburl) map.set(p.title.replace(/^File:/, ''), info.thumburl)
-  }
-  return map
+  const infoPages = Object.values(infoData.query?.pages ?? {})
+  return infoPages[0]?.imageinfo?.[0]?.thumburl ?? null
 }
 
+// Re-runnable: skips rows that already have an imageUrl, so an interrupted
+// run just picks up where it left off instead of redoing completed work.
 async function main() {
-  const rows = await sql`SELECT id, name, "imageUrl" FROM universities ORDER BY id`
-  console.log(`${rows.length} universities in catalog`)
+  const rows = await sql`SELECT id, name FROM universities WHERE "imageUrl" IS NULL ORDER BY id`
+  console.log(`${rows.length} universities still need an image`)
 
-  const chosenFilenameById = new Map()
+  let updated = 0
   let notFound = 0
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i]
     try {
-      const filename = await findImageFilename(row.name)
-      if (filename) {
-        chosenFilenameById.set(row.id, filename)
+      const url = await findImageUrl(row.name)
+      if (url) {
+        await sql`UPDATE universities SET "imageUrl" = ${url} WHERE id = ${row.id}`
+        updated++
       } else {
         notFound++
         console.log(`  no candidate image: ${row.name}`)
@@ -107,31 +104,11 @@ async function main() {
       notFound++
       console.log(`  error fetching ${row.name}: ${err.message}`)
     }
-    if ((i + 1) % 25 === 0) console.log(`...${i + 1}/${rows.length}`)
-    await sleep(1500)
+    if ((i + 1) % 10 === 0) console.log(`...${i + 1}/${rows.length} (updated ${updated}, no match ${notFound})`)
+    await sleep(5000)
   }
 
-  console.log(`Resolved candidate filenames for ${chosenFilenameById.size}/${rows.length} (${notFound} with no match)`)
-
-  // Batch-resolve actual CDN URLs, 50 filenames per request.
-  const allFilenames = [...new Set(chosenFilenameById.values())]
-  const urlMap = new Map()
-  for (let i = 0; i < allFilenames.length; i += 50) {
-    const batch = allFilenames.slice(i, i + 50)
-    const resolved = await resolveFilenamesToUrls(batch)
-    for (const [k, v] of resolved) urlMap.set(k, v)
-    await sleep(1500)
-  }
-
-  let updated = 0
-  for (const [id, filename] of chosenFilenameById) {
-    const url = urlMap.get(filename)
-    if (!url) continue
-    await sql`UPDATE universities SET "imageUrl" = ${url} WHERE id = ${id}`
-    updated++
-  }
-
-  console.log(`Updated imageUrl for ${updated} universities`)
+  console.log(`Done. Updated ${updated}, no match for ${notFound}.`)
 }
 
 main().catch((err) => {
