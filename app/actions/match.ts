@@ -280,6 +280,7 @@ export async function runMatch(): Promise<
           country: u.country,
           location: u.location,
           climate: u.climate,
+          imageUrl: u.imageUrl,
           matchTier: r.matchTier,
           acceptanceProbability: r.acceptanceProbability,
           baselineSelectivity: u.baselineSelectivity,

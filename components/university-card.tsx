@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { MapPin, Sun, ArrowRight, Lightbulb, ChevronDown, Sparkles } from 'lucide-react'
+import { MapPin, Sun, ArrowRight, Lightbulb, ChevronDown, Sparkles, GraduationCap } from 'lucide-react'
 import type { MatchResult } from '@/lib/db/schema'
 import { tierBadgeClass } from '@/lib/match-tier'
 import { GlowCard } from '@/components/ui/spotlight-card'
@@ -13,17 +13,22 @@ export function UniversityCard({ uni }: { uni: MatchResult }) {
   return (
     <GlowCard className="rounded-3xl block">
     <article className="bg-card border border-border rounded-3xl overflow-hidden transition-colors hover:border-foreground/20">
-      {/* Decorative header photo — a stable, seeded placeholder (not an
-          actual photo of this specific campus). Sourcing real, rights-
-          cleared photos for every one of 150+ catalog universities isn't
-          feasible, so this is purely visual polish, not a factual claim. */}
-      <img
-        src={`https://picsum.photos/seed/university-${uni.universityId}/640/240`}
-        alt=""
-        aria-hidden="true"
-        loading="lazy"
-        className="w-full h-32 object-cover"
-      />
+      {/* Real campus photo sourced from Wikimedia Commons (see
+          scripts/fetch-university-images.mjs). When no good match was
+          found, fall back to a plain branded placeholder — never a random
+          unrelated photo, since that would misrepresent the school. */}
+      {uni.imageUrl ? (
+        <img
+          src={uni.imageUrl}
+          alt={`${uni.name} campus`}
+          loading="lazy"
+          className="w-full h-32 object-cover"
+        />
+      ) : (
+        <div className="w-full h-32 bg-gradient-to-br from-accent to-secondary flex items-center justify-center" aria-hidden="true">
+          <GraduationCap className="w-8 h-8 text-primary/50" />
+        </div>
+      )}
 
       <div className="p-6">
         <div className="flex justify-between items-start gap-4 mb-4 pr-9">

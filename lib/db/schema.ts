@@ -23,6 +23,7 @@ export const universities = pgTable('universities', {
   academicFields: jsonb('academicFields').$type<AcademicField[]>().notNull().default([]),
   rankSource: text('rankSource'), // e.g. 'QS World University Rankings 2026' — nullable, curated (unverified) rows have no source yet
   rankValue: integer('rankValue'), // the cited rank number from rankSource — nullable
+  imageUrl: text('imageUrl'), // real campus photo from Wikimedia Commons — nullable, not every school resolves to a good match
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
 
@@ -102,6 +103,7 @@ export type MatchResult = {
   country: string
   location: string
   climate: string
+  imageUrl: string | null
   matchTier: 'Safety' | 'Good Chance' | 'Reach' | 'Ultra Reach'
   acceptanceProbability: number
   baselineSelectivity: number

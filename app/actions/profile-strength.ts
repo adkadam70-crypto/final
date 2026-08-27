@@ -14,8 +14,8 @@ const strengthSchema = z.object({
     .min(1)
     .max(99)
     .describe('Realistic profile strength percentage. 100 is intentionally unreachable.'),
-  headline: z.string().describe('Short phrase summarizing the assessment, e.g. "Strong academics, thin on extracurriculars".'),
-  hint: z.string().describe('One specific, actionable sentence on what would raise the score most.'),
+  headline: z.string().describe('Under 8 words summarizing the assessment, e.g. "Strong academics, thin on extracurriculars".'),
+  hint: z.string().describe('Under 20 words: one specific, actionable thing that would raise the score most.'),
 })
 
 export type ProfileStrengthResult = {

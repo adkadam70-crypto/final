@@ -13,10 +13,10 @@ import { zodTextFormat } from 'openai/helpers/zod'
 const analysisSchema = z.object({
   matchTier: z.enum(['Safety', 'Good Chance', 'Reach', 'Ultra Reach']),
   acceptanceProbability: z.number().min(1).max(99),
-  admissionChanceSummary: z.string().describe('A rigorous 2-3 sentence summary of the overall admission picture at this specific school.'),
-  strengths: z.array(z.string()).describe('Specific strengths in this profile relative to this school — not generic.'),
-  weaknesses: z.array(z.string()).describe('Specific weaknesses or gaps relative to this school — not generic.'),
-  actionSteps: z.array(z.string()).describe('Concrete, specific actions to become more competitive for this exact school.'),
+  admissionChanceSummary: z.string().describe('Under 25 words summarizing the overall admission picture at this specific school.'),
+  strengths: z.array(z.string()).max(3).describe('Up to 3 specific strengths in this profile relative to this school, each under 12 words. Specific, not generic.'),
+  weaknesses: z.array(z.string()).max(3).describe('Up to 3 specific weaknesses or gaps relative to this school, each under 12 words. Specific, not generic.'),
+  actionSteps: z.array(z.string()).max(3).describe('Up to 3 concrete actions to become more competitive for this exact school, each under 15 words.'),
 })
 
 export type TargetAnalysisResult = {
@@ -73,7 +73,7 @@ export async function analyzeTargetUniversity(universityName: string): Promise<T
       ? `This school IS in our verified catalog. Ground your analysis in this data: baseline selectivity ${matched.baselineSelectivity}/100, sectors: ${matched.sectors.join(', ')}, climate: ${matched.climate}, requirements: ${matched.requirements.join(', ')}.`
       : `This school is NOT in our verified catalog — rely on your general knowledge of it, and explicitly note in admissionChanceSummary that this analysis isn't grounded in verified selectivity data.`
 
-    const prompt = `You are an expert college admissions analyst. Give a RIGOROUS, specific deep-dive analysis of this student's chances at ONE named university — not a brief summary. This is the core value of the analysis, so be thorough and concrete, not generic.
+    const prompt = `You are an expert college admissions analyst. Give a specific, well-grounded deep-dive analysis of this student's chances at ONE named university. Prioritize being specific and scannable over being long — a reader should absorb this in seconds, not minutes. Every bullet must be concrete to this student and this school, never generic filler, but keep each one short and punchy.
 
 ${BIAS_INSTRUCTION}
 
@@ -87,7 +87,7 @@ STUDENT PROFILE:
 - Intended field of study: ${profile.intendedField}
 - Extracurriculars: ${profile.extracurriculars.length ? profile.extracurriculars.join('; ') : 'None provided'}
 
-Provide an honest tier + probability, explicit strengths, explicit weaknesses/gaps, and concrete action steps specific to this exact school.`
+Provide an honest tier + probability, and short, specific, scannable bullets for strengths, weaknesses/gaps, and action steps — brevity over completeness.`
 
     let response
     try {
