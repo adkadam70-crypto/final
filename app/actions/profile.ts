@@ -7,14 +7,14 @@ import { revalidatePath } from 'next/cache'
 import { getUserId } from '@/lib/get-user-id'
 import { computeGradeValue, validateAcademicDetail, type AcademicDetail } from '@/lib/academic-detail'
 import { validateStandardizedTests, type StandardizedTests } from '@/lib/standardized-tests'
-import { validatePriorGrades, type PriorGrade } from '@/lib/prior-grades'
+import { validatePriorGrades, type PriorGrades } from '@/lib/prior-grades'
 
 export type SaveProfileInput = {
   targetCountries: string[]
   curriculum: string
   academicDetail: AcademicDetail
   standardizedTests: StandardizedTests
-  priorGrades: PriorGrade[]
+  priorGrades: PriorGrades
   preferredClimate: string
   preferredSector: string
   preferredRank: string

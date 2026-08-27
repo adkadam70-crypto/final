@@ -2,17 +2,31 @@
 
 import { useState, useTransition, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { GraduationCap, Globe, Flame, Compass, Loader2, CheckCircle2, Award, ChevronDown, History, ArrowRight } from 'lucide-react'
+import { GraduationCap, Globe, Flame, Compass, Loader2, CheckCircle2, Award, ChevronDown, History, ArrowRight, Plus, X, NotebookPen } from 'lucide-react'
 import { saveProfile, type SaveProfileInput } from '@/app/actions/profile'
 import { LiquidMetalButton } from '@/components/ui/liquid-metal-button'
 import { gradeBadge } from '@/lib/grade'
 import { AcademicDetailInput } from '@/components/academic-detail-input'
 import { defaultAcademicDetail, ACADEMIC_FIELDS, type AcademicDetail } from '@/lib/academic-detail'
 import { satComposite, type StandardizedTests } from '@/lib/standardized-tests'
-import { GRADE_RELEVANCE, type PriorGrade } from '@/lib/prior-grades'
+import {
+  GRADE_RELEVANCE,
+  defaultNinthTenthCurriculum,
+  type PriorGrades,
+  type NinthTenthGrades,
+  type NinthTenthYear,
+  type NinthTenthCurriculum,
+} from '@/lib/prior-grades'
 import { HowWeAnalyze } from '@/components/how-we-analyze'
 
 type Curriculum = 'CBSE' | 'IB_DIPLOMA' | 'A_LEVELS' | 'US_GPA_PCT'
+
+const CURRICULUM_LABELS: Record<Curriculum, string> = {
+  CBSE: 'CBSE / ISC (India)',
+  IB_DIPLOMA: 'IB Diploma',
+  A_LEVELS: 'A-Levels',
+  US_GPA_PCT: 'US (GPA)',
+}
 
 type ProfileRow = {
   id: number
@@ -25,7 +39,7 @@ type ProfileRow = {
   intendedField: string
   academicDetail: AcademicDetail | null
   standardizedTests: StandardizedTests
-  priorGrades: PriorGrade[]
+  priorGrades: PriorGrades | null
   extracurriculars: string[]
   createdAt: Date
 }
@@ -40,11 +54,86 @@ type LatestProfile = {
   intendedField: string
   academicDetail: AcademicDetail | null
   standardizedTests: StandardizedTests
-  priorGrades: PriorGrade[]
+  priorGrades: PriorGrades | null
   extracurriculars: string[]
 } | null
 
-const DEFAULT_PRIOR_GRADES: PriorGrade[] = [{ grade: 9 }, { grade: 10 }, { grade: 11 }]
+// Small, focused sub-component for the 9th/10th block: one curriculum
+// picker shared by both years (9-10 very often share a curriculum even
+// when a student later switches for 11-12), with curriculum-appropriate
+// inputs — grade counts for IGCSE, not per-subject detail like the main
+// 12th input.
+function NinthTenthInput({ value, onChange }: { value: NinthTenthGrades; onChange: (v: NinthTenthGrades) => void }) {
+  const curriculum = value.curriculum ?? 'CBSE_ICSE'
+
+  function updateYear(year: 'grade9' | 'grade10', patch: Partial<NinthTenthYear>) {
+    onChange({ ...value, [year]: { ...value[year], ...patch } })
+  }
+
+  function yearBlock(year: 'grade9' | 'grade10', label: string) {
+    const y = value[year]
+    return (
+      <div className="space-y-1.5">
+        <span className="text-[11px] text-muted-foreground font-medium">{label}</span>
+        {curriculum === 'IGCSE' && (
+          <div className="grid grid-cols-6 gap-1">
+            {(['aStar', 'a', 'b', 'c', 'd', 'e'] as const).map((k) => (
+              <div key={k}>
+                <label className="text-[9px] text-muted-foreground/70 block mb-0.5 text-center">{k === 'aStar' ? 'A*' : k.toUpperCase()}</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={y.igcse?.[k] ?? ''}
+                  onChange={(e) => updateYear(year, { igcse: { ...y.igcse, [k]: e.target.value ? Number(e.target.value) : undefined } })}
+                  className="w-full bg-secondary border border-border rounded-lg p-1.5 text-xs text-foreground text-center focus:outline-none focus:border-primary"
+                />
+              </div>
+            ))}
+          </div>
+        )}
+        {curriculum === 'CBSE_ICSE' && (
+          <input type="number" min={0} max={100} placeholder="Overall %" value={y.percentage ?? ''} onChange={(e) => updateYear(year, { percentage: e.target.value ? Number(e.target.value) : undefined })} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+        )}
+        {curriculum === 'US_GPA' && (
+          <input type="number" min={0} max={4} step={0.01} placeholder="GPA (0.0–4.0)" value={y.gpa ?? ''} onChange={(e) => updateYear(year, { gpa: e.target.value ? Number(e.target.value) : undefined })} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+        )}
+        {curriculum === 'IB_MYP' && (
+          <input type="number" min={1} max={7} step={0.1} placeholder="Average (1–7)" value={y.ibAverage ?? ''} onChange={(e) => updateYear(year, { ibAverage: e.target.value ? Number(e.target.value) : undefined })} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+        )}
+        <input
+          type="text"
+          maxLength={150}
+          placeholder="Any context worth noting?"
+          value={y.note ?? ''}
+          onChange={(e) => updateYear(year, { note: e.target.value })}
+          className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary"
+        />
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <label className="text-[11px] text-muted-foreground block mb-1">Curriculum for 9th &amp; 10th grade</label>
+        <select
+          value={curriculum}
+          onChange={(e) => onChange({ ...value, curriculum: e.target.value as NinthTenthCurriculum })}
+          className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none focus:border-primary"
+        >
+          <option value="IGCSE">IGCSE</option>
+          <option value="CBSE_ICSE">CBSE / ICSE / other percentage board</option>
+          <option value="US_GPA">US (GPA)</option>
+          <option value="IB_MYP">IB (Middle Years Programme)</option>
+        </select>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {yearBlock('grade9', '9th grade')}
+        {yearBlock('grade10', '10th grade')}
+      </div>
+    </div>
+  )
+}
 
 const HONORS_EXAMPLES = [
   'International/National Olympiad medal (Math, Science, Informatics, etc.)',
@@ -101,18 +190,25 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
   const [ec1, setEc1] = useState(latestProfile?.extracurriculars?.[0] ?? '')
   const [ec2, setEc2] = useState(latestProfile?.extracurriculars?.[1] ?? '')
   const [standardizedTests, setStandardizedTests] = useState<StandardizedTests>(latestProfile?.standardizedTests ?? {})
-  const [priorGrades, setPriorGrades] = useState<PriorGrade[]>(latestProfile?.priorGrades?.length ? latestProfile.priorGrades : DEFAULT_PRIOR_GRADES)
+  const [ninthTenth, setNinthTenth] = useState<NinthTenthGrades>(
+    latestProfile?.priorGrades?.ninthTenth ?? {
+      curriculum: defaultNinthTenthCurriculum((latestProfile?.curriculum as Curriculum) ?? 'CBSE'),
+      grade9: {},
+      grade10: {},
+    },
+  )
+  const [eleventh, setEleventh] = useState<AcademicDetail | null>(latestProfile?.priorGrades?.eleventh ?? null)
+  const [additionalContext, setAdditionalContext] = useState(latestProfile?.priorGrades?.additionalContext ?? '')
   const [loadedProfileId, setLoadedProfileId] = useState<number | null>(latestProfile?.id ?? null)
-
-  function updatePriorGrade(grade: 9 | 10 | 11, patch: Partial<PriorGrade>) {
-    setPriorGrades((prev) => prev.map((g) => (g.grade === grade ? { ...g, ...patch } : g)))
-  }
 
   const badge = gradeBadge(academicDetail)
 
   function handleCurriculumChange(next: Curriculum) {
     setCurriculum(next)
     setAcademicDetail(defaultAcademicDetail(next))
+    // 11th grade reuses the main curriculum's shape (it's "a smaller part of
+    // the 12th section"), so it needs to switch shape along with it.
+    setEleventh((prev) => (prev ? defaultAcademicDetail(next) : null))
   }
 
   function toggleCountry(code: string) {
@@ -134,19 +230,22 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
     setEc1(p.extracurriculars?.[0] ?? '')
     setEc2(p.extracurriculars?.[1] ?? '')
     setStandardizedTests(p.standardizedTests ?? {})
-    setPriorGrades(p.priorGrades?.length ? p.priorGrades : DEFAULT_PRIOR_GRADES)
+    setNinthTenth(p.priorGrades?.ninthTenth ?? { curriculum: defaultNinthTenthCurriculum(p.curriculum as Curriculum), grade9: {}, grade10: {} })
+    setEleventh(p.priorGrades?.eleventh ?? null)
+    setAdditionalContext(p.priorGrades?.additionalContext ?? '')
     setLoadedProfileId(p.id)
   }
 
   async function handleSave() {
     setError(null)
     setSaved(false)
+    const priorGrades: PriorGrades = { ninthTenth, eleventh, additionalContext: additionalContext.trim() }
     const input: SaveProfileInput = {
       targetCountries,
       curriculum,
       academicDetail,
       standardizedTests,
-      priorGrades: priorGrades.filter((g) => g.overallScore !== undefined || (g.note ?? '').trim()),
+      priorGrades,
       preferredClimate,
       preferredSector,
       preferredRank,
@@ -231,7 +330,8 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
             <div className="pt-2 border-t border-border">
               <div className="flex items-center gap-2 mb-1">
                 <History className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Earlier grades (9th–11th, optional)</span>
+                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Earlier grades (9th–11th)</span>
+                <span className="text-[10px] text-muted-foreground/60 font-normal normal-case">— optional, helps sharpen the AI's analysis</span>
               </div>
               {targetCountries.length > 0 && (
                 <ul className="text-[11px] text-muted-foreground/80 mb-3 space-y-1">
@@ -240,30 +340,47 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
                   ))}
                 </ul>
               )}
-              <p className="text-[11px] text-muted-foreground/70 mb-3">Grade 12 above is what actually powers your matches — this is just extra context, so fill in whichever years are worth including.</p>
-              <div className="space-y-2">
-                {priorGrades.map((g) => (
-                  <div key={g.grade} className="flex gap-2 items-start">
-                    <span className="text-[11px] text-muted-foreground w-14 shrink-0 mt-2">Grade {g.grade}</span>
-                    <input
-                      type="number"
-                      min={0}
-                      max={100}
-                      placeholder="Overall %"
-                      value={g.overallScore ?? ''}
-                      onChange={(e) => updatePriorGrade(g.grade, { overallScore: e.target.value ? Number(e.target.value) : undefined })}
-                      className="w-24 shrink-0 bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary"
-                    />
-                    <input
-                      type="text"
-                      maxLength={150}
-                      placeholder="Any context worth noting? e.g. grades dipped after a family move, recovered next year"
-                      value={g.note ?? ''}
-                      onChange={(e) => updatePriorGrade(g.grade, { note: e.target.value })}
-                      className="flex-1 min-w-0 bg-secondary border border-border rounded-lg p-2 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary"
-                    />
+              <p className="text-[11px] text-muted-foreground/70 mb-3">Grade 12 above is what actually powers your matches — everything below is extra context that the AI still reads, so fill in whichever years are worth including.</p>
+
+              <div className="space-y-4">
+                <div className="bg-secondary/40 border border-border rounded-2xl p-3">
+                  <span className="text-[11px] font-semibold text-foreground/80 block mb-2">9th &amp; 10th grade</span>
+                  <NinthTenthInput value={ninthTenth} onChange={setNinthTenth} />
+                </div>
+
+                <div className="bg-secondary/40 border border-border rounded-2xl p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[11px] font-semibold text-foreground/80">11th grade</span>
+                    {eleventh && (
+                      <button type="button" onClick={() => setEleventh(null)} className="text-[10px] text-muted-foreground hover:text-destructive flex items-center gap-0.5">
+                        <X className="w-3 h-3" /> Remove
+                      </button>
+                    )}
                   </div>
-                ))}
+                  {eleventh ? (
+                    <div className="scale-[0.92] origin-top -mx-2 -mb-2">
+                      <AcademicDetailInput detail={eleventh} onChange={setEleventh} />
+                    </div>
+                  ) : (
+                    <button type="button" onClick={() => setEleventh(defaultAcademicDetail(curriculum))} className="text-[11px] text-primary font-medium flex items-center gap-1">
+                      <Plus className="w-3 h-3" /> Add 11th grade detail ({CURRICULUM_LABELS[curriculum]})
+                    </button>
+                  )}
+                </div>
+
+                <div>
+                  <label className="text-[11px] text-muted-foreground flex items-center gap-1.5 mb-1.5">
+                    <NotebookPen className="w-3.5 h-3.5" /> Any major changes worth flagging? (e.g. a big grade jump, a tough year, a school change)
+                  </label>
+                  <textarea
+                    maxLength={300}
+                    rows={2}
+                    placeholder="Optional — anything that adds context to your academic story"
+                    value={additionalContext}
+                    onChange={(e) => setAdditionalContext(e.target.value)}
+                    className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary resize-none"
+                  />
+                </div>
               </div>
             </div>
           </div>

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { Sparkles, LayoutDashboard, User, Search, Bookmark, LogOut, Menu, X } from 'lucide-react'
+import { Sparkles, LayoutDashboard, User, Search, Bookmark, LogOut, Menu, X, BookOpenCheck } from 'lucide-react'
 import { authClient } from '@/lib/auth-client'
 import { cn } from '@/lib/utils'
 
@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { href: '/profile', label: 'Profile', icon: User },
   { href: '/matches', label: 'Find Matches', icon: Search },
   { href: '/saved', label: 'Saved Schools', icon: Bookmark },
+  { href: '/application-info', label: 'Application Info', icon: BookOpenCheck },
 ]
 
 export function Navbar({ userName }: { userName: string }) {

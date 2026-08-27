@@ -6,6 +6,7 @@ import { zodTextFormat } from 'openai/helpers/zod'
 import { getLatestProfile } from '@/app/actions/profile'
 import { gradeBadge } from '@/lib/grade'
 import { formatStandardizedTests } from '@/lib/standardized-tests'
+import { formatPriorGrades, EMPTY_PRIOR_GRADES } from '@/lib/prior-grades'
 import { BIAS_INSTRUCTION } from '@/lib/bias-instruction'
 
 const strengthSchema = z.object({
@@ -53,6 +54,7 @@ ${BIAS_INSTRUCTION}
 STUDENT PROFILE:
 - Academics: ${badge}
 - Standardized tests: ${formatStandardizedTests(profile.standardizedTests)}
+- Earlier grades (9th-11th, optional context): ${formatPriorGrades(profile.priorGrades ?? EMPTY_PRIOR_GRADES)}
 - Target countries: ${profile.targetCountries.join(', ')}
 - Intended field: ${profile.intendedField}
 - Extracurriculars: ${profile.extracurriculars.length ? profile.extracurriculars.join('; ') : 'None provided'}

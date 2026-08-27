@@ -27,7 +27,25 @@ const USER_AGENT = 'ShortlistedApp/1.0 (educational college-admissions project; 
 const API = 'https://en.wikipedia.org/w/api.php'
 
 const EXCLUDE = /seal|logo|crest|coat.?of.?arms|shield|flag|wordmark|emblem|wiki(pedia|quote|source|commons|data)|icon|symbol|ambox|ooui|official.?portrait|ammox/i
-const CAMPUS_HINTS = /campus|aerial|hall|building|center|centre|auditorium|library|tower|quad(rangle)?|gate|arch|chapel|stadium|memorial|plaza|yard|square|dome|corridor|entrance|court|green\b|union\b|museum|observatory|laboratory|institute\b/i
+const CAMPUS_HINTS = /campus|aerial|hall|building|block|center|centre|auditorium|library|tower|quad(rangle)?|gate|arch|chapel|stadium|memorial|plaza|yard|square|dome|corridor|entrance|court|green\b|union\b|museum|observatory|laboratory|institute\b/i
+
+// A handful of catalog names are ambiguous (resolve to a Wikipedia
+// disambiguation page) or don't match their article's exact title —
+// confirmed individually via the Wikipedia search API. Maps the catalog
+// `name` to the real article title to query instead.
+const TITLE_OVERRIDES = {
+  'University of New England': 'University of New England (Australia)',
+  'University of Newcastle': 'University of Newcastle (Australia)',
+  'Victoria University': 'Victoria University (Australia)',
+  'Amity University': 'Amity University, Noida',
+  'Trinity College': 'Trinity College (Connecticut)',
+  'Fergusson College, Pune': 'Fergusson College',
+  'Mumbai University (Institute of Chemical Technology)': 'Institute of Chemical Technology',
+  'RV College of Engineering': 'R.V. College of Engineering',
+  'SASTRA Deemed University': 'Shanmugha Arts, Science, Technology & Research Academy',
+  'Vellore Institute of Technology, Chennai': 'Vellore Institute of Technology',
+  'Xavier Labour Relations Institute (XLRI)': 'XLRI – Xavier School of Management',
+}
 
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms))
@@ -55,9 +73,10 @@ function pickBestFilename(images) {
 }
 
 async function findImageUrl(universityName) {
+  const queryTitle = TITLE_OVERRIDES[universityName] ?? universityName
   const data = await wikiFetch({
     action: 'query',
-    titles: universityName,
+    titles: queryTitle,
     prop: 'images',
     imlimit: '500',
     redirects: '1',

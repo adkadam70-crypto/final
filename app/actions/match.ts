@@ -13,7 +13,7 @@ import { gradeTier, gradeBadge } from '@/lib/grade'
 import { getUserId } from '@/lib/get-user-id'
 import { getLatestProfile } from '@/app/actions/profile'
 import { formatStandardizedTests } from '@/lib/standardized-tests'
-import { formatPriorGrades } from '@/lib/prior-grades'
+import { formatPriorGrades, EMPTY_PRIOR_GRADES } from '@/lib/prior-grades'
 import OpenAI from 'openai'
 import { zodTextFormat } from 'openai/helpers/zod'
 import { BIAS_INSTRUCTION } from '@/lib/bias-instruction'
@@ -237,7 +237,7 @@ export async function runMatch(): Promise<
       badge,
       tier,
       standardizedTests: formatStandardizedTests(profile.standardizedTests),
-      priorGrades: formatPriorGrades(profile.priorGrades),
+      priorGrades: formatPriorGrades(profile.priorGrades ?? EMPTY_PRIOR_GRADES),
       preferredClimate: profile.preferredClimate,
       preferredSector: profile.preferredSector,
       preferredRank: profile.preferredRank,
