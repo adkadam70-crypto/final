@@ -132,15 +132,22 @@ export type MatchResult = {
   imageUrl: string | null
   matchTier: 'Safety' | 'Good Chance' | 'Reach' | 'Ultra Reach'
   acceptanceProbability: number
+  // General selectivity only (real acceptance-rate-derived where we have
+  // it, curated estimate otherwise) — NOT swapped for a program-specific
+  // number. Charts and any "how competitive is this school" framing should
+  // read from this one number; showing two different selectivity values
+  // for the same school (general vs. program) reads as "which one is
+  // real?" rather than adding clarity. Program-specific rank still grounds
+  // the AI's own acceptanceProbability calculation internally — see
+  // rankBadge below for how that surfaces to the user instead.
   baselineSelectivity: number
-  // What the AI actually grounded acceptanceProbability in for this school —
-  // the program-specific selectivity when a verified ranking exists for the
-  // student's intended field, otherwise baselineSelectivity. Charts should
-  // plot this, not baselineSelectivity, or a school with an elite-but-
-  // untagged-overall program looks inexplicably harder/easier than its dot
-  // position suggests.
-  effectiveSelectivity: number
-  selectivityIsProgramSpecific: boolean
+  // One rank fact to display per school, already resolved to whichever is
+  // most specific: a verified program-specific rank for the student's own
+  // intended field, or (if none) the school's verified general/overall
+  // rank, or null if we have neither yet. Never both — see the comment
+  // above on why mixing selectivity numbers is confusing; the same applies
+  // to rank badges.
+  rankBadge: { type: 'program'; rankValue: number; field: string } | { type: 'general'; rankValue: number } | null
   // Display only — a cross-country prestige fact (e.g. QS World Rankings),
   // never fed into the AI prompt or the chance calculation. Showing this on
   // a US-only search result is fine ("this school also happens to be

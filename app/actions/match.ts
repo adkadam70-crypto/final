@@ -328,7 +328,61 @@ export async function runMatch(): Promise<
       IN: 'Holistic Indian universities blend board marks with essays and interviews; IITs are purely exam-driven.',
     }
 
-    const fieldPool = preferIntendedField(catalog, profile.intendedField)
+    // Verified program-specific rankings for the student's intended field,
+    // across the WHOLE country catalog (not just the AI batch) — needed
+    // upfront now because a "Top 50" rank preference has to filter the pool
+    // by real rank numbers before sampling, not just describe it to the AI
+    // afterward. Absence means "not yet researched," never "unranked".
+    const programRankByUniversityId = new Map<number, { rankValue: number | null; rankSource: string; programSelectivity: number }>()
+    if (profile.intendedField !== 'No preference') {
+      const rankRows = await db
+        .select()
+        .from(programRankings)
+        .where(
+          and(
+            inArray(programRankings.universityId, catalog.map((u) => u.id)),
+            eq(programRankings.field, profile.intendedField),
+          ),
+        )
+      for (const row of rankRows) {
+        programRankByUniversityId.set(row.universityId, {
+          rankValue: row.rankValue,
+          rankSource: row.rankSource,
+          programSelectivity: row.programSelectivity,
+        })
+      }
+    }
+
+    // A rank preference ("Top 50") is a real, hard cutoff on the candidate
+    // pool: a school qualifies if its GENERAL rank is within the threshold,
+    // OR its program-specific rank for the student's intended field is
+    // within the threshold — a school ranked #85 overall but #20 in
+    // Business still belongs in a "Top 50" search for a Business-intent
+    // student. Falls back to the softer academicFields-tag preference (the
+    // pre-existing behavior) when no rank preference is set, since most of
+    // the catalog has no verified rank number at all yet to filter on.
+    let fieldPool: typeof catalog
+    let rankFilterFellBack = false
+    const rankThreshold = { 'Top 50': 50, 'Top 100': 100, 'Top 200': 200 }[profile.preferredRank]
+    if (rankThreshold) {
+      const rankFiltered = catalog.filter((u) => {
+        const generalOk = u.rankValue != null && u.rankValue <= rankThreshold
+        const programRank = programRankByUniversityId.get(u.id)
+        const programOk = programRank?.rankValue != null && programRank.rankValue <= rankThreshold
+        return generalOk || programOk
+      })
+      // No verified rank data at all for these countries/fields yet — an
+      // empty result here means "we don't know," not "nothing qualifies."
+      // Fall back rather than showing the student zero schools.
+      if (rankFiltered.length > 0) {
+        fieldPool = rankFiltered
+      } else {
+        fieldPool = preferIntendedField(catalog, profile.intendedField)
+        rankFilterFellBack = true
+      }
+    } else {
+      fieldPool = preferIntendedField(catalog, profile.intendedField)
+    }
 
     // Random banding already gives run-to-run variety by chance, but two
     // back-to-back "re-run match" clicks can still land on an overlapping
@@ -348,29 +402,6 @@ export async function runMatch(): Promise<
 
     const catalogForAI = stratifiedSample(samplingPool, MAX_CATALOG_FOR_AI)
     const batches = interleaveChunks(catalogForAI, PARALLEL_BATCHES)
-
-    // Verified program-specific rankings for the schools actually going to the
-    // AI, scoped to the student's intended field — absence means "not yet
-    // researched," so callers fall back to baselineSelectivity, never zero.
-    const programRankByUniversityId = new Map<number, { rankValue: number | null; rankSource: string; programSelectivity: number }>()
-    if (profile.intendedField !== 'No preference' && catalogForAI.length > 0) {
-      const rankRows = await db
-        .select()
-        .from(programRankings)
-        .where(
-          and(
-            inArray(programRankings.universityId, catalogForAI.map((u) => u.id)),
-            eq(programRankings.field, profile.intendedField),
-          ),
-        )
-      for (const row of rankRows) {
-        programRankByUniversityId.set(row.universityId, {
-          rankValue: row.rankValue,
-          rankSource: row.rankSource,
-          programSelectivity: row.programSelectivity,
-        })
-      }
-    }
 
     const studentProfile = {
       badge,
@@ -425,6 +456,16 @@ export async function runMatch(): Promise<
         const idStr = String(r.universityId)
         const u = byId.get(idStr)!
         const programRank = programRankByUniversityId.get(u.id)
+        // One badge per school, most specific fact first: a verified
+        // program-specific rank for the student's own intended field beats
+        // a general rank, which beats showing nothing. Never both at once —
+        // that reads as two competing "the real rank is X" claims.
+        const rankBadge: MatchResult['rankBadge'] =
+          programRank?.rankValue != null
+            ? { type: 'program', rankValue: programRank.rankValue, field: profile.intendedField }
+            : u.rankValue != null
+              ? { type: 'general', rankValue: u.rankValue }
+              : null
         return {
           universityId: idStr,
           name: u.name,
@@ -435,8 +476,7 @@ export async function runMatch(): Promise<
           matchTier: r.matchTier,
           acceptanceProbability: r.acceptanceProbability,
           baselineSelectivity: u.baselineSelectivity,
-          effectiveSelectivity: programRank?.programSelectivity ?? u.baselineSelectivity,
-          selectivityIsProgramSpecific: programRank != null,
+          rankBadge,
           globalRank: u.globalRankValue != null && u.globalRankSource ? { value: u.globalRankValue, source: u.globalRankSource } : null,
           internshipProgram: u.internshipProgram,
           requirements: u.requirements,
@@ -447,17 +487,21 @@ export async function runMatch(): Promise<
       })
       .sort((a, b) => b.acceptanceProbability - a.acceptanceProbability)
 
+    const summary = rankFilterFellBack
+      ? `${object.summary} (Note: we don't have verified rankings yet to strictly filter to your "${profile.preferredRank}" preference for this country/field, so this list isn't rank-filtered this time.)`
+      : object.summary
+
     await db.insert(matches).values({
       userId,
       targetCountries: profile.targetCountries,
       gradeBadge: badge,
       results,
-      summary: object.summary,
+      summary,
     })
 
     revalidatePath('/')
 
-    return { gradeBadge: badge, summary: object.summary, results }
+    return { gradeBadge: badge, summary, results }
   } catch (err) {
     if (err instanceof Error && err.message.startsWith('OpenAI request failed')) {
       throw err

@@ -34,7 +34,7 @@ const TICKS = [0, 25, 50, 75, 100]
 export function ProbabilityGraph({ results }: { results: MatchResult[] }) {
   const [hovered, setHovered] = useState<MatchResult | null>(null)
 
-  const tooltipLeftPct = hovered ? Math.min(88, Math.max(12, (scaleX(hovered.effectiveSelectivity) / W) * 100)) : 50
+  const tooltipLeftPct = hovered ? Math.min(88, Math.max(12, (scaleX(hovered.baselineSelectivity) / W) * 100)) : 50
   const tooltipTopPct = hovered ? Math.min(85, Math.max(4, (scaleY(hovered.acceptanceProbability) / H) * 100)) : 0
 
   return (
@@ -91,23 +91,27 @@ export function ProbabilityGraph({ results }: { results: MatchResult[] }) {
 
             {/* Axis titles */}
             <text x={(PAD_LEFT + (W - PAD_RIGHT)) / 2} y={H - 4} textAnchor="middle" className="fill-muted-foreground text-[11px] font-medium">
-              Selectivity — program-specific where available (higher = more competitive)
+              Selectivity — from real acceptance rates where we have them (higher = more competitive)
             </text>
             <text x={PAD_LEFT} y={14} textAnchor="start" className="fill-muted-foreground text-[11px] font-medium">
               Chance %
             </text>
 
-            {/* Data points. x-position uses effectiveSelectivity — the
-                program-specific selectivity when the AI had a verified
-                ranking for the student's intended field, since that's what
-                actually drove acceptanceProbability for that school, not
-                the school's general baselineSelectivity. */}
+            {/* Data points. x-position is always baselineSelectivity — a
+                single, general selectivity number per school (real
+                acceptance-rate-derived where we have that data, an internal
+                estimate otherwise). Deliberately not swapped for a
+                program-specific number here: showing two different
+                selectivity values for the same school reads as "which one
+                is real?" rather than adding clarity. A school's
+                program-specific rank (if any) still shows as a badge on its
+                card below instead. */}
             {results.map((u) => {
               const isHovered = hovered?.universityId === u.universityId
               return (
                 <a key={u.universityId} href={`#university-${u.universityId}`} tabIndex={0}>
                   <circle
-                    cx={scaleX(u.effectiveSelectivity)}
+                    cx={scaleX(u.baselineSelectivity)}
                     cy={scaleY(u.acceptanceProbability)}
                     r={isHovered ? 8 : 6}
                     className={`${tierDotClass(u.matchTier)} stroke-background cursor-pointer transition-[r]`}
@@ -117,18 +121,6 @@ export function ProbabilityGraph({ results }: { results: MatchResult[] }) {
                     onFocus={() => setHovered(u)}
                     onBlur={() => setHovered((h) => (h === u ? null : h))}
                   />
-                  {u.selectivityIsProgramSpecific && (
-                    <circle
-                      cx={scaleX(u.effectiveSelectivity)}
-                      cy={scaleY(u.acceptanceProbability)}
-                      r={isHovered ? 12 : 10}
-                      fill="none"
-                      className="stroke-foreground/40"
-                      strokeWidth={1}
-                      strokeDasharray="2 2"
-                      pointerEvents="none"
-                    />
-                  )}
                 </a>
               )
             })}
@@ -141,8 +133,7 @@ export function ProbabilityGraph({ results }: { results: MatchResult[] }) {
             >
               <div className="font-semibold text-foreground">{hovered.name}</div>
               <div className="text-muted-foreground">
-                {hovered.matchTier} · {hovered.acceptanceProbability}% chance · {hovered.effectiveSelectivity}/100{' '}
-                {hovered.selectivityIsProgramSpecific ? 'program selectivity' : 'selectivity'}
+                {hovered.matchTier} · {hovered.acceptanceProbability}% chance · {hovered.baselineSelectivity}/100 selectivity
               </div>
             </div>
           )}
@@ -152,9 +143,8 @@ export function ProbabilityGraph({ results }: { results: MatchResult[] }) {
       <section className="bg-card border border-border rounded-3xl p-6">
         <h3 className="text-sm font-bold mb-3">How to interpret this chart</h3>
         <ul className="text-xs text-muted-foreground space-y-2">
-          <li><strong className="text-foreground font-semibold">Selectivity (x-axis):</strong> how competitive each school is to get into (0–100, higher = more competitive). When we have a verified ranking for your intended field, this is that program&apos;s selectivity specifically — a school can be far more (or less) selective in one program than overall.</li>
-          <li><span className="inline-block w-2.5 h-2.5 rounded-full border border-dashed border-foreground/40 align-middle mr-1" /> <strong className="text-foreground font-semibold">Dashed ring:</strong> this dot is positioned using a verified program-specific ranking, not the school&apos;s general selectivity.</li>
-          <li><strong className="text-foreground font-semibold">Chance % (y-axis):</strong> the AI&apos;s estimated probability you&apos;re admitted to that specific school, given your profile.</li>
+          <li><strong className="text-foreground font-semibold">Selectivity (x-axis):</strong> how competitive each school is overall (0–100, higher = more competitive) — based on its real published acceptance rate where we have one, an internal estimate otherwise. A school&apos;s program-specific ranking (if we have one for your intended field) shows as a badge on its card below instead of changing this number.</li>
+          <li><strong className="text-foreground font-semibold">Chance % (y-axis):</strong> the AI&apos;s estimated probability you&apos;re admitted to that specific school, given your profile — this can differ a lot from general selectivity when your profile is a particularly strong or weak fit.</li>
           <li><span className="text-primary font-semibold">Safety zone:</span> ~75%+ chance — you comfortably exceed the typical bar.</li>
           <li><span className="text-chart-5 font-semibold">Good Chance zone:</span> ~45–70% chance — competitive, on par with typical admits.</li>
           <li><span className="text-chart-2 font-semibold">Reach zone:</span> ~15–40% chance — below the typical bar but plausible.</li>
