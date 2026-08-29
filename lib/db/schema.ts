@@ -137,17 +137,22 @@ export type MatchResult = {
   // number. Charts and any "how competitive is this school" framing should
   // read from this one number; showing two different selectivity values
   // for the same school (general vs. program) reads as "which one is
-  // real?" rather than adding clarity. Program-specific rank still grounds
-  // the AI's own acceptanceProbability calculation internally — see
-  // rankBadge below for how that surfaces to the user instead.
+  // real?" rather than adding clarity. acceptanceProbability is grounded
+  // ONLY in this university-wide signal too — admission is to the
+  // university, not a specific program, for the vast majority of schools
+  // (see match.ts for the handful of real, known exceptions). A verified
+  // program-specific rank is quality/fit context only — see rankBadge.
   baselineSelectivity: number
   // One rank fact to display per school, already resolved to whichever is
   // most specific: a verified program-specific rank for the student's own
   // intended field, or (if none) the school's verified general/overall
   // rank, or null if we have neither yet. Never both — see the comment
   // above on why mixing selectivity numbers is confusing; the same applies
-  // to rank badges.
-  rankBadge: { type: 'program'; rankValue: number; field: string } | { type: 'general'; rankValue: number } | null
+  // to rank badges. `source` is carried through so the UI can explain WHY
+  // several schools can legitimately show the same number — published
+  // rankings (US News, NIRF, etc.) commonly report ties past the top ~10,
+  // which reads as a bug if the source isn't shown alongside it.
+  rankBadge: { type: 'program'; rankValue: number; field: string; source: string } | { type: 'general'; rankValue: number; source: string } | null
   // Display only — a cross-country prestige fact (e.g. QS World Rankings),
   // never fed into the AI prompt or the chance calculation. Showing this on
   // a US-only search result is fine ("this school also happens to be

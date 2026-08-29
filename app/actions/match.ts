@@ -261,9 +261,11 @@ ${JSON.stringify(
 
 When a school's academicFields includes the student's intended field of study, treat that as a genuine positive fit signal in your rationale — not just an admission-probability input. When it's "not yet tagged," don't penalize the school for it; assess it on selectivity and the other signals instead.
 
-Ground each school's chance calculation using this priority order, falling through only when the higher one is unavailable: (1) programRankingForIntendedField, if present — the most accurate signal, since a specific program can be far more or less selective than the university overall; (2) actualOverallAcceptanceRate, if present — a real published admit rate, cite it directly and with full confidence (e.g. "the actual acceptance rate is 12%"); (3) overallRanking, if present — a general prestige ranking, cite it plainly (e.g. "ranked #28 overall") but don't treat it as equivalent to a real acceptance rate; (4) baselineSelectivity alone — an internal estimate with no citation behind it, the least specific of the four. Never present tier 4 with the confidence of tiers 1-3 in your rationale text. Note: when actualOverallAcceptanceRate is present, baselineSelectivity was already derived from it (100 minus the rate) — they are the same fact, not two independent ones.
+IMPORTANT — acceptanceProbability reflects admission to the UNIVERSITY, never to a specific program. Most schools admit students holistically to the institution as a whole (major is a soft signal, sometimes declared a year or two later); this app has no verified data on which specific schools instead admit directly by college/major with a genuinely separate, harder process (a real phenomenon at a handful of schools, but not something to assume by default). So: ground acceptanceProbability using this priority order, falling through only when the higher one is unavailable: (1) actualOverallAcceptanceRate, if present — a real published admit rate, cite it directly and with full confidence (e.g. "the actual acceptance rate is 12%"); (2) overallRanking, if present — a general prestige ranking, cite it plainly (e.g. "ranked #28 overall") but don't treat it as equivalent to a real acceptance rate; (3) baselineSelectivity alone — an internal estimate with no citation behind it. Never present tier 3 with the confidence of tiers 1-2 in your rationale text. Note: when actualOverallAcceptanceRate is present, baselineSelectivity was already derived from it (100 minus the rate) — they are the same fact, not two independent ones. NEVER use programRankingForIntendedField to move acceptanceProbability up or down.
 
-The student's "preferred university ranking" in their profile (e.g. "Top 50") is a real threshold to check against whichever rank number you actually have for each school — programRankingForIntendedField's rank if present, otherwise overallRanking's rank if present. If a school's verified rank number falls outside the student's stated preference, say so plainly in the rationale (e.g. "ranked #78 overall, outside your Top 50 preference") — don't silently ignore the mismatch, but also don't use it to zero out an otherwise-good match, since it's explicitly a soft preference. When neither rank number exists for a school, there's nothing concrete to compare against the preference — don't guess whether it would qualify.
+programRankingForIntendedField, when present, is a quality/fit fact only — mention it in the rationale as context on how strong that specific program is (e.g. "and its Business program is separately ranked #4 nationally"), but it must not change the probability number itself.
+
+The student's "preferred university ranking" in their profile (e.g. "Top 50") is a real threshold to check against overallRanking's rank if present (not the program rank, for the same reason as above — the preference is about the university). If a school's verified overall rank falls outside the student's stated preference, say so plainly in the rationale (e.g. "ranked #78 overall, outside your Top 50 preference") — don't silently ignore the mismatch, but also don't use it to zero out an otherwise-good match, since it's explicitly a soft preference. When no overall rank exists for a school, there's nothing concrete to compare against the preference — don't guess whether it would qualify.
 
 Assess every university in the list above and return one result per university, including exactly 2 specific improvementTips per school. Keep rationale and tips terse — brevity over completeness.`
 
@@ -462,9 +464,9 @@ export async function runMatch(): Promise<
         // that reads as two competing "the real rank is X" claims.
         const rankBadge: MatchResult['rankBadge'] =
           programRank?.rankValue != null
-            ? { type: 'program', rankValue: programRank.rankValue, field: profile.intendedField }
-            : u.rankValue != null
-              ? { type: 'general', rankValue: u.rankValue }
+            ? { type: 'program', rankValue: programRank.rankValue, field: profile.intendedField, source: programRank.rankSource }
+            : u.rankValue != null && u.rankSource
+              ? { type: 'general', rankValue: u.rankValue, source: u.rankSource }
               : null
         return {
           universityId: idStr,

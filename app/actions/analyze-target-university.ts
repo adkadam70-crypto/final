@@ -80,15 +80,21 @@ export async function analyzeTargetUniversity(universityName: string): Promise<T
             .where(and(eq(programRankings.universityId, matched.id), eq(programRankings.field, profile.intendedField))))[0]
         : undefined
 
+    const admissionGrounding = !matched
+      ? ''
+      : matched.actualAcceptanceRate != null && matched.acceptanceRateSource
+        ? ` This school's REAL overall acceptance rate is ${matched.actualAcceptanceRate}% per ${matched.acceptanceRateSource} — cite this directly and with full confidence when computing acceptanceProbability (baseline selectivity above was derived from this same figure, they are not independent facts).`
+        : matched.rankValue != null && matched.rankSource
+          ? ` No real overall acceptance rate is on file. This school IS ranked #${matched.rankValue} overall per ${matched.rankSource} — cite that plainly (e.g. "ranked #${matched.rankValue} overall") as the grounding for acceptanceProbability, but don't present it with the same confidence as a real acceptance rate.`
+          : ` No real overall acceptance rate or overall ranking exists for this school — baseline selectivity above is an internal estimate, not a citation; don't present it as sourced.`
+
     const groundingBlock = matched
-      ? `This school IS in our verified catalog. Ground your analysis in this data: baseline selectivity ${matched.baselineSelectivity}/100, sectors: ${matched.sectors.join(', ')}, climate: ${matched.climate}, requirements: ${matched.requirements.join(', ')}.${
+      ? `This school IS in our verified catalog. Ground your analysis in this data: baseline selectivity ${matched.baselineSelectivity}/100, sectors: ${matched.sectors.join(', ')}, climate: ${matched.climate}, requirements: ${matched.requirements.join(', ')}.
+
+IMPORTANT — acceptanceProbability reflects admission to the UNIVERSITY, never to a specific program. Most schools admit holistically to the institution as a whole; this app has no verified data on which schools instead admit directly by college/major with a genuinely separate process (real at a handful of schools, e.g. Carnegie Mellon's School of Computer Science or NYU Stern, but not something to assume by default here). So ground acceptanceProbability in the university-wide signal below, NEVER in a program-specific ranking:${admissionGrounding}${
           programRank
-            ? ` IMPORTANT: for this student's intended field (${profile.intendedField}), this school has a verified program-specific ranking — #${programRank.rankValue ?? '?'} nationally per ${programRank.rankSource}, program-specific selectivity ${programRank.programSelectivity}/100. Ground the chance calculation in THIS program-specific selectivity for their intended field, not the general baseline selectivity, acceptance rate, or overall rank — a program can be far more or less selective than the university overall.`
-            : matched.actualAcceptanceRate != null && matched.acceptanceRateSource
-              ? ` No verified program-specific ranking exists for ${profile.intendedField}. This school's REAL overall acceptance rate is ${matched.actualAcceptanceRate}% per ${matched.acceptanceRateSource} — cite this directly and with full confidence (baseline selectivity above was derived from this same figure, they are not independent facts).`
-              : matched.rankValue != null && matched.rankSource
-                ? ` No verified program-specific ranking or real acceptance rate exists for this school. It IS ranked #${matched.rankValue} overall per ${matched.rankSource} — cite that plainly (e.g. "ranked #${matched.rankValue} overall") as the next-best grounding, but don't present it with the same confidence as a program-specific rank or a real acceptance rate.`
-                : ` No verified program-specific ranking, real acceptance rate, or overall ranking exists for this school — baseline selectivity above is an internal estimate, not a citation; don't present it as sourced.`
+            ? ` Separately — for this student's intended field (${profile.intendedField}), this school's program is verified as ranked #${programRank.rankValue ?? '?'} nationally per ${programRank.rankSource}. This is a quality/fit fact only: mention it in the rationale as context on how strong that specific program is, but it must NOT move acceptanceProbability.`
+            : ''
         }`
       : `This school is NOT in our verified catalog — rely on your general knowledge of it, and explicitly note in admissionChanceSummary that this analysis isn't grounded in verified selectivity data.`
 
