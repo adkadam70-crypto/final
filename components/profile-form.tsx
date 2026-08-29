@@ -28,6 +28,9 @@ const CURRICULUM_LABELS: Record<Curriculum, string> = {
   US_GPA_PCT: 'US (GPA)',
 }
 
+// SAT section scores are only ever reported in multiples of 10, from 200-800.
+const SAT_SECTION_SCORES = Array.from({ length: 61 }, (_, i) => 200 + i * 10)
+
 type ProfileRow = {
   id: number
   targetCountries: string[]
@@ -384,11 +387,21 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
                   <div className="grid grid-cols-3 gap-2">
                     <div>
                       <label className="text-[10px] text-muted-foreground/70 block mb-1">SAT Math</label>
-                      <input type="number" min={200} max={800} placeholder="200–800" value={standardizedTests.satMath ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, satMath: e.target.value ? Number(e.target.value) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                      <select value={standardizedTests.satMath ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, satMath: e.target.value ? Number(e.target.value) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary">
+                        <option value="">Select score</option>
+                        {SAT_SECTION_SCORES.map((score) => (
+                          <option key={score} value={score}>{score}</option>
+                        ))}
+                      </select>
                     </div>
                     <div>
                       <label className="text-[10px] text-muted-foreground/70 block mb-1">SAT Reading & Writing</label>
-                      <input type="number" min={200} max={800} placeholder="200–800" value={standardizedTests.satReadingWriting ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, satReadingWriting: e.target.value ? Number(e.target.value) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                      <select value={standardizedTests.satReadingWriting ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, satReadingWriting: e.target.value ? Number(e.target.value) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary">
+                        <option value="">Select score</option>
+                        {SAT_SECTION_SCORES.map((score) => (
+                          <option key={score} value={score}>{score}</option>
+                        ))}
+                      </select>
                     </div>
                     <div>
                       <label className="text-[10px] text-muted-foreground/70 block mb-1">ACT</label>

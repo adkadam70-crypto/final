@@ -34,7 +34,7 @@ const TICKS = [0, 25, 50, 75, 100]
 export function ProbabilityGraph({ results }: { results: MatchResult[] }) {
   const [hovered, setHovered] = useState<MatchResult | null>(null)
 
-  const tooltipLeftPct = hovered ? Math.min(88, Math.max(12, (scaleX(hovered.baselineSelectivity) / W) * 100)) : 50
+  const tooltipLeftPct = hovered ? Math.min(88, Math.max(12, (scaleX(hovered.effectiveSelectivity) / W) * 100)) : 50
   const tooltipTopPct = hovered ? Math.min(85, Math.max(4, (scaleY(hovered.acceptanceProbability) / H) * 100)) : 0
 
   return (
@@ -91,19 +91,23 @@ export function ProbabilityGraph({ results }: { results: MatchResult[] }) {
 
             {/* Axis titles */}
             <text x={(PAD_LEFT + (W - PAD_RIGHT)) / 2} y={H - 4} textAnchor="middle" className="fill-muted-foreground text-[11px] font-medium">
-              Selectivity (higher = more competitive)
+              Selectivity — program-specific where available (higher = more competitive)
             </text>
             <text x={PAD_LEFT} y={14} textAnchor="start" className="fill-muted-foreground text-[11px] font-medium">
               Chance %
             </text>
 
-            {/* Data points */}
+            {/* Data points. x-position uses effectiveSelectivity — the
+                program-specific selectivity when the AI had a verified
+                ranking for the student's intended field, since that's what
+                actually drove acceptanceProbability for that school, not
+                the school's general baselineSelectivity. */}
             {results.map((u) => {
               const isHovered = hovered?.universityId === u.universityId
               return (
                 <a key={u.universityId} href={`#university-${u.universityId}`} tabIndex={0}>
                   <circle
-                    cx={scaleX(u.baselineSelectivity)}
+                    cx={scaleX(u.effectiveSelectivity)}
                     cy={scaleY(u.acceptanceProbability)}
                     r={isHovered ? 8 : 6}
                     className={`${tierDotClass(u.matchTier)} stroke-background cursor-pointer transition-[r]`}
@@ -113,6 +117,18 @@ export function ProbabilityGraph({ results }: { results: MatchResult[] }) {
                     onFocus={() => setHovered(u)}
                     onBlur={() => setHovered((h) => (h === u ? null : h))}
                   />
+                  {u.selectivityIsProgramSpecific && (
+                    <circle
+                      cx={scaleX(u.effectiveSelectivity)}
+                      cy={scaleY(u.acceptanceProbability)}
+                      r={isHovered ? 12 : 10}
+                      fill="none"
+                      className="stroke-foreground/40"
+                      strokeWidth={1}
+                      strokeDasharray="2 2"
+                      pointerEvents="none"
+                    />
+                  )}
                 </a>
               )
             })}
@@ -124,7 +140,10 @@ export function ProbabilityGraph({ results }: { results: MatchResult[] }) {
               style={{ left: `${tooltipLeftPct}%`, top: `${tooltipTopPct}%`, marginTop: '-10px' }}
             >
               <div className="font-semibold text-foreground">{hovered.name}</div>
-              <div className="text-muted-foreground">{hovered.matchTier} · {hovered.acceptanceProbability}% chance · {hovered.baselineSelectivity}/100 selectivity</div>
+              <div className="text-muted-foreground">
+                {hovered.matchTier} · {hovered.acceptanceProbability}% chance · {hovered.effectiveSelectivity}/100{' '}
+                {hovered.selectivityIsProgramSpecific ? 'program selectivity' : 'selectivity'}
+              </div>
             </div>
           )}
         </div>
@@ -133,7 +152,8 @@ export function ProbabilityGraph({ results }: { results: MatchResult[] }) {
       <section className="bg-card border border-border rounded-3xl p-6">
         <h3 className="text-sm font-bold mb-3">How to interpret this chart</h3>
         <ul className="text-xs text-muted-foreground space-y-2">
-          <li><strong className="text-foreground font-semibold">Selectivity (x-axis):</strong> how competitive each school is to get into (0–100, higher = more competitive).</li>
+          <li><strong className="text-foreground font-semibold">Selectivity (x-axis):</strong> how competitive each school is to get into (0–100, higher = more competitive). When we have a verified ranking for your intended field, this is that program&apos;s selectivity specifically — a school can be far more (or less) selective in one program than overall.</li>
+          <li><span className="inline-block w-2.5 h-2.5 rounded-full border border-dashed border-foreground/40 align-middle mr-1" /> <strong className="text-foreground font-semibold">Dashed ring:</strong> this dot is positioned using a verified program-specific ranking, not the school&apos;s general selectivity.</li>
           <li><strong className="text-foreground font-semibold">Chance % (y-axis):</strong> the AI&apos;s estimated probability you&apos;re admitted to that specific school, given your profile.</li>
           <li><span className="text-primary font-semibold">Safety zone:</span> ~75%+ chance — you comfortably exceed the typical bar.</li>
           <li><span className="text-chart-5 font-semibold">Good Chance zone:</span> ~45–70% chance — competitive, on par with typical admits.</li>

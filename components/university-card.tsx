@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { MapPin, Sun, ArrowRight, Lightbulb, ChevronDown, Sparkles, GraduationCap } from 'lucide-react'
+import { MapPin, Sun, ArrowRight, Lightbulb, ChevronDown, Sparkles, GraduationCap, Globe } from 'lucide-react'
 import type { MatchResult } from '@/lib/db/schema'
 import { tierBadgeClass } from '@/lib/match-tier'
 import { GlowCard } from '@/components/ui/spotlight-card'
@@ -41,6 +41,14 @@ export function UniversityCard({ uni }: { uni: MatchResult }) {
               <span className="flex items-center gap-1">
                 <Sun className="w-3 h-3 text-chart-2" /> {uni.climate}
               </span>
+              {uni.globalRank && (
+                <span
+                  className="flex items-center gap-1 bg-secondary border border-border rounded-full px-2 py-0.5"
+                  title={uni.globalRank.source}
+                >
+                  <Globe className="w-3 h-3 text-primary" /> Globally #{uni.globalRank.value}
+                </span>
+              )}
             </div>
           </div>
           <span

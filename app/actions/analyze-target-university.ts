@@ -1,10 +1,13 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { universities, universityAnalyses, type MatchResult } from '@/lib/db/schema'
+import { universities, universityAnalyses, programRankings, type MatchResult } from '@/lib/db/schema'
+import { and, eq } from 'drizzle-orm'
 import { getUserId } from '@/lib/get-user-id'
 import { getLatestProfile } from '@/app/actions/profile'
 import { gradeBadge, gradeTier } from '@/lib/grade'
+import { formatStandardizedTests } from '@/lib/standardized-tests'
+import { formatPriorGrades, EMPTY_PRIOR_GRADES } from '@/lib/prior-grades'
 import { BIAS_INSTRUCTION } from '@/lib/bias-instruction'
 import { z } from 'zod'
 import OpenAI from 'openai'
@@ -69,8 +72,24 @@ export async function analyzeTargetUniversity(universityName: string): Promise<T
     const badge = gradeBadge(profile.academicDetail)
     const tier = gradeTier(profile.gradeValue)
 
+    const programRank =
+      matched && profile.intendedField !== 'No preference'
+        ? (await db
+            .select()
+            .from(programRankings)
+            .where(and(eq(programRankings.universityId, matched.id), eq(programRankings.field, profile.intendedField))))[0]
+        : undefined
+
     const groundingBlock = matched
-      ? `This school IS in our verified catalog. Ground your analysis in this data: baseline selectivity ${matched.baselineSelectivity}/100, sectors: ${matched.sectors.join(', ')}, climate: ${matched.climate}, requirements: ${matched.requirements.join(', ')}.`
+      ? `This school IS in our verified catalog. Ground your analysis in this data: baseline selectivity ${matched.baselineSelectivity}/100, sectors: ${matched.sectors.join(', ')}, climate: ${matched.climate}, requirements: ${matched.requirements.join(', ')}.${
+          programRank
+            ? ` IMPORTANT: for this student's intended field (${profile.intendedField}), this school has a verified program-specific ranking — #${programRank.rankValue ?? '?'} nationally per ${programRank.rankSource}, program-specific selectivity ${programRank.programSelectivity}/100. Ground the chance calculation in THIS program-specific selectivity for their intended field, not the general baseline selectivity, acceptance rate, or overall rank — a program can be far more or less selective than the university overall.`
+            : matched.actualAcceptanceRate != null && matched.acceptanceRateSource
+              ? ` No verified program-specific ranking exists for ${profile.intendedField}. This school's REAL overall acceptance rate is ${matched.actualAcceptanceRate}% per ${matched.acceptanceRateSource} — cite this directly and with full confidence (baseline selectivity above was derived from this same figure, they are not independent facts).`
+              : matched.rankValue != null && matched.rankSource
+                ? ` No verified program-specific ranking or real acceptance rate exists for this school. It IS ranked #${matched.rankValue} overall per ${matched.rankSource} — cite that plainly (e.g. "ranked #${matched.rankValue} overall") as the next-best grounding, but don't present it with the same confidence as a program-specific rank or a real acceptance rate.`
+                : ` No verified program-specific ranking, real acceptance rate, or overall ranking exists for this school — baseline selectivity above is an internal estimate, not a citation; don't present it as sourced.`
+        }`
       : `This school is NOT in our verified catalog — rely on your general knowledge of it, and explicitly note in admissionChanceSummary that this analysis isn't grounded in verified selectivity data.`
 
     const prompt = `You are an expert college admissions analyst. Give a specific, well-grounded deep-dive analysis of this student's chances at ONE named university. Prioritize being specific and scannable over being long — a reader should absorb this in seconds, not minutes. Every bullet must be concrete to this student and this school, never generic filler, but keep each one short and punchy.
@@ -82,8 +101,11 @@ ${groundingBlock}
 
 STUDENT PROFILE:
 - Normalized academics: ${badge} (internal academic tier ${tier}/4, higher is stronger)
+- Standardized tests: ${formatStandardizedTests(profile.standardizedTests)}
+- Earlier grades (9th-11th, optional context): ${formatPriorGrades(profile.priorGrades ?? EMPTY_PRIOR_GRADES)}
 - Preferred climate: ${profile.preferredClimate}
 - Preferred industry hub: ${profile.preferredSector}
+- Preferred university ranking: ${profile.preferredRank} (soft preference — weigh it alongside fit, don't treat it as a hard filter)
 - Intended field of study: ${profile.intendedField}
 - Extracurriculars: ${profile.extracurriculars.length ? profile.extracurriculars.join('; ') : 'None provided'}
 

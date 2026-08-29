@@ -24,7 +24,7 @@ export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }
     setPending(true)
     try {
       const res = await analyzeTargetUniversity(name)
-      if ('needsProfile' in res && res.needsProfile) {
+      if ('needsProfile' in res) {
         setError('Set up your profile first — we need your academics to analyze a specific school.')
         return
       }
