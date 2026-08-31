@@ -119,6 +119,57 @@ function preferIntendedField<T extends { academicFields: string[] }>(catalog: T[
   return matched.length >= MIN_FIELD_MATCHED_POOL ? matched : catalog
 }
 
+// Fills out the Top-N rank-filter pool for fields where most tagged schools
+// have no real program-specific citation yet (e.g. US Business: 95 schools
+// tagged, only 19 have a verified programRankings row — so a "Top 50"
+// Business search was recycling the same ~34-school rank-filtered pool
+// after 2-3 runs). For a school that offers the field but has neither a real
+// programRankings row nor a qualifying overall rank, approximate its
+// standing among *other same-field-tagged schools in the same country*
+// using the best real signal already on file (verified overall rank first,
+// baseline selectivity as a tiebreak/fallback) and take its ordinal position
+// as an inferred rank.
+//
+// Deliberately never written to programRankings and never surfaced as a
+// rank badge anywhere in the UI — it exists only so the Top-N *filter* can
+// see past a thin slice of real citations, never to claim a sourced fact
+// (same real-vs-estimate boundary as everywhere else in this file; see
+// universities.rankSource being nullable). Scoped per-country, same reason
+// every other rank comparison here is country-scoped — mixing selectivity
+// scales across countries would make the ordinal meaningless. Only computed
+// once a country+field pool is at least MIN_FIELD_MATCHED_POOL deep, the
+// same "is this field tagged widely enough to filter on" bar as
+// preferIntendedField, so a handful of tagged schools can't produce a
+// misleadingly precise-looking "rank #2" out of a pool of 3.
+function inferFieldRanks(
+  catalog: Array<{ id: number; country: string; academicFields: string[]; rankValue: number | null; baselineSelectivity: number }>,
+  field: string,
+  excludeIds: Set<number>,
+): Map<number, number> {
+  const inferred = new Map<number, number>()
+  const byCountry = new Map<string, typeof catalog>()
+  for (const u of catalog) {
+    if (excludeIds.has(u.id) || !u.academicFields.includes(field)) continue
+    if (!byCountry.has(u.country)) byCountry.set(u.country, [])
+    byCountry.get(u.country)!.push(u)
+  }
+  for (const group of byCountry.values()) {
+    if (group.length < MIN_FIELD_MATCHED_POOL) continue
+    const sorted = [...group].sort((a, b) => {
+      if (a.rankValue != null && b.rankValue != null) return a.rankValue - b.rankValue
+      if (a.rankValue != null) return -1
+      if (b.rankValue != null) return 1
+      return b.baselineSelectivity - a.baselineSelectivity
+    })
+    sorted.forEach((u, i) => inferred.set(u.id, i + 1))
+  }
+  return inferred
+}
+
+function rankThresholdFor(preferredRank: string): number | undefined {
+  return { 'Top 50': 50, 'Top 100': 100, 'Top 200': 200 }[preferredRank]
+}
+
 function interleaveChunks<T>(items: T[], chunkCount: number): T[][] {
   const chunks: T[][] = Array.from({ length: chunkCount }, () => [])
   items.forEach((item, i) => chunks[i % chunkCount].push(item))
@@ -367,15 +418,25 @@ export async function runMatch(): Promise<
     // student. Falls back to the softer academicFields-tag preference (the
     // pre-existing behavior) when no rank preference is set, since most of
     // the catalog has no verified rank number at all yet to filter on.
+
+    // Basic inferred ranking (see inferFieldRanks doc comment) — only needed
+    // once there's an actual rank threshold to fill out, and only for
+    // schools that don't already have a real program-specific citation.
+    const inferredFieldRank =
+      rankThresholdFor(profile.preferredRank) && profile.intendedField !== 'No preference'
+        ? inferFieldRanks(catalog, profile.intendedField, new Set(programRankByUniversityId.keys()))
+        : new Map<number, number>()
+
     let fieldPool: typeof catalog
     let rankFilterFellBack = false
-    const rankThreshold = { 'Top 50': 50, 'Top 100': 100, 'Top 200': 200 }[profile.preferredRank]
+    const rankThreshold = rankThresholdFor(profile.preferredRank)
     if (rankThreshold) {
       const rankFiltered = catalog.filter((u) => {
         const generalOk = u.rankValue != null && u.rankValue <= rankThreshold
         const programRank = programRankByUniversityId.get(u.id)
         const programOk = programRank?.rankValue != null && programRank.rankValue <= rankThreshold
-        return generalOk || programOk
+        const inferredOk = (inferredFieldRank.get(u.id) ?? Infinity) <= rankThreshold
+        return generalOk || programOk || inferredOk
       })
       // No verified rank data at all for these countries/fields yet — an
       // empty result here means "we don't know," not "nothing qualifies."
