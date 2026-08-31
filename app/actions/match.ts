@@ -180,6 +180,7 @@ async function generateOpenAIMatch({
     sectors: string[]
     climate: string
     academicFields: string[]
+    requirements: string[]
     programRank: { rankValue: number | null; rankSource: string; programSelectivity: number } | null
     overallRank: { rankValue: number; rankSource: string } | null
     actualAcceptanceRate: { rate: number; source: string } | null
@@ -245,6 +246,7 @@ ${JSON.stringify(
     sectors: u.sectors,
     climate: u.climate,
     academicFields: u.academicFields.length ? u.academicFields : ['not yet tagged — assume it offers common programs'],
+    admissionRequirements: u.requirements.length ? u.requirements : ['none on file'],
     programRankingForIntendedField: u.programRank
       ? `Ranked #${u.programRank.rankValue ?? '?'} nationally per ${u.programRank.rankSource} — program-specific selectivity ${u.programRank.programSelectivity}/100`
       : 'No verified program-specific ranking on file.',
@@ -266,6 +268,8 @@ IMPORTANT — acceptanceProbability reflects admission to the UNIVERSITY, never 
 programRankingForIntendedField, when present, is a quality/fit fact only — mention it in the rationale as context on how strong that specific program is (e.g. "and its Business program is separately ranked #4 nationally"), but it must not change the probability number itself.
 
 The student's "preferred university ranking" in their profile (e.g. "Top 50") is a real threshold to check against overallRanking's rank if present (not the program rank, for the same reason as above — the preference is about the university). If a school's verified overall rank falls outside the student's stated preference, say so plainly in the rationale (e.g. "ranked #78 overall, outside your Top 50 preference") — don't silently ignore the mismatch, but also don't use it to zero out an otherwise-good match, since it's explicitly a soft preference. When no overall rank exists for a school, there's nothing concrete to compare against the preference — don't guess whether it would qualify.
+
+Cross-reference admissionRequirements against the student's actual profile above (standardized tests, curriculum/grades, extracurriculars) for every school. If a school lists a specific required credential, test, or exam that isn't reflected anywhere in the student's profile (e.g. a school-specific entrance exam, a portfolio, an interview, a specific test the student hasn't reported a score for), that is exactly the kind of concrete, specific improvementTip to surface — name the missing requirement directly and say plainly that it's likely holding down this student's odds at this specific school precisely because it's a stated requirement they haven't demonstrated. Don't invent requirements that aren't listed, and don't flag a requirement the student's profile already satisfies.
 
 Assess every university in the list above and return one result per university, including exactly 2 specific improvementTips per school. Keep rationale and tips terse — brevity over completeness.`
 
@@ -429,6 +433,7 @@ export async function runMatch(): Promise<
             sectors: u.sectors,
             climate: u.climate,
             academicFields: u.academicFields,
+            requirements: u.requirements,
             programRank: programRankByUniversityId.get(u.id) ?? null,
             overallRank: u.rankValue != null && u.rankSource ? { rankValue: u.rankValue, rankSource: u.rankSource } : null,
             actualAcceptanceRate:

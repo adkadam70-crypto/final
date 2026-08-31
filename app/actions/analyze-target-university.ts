@@ -96,7 +96,7 @@ IMPORTANT — acceptanceProbability reflects admission to the UNIVERSITY, never 
             ? ` Separately — for this student's intended field (${profile.intendedField}), this school's program is verified as ranked #${programRank.rankValue ?? '?'} nationally per ${programRank.rankSource}. This is a quality/fit fact only: mention it in the rationale as context on how strong that specific program is, but it must NOT move acceptanceProbability.`
             : ''
         }`
-      : `This school is NOT in our verified catalog — rely on your general knowledge of it, and explicitly note in admissionChanceSummary that this analysis isn't grounded in verified selectivity data.`
+      : `This school is NOT in our verified catalog — we have no selectivity, acceptance rate, or ranking data for it at all. Rely on your general knowledge, but be honest about how thin that is: if you don't have reliable knowledge of this specific school's actual selectivity, don't invent a precise-sounding number anyway. admissionChanceSummary MUST start with an explicit caveat (e.g. "We don't have verified data on this school, so this is a rough estimate:") before anything else — never lead with the tier or percentage as if it were a confident, grounded assessment. If you are genuinely unsure whether this is a highly selective or easily-entered school, prefer a wide middle-of-the-road tier ("Good Chance") over guessing "Reach" or "Safety" with false confidence.`
 
     const prompt = `You are an expert college admissions analyst. Give a specific, well-grounded deep-dive analysis of this student's chances at ONE named university. Prioritize being specific and scannable over being long — a reader should absorb this in seconds, not minutes. Every bullet must be concrete to this student and this school, never generic filler, but keep each one short and punchy.
 
@@ -114,6 +114,8 @@ STUDENT PROFILE:
 - Preferred university ranking: ${profile.preferredRank} (soft preference — weigh it alongside fit, don't treat it as a hard filter)
 - Intended field of study: ${profile.intendedField}
 - Extracurriculars: ${profile.extracurriculars.length ? profile.extracurriculars.join('; ') : 'None provided'}
+
+If this school (see requirements above) lists a specific required credential, test, or exam that isn't reflected anywhere in this student's profile — a school-specific entrance exam, a portfolio, an interview, a specific test they haven't reported a score for — that is exactly the kind of concrete weakness to surface, and taking/improving it is exactly the kind of action step to recommend. Name the missing requirement directly and say plainly that it's likely a real factor holding down their odds at this specific school precisely because it's a stated requirement they haven't demonstrated. Don't invent requirements that aren't listed above, and don't flag one the student's profile already satisfies.
 
 Provide an honest tier + probability, and short, specific, scannable bullets for strengths, weaknesses/gaps, and action steps — brevity over completeness.`
 
