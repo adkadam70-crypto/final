@@ -191,6 +191,22 @@ const resultSchema = z.object({
         .min(1)
         .max(99)
         .describe('Estimated probability (%) this student is admitted.'),
+      earlyDecisionProbability: z
+        .number()
+        .min(1)
+        .max(99)
+        .nullable()
+        .describe(
+          'Only set when this school has a real earlyDecisionRate on file below — this student\'s estimated chance if applying binding Early Decision to this specific school. Null if the school has no real ED rate on file; never invent one.',
+        ),
+      earlyActionProbability: z
+        .number()
+        .min(1)
+        .max(99)
+        .nullable()
+        .describe(
+          'Only set when this school has a real earlyActionRate on file below — this student\'s estimated chance if applying non-binding Early Action to this specific school. Null if no real EA rate is on file; never invent one.',
+        ),
       rationale: z
         .string()
         .describe('Under 20 words explaining the tier and probability for this student.'),
@@ -235,6 +251,7 @@ async function generateOpenAIMatch({
     programRank: { rankValue: number | null; rankSource: string; programSelectivity: number } | null
     overallRank: { rankValue: number; rankSource: string } | null
     actualAcceptanceRate: { rate: number; source: string } | null
+    earlyAdmission: { ed: number | null; ea: number | null; rd: number | null; source: string } | null
   }>
   targetCountries: string[]
   contextByCountry: Record<string, string>
@@ -307,6 +324,15 @@ ${JSON.stringify(
     overallRanking: u.overallRank
       ? `Ranked #${u.overallRank.rankValue} overall per ${u.overallRank.rankSource}`
       : 'No verified overall ranking on file.',
+    earlyDecisionRate: u.earlyAdmission?.ed != null
+      ? `${u.earlyAdmission.ed}% — a REAL published Early Decision (binding) admit rate, per ${u.earlyAdmission.source}.`
+      : 'Not on file — either this school has no binding ED program, or we have no real rate for it. Never invent one.',
+    earlyActionRate: u.earlyAdmission?.ea != null
+      ? `${u.earlyAdmission.ea}% — a REAL published Early Action (non-binding) admit rate, per ${u.earlyAdmission.source}.`
+      : 'Not on file — either this school has no EA program, or we have no real rate for it. Never invent one.',
+    regularDecisionRate: u.earlyAdmission?.rd != null
+      ? `${u.earlyAdmission.rd}% — a REAL published Regular-Decision-only admit rate, per ${u.earlyAdmission.source}. More precise than actualOverallAcceptanceRate for a typical (non-early) applicant, since a blended headline rate can fold in a much easier early pool.`
+      : 'Not on file.',
   })),
   null,
   2,
@@ -314,7 +340,11 @@ ${JSON.stringify(
 
 When a school's academicFields includes the student's intended field of study, treat that as a genuine positive fit signal in your rationale — not just an admission-probability input. When it's "not yet tagged," don't penalize the school for it; assess it on selectivity and the other signals instead.
 
-IMPORTANT — acceptanceProbability reflects admission to the UNIVERSITY, never to a specific program. Most schools admit students holistically to the institution as a whole (major is a soft signal, sometimes declared a year or two later); this app has no verified data on which specific schools instead admit directly by college/major with a genuinely separate, harder process (a real phenomenon at a handful of schools, but not something to assume by default). So: ground acceptanceProbability using this priority order, falling through only when the higher one is unavailable: (1) actualOverallAcceptanceRate, if present — a real published admit rate, cite it directly and with full confidence (e.g. "the actual acceptance rate is 12%"); (2) overallRanking, if present — a general prestige ranking, cite it plainly (e.g. "ranked #28 overall") but don't treat it as equivalent to a real acceptance rate; (3) baselineSelectivity alone — an internal estimate with no citation behind it. Never present tier 3 with the confidence of tiers 1-2 in your rationale text. Note: when actualOverallAcceptanceRate is present, baselineSelectivity was already derived from it (100 minus the rate) — they are the same fact, not two independent ones. NEVER use programRankingForIntendedField to move acceptanceProbability up or down.
+IMPORTANT — acceptanceProbability reflects admission to the UNIVERSITY, never to a specific program. Most schools admit students holistically to the institution as a whole (major is a soft signal, sometimes declared a year or two later); this app has no verified data on which specific schools instead admit directly by college/major with a genuinely separate, harder process (a real phenomenon at a handful of schools, but not something to assume by default). So: ground acceptanceProbability using this priority order, falling through only when the higher one is unavailable: (1) regularDecisionRate, if present — the most realistic baseline for a typical non-early applicant, since it strips out any early-round effect the blended headline can't separate; (2) actualOverallAcceptanceRate, if present and regularDecisionRate is not — a real published admit rate, cite it directly and with full confidence (e.g. "the actual acceptance rate is 12%"); (3) overallRanking, if present — a general prestige ranking, cite it plainly (e.g. "ranked #28 overall") but don't treat it as equivalent to a real acceptance rate; (4) baselineSelectivity alone — an internal estimate with no citation behind it. Never present tier 4 with the confidence of tiers 1-3 in your rationale text. Note: when actualOverallAcceptanceRate is present, baselineSelectivity was already derived from it (100 minus the rate) — they are the same fact, not two independent ones. NEVER use programRankingForIntendedField to move acceptanceProbability up or down.
+
+When regularDecisionRate is present AND meaningfully different from actualOverallAcceptanceRate (this happens at schools that lean heavily on binding Early Decision, e.g. a school publishing a ~5% blended rate that's actually ~43% ED and ~4% regular), say so plainly and specifically in the rationale — e.g. "published rate is 5%, but that blends in a large Early Decision pool; as a Regular Decision applicant, ~4% is the more realistic baseline." This is about being transparent with the student, not about penalizing the school — state it as a neutral fact.
+
+Separately, compute earlyDecisionProbability and earlyActionProbability: these are this student's estimated personal chance if they applied through that specific binding-ED or non-binding-EA round instead, computed the same way as acceptanceProbability but grounded in earlyDecisionRate/earlyActionRate respectively. Only set a value when that real rate is present in the data above — leave it null when a school has no such program or no real rate on file, exactly like every other estimate in this app. Never infer or guess an early-round number from the regular one.
 
 programRankingForIntendedField, when present, is a quality/fit fact only — mention it in the rationale as context on how strong that specific program is (e.g. "and its Business program is separately ranked #4 nationally"), but it must not change the probability number itself.
 
@@ -501,6 +531,9 @@ export async function runMatch(): Promise<
               u.actualAcceptanceRate != null && u.acceptanceRateSource
                 ? { rate: u.actualAcceptanceRate, source: u.acceptanceRateSource }
                 : null,
+            earlyAdmission: u.earlyAdmissionSource
+              ? { ed: u.earlyDecisionRate, ea: u.earlyActionRate, rd: u.regularDecisionRate, source: u.earlyAdmissionSource }
+              : null,
           })),
           targetCountries: profile.targetCountries,
           contextByCountry,
@@ -551,6 +584,21 @@ export async function runMatch(): Promise<
           link: u.link,
           rationale: r.rationale,
           improvementTips: r.improvementTips,
+          earlyAdmission: u.earlyAdmissionSource
+            ? {
+                earlyDecision:
+                  u.earlyDecisionRate != null && r.earlyDecisionProbability != null
+                    ? { realRate: u.earlyDecisionRate, yourChance: r.earlyDecisionProbability }
+                    : null,
+                earlyAction:
+                  u.earlyActionRate != null && r.earlyActionProbability != null
+                    ? { realRate: u.earlyActionRate, yourChance: r.earlyActionProbability }
+                    : null,
+                regularDecision: u.regularDecisionRate != null ? { realRate: u.regularDecisionRate } : null,
+                publishedOverallRate: u.actualAcceptanceRate,
+                source: u.earlyAdmissionSource,
+              }
+            : null,
         }
       })
       .sort((a, b) => b.acceptanceProbability - a.acceptanceProbability)

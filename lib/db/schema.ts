@@ -28,6 +28,19 @@ export const universities = pgTable('universities', {
   acceptanceRateSource: text('acceptanceRateSource'), // e.g. 'U.S. Dept of Education College Scorecard' — nullable. When set, baselineSelectivity above was derived FROM this real rate (100 - rate), not curated/estimated — the two are not independent facts.
   globalRankValue: integer('globalRankValue'), // e.g. 4 for QS World rank #4 — nullable. DISPLAY ONLY: deliberately never read by the match/analysis AI prompts, so a student who only targets one country doesn't have their in-country chance calculation skewed by a cross-country prestige list.
   globalRankSource: text('globalRankSource'), // e.g. 'QS World University Rankings 2026' — nullable
+  // Early Decision / Early Action / Regular-Decision-only rates — a US-only
+  // phenomenon (verified: no binding equivalent in UK/AU/SG/HK/IN). Distinct
+  // from actualAcceptanceRate above, which is the BLENDED overall rate: a
+  // school can publish ~43% ED admit vs ~3.83% everyone else, both folded
+  // into one ~5% headline. All nullable — null means "not yet researched or
+  // doesn't offer this round," never zero. When present, these ground a
+  // separate, additional personalized probability per round (see match.ts /
+  // analyze-target-university.ts) — never used to silently overwrite the
+  // main university-wide acceptanceProbability.
+  earlyDecisionRate: integer('earlyDecisionRate'),
+  earlyActionRate: integer('earlyActionRate'),
+  regularDecisionRate: integer('regularDecisionRate'),
+  earlyAdmissionSource: text('earlyAdmissionSource'), // e.g. 'Common Data Set 2024-25' — covers whichever of the three rates above are set
   imageUrl: text('imageUrl'), // real campus photo from Wikimedia Commons — nullable, not every school resolves to a good match
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
@@ -123,6 +136,17 @@ export const universityAnalyses = pgTable('universityAnalyses', {
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
 
+// Real Early Decision / Early Action / Regular-Decision-only facts, shared
+// shape between MatchResult and TargetAnalysisResult — see the field-level
+// comment on MatchResult.earlyAdmission below for the full rationale.
+export type EarlyAdmissionInfo = {
+  earlyDecision: { realRate: number; yourChance: number } | null
+  earlyAction: { realRate: number; yourChance: number } | null
+  regularDecision: { realRate: number } | null
+  publishedOverallRate: number | null
+  source: string
+} | null
+
 export type MatchResult = {
   universityId: string
   name: string
@@ -164,4 +188,17 @@ export type MatchResult = {
   link: string
   rationale: string
   improvementTips: string[]
+  // Real Early Decision / Early Action / Regular-Decision-only facts, shown
+  // directly (not gated behind a plan picker) whenever we have real data —
+  // see universities.earlyDecisionRate etc. US-only in practice (verified:
+  // no binding-commitment equivalent in UK/AU/SG/HK/IN). `realRate` is the
+  // actual published figure for that round; `yourChance` is this student's
+  // AI-estimated personalized odds if applying through that specific round,
+  // only ever set alongside a real realRate — never invented. `regularDecision`
+  // is the more "realistic" baseline for the typical non-early applicant,
+  // often more pessimistic than publishedOverallRate since a blended headline
+  // (like Northeastern's ~5%) can fold in a much easier ED pool (~43%) —
+  // this is what acceptanceProbability above is grounded in when present,
+  // ahead of the blended publishedOverallRate.
+  earlyAdmission: EarlyAdmissionInfo
 }

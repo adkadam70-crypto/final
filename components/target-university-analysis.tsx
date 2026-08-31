@@ -6,6 +6,7 @@ import { analyzeTargetUniversity, type TargetAnalysisResult } from '@/app/action
 import { tierBadgeClass } from '@/lib/match-tier'
 import { LoadingDots } from '@/components/loading-dots'
 import { RevealGroup } from '@/components/reveal-group'
+import { EarlyAdmissionPanel } from '@/components/early-admission-panel'
 
 export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }) {
   const [name, setName] = useState('')
@@ -77,6 +78,8 @@ export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }
           )}
 
           <p className="text-xs text-muted-foreground leading-relaxed text-pretty">{result.admissionChanceSummary}</p>
+
+          <EarlyAdmissionPanel info={result.earlyAdmission} />
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>

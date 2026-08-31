@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { universities, universityAnalyses, programRankings, type MatchResult } from '@/lib/db/schema'
+import { universities, universityAnalyses, programRankings, type MatchResult, type EarlyAdmissionInfo } from '@/lib/db/schema'
 import { and, eq } from 'drizzle-orm'
 import { getUserId } from '@/lib/get-user-id'
 import { getLatestProfile } from '@/app/actions/profile'
@@ -16,6 +16,22 @@ import { zodTextFormat } from 'openai/helpers/zod'
 const analysisSchema = z.object({
   matchTier: z.enum(['Safety', 'Good Chance', 'Reach', 'Ultra Reach']),
   acceptanceProbability: z.number().min(1).max(99),
+  earlyDecisionProbability: z
+    .number()
+    .min(1)
+    .max(99)
+    .nullable()
+    .describe(
+      'Only set when a real earlyDecisionRate is on file for this school — this student\'s estimated chance if applying binding Early Decision. Null if the school has no ED program or no real rate on file; never invent one.',
+    ),
+  earlyActionProbability: z
+    .number()
+    .min(1)
+    .max(99)
+    .nullable()
+    .describe(
+      'Only set when a real earlyActionRate is on file for this school — this student\'s estimated chance if applying non-binding Early Action. Null if no real EA rate on file; never invent one.',
+    ),
   admissionChanceSummary: z.string().describe('Under 25 words summarizing the overall admission picture at this specific school.'),
   strengths: z.array(z.string()).max(3).describe('Up to 3 specific strengths in this profile relative to this school, each under 12 words. Specific, not generic.'),
   weaknesses: z.array(z.string()).max(3).describe('Up to 3 specific weaknesses or gaps relative to this school, each under 12 words. Specific, not generic.'),
@@ -31,6 +47,7 @@ export type TargetAnalysisResult = {
   strengths: string[]
   weaknesses: string[]
   actionSteps: string[]
+  earlyAdmission: EarlyAdmissionInfo
 }
 
 /**
@@ -82,11 +99,23 @@ export async function analyzeTargetUniversity(universityName: string): Promise<T
 
     const admissionGrounding = !matched
       ? ''
-      : matched.actualAcceptanceRate != null && matched.acceptanceRateSource
-        ? ` This school's REAL overall acceptance rate is ${matched.actualAcceptanceRate}% per ${matched.acceptanceRateSource} — cite this directly and with full confidence when computing acceptanceProbability (baseline selectivity above was derived from this same figure, they are not independent facts).`
-        : matched.rankValue != null && matched.rankSource
-          ? ` No real overall acceptance rate is on file. This school IS ranked #${matched.rankValue} overall per ${matched.rankSource} — cite that plainly (e.g. "ranked #${matched.rankValue} overall") as the grounding for acceptanceProbability, but don't present it with the same confidence as a real acceptance rate.`
-          : ` No real overall acceptance rate or overall ranking exists for this school — baseline selectivity above is an internal estimate, not a citation; don't present it as sourced.`
+      : matched.regularDecisionRate != null && matched.earlyAdmissionSource
+        ? ` This school's REAL Regular-Decision-only acceptance rate is ${matched.regularDecisionRate}% per ${matched.earlyAdmissionSource} — more precise than a blended headline rate for a typical non-early applicant, since a blended figure can fold in a much easier early-round pool (e.g. a school publishing a ~5% overall rate can be ~43% for Early Decision and ~4% for everyone else). Cite this directly and with full confidence as the grounding for acceptanceProbability.${
+            matched.actualAcceptanceRate != null
+              ? ` If that published overall rate (${matched.actualAcceptanceRate}%) is meaningfully different from this regular-decision figure, say so plainly in admissionChanceSummary — this is about transparency with the student, not about penalizing the school.`
+              : ''
+          }`
+        : matched.actualAcceptanceRate != null && matched.acceptanceRateSource
+          ? ` This school's REAL overall acceptance rate is ${matched.actualAcceptanceRate}% per ${matched.acceptanceRateSource} — cite this directly and with full confidence when computing acceptanceProbability (baseline selectivity above was derived from this same figure, they are not independent facts).`
+          : matched.rankValue != null && matched.rankSource
+            ? ` No real overall acceptance rate is on file. This school IS ranked #${matched.rankValue} overall per ${matched.rankSource} — cite that plainly (e.g. "ranked #${matched.rankValue} overall") as the grounding for acceptanceProbability, but don't present it with the same confidence as a real acceptance rate.`
+            : ` No real overall acceptance rate or overall ranking exists for this school — baseline selectivity above is an internal estimate, not a citation; don't present it as sourced.`
+
+    const earlyAdmissionGrounding = !matched
+      ? ''
+      : matched.earlyDecisionRate != null || matched.earlyActionRate != null
+        ? ` Separately, compute earlyDecisionProbability and/or earlyActionProbability: this school has a REAL ${matched.earlyDecisionRate != null ? `Early Decision (binding) admit rate of ${matched.earlyDecisionRate}%` : ''}${matched.earlyDecisionRate != null && matched.earlyActionRate != null ? ' and a REAL ' : ''}${matched.earlyActionRate != null ? `Early Action (non-binding) admit rate of ${matched.earlyActionRate}%` : ''} per ${matched.earlyAdmissionSource}. Estimate this student's chance under each real round the same way you computed acceptanceProbability, just grounded in that round's real rate instead. Leave the other one (no real rate on file) null — never invent one.`
+        : ' This school has no real Early Decision or Early Action rate on file — leave earlyDecisionProbability and earlyActionProbability both null.'
 
     const groundingBlock = matched
       ? `This school IS in our verified catalog. Ground your analysis in this data: baseline selectivity ${matched.baselineSelectivity}/100, sectors: ${matched.sectors.join(', ')}, climate: ${matched.climate}, requirements: ${matched.requirements.join(', ')}.
@@ -95,7 +124,7 @@ IMPORTANT — acceptanceProbability reflects admission to the UNIVERSITY, never 
           programRank
             ? ` Separately — for this student's intended field (${profile.intendedField}), this school's program is verified as ranked #${programRank.rankValue ?? '?'} nationally per ${programRank.rankSource}. This is a quality/fit fact only: mention it in the rationale as context on how strong that specific program is, but it must NOT move acceptanceProbability.`
             : ''
-        }`
+        }${earlyAdmissionGrounding}`
       : `This school is NOT in our verified catalog — we have no selectivity, acceptance rate, or ranking data for it at all. Rely on your general knowledge, but be honest about how thin that is: if you don't have reliable knowledge of this specific school's actual selectivity, don't invent a precise-sounding number anyway. admissionChanceSummary MUST start with an explicit caveat (e.g. "We don't have verified data on this school, so this is a rough estimate:") before anything else — never lead with the tier or percentage as if it were a confident, grounded assessment. If you are genuinely unsure whether this is a highly selective or easily-entered school, prefer a wide middle-of-the-road tier ("Good Chance") over guessing "Reach" or "Safety" with false confidence.`
 
     const prompt = `You are an expert college admissions analyst. Give a specific, well-grounded deep-dive analysis of this student's chances at ONE named university. Prioritize being specific and scannable over being long — a reader should absorb this in seconds, not minutes. Every bullet must be concrete to this student and this school, never generic filler, but keep each one short and punchy.
@@ -135,6 +164,23 @@ Provide an honest tier + probability, and short, specific, scannable bullets for
     }
     const object = response.output_parsed
 
+    const earlyAdmission: EarlyAdmissionInfo =
+      matched && matched.earlyAdmissionSource
+        ? {
+            earlyDecision:
+              matched.earlyDecisionRate != null && object.earlyDecisionProbability != null
+                ? { realRate: matched.earlyDecisionRate, yourChance: object.earlyDecisionProbability }
+                : null,
+            earlyAction:
+              matched.earlyActionRate != null && object.earlyActionProbability != null
+                ? { realRate: matched.earlyActionRate, yourChance: object.earlyActionProbability }
+                : null,
+            regularDecision: matched.regularDecisionRate != null ? { realRate: matched.regularDecisionRate } : null,
+            publishedOverallRate: matched.actualAcceptanceRate,
+            source: matched.earlyAdmissionSource,
+          }
+        : null
+
     await db.insert(universityAnalyses).values({
       userId,
       universityName: matched?.name ?? trimmed,
@@ -157,6 +203,7 @@ Provide an honest tier + probability, and short, specific, scannable bullets for
       strengths: object.strengths,
       weaknesses: object.weaknesses,
       actionSteps: object.actionSteps,
+      earlyAdmission,
     }
   } catch (err) {
     if (err instanceof Error && err.message.startsWith('OpenAI request failed')) {

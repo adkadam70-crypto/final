@@ -5,6 +5,7 @@ import { MapPin, Sun, ArrowRight, Lightbulb, ChevronDown, Sparkles, GraduationCa
 import type { MatchResult } from '@/lib/db/schema'
 import { tierBadgeClass } from '@/lib/match-tier'
 import { GlowCard } from '@/components/ui/spotlight-card'
+import { EarlyAdmissionPanel } from '@/components/early-admission-panel'
 
 export function UniversityCard({ uni }: { uni: MatchResult }) {
   const [tipsOpen, setTipsOpen] = useState(false)
@@ -68,11 +69,13 @@ export function UniversityCard({ uni }: { uni: MatchResult }) {
         </div>
 
         {/* AI rationale */}
-        <p className="text-xs text-muted-foreground leading-relaxed mb-4 text-pretty">
+        <p className="text-xs text-muted-foreground leading-relaxed text-pretty">
           {uni.rationale}
         </p>
 
-        <div className="mb-4">
+        <EarlyAdmissionPanel info={uni.earlyAdmission} compact />
+
+        <div className="mb-4 mt-4">
           <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
             Requirements
           </div>
