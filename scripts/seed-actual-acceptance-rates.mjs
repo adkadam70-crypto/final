@@ -28,6 +28,47 @@ const SOURCE = 'U.S. Dept of Education College Scorecard (official federal data)
 // fetched batch under this exact alternate name.
 const NAME_ALIASES = {
   'columbia university': 'columbia university in the city of new york',
+  // IPEDS/Scorecard appends a campus qualifier ("-Main Campus", "at Raleigh",
+  // etc.) that this catalog's simpler names don't carry — found via a second,
+  // full-key pass after a real API key removed the DEMO_KEY row cap and
+  // exposed ~35 more true matches hiding behind this naming difference.
+  'purdue university': 'purdue university-main campus',
+  'pennsylvania state university': 'pennsylvania state university-main campus',
+  'university of maryland college park': 'university of maryland-college park',
+  'colorado state university': 'colorado state university-fort collins',
+  'indiana university bloomington': 'indiana university-bloomington',
+  'university of oklahoma': 'university of oklahoma-norman campus',
+  'university of missouri': 'university of missouri-columbia',
+  'university of south carolina': 'university of south carolina-columbia',
+  'north carolina state university': 'north carolina state university at raleigh',
+  'university of pittsburgh': 'university of pittsburgh-pittsburgh campus',
+  'university of new mexico': 'university of new mexico-main campus',
+  'tulane university': 'tulane university of louisiana',
+  'southern illinois university carbondale': 'southern illinois university-carbondale',
+  'california state university long beach': 'california state university-long beach',
+  'arizona state university': 'arizona state university campus immersion',
+  'ohio state university': 'ohio state university-main campus',
+  'university of minnesota twin cities': 'university of minnesota-twin cities',
+  'university of tennessee knoxville': 'university of tennessee-knoxville',
+  'california polytechnic state university san luis obispo': 'california polytechnic state university-san luis obispo',
+  'university of massachusetts amherst': 'university of massachusetts-amherst',
+  'virginia tech': 'virginia polytechnic institute and state university',
+  'kent state university': 'kent state university at kent',
+  'university of cincinnati': 'university of cincinnati-main campus',
+  'california state university fullerton': 'california state university-fullerton',
+  'university of nevada reno': 'university of nevada-reno',
+  'university of virginia': 'university of virginia-main campus',
+  'miami university': 'miami university-oxford',
+  'university of washington': 'university of washington-seattle campus',
+  'oklahoma state university': 'oklahoma state university-main campus',
+  'georgia institute of technology': 'georgia institute of technology-main campus',
+  'university of michigan': 'university of michigan-ann arbor',
+  'north dakota state university': 'north dakota state university-main campus',
+  'texas a&m university': 'texas a&m university-college station',
+  'louisiana state university': 'louisiana state university and agricultural & mechanical college',
+  'embry-riddle aeronautical university': 'embry-riddle aeronautical university-daytona beach',
+  // Scorecard's own name drops the accent.
+  'san josé state university': 'san jose state university',
 }
 
 function normalize(name) {
@@ -35,7 +76,11 @@ function normalize(name) {
     .toLowerCase()
     .replace(/^the\s+/, '')
     .replace(/[.,]/g, '')
-    .replace(/\buniversity of california,?\s*/, 'uc ')
+    // Scorecard separates "University of California" from the campus name
+    // with a hyphen, not a comma — the comma is already stripped above, so
+    // match either a hyphen or whitespace here (both sides funnel through
+    // this same function, so it's applied uniformly).
+    .replace(/\buniversity of california[\s-]+/, 'uc ')
     .replace(/--/g, '-')
     .replace(/\s+/g, ' ')
     .trim()
