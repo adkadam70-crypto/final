@@ -17,6 +17,24 @@
 // Furman, Illinois Institute of Technology, Fordham, Georgetown (Georgetown
 // also has no binding ED at all — REA only, not reported separately here).
 //
+// Second pass (Aug 2026): four more schools from the same source, mechanism
+// re-verified per school —
+//   - University of Virginia: binding ED confirmed (1,245 admits / 4,461
+//     ED applicants, Fall 2024 ≈ 28%; RD ~12% vs ~17% overall). UVA also
+//     runs non-binding EA, but ED is the binding round the panel is about.
+//   - College of William & Mary: binding ED confirmed (746 / 1,586 ≈ 47%;
+//     RD 32.8% vs 34% overall).
+//   - University of Denver: binding ED I/II confirmed. Below the selectivity
+//     band above (baselineSelectivity 22) but a genuine private-ED school;
+//     77% ED / 62% RD is internally consistent with its ~71-78% blended.
+//   - Miami University (Oxford, OH): non-binding EA (84%) vs RD (75%) — a
+//     small gap, low signal, but consistent and real.
+// Re-checked and still excluded for the same backwards-numbers reason as
+// above: College of Charleston (RD 24% not credible against a ~60-78%
+// overall rate), Illinois Institute of Technology (EA below RD; EA not ED),
+// Fordham (RD above ED; Fordham does not publish RD or EA separately),
+// Rhodes (ED below RD; no real ED-round rate published).
+//
 // regularDecisionRate is the more defensible "realistic" baseline for the
 // large majority of applicants who don't apply early — see the priority
 // order in match.ts / analyze-target-university.ts, where it now outranks
@@ -88,6 +106,11 @@ const ENTRIES = [
   { name: 'Howard University', rd: 33 },
   { name: 'Morehouse College', rd: 26 },
   { name: 'Loyola Marymount University', rd: 35 },
+  // Second pass (Aug 2026) — see header note.
+  { name: 'University of Virginia', ed: 28, rd: 12 },
+  { name: 'College of William & Mary', ed: 47, rd: 33 },
+  { name: 'University of Denver', ed: 77, rd: 62 },
+  { name: 'Miami University', ea: 84, rd: 75 },
 ]
 
 let updated = 0
