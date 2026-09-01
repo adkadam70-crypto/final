@@ -7,8 +7,8 @@ import { LiquidMetalButton } from '@/components/ui/liquid-metal-button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
-import { Sparkles } from 'lucide-react'
 import { TurnstileWidget } from '@/components/turnstile-widget'
+import { AppLogo } from '@/components/app-logo'
 
 export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   const [name, setName] = useState('')
@@ -57,9 +57,7 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
       <Card className="w-full max-w-sm p-6 rounded-3xl">
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-5">
-            <div className="bg-primary text-primary-foreground p-1.5 rounded-xl">
-              <Sparkles className="w-4 h-4" />
-            </div>
+            <AppLogo className="w-7 h-7 rounded-lg" />
             <span className="text-base font-bold tracking-tight">Shortlisted</span>
           </div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground text-balance">

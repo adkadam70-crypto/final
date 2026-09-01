@@ -1,26 +1,35 @@
 <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <style>
-    @media (prefers-color-scheme: light) {
-      .background { fill: black; }
-      .foreground { fill: white; }
-    }
-    @media (prefers-color-scheme: dark) {
-      .background { fill: white; }
-      .foreground { fill: black; }
-    }
-  </style>
-  <g clip-path="url(#clip0_7960_43945)">
-    <rect class="background" width="180" height="180" rx="37" />
-    <g style="transform: scale(95%); transform-origin: center">
-      <path class="foreground"
-        d="M101.141 53H136.632C151.023 53 162.689 64.6662 162.689 79.0573V112.904H148.112V79.0573C148.112 78.7105 148.098 78.3662 148.072 78.0251L112.581 112.898C112.701 112.902 112.821 112.904 112.941 112.904H148.112V126.672H112.941C98.5504 126.672 86.5638 114.891 86.5638 100.5V66.7434H101.141V100.5C101.141 101.15 101.191 101.792 101.289 102.422L137.56 66.7816C137.255 66.7563 136.945 66.7434 136.632 66.7434H101.141V53Z" />
-      <path class="foreground"
-        d="M65.2926 124.136L14 66.7372H34.6355L64.7495 100.436V66.7372H80.1365V118.47C80.1365 126.278 70.4953 129.958 65.2926 124.136Z" />
-    </g>
-  </g>
   <defs>
-    <clipPath id="clip0_7960_43945">
-      <rect width="180" height="180" fill="white" />
-    </clipPath>
+    <linearGradient id="diamondTop" x1="90" y1="30" x2="90" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#a7f3ec" />
+      <stop offset="1" stop-color="#2dd4bf" />
+    </linearGradient>
+    <linearGradient id="diamondMid" x1="90" y1="70" x2="90" y2="110" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2dd4bf" />
+      <stop offset="1" stop-color="#0f766e" />
+    </linearGradient>
+    <linearGradient id="diamondBottom" x1="90" y1="90" x2="90" y2="130" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#115e59" />
+      <stop offset="1" stop-color="#0a3f3a" />
+    </linearGradient>
+    <radialGradient id="shadow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#000000" stop-opacity="0.45" />
+      <stop offset="1" stop-color="#000000" stop-opacity="0" />
+    </radialGradient>
   </defs>
+
+  <rect width="180" height="180" rx="40" fill="#1a1b1f" />
+
+  <ellipse cx="90" cy="132" rx="44" ry="7" fill="url(#shadow)" />
+
+  <path d="M90 100 L136 114.5 L90 129 L44 114.5 Z" fill="url(#diamondBottom)" opacity="0.9" />
+  <path d="M90 85 L136 99.5 L90 114 L44 99.5 Z" fill="url(#diamondMid)" opacity="0.95" />
+
+  <path d="M90 44 L138 60 C140.5 60.8 140.5 64.2 138 65 L94 79.6 C91.4 80.5 88.6 80.5 86 79.6 L42 65 C39.5 64.2 39.5 60.8 42 60 L86 45.4 C87.9 44.8 90 44.8 90 44Z"
+    fill="url(#diamondTop)" />
+
+  <path d="M90 52 L95.2 65.8 L109 71 L95.2 76.2 L90 90 L84.8 76.2 L71 71 L84.8 65.8 Z" fill="#1a1b1f" />
+
+  <path d="M129 34 L132.6 43.4 L142 47 L132.6 50.6 L129 60 L125.4 50.6 L116 47 L125.4 43.4 Z" fill="#2dd4bf" />
+  <path d="M144 55 L146 60.2 L151.2 62.2 L146 64.2 L144 69.4 L142 64.2 L136.8 62.2 L142 60.2 Z" fill="#5eead4" />
 </svg>

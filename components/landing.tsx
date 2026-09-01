@@ -2,10 +2,10 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Sparkles } from 'lucide-react'
 import { HeroScrollVideoReveal, type TagItem } from '@/components/ui/hero-scroll-video-pin-reveal'
 import { LiquidMetalButton } from '@/components/ui/liquid-metal-button'
 import { marigold } from '@/lib/fonts'
+import { AppLogo } from '@/components/app-logo'
 
 const CAMPUS_BACKGROUND_URL = 'https://upload.wikimedia.org/wikipedia/commons/e/e1/Main_quad_looking_east_at_the_University_of_Rochester.jpg'
 
@@ -62,8 +62,8 @@ export function Landing() {
     <main className="min-h-svh bg-background text-foreground">
       <HeroScrollVideoReveal
         topBrand={
-          <div className="flex items-center gap-2.5 text-primary">
-            <Sparkles className="w-7 h-7" />
+          <div className="flex items-center gap-2.5">
+            <AppLogo className="w-9 h-9 rounded-xl" />
             <span className="text-2xl font-bold tracking-tight">Shortlisted</span>
           </div>
         }
