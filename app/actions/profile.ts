@@ -26,6 +26,40 @@ export type SaveProfileInput = {
  * Saves a student profile to the database without running AI matching.
  * This is used by the profile form to persist user data.
  */
+// Free-text fields have no natural upper bound from the client (the UI's
+// character counters are cosmetic — a request built directly against this
+// action, bypassing the form, could send arbitrary-length strings). Every
+// one of these flows into an OpenAI prompt, so an unbounded string is a
+// real cost/DoS vector, not just a cosmetic concern. Caps here are
+// deliberately generous — well above anything a real user would ever type —
+// so this only ever rejects abuse, never a genuine profile.
+const MAX_FIELD_LENGTH = 500
+const MAX_EXTRACURRICULARS = 20
+const MAX_SUBJECTS = 10
+
+function validateFreeTextLengths(input: SaveProfileInput): string | null {
+  if (input.curriculum.length > MAX_FIELD_LENGTH) return 'Curriculum value is too long.'
+  if (input.preferredClimate.length > MAX_FIELD_LENGTH) return 'Preferred climate value is too long.'
+  if (input.preferredSector.length > MAX_FIELD_LENGTH) return 'Preferred sector value is too long.'
+  if (input.preferredRank.length > MAX_FIELD_LENGTH) return 'Preferred rank value is too long.'
+  if (input.intendedField.length > MAX_FIELD_LENGTH) return 'Intended field value is too long.'
+
+  if (input.extracurriculars.length > MAX_EXTRACURRICULARS) return `Enter at most ${MAX_EXTRACURRICULARS} extracurricular entries.`
+  if (input.extracurriculars.some((e) => e.length > MAX_FIELD_LENGTH)) return 'One of your extracurricular entries is too long.'
+
+  if ('subjects' in input.academicDetail) {
+    if (input.academicDetail.subjects.length > MAX_SUBJECTS) return `Enter at most ${MAX_SUBJECTS} subjects.`
+    const tooLong = input.academicDetail.subjects.some((s) => ('name' in s ? s.name : s.subjectName).length > MAX_FIELD_LENGTH)
+    if (tooLong) return 'One of your subject names is too long.'
+  }
+
+  for (const y of [input.priorGrades.ninthTenth.grade9, input.priorGrades.ninthTenth.grade10]) {
+    if (y.note && y.note.length > MAX_FIELD_LENGTH) return 'One of your 9th/10th grade notes is too long.'
+  }
+
+  return null
+}
+
 export async function saveProfile(input: SaveProfileInput): Promise<{ success: boolean; message: string }> {
   const userId = await getUserId()
 
@@ -34,7 +68,8 @@ export async function saveProfile(input: SaveProfileInput): Promise<{ success: b
   const validationError =
     validateAcademicDetail(input.academicDetail) ??
     validateStandardizedTests(input.standardizedTests) ??
-    validatePriorGrades(input.priorGrades)
+    validatePriorGrades(input.priorGrades) ??
+    validateFreeTextLengths(input)
   if (validationError) throw new Error(validationError)
 
   try {

@@ -10,6 +10,15 @@ import { Resend } from 'resend'
 // an address on that domain (e.g. 'Shortlisted <noreply@yourdomain.com>').
 const RESET_PASSWORD_FROM = 'Shortlisted <onboarding@resend.dev>'
 
+// No hardcoded fallback — a fallback secret sitting in source would let
+// anyone who's seen this file forge session tokens the moment a deploy ever
+// ran without the env var set. Fail loudly instead, same as every other
+// required secret in this app.
+const authSecret = process.env.BETTER_AUTH_SECRET
+if (!authSecret) {
+  throw new Error('BETTER_AUTH_SECRET environment variable is not set')
+}
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: 'pg',
@@ -24,7 +33,26 @@ export const auth = betterAuth({
     ],
   },
 
-  secret: process.env.BETTER_AUTH_SECRET || 'fallback_secret_key_auraadmit_32chars',
+  secret: authSecret,
+
+  // "memory" (the default) resets on every serverless cold start on Vercel,
+  // which makes it a near-no-op in production — "database" persists through
+  // the same shared Postgres everything else here already uses.
+  rateLimit: {
+    enabled: true,
+    storage: 'database',
+    window: 60,
+    max: 20,
+    customRules: {
+      // Sign-in is the brute-force target — tightest limit.
+      '/sign-in/email': { window: 60, max: 5 },
+      // Sign-up is cheaper to abuse for spam accounts than to brute-force,
+      // but still worth capping well below the global default.
+      '/sign-up/email': { window: 60, max: 5 },
+      '/forget-password': { window: 60, max: 5 },
+      '/reset-password': { window: 60, max: 5 },
+    },
+  },
 
   advanced: {
     database: {

@@ -69,6 +69,12 @@ export async function analyzeTargetUniversity(universityName: string): Promise<T
   if (!trimmed) {
     throw new Error('Enter a university name')
   }
+  // No real school name is anywhere near this long — flows straight into
+  // the AI prompt, so an unbounded string here is a cost vector, not a
+  // real search query.
+  if (trimmed.length > 200) {
+    throw new Error('That university name is too long.')
+  }
 
   try {
     const catalog = await db.select().from(universities)

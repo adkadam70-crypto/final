@@ -1,4 +1,4 @@
-import { pgTable, text, boolean, timestamp } from 'drizzle-orm/pg-core'
+import { pgTable, text, boolean, timestamp, integer, bigint } from 'drizzle-orm/pg-core'
 
 const generateId = () => crypto.randomUUID()
 
@@ -45,4 +45,14 @@ export const verification = pgTable('verification', {
   expiresAt: timestamp('expiresAt').notNull(),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+})
+
+// Better Auth's own rate-limit ledger — required so rate limiting persists
+// across separate serverless invocations (the default "memory" storage
+// would reset per cold-start on Vercel and be effectively a no-op).
+export const rateLimit = pgTable('rateLimit', {
+  id: text('id').primaryKey().$defaultFn(generateId),
+  key: text('key'),
+  count: integer('count'),
+  lastRequest: bigint('lastRequest', { mode: 'number' }),
 })
