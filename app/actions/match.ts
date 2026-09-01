@@ -18,6 +18,7 @@ import { formatPriorGrades, EMPTY_PRIOR_GRADES } from '@/lib/prior-grades'
 import OpenAI from 'openai'
 import { zodTextFormat } from 'openai/helpers/zod'
 import { BIAS_INSTRUCTION } from '@/lib/bias-instruction'
+import { assertMatchRateLimit } from '@/lib/rate-limit'
 
 // Caps how many universities go to the model in one call. Measured: ~24s for
 // 2 universities, ~50s for 30, ~62s for 60 — there's a large fixed-latency
@@ -388,6 +389,7 @@ export async function runMatch(): Promise<
   | { needsProfile?: false; gradeBadge: string; summary: string; results: MatchResult[] }
 > {
   const userId = await getUserId()
+  await assertMatchRateLimit(userId)
   const profile = await getLatestProfile()
   if (!profile || !profile.academicDetail || profile.targetCountries.length === 0) {
     return { needsProfile: true }

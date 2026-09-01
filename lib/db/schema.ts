@@ -107,6 +107,15 @@ export const savedSchools = pgTable('savedSchools', {
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
 
+// Generic rate-limit ledger for AI-calling actions that don't already have
+// their own per-call history table to count against — see lib/rate-limit.ts.
+export const aiRateLimitLog = pgTable('aiRateLimitLog', {
+  id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
+  userId: uuid('userId').notNull(),
+  action: text('action').notNull(),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+})
+
 export type ApplicationStatus = 'Researching' | 'Applying' | 'Submitted'
 
 export type SavedSchool = {

@@ -3,11 +3,15 @@
 import { z } from 'zod'
 import OpenAI from 'openai'
 import { zodTextFormat } from 'openai/helpers/zod'
+import { db } from '@/lib/db'
+import { aiRateLimitLog } from '@/lib/db/schema'
+import { getUserId } from '@/lib/get-user-id'
 import { getLatestProfile } from '@/app/actions/profile'
 import { gradeBadge } from '@/lib/grade'
 import { formatStandardizedTests } from '@/lib/standardized-tests'
 import { formatPriorGrades, EMPTY_PRIOR_GRADES } from '@/lib/prior-grades'
 import { BIAS_INSTRUCTION } from '@/lib/bias-instruction'
+import { assertProfileStrengthRateLimit } from '@/lib/rate-limit'
 
 const strengthSchema = z.object({
   score: z
@@ -34,6 +38,8 @@ export type ProfileStrengthResult = {
 export async function analyzeProfileStrength(): Promise<
   { needsProfile: true } | ({ needsProfile?: false } & ProfileStrengthResult)
 > {
+  const userId = await getUserId()
+  await assertProfileStrengthRateLimit(userId)
   const profile = await getLatestProfile()
   if (!profile || !profile.academicDetail) {
     return { needsProfile: true }
@@ -76,6 +82,8 @@ Score realistically. A 100 should be practically unreachable — reserved for a 
   if (!response.output_parsed) {
     throw new Error('OpenAI returned no parseable output for the profile strength request')
   }
+
+  await db.insert(aiRateLimitLog).values({ userId, action: 'profileStrength' })
 
   return { ...response.output_parsed }
 }
