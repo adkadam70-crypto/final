@@ -16,7 +16,7 @@ export default async function DashboardRootLayout({ children }: { children: Reac
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Fixed navbar - stays at top across all navigation */}
-      <Navbar userName={session.user.name} />
+      <Navbar userName={session.user.name} userEmail={session.user.email} />
       {/* Main content - accounts for navbar height */}
       <div className="pt-16">
         {children}

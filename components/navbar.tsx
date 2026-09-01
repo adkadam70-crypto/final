@@ -3,9 +3,10 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { Sparkles, LayoutDashboard, User, Search, Bookmark, LogOut, Menu, X, BookOpenCheck } from 'lucide-react'
+import { Sparkles, LayoutDashboard, User, Search, Bookmark, LogOut, Menu, X, BookOpenCheck, Settings } from 'lucide-react'
 import { authClient } from '@/lib/auth-client'
 import { cn } from '@/lib/utils'
+import { ProfileMenu } from '@/components/profile-menu'
 
 const NAV_LINKS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -15,7 +16,7 @@ const NAV_LINKS = [
   { href: '/application-info', label: 'Application Info', icon: BookOpenCheck },
 ]
 
-export function Navbar({ userName }: { userName: string }) {
+export function Navbar({ userName, userEmail }: { userName: string; userEmail: string }) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -23,8 +24,6 @@ export function Navbar({ userName }: { userName: string }) {
     await authClient.signOut()
     window.location.href = '/sign-in'
   }
-
-  const initials = userName.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
 
   return (
     <header
@@ -58,13 +57,9 @@ export function Navbar({ userName }: { userName: string }) {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-primary/15 text-primary text-xs font-bold flex items-center justify-center">{initials}</div>
-            <span className="text-xs text-muted-foreground max-w-[100px] truncate">{userName}</span>
+          <div className="hidden sm:block">
+            <ProfileMenu userName={userName} userEmail={userEmail} />
           </div>
-          <button onClick={handleSignOut} className="hidden lg:flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-xl border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors">
-            <LogOut className="w-3.5 h-3.5" /> Sign out
-          </button>
           <button onClick={() => setMobileOpen((v) => !v)} className="lg:hidden p-2 rounded-xl border border-border text-muted-foreground" aria-label="Toggle menu">
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -83,7 +78,10 @@ export function Navbar({ userName }: { userName: string }) {
                 </Link>
               )
             })}
-            <button onClick={handleSignOut} className="w-full flex items-center gap-2 text-sm font-medium px-3 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+            <Link href="/account" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 text-sm font-medium px-3 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+              <Settings className="w-4 h-4" /> Account settings
+            </Link>
+            <button onClick={handleSignOut} className="w-full flex items-center gap-2 text-sm font-medium px-3 py-2.5 rounded-xl text-destructive hover:bg-destructive/10 transition-colors">
               <LogOut className="w-4 h-4" /> Sign out
             </button>
           </div>

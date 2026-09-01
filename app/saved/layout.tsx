@@ -11,7 +11,7 @@ export default async function SavedLayout({ children }: { children: React.ReactN
 
   return (
     <>
-      <Navbar userName={session.user.name} />
+      <Navbar userName={session.user.name} userEmail={session.user.email} />
       <main className="app-shell-background min-h-screen text-foreground pt-16">
         {children}
       </main>
