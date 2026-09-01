@@ -159,6 +159,7 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
           <section className="bg-card border border-border rounded-3xl p-12 text-center">
             <LoadingDots className="justify-center text-primary mb-4" />
             <p className="text-xs text-muted-foreground">Weighing your academics, extracurriculars, and each school&apos;s selectivity…</p>
+            <p className="text-[11px] text-muted-foreground/70 mt-1.5">Usually takes 20–30 seconds — stay on this page and it&apos;ll update automatically.</p>
           </section>
         ) : (
           <>
