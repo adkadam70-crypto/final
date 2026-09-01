@@ -1,17 +1,21 @@
-// Deliberately no 'unsafe-eval', and script-src has no external hosts — this
-// app has no third-party client-side scripts (no analytics, no ads, no
-// OAuth widgets; OpenAI calls happen server-side in Server Actions only).
-// 'unsafe-inline' on script-src is the one loosening: Next.js's App Router
-// hydration bootstrap needs it without a nonce-based setup (a bigger,
-// separate change involving per-request middleware). style-src needs
-// 'unsafe-inline' for Tailwind's injected critical CSS.
+// Deliberately no 'unsafe-eval'. The only external host anywhere in this
+// policy is Cloudflare Turnstile's own domain, added per Cloudflare's
+// documented CSP requirements (https://developers.cloudflare.com/turnstile/reference/content-security-policy/)
+// for the sign-up/sign-in bot-protection widget — script-src and frame-src
+// need it to load the widget and render its challenge iframe, connect-src
+// for the widget's own verification requests. 'unsafe-inline' on script-src
+// is the one loosening beyond that: Next.js's App Router hydration
+// bootstrap needs it without a nonce-based setup (a bigger, separate change
+// involving per-request middleware). style-src needs 'unsafe-inline' for
+// Tailwind's injected critical CSS.
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https://upload.wikimedia.org",
   "font-src 'self' data:",
-  "connect-src 'self'",
+  "connect-src 'self' https://challenges.cloudflare.com",
+  "frame-src https://challenges.cloudflare.com",
   "frame-ancestors 'none'",
   "form-action 'self'",
   "base-uri 'self'",

@@ -1,4 +1,5 @@
 import { betterAuth } from 'better-auth'
+import { captcha } from 'better-auth/plugins'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { db } from '@/lib/db'
 import * as authSchema from '@/lib/db/auth-schema'
@@ -49,10 +50,32 @@ export const auth = betterAuth({
       // Sign-up is cheaper to abuse for spam accounts than to brute-force,
       // but still worth capping well below the global default.
       '/sign-up/email': { window: 60, max: 5 },
-      '/forget-password': { window: 60, max: 5 },
+      // Better Auth's actual route is /request-password-reset, not
+      // /forget-password — verified directly against api/routes/password.mjs
+      // after noticing the captcha plugin's own default endpoint list uses
+      // this name. The old key was a silent no-op (never matched anything).
+      '/request-password-reset': { window: 60, max: 5 },
       '/reset-password': { window: 60, max: 5 },
     },
   },
+
+  // Cloudflare Turnstile on sign-up, sign-in, and password-reset-request —
+  // Better Auth's own default endpoint list for this plugin, left as-is
+  // rather than narrowed, since brute-force protection on sign-in is as
+  // valuable as spam-account protection on sign-up. Server-side only: the
+  // client attaches the solved token via an `x-captcha-response` header
+  // (see components/turnstile-widget.tsx + auth-form.tsx) — this plugin
+  // never touches the client bundle.
+  plugins: [
+    captcha({
+      provider: 'cloudflare-turnstile',
+      secretKey: (() => {
+        const key = process.env.TURNSTILE_SECRET_KEY
+        if (!key) throw new Error('TURNSTILE_SECRET_KEY environment variable is not set')
+        return key
+      })(),
+    }),
+  ],
 
   advanced: {
     database: {

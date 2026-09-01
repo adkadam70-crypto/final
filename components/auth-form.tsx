@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
 import { Sparkles } from 'lucide-react'
+import { TurnstileWidget } from '@/components/turnstile-widget'
 
 export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   const [name, setName] = useState('')
@@ -16,6 +17,7 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   const [error, setError] = useState<string | null>(null)
   const errorRef = useRef<HTMLParagraphElement>(null)
   const [loading, setLoading] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
 
   const isSignUp = mode === 'sign-up'
 
@@ -26,11 +28,18 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+
+    if (!captchaToken) {
+      setError('Please complete the verification check before continuing.')
+      return
+    }
+
     setLoading(true)
 
+    const fetchOptions = { headers: { 'x-captcha-response': captchaToken } }
     const { error } = isSignUp
-      ? await authClient.signUp.email({ email, password, name })
-      : await authClient.signIn.email({ email, password })
+      ? await authClient.signUp.email({ email, password, name, fetchOptions })
+      : await authClient.signIn.email({ email, password, fetchOptions })
 
     setLoading(false)
 
@@ -106,6 +115,8 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
               autoComplete={isSignUp ? 'new-password' : 'current-password'}
             />
           </div>
+
+          <TurnstileWidget onToken={setCaptchaToken} onExpire={() => setCaptchaToken(null)} />
 
           {error && (
             <p ref={errorRef} tabIndex={-1} className="text-sm text-destructive outline-none" role="alert">

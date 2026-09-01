@@ -8,12 +8,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
 import { Sparkles, CheckCircle2 } from 'lucide-react'
+import { TurnstileWidget } from '@/components/turnstile-widget'
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
   const errorRef = useRef<HTMLParagraphElement>(null)
 
   useEffect(() => {
@@ -23,11 +25,18 @@ export function ForgotPasswordForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+
+    if (!captchaToken) {
+      setError('Please complete the verification check before continuing.')
+      return
+    }
+
     setLoading(true)
 
     const { error } = await authClient.requestPasswordReset({
       email,
       redirectTo: '/reset-password',
+      fetchOptions: { headers: { 'x-captcha-response': captchaToken } },
     })
 
     setLoading(false)
@@ -77,6 +86,8 @@ export function ForgotPasswordForm() {
                 autoComplete="email"
               />
             </div>
+
+            <TurnstileWidget onToken={setCaptchaToken} onExpire={() => setCaptchaToken(null)} />
 
             {error && (
               <p ref={errorRef} tabIndex={-1} className="text-sm text-destructive outline-none" role="alert">
