@@ -63,7 +63,7 @@ export function Landing() {
       <HeroScrollVideoReveal
         topBrand={
           <div className="flex items-center gap-2.5">
-            <AppLogo className="w-9 h-9 rounded-xl" />
+            <AppLogo className="h-9 w-auto" />
             <span className="text-2xl font-bold tracking-tight">Shortlisted</span>
           </div>
         }

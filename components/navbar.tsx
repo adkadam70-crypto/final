@@ -36,7 +36,7 @@ export function Navbar({ userName, userEmail }: { userName: string; userEmail: s
     >
       <nav className="max-w-6xl mx-auto flex items-center justify-between px-4 h-16">
         <Link href="/dashboard" className="flex items-center gap-2.5 shrink-0">
-          <AppLogo className="w-9 h-9 rounded-xl" />
+          <AppLogo className="h-9 w-auto" />
           <div className="flex flex-col leading-tight">
             <span className="text-lg font-bold tracking-tight">Shortlisted</span>
             <span className="text-[11px] text-muted-foreground hidden sm:block">College Predictor: US, UK, AU, SG, HK & India</span>

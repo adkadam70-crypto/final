@@ -55,7 +55,7 @@ export function ForgotPasswordForm() {
       <Card className="w-full max-w-sm p-6 rounded-3xl">
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-5">
-            <AppLogo className="w-7 h-7 rounded-lg" />
+            <AppLogo className="h-7 w-auto" />
             <span className="text-base font-bold tracking-tight">Shortlisted</span>
           </div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground text-balance">Reset your password</h1>
