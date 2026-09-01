@@ -118,7 +118,7 @@ export function defaultAcademicDetail(curriculum: AcademicDetail['curriculum']):
       return {
         curriculum: 'CBSE',
         subjects: [
-          { name: 'English', marks: 90 },
+          { name: 'English Core', marks: 90 },
           { name: 'Mathematics', marks: 90 },
           { name: 'Physics', marks: 90 },
           { name: 'Chemistry', marks: 90 },
@@ -144,7 +144,7 @@ export function defaultAcademicDetail(curriculum: AcademicDetail['curriculum']):
           { group: 2, subjectName: 'Spanish B', level: 'SL', grade: 6 },
           { group: 3, subjectName: 'Economics', level: 'HL', grade: 6 },
           { group: 4, subjectName: 'Physics', level: 'HL', grade: 6 },
-          { group: 5, subjectName: 'Mathematics: Analysis & Approaches', level: 'SL', grade: 6 },
+          { group: 5, subjectName: 'Mathematics: Analysis and Approaches', level: 'SL', grade: 6 },
           { group: 6, subjectName: 'Visual Arts', level: 'SL', grade: 6 },
         ],
         eeGrade: 'B',

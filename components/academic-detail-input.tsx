@@ -10,6 +10,7 @@ import {
   ucasPoints,
   ibTotal,
 } from '@/lib/academic-detail'
+import { CBSE_SUBJECTS, A_LEVEL_SUBJECTS, IB_SUBJECTS_BY_GROUP } from '@/lib/subject-lists'
 
 // Deliberately no width utility baked in here — Tailwind's cascade order
 // (not string order) decides which width utility wins when two are present
@@ -34,10 +35,13 @@ function CBSEInput({ detail, onChange }: { detail: Extract<AcademicDetail, { cur
     <div className="space-y-2">
       {detail.subjects.map((s, i) => (
         <div key={i} className="flex gap-2 items-center">
-          <input className={nameInputClass} placeholder="Subject" value={s.name} onChange={(e) => {
+          <select className={nameInputClass} value={s.name} onChange={(e) => {
             const subjects = [...detail.subjects]; subjects[i] = { ...s, name: e.target.value }
             onChange({ ...detail, subjects })
-          }} />
+          }}>
+            <option value="">Select subject</option>
+            {CBSE_SUBJECTS.map((subj) => <option key={subj} value={subj}>{subj}</option>)}
+          </select>
           <input className={`${inputClass} w-20 shrink-0`} type="number" min={0} max={100} placeholder="Marks" value={s.marks} onChange={(e) => {
             const subjects = [...detail.subjects]; subjects[i] = { ...s, marks: Number(e.target.value) }
             onChange({ ...detail, subjects })
@@ -61,10 +65,13 @@ function ALevelsInput({ detail, onChange }: { detail: Extract<AcademicDetail, { 
     <div className="space-y-2">
       {detail.subjects.map((s, i) => (
         <div key={i} className="flex gap-2 items-center">
-          <input className={nameInputClass} placeholder="Subject" value={s.name} onChange={(e) => {
+          <select className={nameInputClass} value={s.name} onChange={(e) => {
             const subjects = [...detail.subjects]; subjects[i] = { ...s, name: e.target.value }
             onChange({ ...detail, subjects })
-          }} />
+          }}>
+            <option value="">Select subject</option>
+            {A_LEVEL_SUBJECTS.map((subj) => <option key={subj} value={subj}>{subj}</option>)}
+          </select>
           <select className={`${inputClass} w-16 shrink-0`} value={s.grade} onChange={(e) => {
             const subjects = [...detail.subjects]; subjects[i] = { ...s, grade: e.target.value as ALevelGrade }
             onChange({ ...detail, subjects })
@@ -101,10 +108,13 @@ function IBInput({ detail, onChange }: { detail: Extract<AcademicDetail, { curri
       {detail.subjects.map((s, i) => (
         <div key={s.group} className="flex gap-2 items-center">
           <span className="text-[10px] text-muted-foreground w-4 shrink-0">{s.group}</span>
-          <input className={nameInputClass} placeholder={IB_SUBJECT_GROUPS[s.group - 1].name} value={s.subjectName} onChange={(e) => {
+          <select className={nameInputClass} value={s.subjectName} onChange={(e) => {
             const subjects = [...detail.subjects]; subjects[i] = { ...s, subjectName: e.target.value }
             onChange({ ...detail, subjects })
-          }} />
+          }}>
+            <option value="">{IB_SUBJECT_GROUPS[s.group - 1].name}</option>
+            {IB_SUBJECTS_BY_GROUP[s.group].map((subj) => <option key={subj} value={subj}>{subj}</option>)}
+          </select>
           <select className={`${inputClass} w-16 shrink-0`} value={s.level} onChange={(e) => {
             const subjects = [...detail.subjects]; subjects[i] = { ...s, level: e.target.value as 'HL' | 'SL' }
             onChange({ ...detail, subjects })
