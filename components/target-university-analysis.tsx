@@ -79,7 +79,7 @@ export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }
 
           <p className="text-xs text-muted-foreground leading-relaxed text-pretty">{result.admissionChanceSummary}</p>
 
-          <EarlyAdmissionPanel info={result.earlyAdmission} />
+          <EarlyAdmissionPanel info={result.earlyAdmission} admissionsContext={result.admissionsContext} />
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>

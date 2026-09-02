@@ -601,6 +601,9 @@ export async function runMatch(): Promise<
                 source: u.earlyAdmissionSource,
               }
             : null,
+          admissionsContext: u.admissionsContextNote
+            ? { note: u.admissionsContextNote, source: u.admissionsContextNoteSource ?? 'Curated' }
+            : null,
         }
       })
       .sort((a, b) => b.acceptanceProbability - a.acceptanceProbability)

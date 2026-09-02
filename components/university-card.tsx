@@ -73,7 +73,7 @@ export function UniversityCard({ uni }: { uni: MatchResult }) {
           {uni.rationale}
         </p>
 
-        <EarlyAdmissionPanel info={uni.earlyAdmission} compact />
+        <EarlyAdmissionPanel info={uni.earlyAdmission} admissionsContext={uni.admissionsContext} compact />
 
         <div className="mb-4 mt-4">
           <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">

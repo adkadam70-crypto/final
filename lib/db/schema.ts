@@ -41,6 +41,19 @@ export const universities = pgTable('universities', {
   earlyActionRate: integer('earlyActionRate'),
   regularDecisionRate: integer('regularDecisionRate'),
   earlyAdmissionSource: text('earlyAdmissionSource'), // e.g. 'Common Data Set 2024-25' — covers whichever of the three rates above are set
+  // Narrow, curated exception field — NOT meant to be filled in for most
+  // schools. Reserved for the small number of well-documented cases where a
+  // school's headline acceptance rate is misleadingly low mainly because of
+  // applicant-volume inflation (aggressive marketing, dropping supplemental
+  // essays, going test-optional) rather than a proportional rise in how hard
+  // it is for a genuinely well-matched applicant to get in — e.g. Northeastern
+  // and University of Chicago, both independently reported. Exists so a
+  // student isn't left thinking the app is broken when a school shows a
+  // shockingly low percentage. Distinct from the ED/RD split above (a
+  // different, also-real mechanism) — a school can have either, both, or
+  // neither.
+  admissionsContextNote: text('admissionsContextNote'),
+  admissionsContextNoteSource: text('admissionsContextNoteSource'),
   imageUrl: text('imageUrl'), // real campus photo from Wikimedia Commons — nullable, not every school resolves to a good match
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
@@ -210,4 +223,8 @@ export type MatchResult = {
   // this is what acceptanceProbability above is grounded in when present,
   // ahead of the blended publishedOverallRate.
   earlyAdmission: EarlyAdmissionInfo
+  // See universities.admissionsContextNote — rare, curated exception, null
+  // for the overwhelming majority of schools. Independent of earlyAdmission
+  // above: a school can have this without ED/EA data on file, or vice versa.
+  admissionsContext: { note: string; source: string } | null
 }

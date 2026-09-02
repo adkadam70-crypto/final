@@ -49,6 +49,7 @@ export type TargetAnalysisResult = {
   weaknesses: string[]
   actionSteps: string[]
   earlyAdmission: EarlyAdmissionInfo
+  admissionsContext: { note: string; source: string } | null
 }
 
 /**
@@ -189,6 +190,11 @@ Provide an honest tier + probability, and short, specific, scannable bullets for
           }
         : null
 
+    const admissionsContext =
+      matched && matched.admissionsContextNote
+        ? { note: matched.admissionsContextNote, source: matched.admissionsContextNoteSource ?? 'Curated' }
+        : null
+
     await db.insert(universityAnalyses).values({
       userId,
       universityName: matched?.name ?? trimmed,
@@ -212,6 +218,7 @@ Provide an honest tier + probability, and short, specific, scannable bullets for
       weaknesses: object.weaknesses,
       actionSteps: object.actionSteps,
       earlyAdmission,
+      admissionsContext,
     }
   } catch (err) {
     if (err instanceof Error && err.message.startsWith('OpenAI request failed')) {
