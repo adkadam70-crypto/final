@@ -140,17 +140,24 @@ export async function analyzeTargetUniversity(universityName: string): Promise<T
     let liveResearchContext: string | null = null
     if (!matched) {
       try {
-        const researchResponse = await client.responses.create({
-          model: 'gpt-5.6-terra',
-          input: [
-            {
-              role: 'user',
-              content: `Search the web for "${trimmed}"'s real, most recently published undergraduate acceptance rate. Check the university's own official site, government/education-ministry data, or reputable admissions-data sources. Report exactly what you find with a specific citation (publication or report name). If you cannot find an explicitly stated real rate, say so honestly — do not estimate or guess one.`,
-            },
-          ],
-          tools: [{ type: 'web_search' }],
-          text: { format: zodTextFormat(researchSchema, 'research_result') },
-        })
+        const researchResponse = await client.responses.create(
+          {
+            model: 'gpt-5.6-terra',
+            input: [
+              {
+                role: 'user',
+                content: `Search the web for "${trimmed}"'s real, published undergraduate acceptance rate. Do at most 1-2 targeted searches — check the university's own official site or a government/education-ministry source first, and stop as soon as you have an answer either way. Report exactly what you find with a specific citation. If a quick search doesn't turn up an explicitly stated real rate, say so honestly rather than digging further — do not estimate or guess one.`,
+              },
+            ],
+            tools: [{ type: 'web_search' }],
+            text: { format: zodTextFormat(researchSchema, 'research_result') },
+          },
+          // Hard cap — real multi-round web search can otherwise run 40s+;
+          // this is a best-effort enhancement, not worth making the user
+          // wait indefinitely for. Times out to the existing static-
+          // knowledge fallback below, same as any other research failure.
+          { timeout: 15_000 },
+        )
         const research = extractToolCallStructuredOutput(researchResponse, researchSchema)
         if (research?.foundRealAcceptanceRate && research.acceptanceRatePercent != null && research.acceptanceRateSource) {
           liveResearch = { acceptanceRatePercent: research.acceptanceRatePercent, source: research.acceptanceRateSource }
@@ -209,10 +216,10 @@ IMPORTANT — acceptanceProbability reflects admission to the UNIVERSITY, never 
           liveResearchContext
             ? liveResearchContext
             : " A live web search was also attempted and found nothing usable. Rely on your general knowledge, but be honest about how thin that is: if you don't have reliable knowledge of this specific school's actual selectivity, don't invent a precise-sounding number anyway."
-        } admissionChanceSummary MUST start with an explicit caveat before anything else — never lead with the tier or percentage as if it were a confident, grounded assessment.${
+        } admissionChanceSummary MUST start with a brief, calm caveat before anything else — never lead with the tier or percentage as if it were a confident, grounded assessment, but don't dwell on it or apologize either; one short clause is enough.${
           liveResearchContext && liveResearch
-            ? ' Since a real rate was found via live search, the caveat should say so plainly (e.g. "Not in our verified catalog, but a live search found a real published rate:") rather than implying this is unsourced guesswork.'
-            : ' Use a caveat like "We don\'t have verified data on this school, so this is a rough estimate:".'
+            ? ' Since a real rate was found via live search, phrase the caveat around that positively (e.g. "Based on a real published rate found via research:") rather than leading with what our catalog lacks.'
+            : ' Phrase the caveat plainly and briefly, e.g. "Based on general research rather than a verified data point:" — avoid dwelling on the absence of data.'
         } If you are genuinely unsure whether this is a highly selective or easily-entered school, prefer a wide middle-of-the-road tier ("Good Chance") over guessing "Reach" or "Safety" with false confidence.`
 
     const prompt = `You are an expert college admissions analyst. Give a specific, well-grounded deep-dive analysis of this student's chances at ONE named university. Prioritize being specific and scannable over being long — a reader should absorb this in seconds, not minutes. Every bullet must be concrete to this student and this school, never generic filler, but keep each one short and punchy.

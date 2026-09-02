@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Search, TrendingUp, AlertTriangle, ListChecks, Sparkles, Globe } from 'lucide-react'
+import { Search, TrendingUp, AlertTriangle, ListChecks, Sparkles, Globe, BrainCircuit } from 'lucide-react'
 import { analyzeTargetUniversity, type TargetAnalysisResult } from '@/app/actions/analyze-target-university'
 import { tierBadgeClass } from '@/lib/match-tier'
 import { LoadingDots } from '@/components/loading-dots'
@@ -76,10 +76,10 @@ export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }
           {!result.usedCatalogGrounding && (
             result.liveResearch ? (
               <p className="text-[11px] text-primary flex items-center gap-1.5" title={`Source: ${result.liveResearch.source}`}>
-                <Globe className="w-3.5 h-3.5 shrink-0" /> Not in our verified catalog — but a live web search found a real published acceptance rate ({result.liveResearch.acceptanceRatePercent}%) for this school and used it.
+                <Globe className="w-3.5 h-3.5 shrink-0" /> Found via live research: real published acceptance rate of {result.liveResearch.acceptanceRatePercent}%, used directly above.
               </p>
             ) : (
-              <p className="text-[11px] text-chart-2 flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5 shrink-0" /> Not in our verified catalog, and a live search found no real published rate either — based on general knowledge of this school, not sourced data.</p>
+              <p className="text-[11px] text-muted-foreground flex items-center gap-1.5"><BrainCircuit className="w-3.5 h-3.5 shrink-0" /> This school isn't in our core database yet, so this is our AI's own research-based estimate rather than a verified data point.</p>
             )
           )}
 
