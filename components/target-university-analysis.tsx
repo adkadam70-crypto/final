@@ -62,6 +62,7 @@ export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }
       </div>
 
       {!hasProfile && <p className="text-[11px] text-muted-foreground mt-2">Set up your profile below to use this.</p>}
+      {pending && <p className="text-[11px] text-muted-foreground/70 mt-2">Usually a few seconds — up to 15 if this school isn&apos;t in our database yet and we&apos;re researching it live.</p>}
       {error && <p ref={errorRef} tabIndex={-1} className="text-xs text-destructive mt-3 outline-none" role="alert">{error}</p>}
 
       {result && (

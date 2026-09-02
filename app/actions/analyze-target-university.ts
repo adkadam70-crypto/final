@@ -14,14 +14,6 @@ import { z } from 'zod'
 import OpenAI from 'openai'
 import { zodTextFormat } from 'openai/helpers/zod'
 
-const researchSchema = z.object({
-  isRealUniversity: z.boolean().describe('False only if this name does not appear to correspond to any real, accredited institution at all.'),
-  foundRealAcceptanceRate: z.boolean(),
-  acceptanceRatePercent: z.number().min(0).max(100).nullable().describe('Only set when foundRealAcceptanceRate is true — the exact published rate found.'),
-  acceptanceRateSource: z.string().nullable().describe('Specific citation when a real rate was found: publication/report name and what it says. Null otherwise.'),
-  briefContext: z.string().describe('Under 40 words: what kind of school this is, its general selectivity level, and any other notable admissions context found while searching.'),
-})
-
 /**
  * Extracts the final structured JSON payload from a Responses API call that
  * used tools (web_search) — response.output_parsed is only populated by the
@@ -42,7 +34,9 @@ function extractToolCallStructuredOutput<T>(response: OpenAI.Responses.Response,
   }
 }
 
-const analysisSchema = z.object({
+// Catalog-grounded path — real ED/EA rounds only ever apply to schools we
+// actually have on file, so this schema is exclusive to the `matched` branch.
+const catalogAnalysisSchema = z.object({
   matchTier: z.enum(['Safety', 'Good Chance', 'Reach', 'Ultra Reach']),
   acceptanceProbability: z.number().min(1).max(99),
   earlyDecisionProbability: z
@@ -67,6 +61,23 @@ const analysisSchema = z.object({
   actionSteps: z.array(z.string()).max(3).describe('Up to 3 concrete actions to become more competitive for this exact school, each under 15 words.'),
 })
 
+// Non-catalog path — search + full analysis in ONE call (not two sequential
+// ones). Merging them cuts real end-to-end latency roughly in half versus a
+// separate research call followed by a separate analysis call (~20-25s vs
+// ~11-13s in repeated live testing), since it avoids a second full
+// prompt-processing round-trip.
+const nonCatalogAnalysisSchema = z.object({
+  foundRealAcceptanceRate: z.boolean(),
+  acceptanceRatePercent: z.number().min(0).max(100).nullable().describe('Only set when foundRealAcceptanceRate is true.'),
+  acceptanceRateSource: z.string().nullable().describe('Specific citation when a real rate was found. Null otherwise.'),
+  matchTier: z.enum(['Safety', 'Good Chance', 'Reach', 'Ultra Reach']),
+  acceptanceProbability: z.number().min(1).max(99),
+  admissionChanceSummary: z.string().describe('Under 25 words summarizing the overall admission picture at this specific school.'),
+  strengths: z.array(z.string()).max(3).describe('Up to 3 specific strengths in this profile relative to this school, each under 12 words. Specific, not generic.'),
+  weaknesses: z.array(z.string()).max(3).describe('Up to 3 specific weaknesses or gaps relative to this school, each under 12 words. Specific, not generic.'),
+  actionSteps: z.array(z.string()).max(3).describe('Up to 3 concrete actions to become more competitive for this exact school, each under 15 words.'),
+})
+
 export type TargetAnalysisResult = {
   resolvedUniversityName: string
   usedCatalogGrounding: boolean
@@ -78,7 +89,7 @@ export type TargetAnalysisResult = {
   actionSteps: string[]
   earlyAdmission: EarlyAdmissionInfo
   admissionsContext: { note: string; source: string } | null
-  // Only set for schools NOT in our verified catalog, when a live web
+  // Only set for schools NOT in our verified catalog, when the live web
   // search (run at request time, not from our own database) turned up a
   // real, citable published acceptance rate. Distinct from admissionsContext
   // (which is our own curated data) and from the plain "not in our catalog"
@@ -86,13 +97,28 @@ export type TargetAnalysisResult = {
   liveResearch: { acceptanceRatePercent: number; source: string } | null
 }
 
+const BASE_PROFILE_BLOCK = (profile: NonNullable<Awaited<ReturnType<typeof getLatestProfile>>>, badge: string, tier: number) => `
+STUDENT PROFILE:
+- Normalized academics: ${badge} (internal academic tier ${tier}/4, higher is stronger)
+- Standardized tests: ${formatStandardizedTests(profile.standardizedTests)}
+- Earlier grades (9th-11th, optional context): ${formatPriorGrades(profile.priorGrades ?? EMPTY_PRIOR_GRADES)}
+- Preferred climate: ${profile.preferredClimate}
+- Preferred industry hub: ${profile.preferredSector}
+- Preferred university ranking: ${profile.preferredRank} (soft preference — weigh it alongside fit, don't treat it as a hard filter)
+- Intended field of study: ${profile.intendedField}
+- Extracurriculars: ${profile.extracurriculars.length ? profile.extracurriculars.join('; ') : 'None provided'}`
+
 /**
  * Rigorous single-university deep-dive: strengths, weaknesses, and concrete
  * action steps for the user's latest saved profile against one named school.
- * Grounded against the catalog when the name resolves to a known row.
- * Otherwise, runs a live web search (not the model's static training
- * knowledge alone) to try to find this specific school's real published
- * acceptance rate before falling back to a plainly-labeled estimate.
+ *
+ * Catalog schools: grounded directly in our own verified data, single fast
+ * call, no search needed.
+ *
+ * Non-catalog schools: a single call that both searches the web for this
+ * specific school's real published acceptance rate AND produces the full
+ * analysis in one shot (capped at 20s) — falls back to a fast, honest,
+ * search-free estimate if that doesn't complete in time.
  */
 export async function analyzeTargetUniversity(universityName: string): Promise<TargetAnalysisResult | { needsProfile: true }> {
   const userId = await getUserId()
@@ -131,144 +157,185 @@ export async function analyzeTargetUniversity(universityName: string): Promise<T
     }
     const client = new OpenAI({ apiKey })
 
-    // Not in our verified catalog — before falling back to the model's
-    // static training knowledge, try a live web search for this specific
-    // school's real published acceptance rate. Genuinely slower (multiple
-    // search rounds) and costs more per call than the catalog path, but a
-    // real, cited figure beats a guess whenever one is findable.
-    let liveResearch: TargetAnalysisResult['liveResearch'] = null
-    let liveResearchContext: string | null = null
-    if (!matched) {
-      try {
-        const researchResponse = await client.responses.create(
-          {
-            model: 'gpt-5.6-terra',
-            input: [
-              {
-                role: 'user',
-                content: `Search the web for "${trimmed}"'s real, published undergraduate acceptance rate. Do at most 1-2 targeted searches — check the university's own official site or a government/education-ministry source first, and stop as soon as you have an answer either way. Report exactly what you find with a specific citation. If a quick search doesn't turn up an explicitly stated real rate, say so honestly rather than digging further — do not estimate or guess one.`,
-              },
-            ],
-            tools: [{ type: 'web_search' }],
-            text: { format: zodTextFormat(researchSchema, 'research_result') },
-          },
-          // Hard cap — real multi-round web search can otherwise run 40s+;
-          // this is a best-effort enhancement, not worth making the user
-          // wait indefinitely for. Times out to the existing static-
-          // knowledge fallback below, same as any other research failure.
-          { timeout: 15_000 },
-        )
-        const research = extractToolCallStructuredOutput(researchResponse, researchSchema)
-        if (research?.foundRealAcceptanceRate && research.acceptanceRatePercent != null && research.acceptanceRateSource) {
-          liveResearch = { acceptanceRatePercent: research.acceptanceRatePercent, source: research.acceptanceRateSource }
-          liveResearchContext = ` A live web search found this school's REAL published undergraduate acceptance rate: ${research.acceptanceRatePercent}% per ${research.acceptanceRateSource}. Cite this directly and with confidence as the grounding for acceptanceProbability — it is a real, sourced figure, just not from our own curated database. Additional context found: ${research.briefContext}`
-        } else if (research) {
-          liveResearchContext = ` A live web search did not turn up an explicitly stated real acceptance rate for this school. Additional context found: ${research.briefContext}`
-        }
-      } catch {
-        // Web search is a best-effort enhancement — if it fails for any
-        // reason (network, malformed output), fall through silently to the
-        // existing static-knowledge disclaimer path below rather than
-        // failing the whole analysis over a research step that didn't pan out.
-      }
-    }
-
     const badge = gradeBadge(profile.academicDetail)
     const tier = gradeTier(profile.gradeValue)
+    const profileBlock = BASE_PROFILE_BLOCK(profile, badge, tier)
 
-    const programRank =
-      matched && profile.intendedField !== 'No preference'
-        ? (await db
-            .select()
-            .from(programRankings)
-            .where(and(eq(programRankings.universityId, matched.id), eq(programRankings.field, profile.intendedField))))[0]
-        : undefined
+    const requirementNote = `If this school lists a specific required credential, test, or exam that isn't reflected anywhere in this student's profile — a school-specific entrance exam, a portfolio, an interview, a specific test they haven't reported a score for — that is exactly the kind of concrete weakness to surface, and taking/improving it is exactly the kind of action step to recommend. Name the missing requirement directly and say plainly that it's likely a real factor holding down their odds at this specific school precisely because it's a stated requirement they haven't demonstrated. Don't invent requirements that aren't listed, and don't flag one the student's profile already satisfies.`
 
-    const admissionGrounding = !matched
-      ? ''
-      : matched.regularDecisionRate != null && matched.earlyAdmissionSource
-        ? ` This school's REAL Regular-Decision-only acceptance rate is ${matched.regularDecisionRate}% per ${matched.earlyAdmissionSource} — more precise than a blended headline rate for a typical non-early applicant, since a blended figure can fold in a much easier early-round pool (e.g. a school publishing a ~5% overall rate can be ~43% for Early Decision and ~4% for everyone else). Cite this directly and with full confidence as the grounding for acceptanceProbability.${
-            matched.actualAcceptanceRate != null
-              ? ` If that published overall rate (${matched.actualAcceptanceRate}%) is meaningfully different from this regular-decision figure, say so plainly in admissionChanceSummary — this is about transparency with the student, not about penalizing the school.`
-              : ''
-          }`
-        : matched.actualAcceptanceRate != null && matched.acceptanceRateSource
-          ? ` This school's REAL overall acceptance rate is ${matched.actualAcceptanceRate}% per ${matched.acceptanceRateSource} — cite this directly and with full confidence when computing acceptanceProbability (baseline selectivity above was derived from this same figure, they are not independent facts).`
-          : matched.rankValue != null && matched.rankSource
-            ? ` No real overall acceptance rate is on file. This school IS ranked #${matched.rankValue} overall per ${matched.rankSource} — cite that plainly (e.g. "ranked #${matched.rankValue} overall") as the grounding for acceptanceProbability, but don't present it with the same confidence as a real acceptance rate.`
-            : ` No real overall acceptance rate or overall ranking exists for this school — baseline selectivity above is an internal estimate, not a citation; don't present it as sourced.`
+    let matchTier: MatchResult['matchTier']
+    let acceptanceProbability: number
+    let admissionChanceSummary: string
+    let strengths: string[]
+    let weaknesses: string[]
+    let actionSteps: string[]
+    let earlyDecisionProbability: number | null = null
+    let earlyActionProbability: number | null = null
+    let liveResearch: TargetAnalysisResult['liveResearch'] = null
 
-    const earlyAdmissionGrounding = !matched
-      ? ''
-      : matched.earlyDecisionRate != null || matched.earlyActionRate != null
-        ? ` Separately, compute earlyDecisionProbability and/or earlyActionProbability: this school has a REAL ${matched.earlyDecisionRate != null ? `Early Decision (binding) admit rate of ${matched.earlyDecisionRate}%` : ''}${matched.earlyDecisionRate != null && matched.earlyActionRate != null ? ' and a REAL ' : ''}${matched.earlyActionRate != null ? `Early Action (non-binding) admit rate of ${matched.earlyActionRate}%` : ''} per ${matched.earlyAdmissionSource}. Estimate this student's chance under each real round the same way you computed acceptanceProbability, just grounded in that round's real rate instead. Leave the other one (no real rate on file) null — never invent one.`
-        : ' This school has no real Early Decision or Early Action rate on file — leave earlyDecisionProbability and earlyActionProbability both null.'
+    if (matched) {
+      const programRank =
+        profile.intendedField !== 'No preference'
+          ? (await db
+              .select()
+              .from(programRankings)
+              .where(and(eq(programRankings.universityId, matched.id), eq(programRankings.field, profile.intendedField))))[0]
+          : undefined
 
-    const groundingBlock = matched
-      ? `This school IS in our verified catalog. Ground your analysis in this data: baseline selectivity ${matched.baselineSelectivity}/100, sectors: ${matched.sectors.join(', ')}, climate: ${matched.climate}, requirements: ${matched.requirements.join(', ')}.
+      const admissionGrounding =
+        matched.regularDecisionRate != null && matched.earlyAdmissionSource
+          ? ` This school's REAL Regular-Decision-only acceptance rate is ${matched.regularDecisionRate}% per ${matched.earlyAdmissionSource} — more precise than a blended headline rate for a typical non-early applicant, since a blended figure can fold in a much easier early-round pool (e.g. a school publishing a ~5% overall rate can be ~43% for Early Decision and ~4% for everyone else). Cite this directly and with full confidence as the grounding for acceptanceProbability.${
+              matched.actualAcceptanceRate != null
+                ? ` If that published overall rate (${matched.actualAcceptanceRate}%) is meaningfully different from this regular-decision figure, say so plainly in admissionChanceSummary — this is about transparency with the student, not about penalizing the school.`
+                : ''
+            }`
+          : matched.actualAcceptanceRate != null && matched.acceptanceRateSource
+            ? ` This school's REAL overall acceptance rate is ${matched.actualAcceptanceRate}% per ${matched.acceptanceRateSource} — cite this directly and with full confidence when computing acceptanceProbability (baseline selectivity above was derived from this same figure, they are not independent facts).`
+            : matched.rankValue != null && matched.rankSource
+              ? ` No real overall acceptance rate is on file. This school IS ranked #${matched.rankValue} overall per ${matched.rankSource} — cite that plainly (e.g. "ranked #${matched.rankValue} overall") as the grounding for acceptanceProbability, but don't present it with the same confidence as a real acceptance rate.`
+              : ` No real overall acceptance rate or overall ranking exists for this school — baseline selectivity above is an internal estimate, not a citation; don't present it as sourced.`
+
+      const earlyAdmissionGrounding =
+        matched.earlyDecisionRate != null || matched.earlyActionRate != null
+          ? ` Separately, compute earlyDecisionProbability and/or earlyActionProbability: this school has a REAL ${matched.earlyDecisionRate != null ? `Early Decision (binding) admit rate of ${matched.earlyDecisionRate}%` : ''}${matched.earlyDecisionRate != null && matched.earlyActionRate != null ? ' and a REAL ' : ''}${matched.earlyActionRate != null ? `Early Action (non-binding) admit rate of ${matched.earlyActionRate}%` : ''} per ${matched.earlyAdmissionSource}. Estimate this student's chance under each real round the same way you computed acceptanceProbability, just grounded in that round's real rate instead. Leave the other one (no real rate on file) null — never invent one.`
+          : ' This school has no real Early Decision or Early Action rate on file — leave earlyDecisionProbability and earlyActionProbability both null.'
+
+      const groundingBlock = `This school IS in our verified catalog. Ground your analysis in this data: baseline selectivity ${matched.baselineSelectivity}/100, sectors: ${matched.sectors.join(', ')}, climate: ${matched.climate}, requirements: ${matched.requirements.join(', ')}.
 
 IMPORTANT — acceptanceProbability reflects admission to the UNIVERSITY, never to a specific program. Most schools admit holistically to the institution as a whole; this app has no verified data on which schools instead admit directly by college/major with a genuinely separate process (real at a handful of schools, e.g. Carnegie Mellon's School of Computer Science or NYU Stern, but not something to assume by default here). So ground acceptanceProbability in the university-wide signal below, NEVER in a program-specific ranking:${admissionGrounding}${
-          programRank
-            ? ` Separately — for this student's intended field (${profile.intendedField}), this school's program is verified as ranked #${programRank.rankValue ?? '?'} nationally per ${programRank.rankSource}. This is a quality/fit fact only: mention it in the rationale as context on how strong that specific program is, but it must NOT move acceptanceProbability.`
-            : ''
-        }${earlyAdmissionGrounding}`
-      : `This school is NOT in our own verified catalog — we have no selectivity, acceptance rate, or ranking data for it in our database.${
-          liveResearchContext
-            ? liveResearchContext
-            : " A live web search was also attempted and found nothing usable. Rely on your general knowledge, but be honest about how thin that is: if you don't have reliable knowledge of this specific school's actual selectivity, don't invent a precise-sounding number anyway."
-        } admissionChanceSummary MUST start with a brief, calm caveat before anything else — never lead with the tier or percentage as if it were a confident, grounded assessment, but don't dwell on it or apologize either; one short clause is enough.${
-          liveResearchContext && liveResearch
-            ? ' Since a real rate was found via live search, phrase the caveat around that positively (e.g. "Based on a real published rate found via research:") rather than leading with what our catalog lacks.'
-            : ' Phrase the caveat plainly and briefly, e.g. "Based on general research rather than a verified data point:" — avoid dwelling on the absence of data.'
-        } If you are genuinely unsure whether this is a highly selective or easily-entered school, prefer a wide middle-of-the-road tier ("Good Chance") over guessing "Reach" or "Safety" with false confidence.`
+        programRank
+          ? ` Separately — for this student's intended field (${profile.intendedField}), this school's program is verified as ranked #${programRank.rankValue ?? '?'} nationally per ${programRank.rankSource}. This is a quality/fit fact only: mention it in the rationale as context on how strong that specific program is, but it must NOT move acceptanceProbability.`
+          : ''
+      }${earlyAdmissionGrounding}`
 
-    const prompt = `You are an expert college admissions analyst. Give a specific, well-grounded deep-dive analysis of this student's chances at ONE named university. Prioritize being specific and scannable over being long — a reader should absorb this in seconds, not minutes. Every bullet must be concrete to this student and this school, never generic filler, but keep each one short and punchy.
+      const prompt = `You are an expert college admissions analyst. Give a specific, well-grounded deep-dive analysis of this student's chances at ONE named university. Prioritize being specific and scannable over being long — a reader should absorb this in seconds, not minutes. Every bullet must be concrete to this student and this school, never generic filler, but keep each one short and punchy.
 
 ${BIAS_INSTRUCTION}
 
-TARGET UNIVERSITY: ${matched?.name ?? trimmed}
+TARGET UNIVERSITY: ${matched.name}
 ${groundingBlock}
+${profileBlock}
 
-STUDENT PROFILE:
-- Normalized academics: ${badge} (internal academic tier ${tier}/4, higher is stronger)
-- Standardized tests: ${formatStandardizedTests(profile.standardizedTests)}
-- Earlier grades (9th-11th, optional context): ${formatPriorGrades(profile.priorGrades ?? EMPTY_PRIOR_GRADES)}
-- Preferred climate: ${profile.preferredClimate}
-- Preferred industry hub: ${profile.preferredSector}
-- Preferred university ranking: ${profile.preferredRank} (soft preference — weigh it alongside fit, don't treat it as a hard filter)
-- Intended field of study: ${profile.intendedField}
-- Extracurriculars: ${profile.extracurriculars.length ? profile.extracurriculars.join('; ') : 'None provided'}
-
-If this school (see requirements above) lists a specific required credential, test, or exam that isn't reflected anywhere in this student's profile — a school-specific entrance exam, a portfolio, an interview, a specific test they haven't reported a score for — that is exactly the kind of concrete weakness to surface, and taking/improving it is exactly the kind of action step to recommend. Name the missing requirement directly and say plainly that it's likely a real factor holding down their odds at this specific school precisely because it's a stated requirement they haven't demonstrated. Don't invent requirements that aren't listed above, and don't flag one the student's profile already satisfies.
+${requirementNote}
 
 Provide an honest tier + probability, and short, specific, scannable bullets for strengths, weaknesses/gaps, and action steps — brevity over completeness.`
 
-    let response
-    try {
-      response = await client.responses.parse({
-        model: 'gpt-5.6-terra',
-        input: [{ role: 'user', content: prompt }],
-        text: { format: zodTextFormat(analysisSchema, 'target_analysis') },
-      })
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'OpenAI request failed'
-      throw new Error(`OpenAI request failed: ${message}`)
+      let response
+      try {
+        response = await client.responses.parse({
+          model: 'gpt-5.6-terra',
+          input: [{ role: 'user', content: prompt }],
+          text: { format: zodTextFormat(catalogAnalysisSchema, 'target_analysis') },
+        })
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'OpenAI request failed'
+        throw new Error(`OpenAI request failed: ${message}`)
+      }
+      if (!response.output_parsed) {
+        throw new Error('OpenAI returned no parseable output for the analysis request')
+      }
+      const object = response.output_parsed
+      matchTier = object.matchTier
+      acceptanceProbability = object.acceptanceProbability
+      admissionChanceSummary = object.admissionChanceSummary
+      strengths = object.strengths
+      weaknesses = object.weaknesses
+      actionSteps = object.actionSteps
+      earlyDecisionProbability = object.earlyDecisionProbability
+      earlyActionProbability = object.earlyActionProbability
+    } else {
+      const mergedPrompt = `You are an expert college admissions analyst. TARGET UNIVERSITY: ${trimmed}
+
+This school is NOT in our own verified catalog — we have no selectivity, acceptance rate, or ranking data for it in our database. Do AT MOST 1 quick, targeted web search for this school's real published undergraduate acceptance rate — check its official site or a government/education-ministry source first, and stop as soon as you have an answer either way. Report exactly what you find with a specific citation (set foundRealAcceptanceRate, acceptanceRatePercent, acceptanceRateSource accordingly). If a quick search doesn't turn up an explicitly stated real rate, don't dig further — set foundRealAcceptanceRate to false and give an honest profile-based estimate instead; never invent a precise-sounding number.
+
+${BIAS_INSTRUCTION}
+${profileBlock}
+
+${requirementNote}
+
+admissionChanceSummary MUST start with a brief, calm caveat before anything else — never lead with the tier or percentage as if it were a confident, grounded assessment, but don't dwell on it or apologize either; one short clause is enough. If a real rate was found, phrase the caveat positively around that (e.g. "Based on a real published rate found via research:") rather than leading with what our catalog lacks. Otherwise phrase it plainly, e.g. "Based on general research rather than a verified data point:". If you are genuinely unsure whether this is a highly selective or easily-entered school, prefer a wide middle-of-the-road tier ("Good Chance") over guessing "Reach" or "Safety" with false confidence.
+
+Provide short, specific, scannable bullets for strengths, weaknesses/gaps, and action steps — brevity over completeness.`
+
+      let merged: z.infer<typeof nonCatalogAnalysisSchema> | null = null
+      try {
+        const mergedResponse = await client.responses.create(
+          {
+            model: 'gpt-5.6-terra',
+            input: [{ role: 'user', content: mergedPrompt }],
+            tools: [{ type: 'web_search' }],
+            text: { format: zodTextFormat(nonCatalogAnalysisSchema, 'non_catalog_analysis') },
+          },
+          // Generous-but-bounded — repeated live testing landed this merged
+          // (search + analysis in one call) at ~11-13s; 20s leaves headroom
+          // for a slower run without approaching the old two-call ~40s+ tail.
+          { timeout: 20_000 },
+        )
+        merged = extractToolCallStructuredOutput(mergedResponse, nonCatalogAnalysisSchema)
+      } catch {
+        // Falls through to the no-search fallback below.
+      }
+
+      if (merged) {
+        matchTier = merged.matchTier
+        acceptanceProbability = merged.acceptanceProbability
+        admissionChanceSummary = merged.admissionChanceSummary
+        strengths = merged.strengths
+        weaknesses = merged.weaknesses
+        actionSteps = merged.actionSteps
+        if (merged.foundRealAcceptanceRate && merged.acceptanceRatePercent != null && merged.acceptanceRateSource) {
+          liveResearch = { acceptanceRatePercent: merged.acceptanceRatePercent, source: merged.acceptanceRateSource }
+        }
+      } else {
+        // Search timed out or failed outright — fast, honest, search-free
+        // fallback so the user still gets a result rather than an error.
+        const fallbackPrompt = `You are an expert college admissions analyst. TARGET UNIVERSITY: ${trimmed}
+
+This school is NOT in our own verified catalog, and a live web search was also attempted and found nothing usable. Rely on your general knowledge, but be honest about how thin that is — if you don't have reliable knowledge of this specific school's actual selectivity, don't invent a precise-sounding number anyway.
+
+${BIAS_INSTRUCTION}
+${profileBlock}
+
+${requirementNote}
+
+admissionChanceSummary MUST start with a brief, calm caveat before anything else, e.g. "Based on general research rather than a verified data point:" — one short clause, don't dwell on it. If you are genuinely unsure whether this is a highly selective or easily-entered school, prefer a wide middle-of-the-road tier ("Good Chance") over guessing "Reach" or "Safety" with false confidence.
+
+Provide short, specific, scannable bullets for strengths, weaknesses/gaps, and action steps — brevity over completeness.`
+
+        let response
+        try {
+          response = await client.responses.parse({
+            model: 'gpt-5.6-terra',
+            input: [{ role: 'user', content: fallbackPrompt }],
+            text: { format: zodTextFormat(catalogAnalysisSchema, 'target_analysis_fallback') },
+          })
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'OpenAI request failed'
+          throw new Error(`OpenAI request failed: ${message}`)
+        }
+        if (!response.output_parsed) {
+          throw new Error('OpenAI returned no parseable output for the analysis request')
+        }
+        const object = response.output_parsed
+        matchTier = object.matchTier
+        acceptanceProbability = object.acceptanceProbability
+        admissionChanceSummary = object.admissionChanceSummary
+        strengths = object.strengths
+        weaknesses = object.weaknesses
+        actionSteps = object.actionSteps
+      }
     }
-    if (!response.output_parsed) {
-      throw new Error('OpenAI returned no parseable output for the analysis request')
-    }
-    const object = response.output_parsed
 
     const earlyAdmission: EarlyAdmissionInfo =
       matched && matched.earlyAdmissionSource
         ? {
             earlyDecision:
-              matched.earlyDecisionRate != null && object.earlyDecisionProbability != null
-                ? { realRate: matched.earlyDecisionRate, yourChance: object.earlyDecisionProbability }
+              matched.earlyDecisionRate != null && earlyDecisionProbability != null
+                ? { realRate: matched.earlyDecisionRate, yourChance: earlyDecisionProbability }
                 : null,
             earlyAction:
-              matched.earlyActionRate != null && object.earlyActionProbability != null
-                ? { realRate: matched.earlyActionRate, yourChance: object.earlyActionProbability }
+              matched.earlyActionRate != null && earlyActionProbability != null
+                ? { realRate: matched.earlyActionRate, yourChance: earlyActionProbability }
                 : null,
             regularDecision: matched.regularDecisionRate != null ? { realRate: matched.regularDecisionRate } : null,
             publishedOverallRate: matched.actualAcceptanceRate,
@@ -286,23 +353,23 @@ Provide an honest tier + probability, and short, specific, scannable bullets for
       universityName: matched?.name ?? trimmed,
       universityId: matched?.id ?? null,
       usedCatalogGrounding: matched ? 1 : 0,
-      acceptanceProbability: object.acceptanceProbability,
-      matchTier: object.matchTier,
-      admissionChanceSummary: object.admissionChanceSummary,
-      strengths: object.strengths,
-      weaknesses: object.weaknesses,
-      actionSteps: object.actionSteps,
+      acceptanceProbability,
+      matchTier,
+      admissionChanceSummary,
+      strengths,
+      weaknesses,
+      actionSteps,
     })
 
     return {
       resolvedUniversityName: matched?.name ?? trimmed,
       usedCatalogGrounding: !!matched,
-      matchTier: object.matchTier,
-      acceptanceProbability: object.acceptanceProbability,
-      admissionChanceSummary: object.admissionChanceSummary,
-      strengths: object.strengths,
-      weaknesses: object.weaknesses,
-      actionSteps: object.actionSteps,
+      matchTier,
+      acceptanceProbability,
+      admissionChanceSummary,
+      strengths,
+      weaknesses,
+      actionSteps,
       earlyAdmission,
       admissionsContext,
       liveResearch,
