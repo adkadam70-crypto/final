@@ -14,6 +14,34 @@ import { z } from 'zod'
 import OpenAI from 'openai'
 import { zodTextFormat } from 'openai/helpers/zod'
 
+const researchSchema = z.object({
+  isRealUniversity: z.boolean().describe('False only if this name does not appear to correspond to any real, accredited institution at all.'),
+  foundRealAcceptanceRate: z.boolean(),
+  acceptanceRatePercent: z.number().min(0).max(100).nullable().describe('Only set when foundRealAcceptanceRate is true — the exact published rate found.'),
+  acceptanceRateSource: z.string().nullable().describe('Specific citation when a real rate was found: publication/report name and what it says. Null otherwise.'),
+  briefContext: z.string().describe('Under 40 words: what kind of school this is, its general selectivity level, and any other notable admissions context found while searching.'),
+})
+
+/**
+ * Extracts the final structured JSON payload from a Responses API call that
+ * used tools (web_search) — response.output_parsed is only populated by the
+ * .parse() convenience method, which doesn't support tools, so a tool-using
+ * .create() call must be parsed manually from the last message-type output
+ * item instead.
+ */
+function extractToolCallStructuredOutput<T>(response: OpenAI.Responses.Response, schema: z.ZodType<T>): T | null {
+  const messageItem = [...response.output].reverse().find((item) => item.type === 'message')
+  if (!messageItem || messageItem.type !== 'message') return null
+  const textPart = messageItem.content.find((c) => c.type === 'output_text')
+  if (!textPart || textPart.type !== 'output_text') return null
+  try {
+    const parsed = schema.safeParse(JSON.parse(textPart.text))
+    return parsed.success ? parsed.data : null
+  } catch {
+    return null
+  }
+}
+
 const analysisSchema = z.object({
   matchTier: z.enum(['Safety', 'Good Chance', 'Reach', 'Ultra Reach']),
   acceptanceProbability: z.number().min(1).max(99),
@@ -50,13 +78,21 @@ export type TargetAnalysisResult = {
   actionSteps: string[]
   earlyAdmission: EarlyAdmissionInfo
   admissionsContext: { note: string; source: string } | null
+  // Only set for schools NOT in our verified catalog, when a live web
+  // search (run at request time, not from our own database) turned up a
+  // real, citable published acceptance rate. Distinct from admissionsContext
+  // (which is our own curated data) and from the plain "not in our catalog"
+  // disclaimer (which fires when live search finds nothing usable either).
+  liveResearch: { acceptanceRatePercent: number; source: string } | null
 }
 
 /**
  * Rigorous single-university deep-dive: strengths, weaknesses, and concrete
  * action steps for the user's latest saved profile against one named school.
- * Grounded against the catalog when the name resolves to a known row;
- * otherwise falls back to the model's general knowledge with a disclaimer.
+ * Grounded against the catalog when the name resolves to a known row.
+ * Otherwise, runs a live web search (not the model's static training
+ * knowledge alone) to try to find this specific school's real published
+ * acceptance rate before falling back to a plainly-labeled estimate.
  */
 export async function analyzeTargetUniversity(universityName: string): Promise<TargetAnalysisResult | { needsProfile: true }> {
   const userId = await getUserId()
@@ -94,6 +130,41 @@ export async function analyzeTargetUniversity(universityName: string): Promise<T
       }
     }
     const client = new OpenAI({ apiKey })
+
+    // Not in our verified catalog — before falling back to the model's
+    // static training knowledge, try a live web search for this specific
+    // school's real published acceptance rate. Genuinely slower (multiple
+    // search rounds) and costs more per call than the catalog path, but a
+    // real, cited figure beats a guess whenever one is findable.
+    let liveResearch: TargetAnalysisResult['liveResearch'] = null
+    let liveResearchContext: string | null = null
+    if (!matched) {
+      try {
+        const researchResponse = await client.responses.create({
+          model: 'gpt-5.6-terra',
+          input: [
+            {
+              role: 'user',
+              content: `Search the web for "${trimmed}"'s real, most recently published undergraduate acceptance rate. Check the university's own official site, government/education-ministry data, or reputable admissions-data sources. Report exactly what you find with a specific citation (publication or report name). If you cannot find an explicitly stated real rate, say so honestly — do not estimate or guess one.`,
+            },
+          ],
+          tools: [{ type: 'web_search' }],
+          text: { format: zodTextFormat(researchSchema, 'research_result') },
+        })
+        const research = extractToolCallStructuredOutput(researchResponse, researchSchema)
+        if (research?.foundRealAcceptanceRate && research.acceptanceRatePercent != null && research.acceptanceRateSource) {
+          liveResearch = { acceptanceRatePercent: research.acceptanceRatePercent, source: research.acceptanceRateSource }
+          liveResearchContext = ` A live web search found this school's REAL published undergraduate acceptance rate: ${research.acceptanceRatePercent}% per ${research.acceptanceRateSource}. Cite this directly and with confidence as the grounding for acceptanceProbability — it is a real, sourced figure, just not from our own curated database. Additional context found: ${research.briefContext}`
+        } else if (research) {
+          liveResearchContext = ` A live web search did not turn up an explicitly stated real acceptance rate for this school. Additional context found: ${research.briefContext}`
+        }
+      } catch {
+        // Web search is a best-effort enhancement — if it fails for any
+        // reason (network, malformed output), fall through silently to the
+        // existing static-knowledge disclaimer path below rather than
+        // failing the whole analysis over a research step that didn't pan out.
+      }
+    }
 
     const badge = gradeBadge(profile.academicDetail)
     const tier = gradeTier(profile.gradeValue)
@@ -134,7 +205,15 @@ IMPORTANT — acceptanceProbability reflects admission to the UNIVERSITY, never 
             ? ` Separately — for this student's intended field (${profile.intendedField}), this school's program is verified as ranked #${programRank.rankValue ?? '?'} nationally per ${programRank.rankSource}. This is a quality/fit fact only: mention it in the rationale as context on how strong that specific program is, but it must NOT move acceptanceProbability.`
             : ''
         }${earlyAdmissionGrounding}`
-      : `This school is NOT in our verified catalog — we have no selectivity, acceptance rate, or ranking data for it at all. Rely on your general knowledge, but be honest about how thin that is: if you don't have reliable knowledge of this specific school's actual selectivity, don't invent a precise-sounding number anyway. admissionChanceSummary MUST start with an explicit caveat (e.g. "We don't have verified data on this school, so this is a rough estimate:") before anything else — never lead with the tier or percentage as if it were a confident, grounded assessment. If you are genuinely unsure whether this is a highly selective or easily-entered school, prefer a wide middle-of-the-road tier ("Good Chance") over guessing "Reach" or "Safety" with false confidence.`
+      : `This school is NOT in our own verified catalog — we have no selectivity, acceptance rate, or ranking data for it in our database.${
+          liveResearchContext
+            ? liveResearchContext
+            : " A live web search was also attempted and found nothing usable. Rely on your general knowledge, but be honest about how thin that is: if you don't have reliable knowledge of this specific school's actual selectivity, don't invent a precise-sounding number anyway."
+        } admissionChanceSummary MUST start with an explicit caveat before anything else — never lead with the tier or percentage as if it were a confident, grounded assessment.${
+          liveResearchContext && liveResearch
+            ? ' Since a real rate was found via live search, the caveat should say so plainly (e.g. "Not in our verified catalog, but a live search found a real published rate:") rather than implying this is unsourced guesswork.'
+            : ' Use a caveat like "We don\'t have verified data on this school, so this is a rough estimate:".'
+        } If you are genuinely unsure whether this is a highly selective or easily-entered school, prefer a wide middle-of-the-road tier ("Good Chance") over guessing "Reach" or "Safety" with false confidence.`
 
     const prompt = `You are an expert college admissions analyst. Give a specific, well-grounded deep-dive analysis of this student's chances at ONE named university. Prioritize being specific and scannable over being long — a reader should absorb this in seconds, not minutes. Every bullet must be concrete to this student and this school, never generic filler, but keep each one short and punchy.
 
@@ -219,6 +298,7 @@ Provide an honest tier + probability, and short, specific, scannable bullets for
       actionSteps: object.actionSteps,
       earlyAdmission,
       admissionsContext,
+      liveResearch,
     }
   } catch (err) {
     if (err instanceof Error && err.message.startsWith('OpenAI request failed')) {
