@@ -249,7 +249,7 @@ async function generateOpenAIMatch({
     climate: string
     academicFields: string[]
     requirements: string[]
-    programRank: { rankValue: number | null; rankSource: string; programSelectivity: number } | null
+    programRank: { rankValue: number | null; rankSource: string; programSelectivity: number; additionalRequirements: string[] } | null
     overallRank: { rankValue: number; rankSource: string } | null
     actualAcceptanceRate: { rate: number; source: string } | null
     earlyAdmission: { ed: number | null; ea: number | null; rd: number | null; source: string } | null
@@ -320,6 +320,11 @@ ${JSON.stringify(
     programRankingForIntendedField: u.programRank
       ? `Ranked #${u.programRank.rankValue ?? '?'} nationally per ${u.programRank.rankSource} — program-specific selectivity ${u.programRank.programSelectivity}/100`
       : 'No verified program-specific ranking on file.',
+    programSpecificAdditionalRequirements: u.programRank
+      ? u.programRank.additionalRequirements.length
+        ? u.programRank.additionalRequirements
+        : 'None on file beyond admissionRequirements above.'
+      : 'No verified program-specific data on file — nothing to add beyond admissionRequirements above.',
     actualOverallAcceptanceRate: u.actualAcceptanceRate
       ? `${u.actualAcceptanceRate.rate}% overall admit rate, per ${u.actualAcceptanceRate.source} — a real published figure, not an estimate.`
       : 'Not on file.',
@@ -356,6 +361,8 @@ testScoreFit, when it contains a real comparison (not "Not on file" or "not dire
 The student's "preferred university ranking" in their profile (e.g. "Top 50") is a real threshold to check against overallRanking's rank if present (not the program rank, for the same reason as above — the preference is about the university). If a school's verified overall rank falls outside the student's stated preference, say so plainly in the rationale (e.g. "ranked #78 overall, outside your Top 50 preference") — don't silently ignore the mismatch, but also don't use it to zero out an otherwise-good match, since it's explicitly a soft preference. When no overall rank exists for a school, there's nothing concrete to compare against the preference — don't guess whether it would qualify.
 
 Cross-reference admissionRequirements against the student's actual profile above (standardized tests, curriculum/grades, extracurriculars) for every school. If a school lists a specific required credential, test, or exam that isn't reflected anywhere in the student's profile (e.g. a school-specific entrance exam, a portfolio, an interview, a specific test the student hasn't reported a score for), that is exactly the kind of concrete, specific improvementTip to surface — name the missing requirement directly and say plainly that it's likely holding down this student's odds at this specific school precisely because it's a stated requirement they haven't demonstrated. Don't invent requirements that aren't listed, and don't flag a requirement the student's profile already satisfies.
+
+Do the same cross-reference for programSpecificAdditionalRequirements, when it's a real list rather than "None on file...": these are requirements for the student's own intended field/program specifically — on top of, not instead of, admissionRequirements above (e.g. a supplemental essay, a portfolio, or a specific score a particular school of engineering or business requires beyond what the university asks of everyone). If one of these isn't reflected in the student's profile, flag it the same way — name it directly, and note it's specific to this student's intended program at this school, not a school-wide requirement. Like programRankingForIntendedField, this is fit/preparedness context only — never use it to move acceptanceProbability itself.
 
 Assess every university in the list above and return one result per university, including exactly 2 specific improvementTips per school. Keep rationale and tips terse — brevity over completeness.`
 
@@ -426,7 +433,7 @@ export async function runMatch(): Promise<
     // upfront now because a "Top 50" rank preference has to filter the pool
     // by real rank numbers before sampling, not just describe it to the AI
     // afterward. Absence means "not yet researched," never "unranked".
-    const programRankByUniversityId = new Map<number, { rankValue: number | null; rankSource: string; programSelectivity: number }>()
+    const programRankByUniversityId = new Map<number, { rankValue: number | null; rankSource: string; programSelectivity: number; additionalRequirements: string[] }>()
     if (profile.intendedField !== 'No preference') {
       const rankRows = await db
         .select()
@@ -442,6 +449,7 @@ export async function runMatch(): Promise<
           rankValue: row.rankValue,
           rankSource: row.rankSource,
           programSelectivity: row.programSelectivity,
+          additionalRequirements: row.additionalRequirements,
         })
       }
     }

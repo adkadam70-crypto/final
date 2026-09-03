@@ -99,6 +99,15 @@ export const programRankings = pgTable('programRankings', {
   acceptanceRate: integer('acceptanceRate'), // 0-100 program-specific admit rate, if the source publishes one; nullable
   programSelectivity: integer('programSelectivity').notNull(), // 0-100, this program's selectivity (derived from rank/acceptance rate) — used in place of baselineSelectivity when present
   notes: text('notes'), // caveats, e.g. "rank is for the business school overall, not a named major"
+  // Program-specific admission requirements ON TOP OF universities.requirements
+  // (school-wide) — e.g. Carnegie Mellon's School of Computer Science
+  // requiring a supplemental essay and sometimes an AP CS score, or NYU
+  // Stern requiring its own supplemental essays. Same convention as
+  // universities.requirements: empty array means "none on file / none
+  // required beyond the school-wide list," never "unresearched" — a row
+  // existing in this table at all already implies the field was
+  // deliberately researched, since a row won't exist otherwise.
+  additionalRequirements: jsonb('additionalRequirements').$type<string[]>().notNull().default([]),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
 
