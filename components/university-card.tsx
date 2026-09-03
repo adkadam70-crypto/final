@@ -42,13 +42,22 @@ export function UniversityCard({ uni }: { uni: MatchResult }) {
               <span className="flex items-center gap-1">
                 <Sun className="w-3 h-3 text-chart-2" /> {uni.climate}
               </span>
-              {uni.rankBadge && (
+              {uni.generalRankBadge && (
                 <span
                   className="flex items-center gap-1 bg-chart-4/15 border border-chart-4/25 text-chart-4 rounded-full px-2 py-0.5 font-medium"
-                  title={`Source: ${uni.rankBadge.source}. Published rankings often include ties — multiple schools can legitimately share the same position, especially outside the top 10.`}
+                  title={`Source: ${uni.generalRankBadge.source}. Published rankings often include ties — multiple schools can legitimately share the same position, especially outside the top 10.`}
                 >
                   <Award className="w-3 h-3" />
-                  {uni.rankBadge.type === 'program' ? `#${uni.rankBadge.rankValue} in ${uni.rankBadge.field}` : `Rank #${uni.rankBadge.rankValue}`}
+                  Rank #{uni.generalRankBadge.rankValue}
+                </span>
+              )}
+              {uni.programRankBadge && (
+                <span
+                  className="flex items-center gap-1 bg-chart-4/15 border border-chart-4/25 text-chart-4 rounded-full px-2 py-0.5 font-medium"
+                  title={`Source: ${uni.programRankBadge.source}. Published rankings often include ties — multiple schools can legitimately share the same position, especially outside the top 10.`}
+                >
+                  <Award className="w-3 h-3" />
+                  #{uni.programRankBadge.rankValue} in {uni.programRankBadge.field}
                 </span>
               )}
               {uni.globalRank && (

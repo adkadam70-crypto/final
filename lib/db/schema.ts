@@ -222,16 +222,15 @@ export type MatchResult = {
   // (see match.ts for the handful of real, known exceptions). A verified
   // program-specific rank is quality/fit context only — see rankBadge.
   baselineSelectivity: number
-  // One rank fact to display per school, already resolved to whichever is
-  // most specific: a verified program-specific rank for the student's own
-  // intended field, or (if none) the school's verified general/overall
-  // rank, or null if we have neither yet. Never both — see the comment
-  // above on why mixing selectivity numbers is confusing; the same applies
-  // to rank badges. `source` is carried through so the UI can explain WHY
-  // several schools can legitimately show the same number — published
-  // rankings (US News, NIRF, etc.) commonly report ties past the top ~10,
-  // which reads as a bug if the source isn't shown alongside it.
-  rankBadge: { type: 'program'; rankValue: number; field: string; source: string } | { type: 'general'; rankValue: number; source: string } | null
+  // Both rank facts shown side by side when both exist, so a rank-filtered
+  // search (e.g. "Top 100") never looks self-contradictory — a school can
+  // qualify via its general rank while its program-specific rank sits
+  // outside the threshold, and hiding one number used to read as a bug.
+  // `source` is carried through so the UI can explain WHY several schools
+  // can legitimately show the same number — published rankings (US News,
+  // NIRF, etc.) commonly report ties past the top ~10.
+  generalRankBadge: { rankValue: number; source: string } | null
+  programRankBadge: { rankValue: number; field: string; source: string } | null
   // Display only — a cross-country prestige fact (e.g. QS World Rankings),
   // never fed into the AI prompt or the chance calculation. Showing this on
   // a US-only search result is fine ("this school also happens to be

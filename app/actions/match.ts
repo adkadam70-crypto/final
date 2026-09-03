@@ -572,16 +572,15 @@ export async function runMatch(): Promise<
         const idStr = String(r.universityId)
         const u = byId.get(idStr)!
         const programRank = programRankByUniversityId.get(u.id)
-        // One badge per school, most specific fact first: a verified
-        // program-specific rank for the student's own intended field beats
-        // a general rank, which beats showing nothing. Never both at once —
-        // that reads as two competing "the real rank is X" claims.
-        const rankBadge: MatchResult['rankBadge'] =
+        // Both shown when both exist — see the type comment on
+        // MatchResult.generalRankBadge for why hiding either one reads as a
+        // contradiction under a rank-filtered search.
+        const generalRankBadge: MatchResult['generalRankBadge'] =
+          u.rankValue != null && u.rankSource ? { rankValue: u.rankValue, source: u.rankSource } : null
+        const programRankBadge: MatchResult['programRankBadge'] =
           programRank?.rankValue != null
-            ? { type: 'program', rankValue: programRank.rankValue, field: profile.intendedField, source: programRank.rankSource }
-            : u.rankValue != null && u.rankSource
-              ? { type: 'general', rankValue: u.rankValue, source: u.rankSource }
-              : null
+            ? { rankValue: programRank.rankValue, field: profile.intendedField, source: programRank.rankSource }
+            : null
         return {
           universityId: idStr,
           name: u.name,
@@ -592,7 +591,8 @@ export async function runMatch(): Promise<
           matchTier: r.matchTier,
           acceptanceProbability: r.acceptanceProbability,
           baselineSelectivity: u.baselineSelectivity,
-          rankBadge,
+          generalRankBadge,
+          programRankBadge,
           globalRank: u.globalRankValue != null && u.globalRankSource ? { value: u.globalRankValue, source: u.globalRankSource } : null,
           internshipProgram: u.internshipProgram,
           requirements: u.requirements,

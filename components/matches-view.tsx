@@ -136,6 +136,7 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
           )}
 
           {error && <p ref={errorRef} tabIndex={-1} className="text-xs text-destructive text-center outline-none" role="alert">{error}</p>}
+          <p className="text-[11px] text-muted-foreground/70 text-center text-pretty">Results are sampled from the catalog — run it 2–3 times to see other strong-fit schools you may have missed.</p>
         </div>
       </div>
 
