@@ -210,7 +210,11 @@ export async function analyzeTargetUniversity(universityName: string): Promise<T
 
 IMPORTANT — acceptanceProbability reflects admission to the UNIVERSITY, never to a specific program. Most schools admit holistically to the institution as a whole; this app has no verified data on which schools instead admit directly by college/major with a genuinely separate process (real at a handful of schools, e.g. Carnegie Mellon's School of Computer Science or NYU Stern, but not something to assume by default here). So ground acceptanceProbability in the university-wide signal below, NEVER in a program-specific ranking:${admissionGrounding}${
         programRank
-          ? ` Separately — for this student's intended field (${profile.intendedField}), this school's program is verified as ranked #${programRank.rankValue ?? '?'} nationally per ${programRank.rankSource}. This is a quality/fit fact only: mention it in the rationale as context on how strong that specific program is, but it must NOT move acceptanceProbability.`
+          ? ` Separately — for this student's intended field (${profile.intendedField}), this school's program is verified as ranked #${programRank.rankValue ?? '?'} nationally per ${programRank.rankSource}. This is a quality/fit fact only: mention it in the rationale as context on how strong that specific program is, but it must NOT move acceptanceProbability.${
+              programRank.additionalRequirements.length
+                ? ` This program also has its own additional admission requirements beyond the school-wide ones above: ${programRank.additionalRequirements.join(', ')}. Cross-reference these against the student's profile the same way you would the school-wide requirements — if one isn't reflected in their profile, name it directly as a concrete gap. This is fit/preparedness context only, never a reason to move acceptanceProbability.`
+                : ''
+            }`
           : ''
       }${earlyAdmissionGrounding}${testScoreGrounding}`
 
