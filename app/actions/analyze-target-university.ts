@@ -6,7 +6,7 @@ import { and, eq } from 'drizzle-orm'
 import { getUserId } from '@/lib/get-user-id'
 import { getLatestProfile } from '@/app/actions/profile'
 import { gradeBadge, gradeTier } from '@/lib/grade'
-import { formatStandardizedTests } from '@/lib/standardized-tests'
+import { formatStandardizedTests, testScoreRangeComparison } from '@/lib/standardized-tests'
 import { formatPriorGrades, EMPTY_PRIOR_GRADES } from '@/lib/prior-grades'
 import { BIAS_INSTRUCTION } from '@/lib/bias-instruction'
 import { assertAnalysisRateLimit } from '@/lib/rate-limit'
@@ -200,13 +200,19 @@ export async function analyzeTargetUniversity(universityName: string): Promise<T
           ? ` Separately, compute earlyDecisionProbability and/or earlyActionProbability: this school has a REAL ${matched.earlyDecisionRate != null ? `Early Decision (binding) admit rate of ${matched.earlyDecisionRate}%` : ''}${matched.earlyDecisionRate != null && matched.earlyActionRate != null ? ' and a REAL ' : ''}${matched.earlyActionRate != null ? `Early Action (non-binding) admit rate of ${matched.earlyActionRate}%` : ''} per ${matched.earlyAdmissionSource}. Estimate this student's chance under each real round the same way you computed acceptanceProbability, just grounded in that round's real rate instead. Leave the other one (no real rate on file) null — never invent one.`
           : ' This school has no real Early Decision or Early Action rate on file — leave earlyDecisionProbability and earlyActionProbability both null.'
 
+      const testScoreFit = testScoreRangeComparison(profile.standardizedTests, matched)
+      const testScoreGrounding =
+        testScoreFit.startsWith('Not on file') || testScoreFit.includes('not directly comparable') || testScoreFit.includes('has not reported')
+          ? ` ${testScoreFit}`
+          : ` Test score fit: ${testScoreFit} This is one additional input among all the others above — weigh it alongside baseline selectivity/acceptance rate/rank the way you already weigh those, never as a standalone hard cutoff. A below-25th-percentile score should pull acceptanceProbability down somewhat and an above-75th-percentile score should lift it somewhat, proportionate to how strong the other signals are — never a disqualifier or an automatic lock by itself.`
+
       const groundingBlock = `This school IS in our verified catalog. Ground your analysis in this data: baseline selectivity ${matched.baselineSelectivity}/100, sectors: ${matched.sectors.join(', ')}, climate: ${matched.climate}, requirements: ${matched.requirements.join(', ')}.
 
 IMPORTANT — acceptanceProbability reflects admission to the UNIVERSITY, never to a specific program. Most schools admit holistically to the institution as a whole; this app has no verified data on which schools instead admit directly by college/major with a genuinely separate process (real at a handful of schools, e.g. Carnegie Mellon's School of Computer Science or NYU Stern, but not something to assume by default here). So ground acceptanceProbability in the university-wide signal below, NEVER in a program-specific ranking:${admissionGrounding}${
         programRank
           ? ` Separately — for this student's intended field (${profile.intendedField}), this school's program is verified as ranked #${programRank.rankValue ?? '?'} nationally per ${programRank.rankSource}. This is a quality/fit fact only: mention it in the rationale as context on how strong that specific program is, but it must NOT move acceptanceProbability.`
           : ''
-      }${earlyAdmissionGrounding}`
+      }${earlyAdmissionGrounding}${testScoreGrounding}`
 
       const prompt = `You are an expert college admissions analyst. Give a specific, well-grounded deep-dive analysis of this student's chances at ONE named university. Prioritize being specific and scannable over being long — a reader should absorb this in seconds, not minutes. Every bullet must be concrete to this student and this school, never generic filler, but keep each one short and punchy.
 
@@ -252,6 +258,8 @@ ${BIAS_INSTRUCTION}
 ${profileBlock}
 
 ${requirementNote}
+
+If your search happens to surface this school's real published SAT/ACT admitted-student range (a 25th-75th percentile range, commonly reported by U.S. News or the school's Common Data Set), compare the student's own SAT composite or ACT score against it and fold that comparison into admissionChanceSummary as one factor among the others — never a hard cutoff. Also check whether the school is Test-Optional, Test-Blind, or Required: if it's Test-Blind (scores never considered, e.g. the University of California system), say so plainly and don't treat the student's score as relevant to this school at all; if it's Test-Optional and you can't find a range, say scores are optional here rather than implying none exists. Don't go out of your way to search for this specifically — only use it if it surfaces naturally within your one acceptance-rate search, or you already know it reliably.
 
 admissionChanceSummary MUST start with a brief, calm caveat before anything else — never lead with the tier or percentage as if it were a confident, grounded assessment, but don't dwell on it or apologize either; one short clause is enough. If a real rate was found, phrase the caveat positively around that (e.g. "Based on a real published rate found via research:") rather than leading with what our catalog lacks. Otherwise phrase it plainly, e.g. "Based on general research rather than a verified data point:". If you are genuinely unsure whether this is a highly selective or easily-entered school, prefer a wide middle-of-the-road tier ("Good Chance") over guessing "Reach" or "Safety" with false confidence.
 

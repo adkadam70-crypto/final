@@ -13,7 +13,7 @@ import { z } from 'zod'
 import { gradeTier, gradeBadge } from '@/lib/grade'
 import { getUserId } from '@/lib/get-user-id'
 import { getLatestProfile } from '@/app/actions/profile'
-import { formatStandardizedTests } from '@/lib/standardized-tests'
+import { formatStandardizedTests, testScoreRangeComparison } from '@/lib/standardized-tests'
 import { formatPriorGrades, EMPTY_PRIOR_GRADES } from '@/lib/prior-grades'
 import OpenAI from 'openai'
 import { zodTextFormat } from 'openai/helpers/zod'
@@ -253,6 +253,7 @@ async function generateOpenAIMatch({
     overallRank: { rankValue: number; rankSource: string } | null
     actualAcceptanceRate: { rate: number; source: string } | null
     earlyAdmission: { ed: number | null; ea: number | null; rd: number | null; source: string } | null
+    testScoreFit: string
   }>
   targetCountries: string[]
   contextByCountry: Record<string, string>
@@ -334,6 +335,7 @@ ${JSON.stringify(
     regularDecisionRate: u.earlyAdmission?.rd != null
       ? `${u.earlyAdmission.rd}% — a REAL published Regular-Decision-only admit rate, per ${u.earlyAdmission.source}. More precise than actualOverallAcceptanceRate for a typical (non-early) applicant, since a blended headline rate can fold in a much easier early pool.`
       : 'Not on file.',
+    testScoreFit: u.testScoreFit,
   })),
   null,
   2,
@@ -348,6 +350,8 @@ When regularDecisionRate is present AND meaningfully different from actualOveral
 Separately, compute earlyDecisionProbability and earlyActionProbability: these are this student's estimated personal chance if they applied through that specific binding-ED or non-binding-EA round instead, computed the same way as acceptanceProbability but grounded in earlyDecisionRate/earlyActionRate respectively. Only set a value when that real rate is present in the data above — leave it null when a school has no such program or no real rate on file, exactly like every other estimate in this app. Never infer or guess an early-round number from the regular one.
 
 programRankingForIntendedField, when present, is a quality/fit fact only — mention it in the rationale as context on how strong that specific program is (e.g. "and its Business program is separately ranked #4 nationally"), but it must not change the probability number itself.
+
+testScoreFit, when it contains a real comparison (not "Not on file" or "not directly comparable"), is one additional input among all the others above — weigh it alongside baselineSelectivity/acceptance-rate/rank the way you already weigh those, never as a standalone hard cutoff. A score below the school's 25th percentile should pull acceptanceProbability down somewhat and a score above the 75th percentile should lift it somewhat, but the direction and size of that adjustment must stay proportionate to how strong the other signals are — a below-range score at a school where the student is otherwise an excellent fit is a real negative, not a disqualifier.
 
 The student's "preferred university ranking" in their profile (e.g. "Top 50") is a real threshold to check against overallRanking's rank if present (not the program rank, for the same reason as above — the preference is about the university). If a school's verified overall rank falls outside the student's stated preference, say so plainly in the rationale (e.g. "ranked #78 overall, outside your Top 50 preference") — don't silently ignore the mismatch, but also don't use it to zero out an otherwise-good match, since it's explicitly a soft preference. When no overall rank exists for a school, there's nothing concrete to compare against the preference — don't guess whether it would qualify.
 
@@ -536,6 +540,7 @@ export async function runMatch(): Promise<
             earlyAdmission: u.earlyAdmissionSource
               ? { ed: u.earlyDecisionRate, ea: u.earlyActionRate, rd: u.regularDecisionRate, source: u.earlyAdmissionSource }
               : null,
+            testScoreFit: testScoreRangeComparison(profile.standardizedTests, u),
           })),
           targetCountries: profile.targetCountries,
           contextByCountry,

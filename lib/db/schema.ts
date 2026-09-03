@@ -55,6 +55,30 @@ export const universities = pgTable('universities', {
   admissionsContextNote: text('admissionsContextNote'),
   admissionsContextNoteSource: text('admissionsContextNoteSource'),
   imageUrl: text('imageUrl'), // real campus photo from Wikimedia Commons — nullable, not every school resolves to a good match
+  // Published 25th-75th percentile range for admitted students' standardized
+  // test scores — nullable, populated only for schools that have been
+  // researched. Null means "not yet researched," never "no testing." SAT and
+  // ACT ranges are independent (a school may publish one, both, or neither);
+  // never derive one from the other, since no SAT<->ACT concordance is used
+  // anywhere else in this app (see lib/standardized-tests.ts). Compared
+  // against the student's own satComposite()/act in match.ts and
+  // analyze-target-university.ts to give the AI a real, factual data point —
+  // never used to compute a probability adjustment directly in code.
+  satRange25: integer('satRange25'), // 400-1600 composite, 25th percentile
+  satRange75: integer('satRange75'), // 400-1600 composite, 75th percentile
+  actRange25: integer('actRange25'), // 1-36, 25th percentile
+  actRange75: integer('actRange75'), // 1-36, 75th percentile
+  testScoreSource: text('testScoreSource'), // e.g. 'U.S. News & World Report — 2026 Best Colleges' — nullable, covers whichever of the four fields above are set
+  // 'Required' | 'Recommended' | 'Test-Optional' | 'Test-Blind' — the school's
+  // admissions testing policy, independent of whether we have a range on
+  // file. Nullable: null means "not yet researched," never "Required" by
+  // default. Matters because an absent satRange/actRange means two very
+  // different things depending on this field — a Test-Blind school (e.g. the
+  // UC system) never considers scores at all, even if submitted, so a
+  // missing range is expected and permanent; a Test-Optional school simply
+  // may not have a published range on this source yet. Never conflate the
+  // two when explaining a missing range to a student.
+  testPolicy: text('testPolicy'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
 
