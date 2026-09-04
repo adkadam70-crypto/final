@@ -8,6 +8,7 @@ import { LoadingDots } from '@/components/loading-dots'
 import { RevealGroup } from '@/components/reveal-group'
 import { EarlyAdmissionPanel } from '@/components/early-admission-panel'
 import { ProgressiveFluxLoader, type ProgressiveFluxPhase } from '@/components/ui/progressive-flux-loader'
+import { AcceptanceRateLine } from '@/components/acceptance-rate-line'
 
 // Mirrors the actual stages analyzeTargetUniversity() goes through
 // server-side (see app/actions/analyze-target-university.ts) — checking our
@@ -131,6 +132,8 @@ export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }
               <p className="text-[11px] text-muted-foreground flex items-center gap-1.5"><BrainCircuit className="w-3.5 h-3.5 shrink-0" /> This school isn't in our core database yet, so this is our AI's own research-based estimate rather than a verified data point.</p>
             )
           )}
+
+          {result.acceptanceRate && <AcceptanceRateLine info={result.acceptanceRate} />}
 
           <p className="text-xs text-muted-foreground leading-relaxed text-pretty">{result.admissionChanceSummary}</p>
 

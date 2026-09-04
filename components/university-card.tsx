@@ -6,6 +6,7 @@ import type { MatchResult } from '@/lib/db/schema'
 import { tierBadgeClass } from '@/lib/match-tier'
 import { GlowCard } from '@/components/ui/spotlight-card'
 import { EarlyAdmissionPanel } from '@/components/early-admission-panel'
+import { AcceptanceRateLine } from '@/components/acceptance-rate-line'
 
 export function UniversityCard({ uni }: { uni: MatchResult }) {
   const [tipsOpen, setTipsOpen] = useState(false)
@@ -76,6 +77,12 @@ export function UniversityCard({ uni }: { uni: MatchResult }) {
             {uni.matchTier} · {uni.acceptanceProbability}%
           </span>
         </div>
+
+        {uni.acceptanceRate && (
+          <div className="mb-3">
+            <AcceptanceRateLine info={uni.acceptanceRate} />
+          </div>
+        )}
 
         {/* AI rationale */}
         <p className="text-xs text-muted-foreground leading-relaxed text-pretty">

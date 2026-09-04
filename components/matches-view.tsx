@@ -35,6 +35,8 @@ const CONTEXT: Record<string, string> = {
   SG: 'Singapore weighs strong academics first, with essays and interviews as secondary factors.',
   HK: 'Hong Kong blends strong academics with interviews and some holistic review.',
   IN: 'Holistic Indian universities blend board marks with essays and interviews; IITs are purely exam-driven.',
+  DE: 'Germany admits almost purely on your final secondary-school GPA (Abitur equivalent) — Numerus Clausus subjects have a GPA cutoff, open-admission subjects just need the entry bar met. Extracurriculars and essays barely count.',
+  FR: 'France splits in two: public-university licence programs are essentially non-selective, while grandes écoles and selective programs weigh high-school grades and concours performance heavily (~90%), with the motivation letter secondary.',
 }
 
 type ProfileRow = {

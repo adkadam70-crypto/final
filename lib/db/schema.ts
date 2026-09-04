@@ -13,7 +13,7 @@ import type { PriorGrades } from "@/lib/prior-grades";
 export const universities = pgTable('universities', {
   id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
   name: text('name').notNull(),
-  country: text('country').notNull(), // 'US' | 'UK' | 'AU' | 'SG' | 'HK' | 'IN'
+  country: text('country').notNull(), // 'US' | 'UK' | 'AU' | 'SG' | 'HK' | 'IN' | 'DE' | 'FR'
   location: text('location').notNull(),
   climate: text('climate').notNull(), // 'Warm' | 'Balanced' | 'Cold'
   sectors: jsonb('sectors').$type<string[]>().notNull().default([]),
@@ -26,6 +26,22 @@ export const universities = pgTable('universities', {
   rankValue: integer('rankValue'), // the cited rank number from rankSource — nullable
   actualAcceptanceRate: integer('actualAcceptanceRate'), // 0-100, real published overall admit rate — nullable
   acceptanceRateSource: text('acceptanceRateSource'), // e.g. 'U.S. Dept of Education College Scorecard' — nullable. When set, baselineSelectivity above was derived FROM this real rate (100 - rate), not curated/estimated — the two are not independent facts.
+  // Our own researched estimate of the overall undergrad acceptance rate, set
+  // ONLY when actualAcceptanceRate is null AND credible data supported an
+  // estimate (>=2 independent sources within tolerance, direct applicant/admit
+  // counts, or structural signals — published Numerus Clausus cutoffs,
+  // Parcoursup taux d'accès, entrance-exam seat ratios, UCAS offer rates).
+  // Never derived from baselineSelectivity alone; never set alongside a real
+  // actualAcceptanceRate. Treated exactly like actualAcceptanceRate: when set,
+  // baselineSelectivity was aligned to (100 - this), and the match/analysis
+  // AI anchors acceptanceProbability on it — flagged as an estimate in the
+  // rationale, never stated as a certified figure.
+  estimatedAcceptanceRate: integer('estimatedAcceptanceRate'),
+  // User-facing sentence explaining the rate situation: either "Estimated ~X%
+  // — <basis>. A research estimate, not a figure certified by the university."
+  // or "No official acceptance rate — <why>." Null on rows that carry a real
+  // actualAcceptanceRate (acceptanceRateSource covers those).
+  acceptanceRateNote: text('acceptanceRateNote'),
   globalRankValue: integer('globalRankValue'), // e.g. 4 for QS World rank #4 — nullable. DISPLAY ONLY: deliberately never read by the match/analysis AI prompts, so a student who only targets one country doesn't have their in-country chance calculation skewed by a cross-country prestige list.
   globalRankSource: text('globalRankSource'), // e.g. 'QS World University Rankings 2026' — nullable
   // Early Decision / Early Action / Regular-Decision-only rates — a US-only
@@ -115,7 +131,7 @@ export const programRankings = pgTable('programRankings', {
 export const profiles = pgTable('profiles', {
   id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
   userId: uuid('userId').notNull(),
-  targetCountries: jsonb('targetCountries').$type<string[]>().notNull().default([]), // one or more of 'US' | 'UK' | 'AU' | 'SG' | 'HK' | 'IN'
+  targetCountries: jsonb('targetCountries').$type<string[]>().notNull().default([]), // one or more of 'US' | 'UK' | 'AU' | 'SG' | 'HK' | 'IN' | 'DE' | 'FR'
   curriculum: text('curriculum').notNull(),
   gradeValue: integer('gradeValue').notNull(),
   preferredClimate: text('preferredClimate').notNull(),
@@ -202,6 +218,22 @@ export type EarlyAdmissionInfo = {
   source: string
 } | null
 
+// One resolved acceptance-rate fact to show per school. Shared between
+// MatchResult and TargetAnalysisResult. Resolved server-side from
+// universities.actualAcceptanceRate / acceptanceRateSource /
+// estimatedAcceptanceRate / acceptanceRateNote:
+//   - 'official'   : a real published rate (never our estimate)
+//   - 'estimated'  : our own researched estimate — `note` says the basis and
+//                    that the university does not certify it
+//   - 'unspecified': no rate exists or none is credibly estimable — `note`
+//                    says why (e.g. Numerus Clausus, non-selective licence)
+//   - null         : row predates this pass; nothing to show
+export type AcceptanceRateInfo =
+  | { kind: 'official'; rate: number; source: string }
+  | { kind: 'estimated'; rate: number; note: string }
+  | { kind: 'unspecified'; note: string }
+  | null
+
 export type MatchResult = {
   universityId: string
   name: string
@@ -237,6 +269,10 @@ export type MatchResult = {
   // globally ranked #4"); using it to affect that student's US-specific
   // odds would wrongly blend two different rankings systems.
   globalRank: { value: number; source: string } | null
+  // The school's own acceptance rate (or the honest absence of one) — see
+  // AcceptanceRateInfo. Distinct from acceptanceProbability, which is the
+  // student's personalized chance.
+  acceptanceRate: AcceptanceRateInfo
   internshipProgram: string
   requirements: string[]
   link: string
