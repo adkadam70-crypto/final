@@ -27,14 +27,19 @@ export function Navbar({ userName, userEmail }: { userName: string; userEmail: s
   }
 
   return (
-    <header
-      className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-md"
-      style={{
-        maskImage: 'linear-gradient(to bottom, black 75%, transparent 100%)',
-        WebkitMaskImage: 'linear-gradient(to bottom, black 75%, transparent 100%)',
-      }}
-    >
-      <nav className="max-w-6xl mx-auto flex items-center justify-between px-4 h-16">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-md">
+      {/* Mask lives on the nav bar itself, not the whole header — the header
+          also wraps the expandable mobile menu when open, and a mask sized
+          for the thin persistent bar was fading out whatever landed in its
+          last ~25% once the menu made the header much taller (Account
+          settings / Sign out, at the bottom of the list). */}
+      <nav
+        className="max-w-6xl mx-auto flex items-center justify-between px-4 h-16"
+        style={{
+          maskImage: 'linear-gradient(to bottom, black 75%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 75%, transparent 100%)',
+        }}
+      >
         <Link href="/dashboard" className="flex items-center gap-2.5 shrink-0">
           <AppLogo className="h-9 w-auto" />
           <div className="flex flex-col leading-tight">
