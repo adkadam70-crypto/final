@@ -95,15 +95,6 @@ export const universities = pgTable('universities', {
   // may not have a published range on this source yet. Never conflate the
   // two when explaining a missing range to a student.
   testPolicy: text('testPolicy'),
-  // Added for the France/Germany catalog expansion — many schools there
-  // (French Parcoursup-governed universities, German Numerus-Clausus
-  // programs) don't publish one institution-wide acceptance rate the way
-  // actualAcceptanceRate above assumes, so this pair carries either a
-  // research-backed estimate + methodology note, or an honest "not a
-  // meaningful figure for this school" note with no number at all — never a
-  // fabricated rate.
-  estimatedAcceptanceRate: integer('estimatedAcceptanceRate'),
-  acceptanceRateNote: text('acceptanceRateNote'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
 
