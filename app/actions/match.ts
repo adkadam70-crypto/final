@@ -21,21 +21,18 @@ import { zodTextFormat } from 'openai/helpers/zod'
 import { BIAS_INSTRUCTION } from '@/lib/bias-instruction'
 import { assertMatchRateLimit } from '@/lib/rate-limit'
 
-// Caps how many universities go to the model in one call. Measured: ~24s for
-// 2 universities, ~50s for 30, ~62s for 60 — there's a large fixed-latency
-// floor with this model/schema that doesn't shrink much with catalog size,
-// so even moderate caps sit uncomfortably close to Vercel's Hobby-tier 60s
-// function ceiling. 20 trades some breadth for a real safety margin.
-// Sampling across selectivity bands (rather than truncating) keeps a
-// representative spread from Safety through Ultra Reach regardless of size.
+// Caps how many universities go to the model per run. A single call for all
+// 20 measured at ~45-65s live — real variance run to run, not a bug. This
+// used to be split into 2 parallel half-size calls on the theory that two
+// smaller calls beat one big one, but live A/B testing (2 timed runs at
+// 46s/65s vs. a single call at 51s) showed no reliable win, just the same
+// noisy range — while the single call is strictly cheaper (no duplicated
+// system prompt/instructions across two requests) and simpler. 20 trades
+// some breadth for real detail per school; sampling across selectivity bands
+// (rather than truncating) keeps a representative spread from Safety through
+// Ultra Reach regardless of size, and the UI already nudges re-running 2-3
+// times to cover more of the catalog rather than shrinking this per run.
 const MAX_CATALOG_FOR_AI = 20
-
-// That fixed floor means one call for N schools is slower than two parallel
-// calls for N/2 each (wall-clock time ≈ the slower of the two, not the sum).
-// Split into interleaved halves — not first-half/second-half — so each
-// batch independently spans the full selectivity range instead of one batch
-// getting all the reaches and the other all the safeties.
-const PARALLEL_BATCHES = 2
 
 function shuffle<T>(items: T[]): T[] {
   const copy = [...items]
@@ -123,12 +120,6 @@ function preferIntendedField<T extends { academicFields: string[] }>(catalog: T[
 
 function rankThresholdFor(preferredRank: string): number | undefined {
   return { 'Top 50': 50, 'Top 100': 100, 'Top 200': 200 }[preferredRank]
-}
-
-function interleaveChunks<T>(items: T[], chunkCount: number): T[][] {
-  const chunks: T[][] = Array.from({ length: chunkCount }, () => [])
-  items.forEach((item, i) => chunks[i % chunkCount].push(item))
-  return chunks.filter((c) => c.length > 0)
 }
 
 const resultSchema = z.object({
@@ -480,7 +471,6 @@ export async function runMatch(): Promise<
     const samplingPool = freshPool.length >= MAX_CATALOG_FOR_AI ? freshPool : fieldPool
 
     const catalogForAI = stratifiedSample(samplingPool, MAX_CATALOG_FOR_AI)
-    const batches = interleaveChunks(catalogForAI, PARALLEL_BATCHES)
 
     const studentProfile = {
       badge,
@@ -494,40 +484,31 @@ export async function runMatch(): Promise<
       extracurriculars: profile.extracurriculars,
     }
 
-    const batchResults = await Promise.all(
-      batches.map((batch) =>
-        generateOpenAIMatch({
-          studentProfile,
-          catalog: batch.map((u) => ({
-            universityId: u.id,
-            name: u.name,
-            country: u.country,
-            baselineSelectivity: u.baselineSelectivity,
-            sectors: u.sectors,
-            climate: u.climate,
-            academicFields: u.academicFields,
-            requirements: u.requirements,
-            programRank: programRankByUniversityId.get(u.id) ?? null,
-            overallRank: u.rankValue != null && u.rankSource ? { rankValue: u.rankValue, rankSource: u.rankSource } : null,
-            actualAcceptanceRate:
-              u.actualAcceptanceRate != null && u.acceptanceRateSource
-                ? { rate: u.actualAcceptanceRate, source: u.acceptanceRateSource }
-                : null,
-            earlyAdmission: u.earlyAdmissionSource
-              ? { ed: u.earlyDecisionRate, ea: u.earlyActionRate, rd: u.regularDecisionRate, source: u.earlyAdmissionSource }
-              : null,
-            testScoreFit: testScoreRangeComparison(profile.standardizedTests, u),
-          })),
-          targetCountries: profile.targetCountries,
-          contextByCountry,
-        }),
-      ),
-    )
-
-    const object = {
-      summary: batchResults[0].object.summary,
-      results: batchResults.flatMap((b) => b.object.results),
-    }
+    const { object } = await generateOpenAIMatch({
+      studentProfile,
+      catalog: catalogForAI.map((u) => ({
+        universityId: u.id,
+        name: u.name,
+        country: u.country,
+        baselineSelectivity: u.baselineSelectivity,
+        sectors: u.sectors,
+        climate: u.climate,
+        academicFields: u.academicFields,
+        requirements: u.requirements,
+        programRank: programRankByUniversityId.get(u.id) ?? null,
+        overallRank: u.rankValue != null && u.rankSource ? { rankValue: u.rankValue, rankSource: u.rankSource } : null,
+        actualAcceptanceRate:
+          u.actualAcceptanceRate != null && u.acceptanceRateSource
+            ? { rate: u.actualAcceptanceRate, source: u.acceptanceRateSource }
+            : null,
+        earlyAdmission: u.earlyAdmissionSource
+          ? { ed: u.earlyDecisionRate, ea: u.earlyActionRate, rd: u.regularDecisionRate, source: u.earlyAdmissionSource }
+          : null,
+        testScoreFit: testScoreRangeComparison(profile.standardizedTests, u),
+      })),
+      targetCountries: profile.targetCountries,
+      contextByCountry,
+    })
 
     // Merge AI output back with DB records (source of truth for display fields).
     const byId = new Map(catalog.map((u) => [String(u.id), u]))

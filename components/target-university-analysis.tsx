@@ -7,6 +7,18 @@ import { tierBadgeClass } from '@/lib/match-tier'
 import { LoadingDots } from '@/components/loading-dots'
 import { RevealGroup } from '@/components/reveal-group'
 import { EarlyAdmissionPanel } from '@/components/early-admission-panel'
+import { ProgressiveFluxLoader, type ProgressiveFluxPhase } from '@/components/ui/progressive-flux-loader'
+
+// Mirrors the actual stages analyzeTargetUniversity() goes through
+// server-side (see app/actions/analyze-target-university.ts) — checking our
+// catalog first, researching live if the school isn't on file yet, then
+// comparing against the student's profile.
+const ANALYSIS_PHASES: ProgressiveFluxPhase[] = [
+  { at: 0, label: 'checking our database' },
+  { at: 30, label: 'researching live' },
+  { at: 65, label: 'comparing your profile' },
+  { at: 90, label: 'finalizing your breakdown' },
+]
 
 export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }) {
   const [name, setName] = useState('')
@@ -14,6 +26,11 @@ export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }
   const [error, setError] = useState<string | null>(null)
   const errorRef = useRef<HTMLParagraphElement>(null)
   const [result, setResult] = useState<TargetAnalysisResult | null>(null)
+  // Same reasoning as MatchesView: the real request finishing doesn't mean
+  // the bar has visually caught up to 100% yet, so the result is held until
+  // it has.
+  const [finishing, setFinishing] = useState(false)
+  const pendingResultRef = useRef<TargetAnalysisResult | null>(null)
 
   useEffect(() => {
     if (error) errorRef.current?.focus()
@@ -27,15 +44,31 @@ export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }
       const res = await analyzeTargetUniversity(name)
       if ('needsProfile' in res) {
         setError('Set up your profile first — we need your academics to analyze a specific school.')
+        setPending(false)
         return
       }
-      setResult(res)
+      pendingResultRef.current = res
+      setFinishing(true)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong analyzing this school.')
-    } finally {
       setPending(false)
     }
   }
+
+  // See MatchesView's identical timer for why this can't just be the
+  // loader's own onComplete — that fires the instant `value` hits 100, not
+  // once the fill transition has actually finished playing.
+  useEffect(() => {
+    if (!finishing) return
+    const timer = setTimeout(() => {
+      const pending = pendingResultRef.current
+      pendingResultRef.current = null
+      setFinishing(false)
+      setPending(false)
+      if (pending) setResult(pending)
+    }, 650)
+    return () => clearTimeout(timer)
+  }, [finishing])
 
   return (
     <section className="bg-card border border-border rounded-3xl p-6">
@@ -62,7 +95,22 @@ export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }
       </div>
 
       {!hasProfile && <p className="text-[11px] text-muted-foreground mt-2">Set up your profile below to use this.</p>}
-      {pending && <p className="text-[11px] text-muted-foreground/70 mt-2">Usually a few seconds — up to 15 if this school isn&apos;t in our database yet and we&apos;re researching it live.</p>}
+      {pending && (
+        <div className="mt-3">
+          <ProgressiveFluxLoader
+            phases={ANALYSIS_PHASES}
+            // analyze-target-university.ts documents the non-catalog merged
+            // search+analysis call at ~11-13s live-tested; catalog-matched
+            // schools (the common case) are a single call and faster. Sized
+            // with headroom so the sweep completes in one pass rather than
+            // visibly looping for the common case; `loop` is still the
+            // safety net for a slower live-research run.
+            duration={16}
+            loop={!finishing}
+            value={finishing ? 100 : undefined}
+          />
+        </div>
+      )}
       {error && <p ref={errorRef} tabIndex={-1} className="text-xs text-destructive mt-3 outline-none" role="alert">{error}</p>}
 
       {result && (

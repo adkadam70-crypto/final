@@ -13,7 +13,20 @@ import { TargetUniversityAnalysis } from '@/components/target-university-analysi
 import { LoadingDots } from '@/components/loading-dots'
 import { RevealGroup } from '@/components/reveal-group'
 import { LiquidMetalButton } from '@/components/ui/liquid-metal-button'
+import { ProgressiveFluxLoader, type ProgressiveFluxPhase } from '@/components/ui/progressive-flux-loader'
 import { saveSchool, unsaveSchool, getSavedSchoolIds } from '@/app/actions/saved-schools'
+
+// Mirrors the actual stages runMatch() goes through server-side (see
+// app/actions/match.ts) — reading the profile, filtering the catalog by
+// rank/field, running the AI batches, then merging results — so the label
+// keeps reassuring the student the run is still progressing, not stalled.
+const MATCH_PHASES: ProgressiveFluxPhase[] = [
+  { at: 0, label: 'reading your profile' },
+  { at: 20, label: 'scanning the catalog' },
+  { at: 45, label: 'weighing academics & fit' },
+  { at: 70, label: 'checking selectivity' },
+  { at: 90, label: 'finalizing your matches' },
+]
 
 const CONTEXT: Record<string, string> = {
   US: 'US universities weigh your academic baseline (~50%) alongside holistic leadership, essays, and passion projects (~50%).',
@@ -49,6 +62,12 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
 
   const [results, setResults] = useState<MatchResult[]>([])
   const [summary, setSummary] = useState('')
+  // The real request finishing doesn't mean the loader bar has visually
+  // caught up to 100% yet — `finishing` snaps the bar to complete and holds
+  // the result in `pendingResult` for one beat so results only ever appear
+  // once the bar has actually reached the end, never before.
+  const [finishing, setFinishing] = useState(false)
+  const pendingResultRef = useRef<{ results: MatchResult[]; summary: string } | null>(null)
 
   const targetCountries = profile?.targetCountries?.length ? profile.targetCountries : ['US']
   const badge = profile?.academicDetail ? gradeBadge(profile.academicDetail) : null
@@ -60,19 +79,38 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
       const res = await runMatch()
       if ('needsProfile' in res && res.needsProfile) {
         setError('Set up your profile first — we need your academics and preferences to run a match.')
+        setIsRunning(false)
         return
       }
-      setResults(res.results)
-      setSummary(res.summary)
-      startTransition(() => router.refresh())
-      const ids = await getSavedSchoolIds()
-      setSavedIds(new Set(ids))
+      pendingResultRef.current = { results: res.results, summary: res.summary }
+      setFinishing(true)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong running the match.')
-    } finally {
       setIsRunning(false)
     }
   }
+
+  // ProgressiveFluxLoader's own onComplete fires the instant the `value` prop
+  // crosses 100, not once the fill has visually caught up — so this timer
+  // (matching the loader's 0.55s fill transition, plus a hair) is what
+  // actually gates the reveal on the bar looking complete, not just being
+  // told to be.
+  useEffect(() => {
+    if (!finishing) return
+    const timer = setTimeout(async () => {
+      const pending = pendingResultRef.current
+      pendingResultRef.current = null
+      setFinishing(false)
+      setIsRunning(false)
+      if (!pending) return
+      setResults(pending.results)
+      setSummary(pending.summary)
+      startTransition(() => router.refresh())
+      const ids = await getSavedSchoolIds()
+      setSavedIds(new Set(ids))
+    }, 650)
+    return () => clearTimeout(timer)
+  }, [finishing])
 
   async function toggleSave(uni: MatchResult) {
     if (savedIds.has(uni.universityId)) {
@@ -158,9 +196,18 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
           </section>
         ) : isRunning && results.length === 0 ? (
           <section className="bg-card border border-border rounded-3xl p-12 text-center">
-            <LoadingDots className="justify-center text-primary mb-4" />
-            <p className="text-xs text-muted-foreground">Weighing your academics, extracurriculars, and each school&apos;s selectivity…</p>
-            <p className="text-[11px] text-muted-foreground/70 mt-1.5">Usually takes 20–30 seconds — stay on this page and it&apos;ll update automatically.</p>
+            <ProgressiveFluxLoader
+              phases={MATCH_PHASES}
+              // Measured live with performance.now(): ~46s on a warm dev
+              // server, ~65s on a cold one (2 parallel AI batches over ~10
+              // schools each — see MAX_CATALOG_FOR_AI/PARALLEL_BATCHES in
+              // match.ts). Sized near the warm number so the sweep usually
+              // completes in one pass; `loop` is the safety net for slower
+              // runs.
+              duration={48}
+              loop={!finishing}
+              value={finishing ? 100 : undefined}
+            />
           </section>
         ) : (
           <>
