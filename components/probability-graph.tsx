@@ -54,8 +54,15 @@ export function ProbabilityGraph({ results }: { results: MatchResult[] }) {
           </div>
         </div>
 
-        <div className="relative bg-secondary/60 border border-border rounded-2xl p-4">
-          <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto block" role="img" aria-label="Scatter plot of acceptance probability versus selectivity for each recommended university">
+        {/* On a narrow screen, scaling the SVG down to fit the width shrinks
+            the dots and text along with it since it's all one proportional
+            unit — unreadable well before the chart itself looks "small."
+            A min-width + horizontal scroll keeps every element at its real,
+            legible size on mobile instead of silently shrinking; on a
+            desktop-width screen this never triggers; the scrollbar itself
+            reads as a signal there's more to see, same as any wide table. */}
+        <div className="relative bg-secondary/60 border border-border rounded-2xl p-4 overflow-x-auto">
+          <svg viewBox={`0 0 ${W} ${H}`} className="h-auto block min-w-[480px] w-full" role="img" aria-label="Scatter plot of acceptance probability versus selectivity for each recommended university">
             {/* Axis gridlines + tick labels */}
             {TICKS.map((t) => (
               <g key={`x-${t}`}>
