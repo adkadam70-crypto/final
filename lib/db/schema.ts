@@ -138,6 +138,10 @@ export const matches = pgTable('matches', {
   // The full AI result payload: per-university tier, probability, and rationale.
   results: jsonb('results').$type<MatchResult[]>().notNull().default([]),
   summary: text('summary').notNull().default(''),
+  // Nullable — only used for the IP-level rate-limit backstop in
+  // lib/rate-limit.ts (catches one IP spread across many accounts); never
+  // shown to users or used for anything else.
+  ipAddress: text('ipAddress'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
 
@@ -159,6 +163,21 @@ export const aiRateLimitLog = pgTable('aiRateLimitLog', {
   id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
   userId: uuid('userId').notNull(),
   action: text('action').notNull(),
+  ipAddress: text('ipAddress'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+})
+
+// One row per signed-up account, capturing the IP + coarse device
+// fingerprint (user-agent + accept-language, hashed) present at signup —
+// lets us throttle the same person spinning up many accounts to dodge the
+// per-account AI rate limits above. Weak signals individually (shared IPs,
+// spoofable fingerprints), but combined they raise the cost of doing that
+// enough to stop casual abuse; see lib/auth.ts databaseHooks.
+export const signupFingerprints = pgTable('signupFingerprints', {
+  id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
+  userId: uuid('userId').notNull(),
+  ipAddress: text('ipAddress').notNull(),
+  deviceHash: text('deviceHash').notNull(),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
 
@@ -188,6 +207,7 @@ export const universityAnalyses = pgTable('universityAnalyses', {
   strengths: jsonb('strengths').$type<string[]>().notNull().default([]),
   weaknesses: jsonb('weaknesses').$type<string[]>().notNull().default([]),
   actionSteps: jsonb('actionSteps').$type<string[]>().notNull().default([]),
+  ipAddress: text('ipAddress'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
 

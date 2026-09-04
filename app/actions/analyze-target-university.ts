@@ -10,6 +10,7 @@ import { formatStandardizedTests, testScoreRangeComparison } from '@/lib/standar
 import { formatPriorGrades, EMPTY_PRIOR_GRADES } from '@/lib/prior-grades'
 import { BIAS_INSTRUCTION } from '@/lib/bias-instruction'
 import { assertAnalysisRateLimit } from '@/lib/rate-limit'
+import { getClientIp } from '@/lib/request-fingerprint'
 import { z } from 'zod'
 import OpenAI from 'openai'
 import { zodTextFormat } from 'openai/helpers/zod'
@@ -198,7 +199,8 @@ STUDENT PROFILE:
  */
 export async function analyzeTargetUniversity(universityName: string): Promise<TargetAnalysisResult | { needsProfile: true }> {
   const userId = await getUserId()
-  await assertAnalysisRateLimit(userId)
+  const clientIp = await getClientIp()
+  await assertAnalysisRateLimit(userId, clientIp)
   const profile = await getLatestProfile()
   if (!profile || !profile.academicDetail) {
     return { needsProfile: true }
@@ -449,6 +451,7 @@ Provide short, specific, scannable bullets for strengths, weaknesses/gaps, and a
       strengths,
       weaknesses,
       actionSteps,
+      ipAddress: clientIp,
     })
 
     return {

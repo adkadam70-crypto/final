@@ -12,6 +12,7 @@ import { formatStandardizedTests } from '@/lib/standardized-tests'
 import { formatPriorGrades, EMPTY_PRIOR_GRADES } from '@/lib/prior-grades'
 import { BIAS_INSTRUCTION } from '@/lib/bias-instruction'
 import { assertProfileStrengthRateLimit } from '@/lib/rate-limit'
+import { getClientIp } from '@/lib/request-fingerprint'
 
 const strengthSchema = z.object({
   score: z
@@ -39,7 +40,8 @@ export async function analyzeProfileStrength(): Promise<
   { needsProfile: true } | ({ needsProfile?: false } & ProfileStrengthResult)
 > {
   const userId = await getUserId()
-  await assertProfileStrengthRateLimit(userId)
+  const clientIp = await getClientIp()
+  await assertProfileStrengthRateLimit(userId, clientIp)
   const profile = await getLatestProfile()
   if (!profile || !profile.academicDetail) {
     return { needsProfile: true }
@@ -83,7 +85,7 @@ Score realistically. A 100 should be practically unreachable — reserved for a 
     throw new Error('OpenAI returned no parseable output for the profile strength request')
   }
 
-  await db.insert(aiRateLimitLog).values({ userId, action: 'profileStrength' })
+  await db.insert(aiRateLimitLog).values({ userId, action: 'profileStrength', ipAddress: clientIp })
 
   return { ...response.output_parsed }
 }

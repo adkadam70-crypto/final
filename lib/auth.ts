@@ -1,9 +1,27 @@
-import { betterAuth } from 'better-auth'
+import { betterAuth, APIError } from 'better-auth'
 import { captcha } from 'better-auth/plugins'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { db } from '@/lib/db'
 import * as authSchema from '@/lib/db/auth-schema'
+import { signupFingerprints } from '@/lib/db/schema'
+import { and, eq, gte, sql } from 'drizzle-orm'
+import { ipFromHeaders, deviceHashFromHeaders } from '@/lib/request-fingerprint'
 import { Resend } from 'resend'
+
+// Turnstile + the per-account AI rate limits (lib/rate-limit.ts) both reset
+// the moment someone signs up with a new email — so a user willing to make
+// several accounts can multiply their AI-call budget. Deliberately NOT
+// gating this on IP: an IP is shared by everyone on the same network (a
+// school, an office, a household), so blocking on it risks locking out
+// genuine different people who just happen to share a connection — exactly
+// the failure mode we want to avoid. Device fingerprint doesn't have that
+// problem — it only accumulates when the same browser/device repeats — so
+// it's the only signal used to actually block signups. The limit is
+// deliberately tight (most real people signing up more than twice from one
+// browser in a day is unusual) since we're no longer relying on IP to catch
+// the cases device alone might miss.
+const SIGNUP_LIMIT_PER_DEVICE = 3
+const SIGNUP_WINDOW_HOURS = 24
 
 // Resend's shared sandbox sender — works immediately with zero domain setup,
 // which is what we want while this is on a *.vercel.app testing URL. Once a
@@ -78,6 +96,42 @@ export const auth = betterAuth({
       })(),
     }),
   ],
+
+  // Signup-by-device-fingerprint throttle — see the comment above
+  // SIGNUP_LIMIT_PER_DEVICE for why IP isn't used to block here. `before`
+  // blocks account creation once the device has made SIGNUP_LIMIT_PER_DEVICE
+  // accounts within the window; `after` records the fingerprint for the
+  // account that was just allowed through. IP is still stored on the row
+  // (useful for manual abuse investigation later) but never checked here.
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (_user, context) => {
+          if (!context?.headers) return
+          const deviceHash = deviceHashFromHeaders(context.headers)
+          const since = new Date(Date.now() - SIGNUP_WINDOW_HOURS * 60 * 60 * 1000)
+
+          const [deviceRow] = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(signupFingerprints)
+            .where(and(eq(signupFingerprints.deviceHash, deviceHash), gte(signupFingerprints.createdAt, since)))
+          if (Number(deviceRow.count) >= SIGNUP_LIMIT_PER_DEVICE) {
+            throw new APIError('TOO_MANY_REQUESTS', {
+              message: 'Too many accounts have been created from this device recently. Please try again later.',
+            })
+          }
+        },
+        after: async (user, context) => {
+          if (!context?.headers) return
+          await db.insert(signupFingerprints).values({
+            userId: user.id,
+            ipAddress: ipFromHeaders(context.headers),
+            deviceHash: deviceHashFromHeaders(context.headers),
+          })
+        },
+      },
+    },
+  },
 
   advanced: {
     database: {

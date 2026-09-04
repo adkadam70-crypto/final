@@ -20,6 +20,7 @@ import OpenAI from 'openai'
 import { zodTextFormat } from 'openai/helpers/zod'
 import { BIAS_INSTRUCTION } from '@/lib/bias-instruction'
 import { assertMatchRateLimit } from '@/lib/rate-limit'
+import { getClientIp } from '@/lib/request-fingerprint'
 
 // Caps how many universities go to the model per run. A single call for all
 // 20 measured at ~45-65s live — real variance run to run, not a bug. This
@@ -345,7 +346,8 @@ export async function runMatch(): Promise<
   | { needsProfile?: false; gradeBadge: string; summary: string; results: MatchResult[] }
 > {
   const userId = await getUserId()
-  await assertMatchRateLimit(userId)
+  const clientIp = await getClientIp()
+  await assertMatchRateLimit(userId, clientIp)
   const profile = await getLatestProfile()
   if (!profile || !profile.academicDetail || profile.targetCountries.length === 0) {
     return { needsProfile: true }
@@ -580,6 +582,7 @@ export async function runMatch(): Promise<
       gradeBadge: badge,
       results,
       summary,
+      ipAddress: clientIp,
     })
 
     revalidatePath('/')
