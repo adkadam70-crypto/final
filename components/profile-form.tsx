@@ -274,6 +274,8 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
     { code: 'SG', label: 'Singapore' },
     { code: 'HK', label: 'Hong Kong' },
     { code: 'IN', label: 'India' },
+    { code: 'DE', label: 'Germany' },
+    { code: 'FR', label: 'France' },
   ]
 
   const onlyAustralia = targetCountries.length === 1 && targetCountries[0] === 'AU'

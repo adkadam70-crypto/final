@@ -140,4 +140,6 @@ export const GRADE_RELEVANCE: Record<string, string> = {
   SG: "Weighs your final 2 years (A-Level rank points) most heavily — O-Level (~10th) mainly covers baseline requirements like the Mother Tongue Language subject.",
   HK: "Senior secondary results (roughly 10th–12th, via HKDSE) matter most. For international qualifications, your fuller transcript is typically reviewed.",
   IN: "Direct admission is driven almost entirely by 12th-grade board marks — 9th–11th generally aren't formally considered (entrance exams like JEE/NEET matter more for specific fields).",
+  DE: "Admission (especially for Numerus Clausus subjects) runs on your final secondary-school GPA — the Abitur equivalent. Earlier years aren't formally part of the calculation, though a consistent record helps for credential recognition.",
+  FR: "Selective programs (grandes écoles, prépas, IUTs) review your high-school transcripts (bulletins) from roughly 10th–12th; public-university licence programs mainly need the Baccalauréat-equivalent diploma itself.",
 }

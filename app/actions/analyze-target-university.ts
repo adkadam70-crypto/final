@@ -1,13 +1,14 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { universities, universityAnalyses, programRankings, type MatchResult, type EarlyAdmissionInfo } from '@/lib/db/schema'
+import { universities, universityAnalyses, programRankings, type MatchResult, type EarlyAdmissionInfo, type AcceptanceRateInfo } from '@/lib/db/schema'
 import { and, eq } from 'drizzle-orm'
 import { getUserId } from '@/lib/get-user-id'
 import { getLatestProfile } from '@/app/actions/profile'
 import { gradeBadge, gradeTier } from '@/lib/grade'
 import { formatStandardizedTests, testScoreRangeComparison } from '@/lib/standardized-tests'
 import { formatPriorGrades, EMPTY_PRIOR_GRADES } from '@/lib/prior-grades'
+import { resolveAcceptanceRate, acceptanceRateForPrompt } from '@/lib/acceptance-rate'
 import { BIAS_INSTRUCTION } from '@/lib/bias-instruction'
 import { assertAnalysisRateLimit } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/request-fingerprint'
@@ -172,6 +173,9 @@ export type TargetAnalysisResult = {
   // (which is our own curated data) and from the plain "not in our catalog"
   // disclaimer (which fires when live search finds nothing usable either).
   liveResearch: { acceptanceRatePercent: number; source: string } | null
+  // Our resolved acceptance-rate fact for a catalog school (official rate,
+  // our estimate, or an explicit "no rate" note) — see lib/acceptance-rate.ts.
+  acceptanceRate: AcceptanceRateInfo
 }
 
 const BASE_PROFILE_BLOCK = (profile: NonNullable<Awaited<ReturnType<typeof getLatestProfile>>>, badge: string, tier: number) => `
@@ -253,6 +257,13 @@ export async function analyzeTargetUniversity(universityName: string): Promise<T
     let earlyActionProbability: number | null = null
     let liveResearch: TargetAnalysisResult['liveResearch'] = null
 
+    // Our resolved acceptance-rate fact for the matched catalog row (or null
+    // for a non-catalog school). Returned to the UI and, for a catalog match,
+    // used to ground acceptanceProbability below.
+    const acc = matched
+      ? resolveAcceptanceRate(matched)
+      : null
+
     if (matched) {
       const programRank =
         profile.intendedField !== 'No preference'
@@ -269,11 +280,13 @@ export async function analyzeTargetUniversity(universityName: string): Promise<T
                 ? ` If that published overall rate (${matched.actualAcceptanceRate}%) is meaningfully different from this regular-decision figure, say so plainly in admissionChanceSummary — this is about transparency with the student, not about penalizing the school.`
                 : ''
             }`
-          : matched.actualAcceptanceRate != null && matched.acceptanceRateSource
-            ? ` This school's REAL overall acceptance rate is ${matched.actualAcceptanceRate}% per ${matched.acceptanceRateSource} — cite this directly and with full confidence when computing acceptanceProbability (baseline selectivity above was derived from this same figure, they are not independent facts).`
-            : matched.rankValue != null && matched.rankSource
-              ? ` No real overall acceptance rate is on file. This school IS ranked #${matched.rankValue} overall per ${matched.rankSource} — cite that plainly (e.g. "ranked #${matched.rankValue} overall") as the grounding for acceptanceProbability, but don't present it with the same confidence as a real acceptance rate.`
-              : ` No real overall acceptance rate or overall ranking exists for this school — baseline selectivity above is an internal estimate, not a citation; don't present it as sourced.`
+          : ` For grounding acceptanceProbability: ${acceptanceRateForPrompt(acc)}${
+              acc == null || acc.kind === 'unspecified'
+                ? matched.rankValue != null && matched.rankSource
+                  ? ` This school IS ranked #${matched.rankValue} overall per ${matched.rankSource} — use that as the main selectivity signal, cited plainly (e.g. "ranked #${matched.rankValue} overall"), but not with the confidence of a real acceptance rate.`
+                  : ` No overall ranking exists either — baseline selectivity above (${matched.baselineSelectivity}/100) is an internal estimate, not a citation; don't present it as sourced.`
+                : ''
+            }`
 
       const earlyAdmissionGrounding =
         matched.earlyDecisionRate != null || matched.earlyActionRate != null
@@ -466,6 +479,7 @@ Provide short, specific, scannable bullets for strengths, weaknesses/gaps, and a
       earlyAdmission,
       admissionsContext,
       liveResearch,
+      acceptanceRate: acc,
     }
   } catch (err) {
     if (err instanceof Error && err.message.startsWith('OpenAI request failed')) {

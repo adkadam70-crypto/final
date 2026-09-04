@@ -49,7 +49,7 @@ export default async function Image() {
           College Admission Predictor
         </div>
         <div style={{ display: 'flex', fontSize: 27, color: MUTED }}>
-          US · UK · Australia · Singapore · Hong Kong · India
+          US · UK · Australia · Singapore · Hong Kong · India · Germany · France
         </div>
       </div>
     ),

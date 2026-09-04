@@ -6,8 +6,10 @@ import {
   matches,
   programRankings,
   type MatchResult,
+  type AcceptanceRateInfo,
 } from '@/lib/db/schema'
 import type { AcademicField } from '@/lib/academic-detail'
+import { resolveAcceptanceRate, acceptanceRateForPrompt } from '@/lib/acceptance-rate'
 import { inArray, and, eq, desc } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
@@ -197,7 +199,7 @@ async function generateOpenAIMatch({
     requirements: string[]
     programRank: { rankValue: number | null; rankSource: string; programSelectivity: number; additionalRequirements: string[] } | null
     overallRank: { rankValue: number; rankSource: string } | null
-    actualAcceptanceRate: { rate: number; source: string } | null
+    acceptanceRate: AcceptanceRateInfo
     earlyAdmission: { ed: number | null; ea: number | null; rd: number | null; source: string } | null
     testScoreFit: string
   }>
@@ -271,9 +273,7 @@ ${JSON.stringify(
         ? u.programRank.additionalRequirements
         : 'None on file beyond admissionRequirements above.'
       : 'No verified program-specific data on file — nothing to add beyond admissionRequirements above.',
-    actualOverallAcceptanceRate: u.actualAcceptanceRate
-      ? `${u.actualAcceptanceRate.rate}% overall admit rate, per ${u.actualAcceptanceRate.source} — a real published figure, not an estimate.`
-      : 'Not on file.',
+    overallAcceptanceRate: acceptanceRateForPrompt(u.acceptanceRate),
     overallRanking: u.overallRank
       ? `Ranked #${u.overallRank.rankValue} overall per ${u.overallRank.rankSource}`
       : 'No verified overall ranking on file.',
@@ -284,7 +284,7 @@ ${JSON.stringify(
       ? `${u.earlyAdmission.ea}% — a REAL published Early Action (non-binding) admit rate, per ${u.earlyAdmission.source}.`
       : 'Not on file — either this school has no EA program, or we have no real rate for it. Never invent one.',
     regularDecisionRate: u.earlyAdmission?.rd != null
-      ? `${u.earlyAdmission.rd}% — a REAL published Regular-Decision-only admit rate, per ${u.earlyAdmission.source}. More precise than actualOverallAcceptanceRate for a typical (non-early) applicant, since a blended headline rate can fold in a much easier early pool.`
+      ? `${u.earlyAdmission.rd}% — a REAL published Regular-Decision-only admit rate, per ${u.earlyAdmission.source}. More precise than overallAcceptanceRate for a typical (non-early) applicant, since a blended headline rate can fold in a much easier early pool.`
       : 'Not on file.',
     testScoreFit: u.testScoreFit,
   })),
@@ -294,9 +294,9 @@ ${JSON.stringify(
 
 When a school's academicFields includes the student's intended field of study, treat that as a genuine positive fit signal in your rationale — not just an admission-probability input. When it's "not yet tagged," don't penalize the school for it; assess it on selectivity and the other signals instead.
 
-IMPORTANT — acceptanceProbability reflects admission to the UNIVERSITY, never to a specific program. Most schools admit students holistically to the institution as a whole (major is a soft signal, sometimes declared a year or two later); this app has no verified data on which specific schools instead admit directly by college/major with a genuinely separate, harder process (a real phenomenon at a handful of schools, but not something to assume by default). So: ground acceptanceProbability using this priority order, falling through only when the higher one is unavailable: (1) regularDecisionRate, if present — the most realistic baseline for a typical non-early applicant, since it strips out any early-round effect the blended headline can't separate; (2) actualOverallAcceptanceRate, if present and regularDecisionRate is not — a real published admit rate, cite it directly and with full confidence (e.g. "the actual acceptance rate is 12%"); (3) overallRanking, if present — a general prestige ranking, cite it plainly (e.g. "ranked #28 overall") but don't treat it as equivalent to a real acceptance rate; (4) baselineSelectivity alone — an internal estimate with no citation behind it. Never present tier 4 with the confidence of tiers 1-3 in your rationale text. Note: when actualOverallAcceptanceRate is present, baselineSelectivity was already derived from it (100 minus the rate) — they are the same fact, not two independent ones. NEVER use programRankingForIntendedField to move acceptanceProbability up or down.
+IMPORTANT — acceptanceProbability reflects admission to the UNIVERSITY, never to a specific program. Most schools admit students holistically to the institution as a whole (major is a soft signal, sometimes declared a year or two later); this app has no verified data on which specific schools instead admit directly by college/major with a genuinely separate, harder process (a real phenomenon at a handful of schools, but not something to assume by default). So: ground acceptanceProbability using this priority order, falling through only when the higher one is unavailable: (1) regularDecisionRate, if present — the most realistic baseline for a typical non-early applicant, since it strips out any early-round effect the blended headline can't separate; (2) overallAcceptanceRate when it is a REAL published figure — cite it directly and with full confidence (e.g. "the actual acceptance rate is 12%"); (3) overallAcceptanceRate when it is marked OUR RESEARCH ESTIMATE — you may use the number to place the school, but in the rationale you MUST call it an estimate (e.g. "we estimate roughly 25% — not a figure the university publishes"), never state it as fact; (4) overallRanking, if present — a general prestige ranking, cite it plainly (e.g. "ranked #28 overall") but don't treat it as equivalent to a real acceptance rate; (5) baselineSelectivity alone — an internal estimate with no citation behind it. When overallAcceptanceRate says NO published or estimable rate exists (e.g. a Numerus Clausus system or a non-selective licence), do not invent a percentage — explain selectivity through ranking, requirements and baselineSelectivity, and it is fine to tell the student plainly that this school has no published acceptance rate. Never present tiers 3-5 with the confidence of tiers 1-2 in your rationale text. Note: whenever overallAcceptanceRate is present — a real published figure OR our research estimate — baselineSelectivity was already derived from it (100 minus the rate); they are the same fact, not two independent signals to stack. NEVER use programRankingForIntendedField to move acceptanceProbability up or down.
 
-When regularDecisionRate is present AND meaningfully different from actualOverallAcceptanceRate (this happens at schools that lean heavily on binding Early Decision, e.g. a school publishing a ~5% blended rate that's actually ~43% ED and ~4% regular), say so plainly and specifically in the rationale — e.g. "published rate is 5%, but that blends in a large Early Decision pool; as a Regular Decision applicant, ~4% is the more realistic baseline." This is about being transparent with the student, not about penalizing the school — state it as a neutral fact.
+When regularDecisionRate is present AND meaningfully different from a real overallAcceptanceRate (this happens at schools that lean heavily on binding Early Decision, e.g. a school publishing a ~5% blended rate that's actually ~43% ED and ~4% regular), say so plainly and specifically in the rationale — e.g. "published rate is 5%, but that blends in a large Early Decision pool; as a Regular Decision applicant, ~4% is the more realistic baseline." This is about being transparent with the student, not about penalizing the school — state it as a neutral fact.
 
 Separately, compute earlyDecisionProbability and earlyActionProbability: these are this student's estimated personal chance if they applied through that specific binding-ED or non-binding-EA round instead, computed the same way as acceptanceProbability but grounded in earlyDecisionRate/earlyActionRate respectively. Only set a value when that real rate is present in the data above — leave it null when a school has no such program or no real rate on file, exactly like every other estimate in this app. Never infer or guess an early-round number from the regular one.
 
@@ -373,6 +373,8 @@ export async function runMatch(): Promise<
       SG: 'Singapore weighs strong academics first, with essays and interviews as secondary factors.',
       HK: 'Hong Kong weighs strong academics and interviews, with some holistic review.',
       IN: 'Holistic Indian universities blend board marks with essays and interviews; IITs are purely exam-driven.',
+      DE: 'Germany admits almost purely on the final secondary-school GPA (Abitur equivalent). Numerus Clausus subjects have a GPA cutoff; open-admission subjects only require meeting the entry bar. Extracurriculars and essays carry essentially no weight (~100% academic).',
+      FR: 'France has two tracks. Public-university licence programs are essentially non-selective (meeting the Baccalauréat-equivalent bar is enough, outside oversubscribed fields). Grandes écoles and selective programs (~90% academic) weigh high-school grades and concours/exam performance, with the motivation letter a secondary factor.',
     }
 
     // Verified program-specific rankings for the student's intended field,
@@ -499,10 +501,7 @@ export async function runMatch(): Promise<
         requirements: u.requirements,
         programRank: programRankByUniversityId.get(u.id) ?? null,
         overallRank: u.rankValue != null && u.rankSource ? { rankValue: u.rankValue, rankSource: u.rankSource } : null,
-        actualAcceptanceRate:
-          u.actualAcceptanceRate != null && u.acceptanceRateSource
-            ? { rate: u.actualAcceptanceRate, source: u.acceptanceRateSource }
-            : null,
+        acceptanceRate: resolveAcceptanceRate(u),
         earlyAdmission: u.earlyAdmissionSource
           ? { ed: u.earlyDecisionRate, ea: u.earlyActionRate, rd: u.regularDecisionRate, source: u.earlyAdmissionSource }
           : null,
@@ -545,6 +544,7 @@ export async function runMatch(): Promise<
           generalRankBadge,
           programRankBadge,
           globalRank: u.globalRankValue != null && u.globalRankSource ? { value: u.globalRankValue, source: u.globalRankSource } : null,
+          acceptanceRate: resolveAcceptanceRate(u),
           internshipProgram: u.internshipProgram,
           requirements: u.requirements,
           link: u.link,

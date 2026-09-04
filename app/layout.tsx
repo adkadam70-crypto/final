@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 const SITE_URL = 'https://auraadmit-smoky.vercel.app'
 const SITE_NAME = 'Shortlisted — College Predictor'
 const SITE_DESCRIPTION =
-  'College admission predictor for the US, UK, Australia, Singapore, Hong Kong, and India. Match your profile against real admissions data and get acceptance-probability estimates.'
+  'College admission predictor for the US, UK, Australia, Singapore, Hong Kong, India, Germany, and France. Match your profile against real admissions data and get acceptance-probability estimates.'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

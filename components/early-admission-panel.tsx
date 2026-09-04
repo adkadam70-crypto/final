@@ -85,7 +85,7 @@ export function EarlyAdmissionPanel({
             <strong className="text-foreground">Early Action</strong> runs on the same early timeline but isn&apos;t binding — you keep every option open — which is also why it usually carries a smaller boost than ED.
           </p>
           <p>The trade-off with ED: you can&apos;t compare financial aid offers, and you commit before hearing from anywhere else. Only apply ED somewhere you&apos;re certain is your first choice.</p>
-          <p className="text-[10px] opacity-75">Source: {info!.source}. This is a US-specific mechanism — there&apos;s no binding equivalent in the UK, Australia, Singapore, Hong Kong, or India.</p>
+          <p className="text-[10px] opacity-75">Source: {info!.source}. This is a US-specific mechanism — there&apos;s no binding equivalent in the UK, Australia, Singapore, Hong Kong, India, Germany, or France.</p>
         </div>
       )}
     </div>

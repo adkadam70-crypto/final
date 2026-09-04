@@ -145,6 +145,55 @@ export const APPLICATION_INFO: Record<string, CountryApplicationInfo> = {
     essayResources: [],
     prioritizes: 'Board exam percentage plus, for exam-gated fields, your entrance exam score/rank. Extracurriculars and essays are the exception at most institutions, not the norm.',
   },
+  DE: {
+    code: 'DE',
+    name: 'Germany',
+    platform: 'uni-assist handles international document checks for ~180 universities; some universities use their own portal instead. Hochschulstart (Stiftung für Hochschulzulassung) centrally coordinates the nationally-restricted subjects (medicine, dentistry, pharmacy, veterinary medicine).',
+    platformLinks: [
+      { label: 'uni-assist', url: 'https://www.uni-assist.de/en/' },
+      { label: 'Hochschulstart', url: 'https://www.hochschulstart.de/' },
+    ],
+    howToApply: 'Check each university: apply either through uni-assist (about €75 for the first application plus €30 per additional one) or the university\'s own portal. Standard deadlines are 15 July for the winter semester and 15 January for the summer semester; decisions usually follow 4-8 weeks later. Applicants from India, China, and Vietnam must obtain an APS certificate before applying.',
+    requirements: [
+      'A secondary qualification recognized as equivalent to the German Abitur',
+      'APS certificate (mandatory for applicants from India, China, and Vietnam)',
+      'Language proof: German-taught programs need DSH-2 or TestDaF (level 4 in all four sections); English-taught programs need IELTS/TOEFL',
+      'Short motivation letter and CV',
+      "CBSE/ISC Standard XII can give direct university access if it matches the subject-and-marks pattern the German credential database (anabin) sets for Indian qualifications; where it doesn't, a one-year Studienkolleg foundation course plus the Feststellungsprüfung exam is required first. A US high school diploma is normally paired with SAT/AP scores.",
+      'Many popular subjects are Numerus Clausus (NC) restricted — admission is a GPA cutoff (the "NC value") that shifts every semester with the applicant pool. Subjects without an NC (zulassungsfrei) admit everyone who meets the requirements.',
+    ],
+    extracurriculars: 'Essentially not considered. NC admission runs on your Abitur-equivalent GPA, waiting-semester and quota rules, and occasionally a subject-specific aptitude test — activities, references, and essays carry no formal weight for most bachelor programs.',
+    tests: 'No SAT/ACT equivalent. Medicine uses the TMS (Medizinertest); some universities ask international applicants for the TestAS subject aptitude test. Otherwise your secondary-school GPA is the deciding number.',
+    essays: 'A short motivation letter is commonly required but weighs far less than in the US or UK — it confirms fit rather than deciding the case. Some English-taught and private-university programs do weigh it more heavily.',
+    essayResources: [
+      { label: 'DAAD — official application process guide', url: 'https://www.daad.de/en/studying-in-germany/requirements/application-process/' },
+    ],
+    prioritizes: 'Your Abitur-equivalent GPA above all for NC subjects, and simply meeting the entry bar for open-admission subjects. One of the most purely grades-driven systems on this list, with no holistic layer.',
+  },
+  FR: {
+    code: 'FR',
+    name: 'France',
+    platform: 'Parcoursup for most undergraduate (licence) programs. Non-EU students from a Campus France "CEF" country (India included) must first complete the Campus France "Études en France" dossier. Many grandes écoles run their own concours (competitive exams) or post-bac admissions (SESAME/ACCÈS for business; GEIPI, Avenir, Puissance Alpha for engineering).',
+    platformLinks: [
+      { label: 'Parcoursup', url: 'https://www.parcoursup.gouv.fr/' },
+      { label: 'Campus France — Études en France', url: 'https://www.campusfrance.org/en/application-etudes-en-france-procedure' },
+    ],
+    howToApply: 'Non-EU students from a CEF country complete the Campus France "Études en France" dossier first (academic records, motivation letter, language results, CV), then apply — via Parcoursup for licence programs (registration mid-January to mid-March, up to 20 wishes) or directly to grandes écoles and master\'s programs. EU students and applicants in non-CEF countries can apply directly to institutions.',
+    requirements: [
+      'A secondary diploma recognized as equivalent to the French Baccalauréat (CBSE/ISC, IB, and A-Levels are accepted; a US diploma is usually paired with SAT/AP)',
+      'High-school transcripts (bulletins) from the last 2-3 years — weighed heavily for selective programs',
+      'Motivation letter (lettre de motivation, roughly 1,500 characters on Parcoursup) and CV',
+      'Language proof: French-taught programs need DELF/DALF B2 or the TCF; English-taught programs need IELTS/TOEFL',
+      'For grandes écoles: usually two years of classes préparatoires (CPGE) followed by the concours, or a post-bac concours (SESAME, GEIPI, and similar)',
+    ],
+    extracurriculars: 'Limited weight at public universities. Selective programs (grandes écoles, IUTs, prépas) look mainly at your high-school academic record; a sharp, specific motivation letter is the main non-grade factor and can offset a slightly weaker GPA.',
+    tests: 'No universal test. Grandes écoles rely on the concours (written and oral exams, usually after prépa) or post-bac exams (SESAME/ACCÈS for business, GEIPI/Avenir/Puissance Alpha for engineering). Public-university licence programs have no entrance exam.',
+    essays: 'The lettre de motivation is required and does matter — especially for selective programs and on the Campus France dossier — but it is short and focused on program fit and academic motivation, not a US-style personal narrative.',
+    essayResources: [
+      { label: 'Campus France — applying to a French institution', url: 'https://www.campusfrance.org/en/application-higher-education-france' },
+    ],
+    prioritizes: 'Two very different tracks. Public-university licence: essentially non-selective — clearing the Baccalauréat-equivalent bar is usually enough (except oversubscribed fields like medicine, law, and psychology). Grandes écoles and selective programs: high-school grades and concours/exam performance, with the motivation letter as a real secondary factor.',
+  },
 }
 
 export const APPLICATION_INFO_COUNTRIES = Object.keys(APPLICATION_INFO)
