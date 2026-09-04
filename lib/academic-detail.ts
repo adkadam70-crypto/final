@@ -160,6 +160,7 @@ export const ACADEMIC_FIELDS = [
   'Engineering',
   'Mathematics & Statistics',
   'Business',
+  'Economics',
   'Medicine & Health Sciences',
   'Law',
   'Education',
