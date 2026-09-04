@@ -31,6 +31,8 @@ export const auth = betterAuth({
       'auraadmit-smoky.vercel.app',
       '*.vercel.app',
       'localhost:3000',
+      'shortlisted.space',
+      'www.shortlisted.space',
     ],
   },
 
