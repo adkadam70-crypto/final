@@ -22,6 +22,14 @@ const nameInputClass = `${inputClass} flex-1 min-w-0`
 const A_LEVEL_GRADES: ALevelGrade[] = ['A*', 'A', 'B', 'C', 'D', 'E']
 const IB_CORE_GRADES: IBCoreGrade[] = ['A', 'B', 'C', 'D', 'E']
 
+// Dropdown options read alphabetically regardless of how the source lists in
+// lib/subject-lists.ts happen to be ordered (grouped by discipline there,
+// which is easier to maintain but not what a student scanning a dropdown
+// wants).
+function alphabetical(subjects: readonly string[]): string[] {
+  return [...subjects].sort((a, b) => a.localeCompare(b))
+}
+
 export function AcademicDetailInput({ detail, onChange }: { detail: AcademicDetail; onChange: (d: AcademicDetail) => void }) {
   if (detail.curriculum === 'CBSE') return <CBSEInput detail={detail} onChange={onChange} />
   if (detail.curriculum === 'A_LEVELS') return <ALevelsInput detail={detail} onChange={onChange} />
@@ -40,7 +48,7 @@ function CBSEInput({ detail, onChange }: { detail: Extract<AcademicDetail, { cur
             onChange({ ...detail, subjects })
           }}>
             <option value="">Select subject</option>
-            {CBSE_SUBJECTS.map((subj) => <option key={subj} value={subj}>{subj}</option>)}
+            {alphabetical(CBSE_SUBJECTS).map((subj) => <option key={subj} value={subj}>{subj}</option>)}
           </select>
           <input className={`${inputClass} w-20 shrink-0`} type="number" min={0} max={100} placeholder="Marks" value={s.marks} onChange={(e) => {
             const subjects = [...detail.subjects]; subjects[i] = { ...s, marks: Number(e.target.value) }
@@ -70,7 +78,7 @@ function ALevelsInput({ detail, onChange }: { detail: Extract<AcademicDetail, { 
             onChange({ ...detail, subjects })
           }}>
             <option value="">Select subject</option>
-            {A_LEVEL_SUBJECTS.map((subj) => <option key={subj} value={subj}>{subj}</option>)}
+            {alphabetical(A_LEVEL_SUBJECTS).map((subj) => <option key={subj} value={subj}>{subj}</option>)}
           </select>
           <select className={`${inputClass} w-16 shrink-0`} value={s.grade} onChange={(e) => {
             const subjects = [...detail.subjects]; subjects[i] = { ...s, grade: e.target.value as ALevelGrade }
@@ -83,9 +91,7 @@ function ALevelsInput({ detail, onChange }: { detail: Extract<AcademicDetail, { 
           )}
         </div>
       ))}
-      {detail.subjects.length < 4 && (
-        <button type="button" onClick={() => onChange({ ...detail, subjects: [...detail.subjects, { name: '', grade: 'A' }] })} className="text-xs text-primary font-medium flex items-center gap-1"><Plus className="w-3.5 h-3.5" /> Add subject (up to 4)</button>
-      )}
+      <button type="button" onClick={() => onChange({ ...detail, subjects: [...detail.subjects, { name: '', grade: 'A' }] })} className="text-xs text-primary font-medium flex items-center gap-1"><Plus className="w-3.5 h-3.5" /> Add subject</button>
       <p className="text-[11px] text-muted-foreground">{points !== null && <>UCAS points: <span className="text-primary font-mono font-semibold">{points}</span></>}</p>
     </div>
   )
@@ -113,7 +119,7 @@ function IBInput({ detail, onChange }: { detail: Extract<AcademicDetail, { curri
             onChange({ ...detail, subjects })
           }}>
             <option value="">{IB_SUBJECT_GROUPS[s.group - 1].name}</option>
-            {IB_SUBJECTS_BY_GROUP[s.group].map((subj) => <option key={subj} value={subj}>{subj}</option>)}
+            {alphabetical(IB_SUBJECTS_BY_GROUP[s.group]).map((subj) => <option key={subj} value={subj}>{subj}</option>)}
           </select>
           <select className={`${inputClass} w-16 shrink-0`} value={s.level} onChange={(e) => {
             const subjects = [...detail.subjects]; subjects[i] = { ...s, level: e.target.value as 'HL' | 'SL' }

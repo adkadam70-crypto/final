@@ -30,6 +30,10 @@ export const CBSE_SUBJECTS = [
   'Entrepreneurship',
 ] as const
 
+// 'Business' (Cambridge International 9609 / AQA 7132 / Edexcel 9BS0) — not
+// 'Business Studies'. Cambridge retired that name with its old 9707
+// syllabus in 2016; every major UK board now examines this subject as
+// plain 'Business'.
 export const A_LEVEL_SUBJECTS = [
   'Mathematics',
   'Further Mathematics',
@@ -38,7 +42,7 @@ export const A_LEVEL_SUBJECTS = [
   'Biology',
   'Computer Science',
   'Economics',
-  'Business Studies',
+  'Business',
   'Accounting',
   'English Literature',
   'English Language',
@@ -65,7 +69,7 @@ export const A_LEVEL_SUBJECTS = [
 // subject, per the IB's own group 6 substitution rule.
 export const IB_SUBJECTS_BY_GROUP: Record<1 | 2 | 3 | 4 | 5 | 6, readonly string[]> = {
   1: ['English A: Literature', 'English A: Language and Literature', 'Hindi A: Literature', 'Self-Taught Language A: Literature'],
-  2: ['French B', 'Spanish B', 'German B', 'Mandarin B', 'French ab initio', 'Spanish ab initio', 'Mandarin ab initio', 'Classical Greek', 'Latin'],
+  2: ['French B', 'Spanish B', 'German B', 'Mandarin B', 'Hindi B', 'French ab initio', 'Spanish ab initio', 'Mandarin ab initio', 'Classical Greek', 'Latin'],
   3: ['History', 'Geography', 'Economics', 'Business Management', 'Psychology', 'Philosophy', 'Global Politics', 'Environmental Systems and Societies'],
   4: ['Biology', 'Chemistry', 'Physics', 'Computer Science', 'Design Technology', 'Sports, Exercise and Health Science', 'Environmental Systems and Societies'],
   5: ['Mathematics: Analysis and Approaches', 'Mathematics: Applications and Interpretation'],
