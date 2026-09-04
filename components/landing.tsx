@@ -11,7 +11,7 @@ const CAMPUS_BACKGROUND_URL = 'https://upload.wikimedia.org/wikipedia/commons/e/
 
 const FEATURE_TAGS: TagItem[] = [
   { text: 'US · UK · AU · SG · HK · India', background: 'var(--primary)', color: 'var(--primary-foreground)' },
-  { text: '400+ real universities', background: 'var(--chart-5)', color: '#ffffff' },
+  { text: '500+ real universities', background: 'var(--chart-5)', color: '#ffffff' },
   { text: 'Tiered acceptance odds', background: 'var(--chart-2)', color: '#1a1a1a' },
   { text: 'Bias-checked analysis', background: 'var(--chart-3)', color: '#ffffff' },
 ]
@@ -103,7 +103,17 @@ export function Landing() {
               Sign In
             </Link>
           </div>
-          <p className="text-center text-sm font-semibold text-primary mt-10">Shortlisted</p>
+          <div className="text-center mt-12 max-w-2xl px-4">
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Sourced from real, credible publications</p>
+            <p className="text-xs text-muted-foreground leading-relaxed text-pretty">
+              Every ranking and acceptance rate we cite is pulled from named, citable sources — U.S. News &amp; World Report,
+              the U.S. Department of Education&apos;s College Scorecard, NIRF (India&apos;s official government ranking framework),
+              The Complete University Guide (UK), Times Higher Education (Australia), and QS World University Rankings
+              (Singapore &amp; Hong Kong). Where a real published number doesn&apos;t exist yet for a school, we say so — never a
+              guess dressed up as fact.
+            </p>
+          </div>
+          <p className="text-center text-sm font-semibold text-primary mt-8">Shortlisted</p>
         </section>
       </HeroScrollVideoReveal>
     </main>
