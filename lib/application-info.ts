@@ -196,4 +196,8 @@ export const APPLICATION_INFO: Record<string, CountryApplicationInfo> = {
   },
 }
 
-export const APPLICATION_INFO_COUNTRIES = Object.keys(APPLICATION_INFO)
+// Alphabetical by full country name (not insertion order / code) so the
+// tab row on /application-info is easy to scan.
+export const APPLICATION_INFO_COUNTRIES = Object.keys(APPLICATION_INFO).sort((a, b) =>
+  APPLICATION_INFO[a].name.localeCompare(APPLICATION_INFO[b].name),
+)

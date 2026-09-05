@@ -16,16 +16,33 @@ export function UniversityCard({ uni }: { uni: MatchResult }) {
     <GlowCard className="rounded-3xl block">
     <article className="bg-card border border-border rounded-3xl overflow-hidden transition-colors hover:border-foreground/20">
       {/* Real campus photo sourced from Wikimedia Commons (see
-          scripts/fetch-university-images.mjs). When no good match was
-          found, fall back to a plain branded placeholder — never a random
-          unrelated photo, since that would misrepresent the school. */}
+          scripts/fetch-university-images.mjs), or — for schools with no
+          usable campus photo — the university's own logo/icon fetched from
+          its own website (see scripts/seed-university-logos-de-fr.mjs),
+          stored under /public/university-logos and served from this app's
+          own origin. Logos render contained on a plain background instead
+          of cropped-to-fill, since cropping a mark (unlike a photo) usually
+          cuts off part of it. Falls back to a plain branded placeholder
+          when neither exists — never a random unrelated photo, since that
+          would misrepresent the school. */}
       {uni.imageUrl ? (
-        <img
-          src={uni.imageUrl}
-          alt={`${uni.name} campus`}
-          loading="lazy"
-          className="w-full h-32 object-cover"
-        />
+        uni.imageUrl.startsWith('/university-logos/') ? (
+          <div className="w-full h-32 bg-white flex items-center justify-center p-5">
+            <img
+              src={uni.imageUrl}
+              alt={`${uni.name} logo`}
+              loading="lazy"
+              className="max-w-full max-h-full object-contain"
+            />
+          </div>
+        ) : (
+          <img
+            src={uni.imageUrl}
+            alt={`${uni.name} campus`}
+            loading="lazy"
+            className="w-full h-32 object-cover"
+          />
+        )
       ) : (
         <div className="w-full h-32 bg-gradient-to-br from-accent to-secondary flex items-center justify-center" aria-hidden="true">
           <GraduationCap className="w-8 h-8 text-primary/50" />

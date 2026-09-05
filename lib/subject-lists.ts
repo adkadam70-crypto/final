@@ -1,33 +1,34 @@
 // Real, standard subject lists per curriculum — used to power dropdowns in
 // place of free-text subject-name entry. Not exhaustive of every niche
 // vocational/regional option each board offers, but covers the subjects
-// the overwhelming majority of students actually take.
+// the overwhelming majority of students actually take. Alphabetical within
+// each list/group so a student can scan for their subject quickly.
 
 export const CBSE_SUBJECTS = [
+  'Accountancy',
+  'Applied Mathematics',
+  'Biology',
+  'Business Studies',
+  'Chemistry',
+  'Computer Science',
+  'Economics',
   'English Core',
   'English Elective',
+  'Entrepreneurship',
+  'Fine Arts',
+  'Geography',
   'Hindi Core',
   'Hindi Elective',
-  'Mathematics',
-  'Applied Mathematics',
-  'Physics',
-  'Chemistry',
-  'Biology',
-  'Computer Science',
-  'Informatics Practices',
-  'Physical Education',
-  'Accountancy',
-  'Business Studies',
-  'Economics',
   'History',
+  'Home Science',
+  'Informatics Practices',
+  'Legal Studies',
+  'Mathematics',
+  'Physical Education',
+  'Physics',
   'Political Science',
-  'Geography',
   'Psychology',
   'Sociology',
-  'Fine Arts',
-  'Home Science',
-  'Legal Studies',
-  'Entrepreneurship',
 ] as const
 
 // 'Business' (Cambridge International 9609 / AQA 7132 / Edexcel 9BS0) — not
@@ -35,61 +36,65 @@ export const CBSE_SUBJECTS = [
 // syllabus in 2016; every major UK board now examines this subject as
 // plain 'Business'.
 export const A_LEVEL_SUBJECTS = [
-  'Mathematics',
-  'Further Mathematics',
-  'Physics',
-  'Chemistry',
-  'Biology',
-  'Computer Science',
-  'Economics',
-  'Business',
   'Accounting',
-  'English Literature',
+  'Art & Design',
+  'Biology',
+  'Business',
+  'Chemistry',
+  'Computer Science',
+  'Design & Technology',
+  'Drama & Theatre Studies',
+  'Economics',
   'English Language',
-  'History',
+  'English Literature',
+  'French',
+  'Further Mathematics',
   'Geography',
+  'German',
+  'History',
+  'Law',
+  'Mathematics',
+  'Media Studies',
+  'Music',
+  'Philosophy',
+  'Physics',
   'Politics',
   'Psychology',
-  'Sociology',
-  'Law',
-  'Philosophy',
   'Religious Studies',
-  'Art & Design',
-  'Design & Technology',
-  'Music',
-  'Drama & Theatre Studies',
-  'Media Studies',
-  'French',
+  'Sociology',
   'Spanish',
-  'German',
 ] as const
 
 // Keyed by IB subject group (1-6). Group 6 additionally includes the
 // group 3/4 subjects a student may substitute in instead of an Arts
-// subject, per the IB's own group 6 substitution rule.
+// subject, per the IB's own group 6 substitution rule — appended after the
+// true group 6 (Arts) subjects and separately alphabetized, so the
+// substitution set stays visually distinguishable in this source file
+// even though the rendered dropdown is one flat alphabetical list.
 export const IB_SUBJECTS_BY_GROUP: Record<1 | 2 | 3 | 4 | 5 | 6, readonly string[]> = {
-  1: ['English A: Literature', 'English A: Language and Literature', 'Hindi A: Literature', 'Self-Taught Language A: Literature'],
-  2: ['French B', 'Spanish B', 'German B', 'Mandarin B', 'Hindi B', 'French ab initio', 'Spanish ab initio', 'Mandarin ab initio', 'Classical Greek', 'Latin'],
-  3: ['History', 'Geography', 'Economics', 'Business Management', 'Psychology', 'Philosophy', 'Global Politics', 'Environmental Systems and Societies'],
-  4: ['Biology', 'Chemistry', 'Physics', 'Computer Science', 'Design Technology', 'Sports, Exercise and Health Science', 'Environmental Systems and Societies'],
+  1: ['English A: Language and Literature', 'English A: Literature', 'Hindi A: Literature', 'Self-Taught Language A: Literature'],
+  2: ['Classical Greek', 'French ab initio', 'French B', 'German B', 'Hindi B', 'Latin', 'Mandarin ab initio', 'Mandarin B', 'Spanish ab initio', 'Spanish B'],
+  3: ['Business Management', 'Economics', 'Environmental Systems and Societies', 'Geography', 'Global Politics', 'History', 'Philosophy', 'Psychology'],
+  4: ['Biology', 'Chemistry', 'Computer Science', 'Design Technology', 'Environmental Systems and Societies', 'Physics', 'Sports, Exercise and Health Science'],
   5: ['Mathematics: Analysis and Approaches', 'Mathematics: Applications and Interpretation'],
   6: [
-    'Visual Arts',
+    // true group 6 (Arts) subjects
+    'Dance',
+    'Film',
+    'Literature and Performance',
     'Music',
     'Theatre',
-    'Film',
-    'Dance',
-    'Literature and Performance',
-    // Group 6 may instead be a 2nd subject from group 3 or 4:
-    'History',
-    'Geography',
-    'Economics',
-    'Business Management',
-    'Psychology',
+    'Visual Arts',
+    // group 3/4 substitution subjects
     'Biology',
+    'Business Management',
     'Chemistry',
-    'Physics',
     'Computer Science',
+    'Economics',
+    'Geography',
+    'History',
+    'Physics',
+    'Psychology',
   ],
 }
 

@@ -44,7 +44,7 @@ export function Navbar({ userName, userEmail }: { userName: string; userEmail: s
           <AppLogo className="h-9 w-auto" />
           <div className="flex flex-col leading-tight">
             <span className="text-lg font-bold tracking-tight">Shortlisted</span>
-            <span className="text-[11px] text-muted-foreground hidden sm:block">College Predictor: US, UK, AU, SG, HK & India</span>
+            <span className="text-[11px] text-muted-foreground hidden sm:block">College Predictor: US, UK, AU, SG, HK, India, Germany & France</span>
           </div>
         </Link>
 

@@ -124,10 +124,10 @@ function NinthTenthInput({ value, onChange }: { value: NinthTenthGrades; onChang
           onChange={(e) => onChange({ ...value, curriculum: e.target.value as NinthTenthCurriculum })}
           className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none focus:border-primary"
         >
-          <option value="IGCSE">IGCSE</option>
           <option value="CBSE_ICSE">CBSE / ICSE / other percentage board</option>
-          <option value="US_GPA">US (GPA)</option>
           <option value="IB_MYP">IB (Middle Years Programme)</option>
+          <option value="IGCSE">IGCSE</option>
+          <option value="US_GPA">US (GPA)</option>
         </select>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -268,14 +268,14 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
   }
 
   const COUNTRIES = [
-    { code: 'US', label: 'USA' },
-    { code: 'UK', label: 'UK' },
     { code: 'AU', label: 'Australia' },
-    { code: 'SG', label: 'Singapore' },
+    { code: 'FR', label: 'France' },
+    { code: 'DE', label: 'Germany' },
     { code: 'HK', label: 'Hong Kong' },
     { code: 'IN', label: 'India' },
-    { code: 'DE', label: 'Germany' },
-    { code: 'FR', label: 'France' },
+    { code: 'SG', label: 'Singapore' },
+    { code: 'UK', label: 'UK' },
+    { code: 'US', label: 'USA' },
   ]
 
   const onlyAustralia = targetCountries.length === 1 && targetCountries[0] === 'AU'
@@ -313,9 +313,9 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
             <div>
               <label htmlFor="curriculum" className="text-xs text-muted-foreground block mb-2">Curriculum / board</label>
               <select id="curriculum" value={curriculum} onChange={(e) => handleCurriculumChange(e.target.value as Curriculum)} className="w-full bg-secondary border border-border rounded-xl p-3 text-xs text-foreground focus:outline-none focus:border-primary">
+                <option value="A_LEVELS">A-Levels</option>
                 <option value="CBSE">CBSE / ISC (India)</option>
                 <option value="IB_DIPLOMA">IB Diploma</option>
-                <option value="A_LEVELS">A-Levels</option>
                 <option value="US_GPA_PCT">US (GPA)</option>
               </select>
             </div>
@@ -348,7 +348,7 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
               <div className="space-y-4">
                 <div className="bg-secondary/40 border border-border rounded-2xl p-3">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[11px] font-semibold text-foreground/80">11th grade</span>
+                    <span className="text-[11px] font-semibold text-foreground/80">11th grade{curriculum === 'A_LEVELS' && ' (AS-Level)'}</span>
                     {eleventh && (
                       <button type="button" onClick={() => setEleventh(null)} className="text-[10px] text-muted-foreground hover:text-destructive flex items-center gap-0.5">
                         <X className="w-3 h-3" /> Remove
@@ -357,7 +357,7 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
                   </div>
                   {eleventh ? (
                     <div className="scale-[0.92] origin-top -mx-2 -mb-2">
-                      <AcademicDetailInput detail={eleventh} onChange={setEleventh} />
+                      <AcademicDetailInput detail={eleventh} onChange={setEleventh} variant={curriculum === 'A_LEVELS' ? 'as' : 'full'} />
                     </div>
                   ) : (
                     <div>
@@ -464,21 +464,21 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
             <div>
               <label htmlFor="climate" className="text-[11px] text-muted-foreground block mb-1">Preferred climate</label>
               <select id="climate" value={preferredClimate} onChange={(e) => setPreferredClimate(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none focus:border-primary">
-                <option>No preference</option><option>Warm</option><option>Balanced</option><option>Cold</option>
+                <option>No preference</option><option>Balanced</option><option>Cold</option><option>Warm</option>
               </select>
             </div>
             <div>
               <label htmlFor="sector" className="text-[11px] text-muted-foreground block mb-1">Industry hub</label>
               <select id="sector" value={preferredSector} onChange={(e) => setPreferredSector(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none focus:border-primary">
                 <option>No preference</option>
-                <option>Tech Hub</option>
-                <option>Finance Capital</option>
                 <option>Business</option>
                 <option>Creative Hub</option>
-                <option>Research</option>
-                <option>Healthcare & Biotech Hub</option>
+                <option>Finance Capital</option>
                 <option>Government & Policy Hub</option>
+                <option>Healthcare & Biotech Hub</option>
                 <option>Manufacturing & Engineering Hub</option>
+                <option>Research</option>
+                <option>Tech Hub</option>
               </select>
             </div>
             <div>

@@ -10,13 +10,13 @@ import { AppLogo } from '@/components/app-logo'
 const CAMPUS_BACKGROUND_URL = 'https://upload.wikimedia.org/wikipedia/commons/e/e1/Main_quad_looking_east_at_the_University_of_Rochester.jpg'
 
 const FEATURE_TAGS: TagItem[] = [
-  { text: 'US · UK · AU · SG · HK · India', background: 'var(--primary)', color: 'var(--primary-foreground)' },
-  { text: '500+ real universities', background: 'var(--chart-5)', color: '#ffffff' },
+  { text: 'US · UK · AU · SG · HK · India · Germany · France', background: 'var(--primary)', color: 'var(--primary-foreground)' },
+  { text: '750+ real universities', background: 'var(--chart-5)', color: '#ffffff' },
   { text: 'Tiered acceptance odds', background: 'var(--chart-2)', color: '#1a1a1a' },
   { text: 'Bias-checked analysis', background: 'var(--chart-3)', color: '#ffffff' },
 ]
 
-// Real names pulled from this app's own university catalog — spans all six
+// Real names pulled from this app's own university catalog — spans all eight
 // supported countries. Kept as a static list (not a DB fetch) since this is
 // a purely decorative background field, not data the user can act on.
 const CENTERPIECE_UNIVERSITIES = [
@@ -31,7 +31,7 @@ const CENTERPIECE_UNIVERSITIES = [
   'University of Melbourne',
   'Nanyang Technological University',
   'Imperial College London',
-  'University of Toronto',
+  'Technical University of Munich',
   'Princeton University',
   'University College London',
   'Australian National University',
@@ -48,11 +48,14 @@ const CENTERPIECE_UNIVERSITIES = [
   'Cornell University',
   'University of Manchester',
   'Monash University',
+  'Sciences Po',
   'University of California, Berkeley',
   'Duke University',
   'University of Chicago',
+  'Sorbonne University',
   'Johns Hopkins University',
   'University of Pennsylvania',
+  'Ludwig Maximilian University of Munich',
   'Northwestern University',
 ]
 
@@ -78,7 +81,7 @@ export function Landing() {
           <span className={marigold.className}>
             Real odds. Real universities.
             <br />
-            Across six countries.
+            Across eight countries.
           </span>
         }
         tags={FEATURE_TAGS}
@@ -108,9 +111,9 @@ export function Landing() {
             <p className="text-xs text-muted-foreground leading-relaxed text-pretty">
               Every ranking and acceptance rate we cite is pulled from named, citable sources — U.S. News &amp; World Report,
               the U.S. Department of Education&apos;s College Scorecard, NIRF (India&apos;s official government ranking framework),
-              The Complete University Guide (UK), Times Higher Education (Australia), and QS World University Rankings
-              (Singapore &amp; Hong Kong). Where a real published number doesn&apos;t exist yet for a school, we say so — never a
-              guess dressed up as fact.
+              The Complete University Guide (UK), Times Higher Education (Australia, Germany &amp; France), and QS World
+              University Rankings (Singapore &amp; Hong Kong). Where a real published number doesn&apos;t exist yet for a
+              school, we say so — never a guess dressed up as fact.
             </p>
           </div>
           <p className="text-center text-sm font-semibold text-primary mt-8">Shortlisted</p>
