@@ -92,3 +92,9 @@ export const IB_SUBJECTS_BY_GROUP: Record<1 | 2 | 3 | 4 | 5 | 6, readonly string
     'Computer Science',
   ],
 }
+
+// Every IB subject across all 6 groups, deduped (several appear in more than
+// one group's list already, e.g. Economics in groups 3 and 6) — used so a
+// student can pick any subject in any of their 6 slots rather than being
+// locked to one group's list per slot.
+export const ALL_IB_SUBJECTS = [...new Set(Object.values(IB_SUBJECTS_BY_GROUP).flat())]

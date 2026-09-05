@@ -10,7 +10,7 @@ import {
   ucasPoints,
   ibTotal,
 } from '@/lib/academic-detail'
-import { CBSE_SUBJECTS, A_LEVEL_SUBJECTS, IB_SUBJECTS_BY_GROUP } from '@/lib/subject-lists'
+import { CBSE_SUBJECTS, A_LEVEL_SUBJECTS, ALL_IB_SUBJECTS } from '@/lib/subject-lists'
 
 // Deliberately no width utility baked in here — Tailwind's cascade order
 // (not string order) decides which width utility wins when two are present
@@ -119,7 +119,7 @@ function IBInput({ detail, onChange }: { detail: Extract<AcademicDetail, { curri
             onChange({ ...detail, subjects })
           }}>
             <option value="">{IB_SUBJECT_GROUPS[s.group - 1].name}</option>
-            {alphabetical(IB_SUBJECTS_BY_GROUP[s.group]).map((subj) => <option key={subj} value={subj}>{subj}</option>)}
+            {alphabetical(ALL_IB_SUBJECTS).map((subj) => <option key={subj} value={subj}>{subj}</option>)}
           </select>
           <select className={`${inputClass} w-16 shrink-0`} value={s.level} onChange={(e) => {
             const subjects = [...detail.subjects]; subjects[i] = { ...s, level: e.target.value as 'HL' | 'SL' }
