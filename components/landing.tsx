@@ -4,10 +4,9 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { HeroScrollVideoReveal, type TagItem } from '@/components/ui/hero-scroll-video-pin-reveal'
 import { LiquidMetalButton } from '@/components/ui/liquid-metal-button'
+import Velaris from '@/components/ui/velaris'
 import { marigold } from '@/lib/fonts'
 import { AppLogo } from '@/components/app-logo'
-
-const CAMPUS_BACKGROUND_URL = 'https://upload.wikimedia.org/wikipedia/commons/e/e1/Main_quad_looking_east_at_the_University_of_Rochester.jpg'
 
 const FEATURE_TAGS: TagItem[] = [
   { text: 'US · UK · AU · SG · HK · India', background: 'var(--primary)', color: 'var(--primary-foreground)' },
@@ -59,7 +58,16 @@ const CENTERPIECE_UNIVERSITIES = [
 export function Landing() {
   const router = useRouter()
   return (
-    <main className="min-h-svh bg-background text-foreground">
+    <main className="min-h-svh text-foreground">
+      {/* Fixed (not scrolled-with-content) so one shader instance covers the
+          entire page — every section below is transparent so this shows
+          through everywhere, not just inside the pinned reveal circle.
+          Deliberately no negative z-index: <body> paints its own opaque
+          --background color as the page root, and a negative z-index here
+          renders behind that root paint instead of in front of it. Plain
+          DOM order (this first, real content after) stacks correctly
+          without fighting that. */}
+      <Velaris height="100vh" className="fixed inset-0" />
       <HeroScrollVideoReveal
         topBrand={
           <div className="flex items-center gap-2.5">
@@ -84,7 +92,6 @@ export function Landing() {
         tags={FEATURE_TAGS}
         subText="Every recommendation is grounded in real selectivity data for real universities — not vibes, and not guesswork."
         centerpieceNames={CENTERPIECE_UNIVERSITIES}
-        centerpieceBackgroundUrl={CAMPUS_BACKGROUND_URL}
         bottomText={
           <span className={marigold.className}>
             Stop guessing.
