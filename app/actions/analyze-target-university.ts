@@ -483,3 +483,12 @@ Provide an honest tier + probability, and short, specific, scannable bullets for
     throw new Error(`Analysis failed: ${message}`)
   }
 }
+
+// Powers the autocomplete dropdown on the Target Analysis input — names
+// only, alphabetical, so the client can filter-as-you-type against the real
+// catalog instead of the user having to type a full name blind and find out
+// afterward whether it's in our catalog.
+export async function getUniversityNames(): Promise<string[]> {
+  const rows = await db.select({ name: universities.name }).from(universities)
+  return rows.map((r) => r.name).sort((a, b) => a.localeCompare(b))
+}

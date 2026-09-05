@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { Search, TrendingUp, AlertTriangle, ListChecks, Sparkles } from 'lucide-react'
-import { analyzeTargetUniversity, type TargetAnalysisResult } from '@/app/actions/analyze-target-university'
+import { analyzeTargetUniversity, getUniversityNames, type TargetAnalysisResult } from '@/app/actions/analyze-target-university'
 import { tierBadgeClass } from '@/lib/match-tier'
 import { LoadingDots } from '@/components/loading-dots'
 import { RevealGroup } from '@/components/reveal-group'
@@ -19,6 +19,10 @@ const ANALYSIS_PHASES: ProgressiveFluxPhase[] = [
   { at: 80, label: 'finalizing your breakdown' },
 ]
 
+// Longest common catalog name is well under this; a query longer than it
+// can't possibly still be narrowing toward a real match.
+const MAX_SUGGESTIONS = 8
+
 export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }) {
   const [name, setName] = useState('')
   const [pending, setPending] = useState(false)
@@ -31,12 +35,46 @@ export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }
   const [finishing, setFinishing] = useState(false)
   const pendingResultRef = useRef<TargetAnalysisResult | null>(null)
 
+  // Fetched once and filtered client-side as the user types — lets someone
+  // pick a real catalog name directly instead of typing blind and finding
+  // out afterward it's not in our catalog. Free-text entry still works
+  // (analyzeTargetUniversity still does its own catalog check), this is
+  // purely a faster, more guided way to get there.
+  const [catalogNames, setCatalogNames] = useState<string[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const inputWrapperRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    getUniversityNames().then(setCatalogNames).catch(() => {})
+  }, [])
+
   useEffect(() => {
     if (error) errorRef.current?.focus()
   }, [error])
 
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (inputWrapperRef.current && !inputWrapperRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const query = name.trim().toLowerCase()
+  const suggestions = query
+    ? catalogNames.filter((n) => n.toLowerCase().startsWith(query)).slice(0, MAX_SUGGESTIONS)
+    : []
+
+  function selectSuggestion(suggestion: string) {
+    setName(suggestion)
+    setShowSuggestions(false)
+  }
+
   async function handleAnalyze() {
     if (!name.trim()) return
+    setShowSuggestions(false)
     setError(null)
     setPending(true)
     try {
@@ -85,15 +123,40 @@ export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }
       <p className="text-xs text-muted-foreground mb-4">Get a rigorous, school-specific breakdown: your odds, strengths, gaps, and exactly what to do about them.</p>
 
       <div className="flex flex-col sm:flex-row gap-2">
-        <input
-          type="text"
-          placeholder="e.g. Stanford University"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
-          disabled={!hasProfile}
-          className="flex-1 min-w-0 bg-secondary border border-border rounded-xl p-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary disabled:opacity-60"
-        />
+        <div ref={inputWrapperRef} className="relative flex-1 min-w-0">
+          <input
+            type="text"
+            placeholder="e.g. Stanford University"
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value)
+              setShowSuggestions(true)
+            }}
+            onFocus={() => setShowSuggestions(true)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleAnalyze()
+              if (e.key === 'Escape') setShowSuggestions(false)
+            }}
+            disabled={!hasProfile}
+            autoComplete="off"
+            className="w-full bg-secondary border border-border rounded-xl p-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary disabled:opacity-60"
+          />
+          {showSuggestions && suggestions.length > 0 && (
+            <ul className="absolute z-20 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-xl shadow-lg max-h-56 overflow-y-auto py-1">
+              {suggestions.map((suggestion) => (
+                <li key={suggestion}>
+                  <button
+                    type="button"
+                    onClick={() => selectSuggestion(suggestion)}
+                    className="w-full text-left px-3 py-2 text-xs text-foreground hover:bg-muted transition-colors"
+                  >
+                    {suggestion}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
         <button
           onClick={handleAnalyze}
           disabled={pending || !hasProfile || !name.trim()}
