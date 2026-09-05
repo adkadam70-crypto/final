@@ -106,7 +106,7 @@ export function Landing() {
           </span>
         }
       >
-        <section className="px-4 pb-24 pt-4 flex flex-col items-center">
+        <section className="relative z-10 px-4 pb-24 pt-4 flex flex-col items-center">
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
             <LiquidMetalButton label="Get Started" onClick={() => router.push('/sign-up')} />
             <Link
