@@ -1,6 +1,21 @@
 import { gradeBadge } from '@/lib/grade'
 import type { AcademicDetail } from '@/lib/academic-detail'
 
+// 11th grade for an A-Levels student is the AS-Level (Year 12) year — a
+// distinct qualification from the full 2-year A-Level: it caps at grade A
+// (no A*), and standalone AS results sit on their own (lower) UCAS tariff,
+// not the full-A-Level table gradeBadge()/ucasPoints() use. So it gets its
+// own label instead of borrowing those and reporting a fabricated "UCAS
+// pts" figure. Every other curriculum's 11th grade is the same kind of
+// result as 12th, so gradeBadge() is accurate for them as-is.
+function formatEleventhGrade(detail: AcademicDetail): string {
+  if (detail.curriculum === 'A_LEVELS') {
+    const grades = detail.subjects.map((s) => (s.grade === 'A*' ? 'A' : s.grade)).join('')
+    return `${detail.subjects.length} AS-Levels: ${grades}`
+  }
+  return gradeBadge(detail)
+}
+
 // Grades 9-11 context, split into two deliberately different shapes:
 //
 // - 9th & 10th share ONE curriculum picker (IGCSE is very commonly the
@@ -122,7 +137,7 @@ export function formatPriorGrades(p: PriorGrades): string {
   }
 
   if (p.eleventh) {
-    parts.push(`11th: ${gradeBadge(p.eleventh)}`)
+    parts.push(`11th: ${formatEleventhGrade(p.eleventh)}`)
   }
 
   return parts.length ? parts.join('; ') : 'None provided'

@@ -28,15 +28,6 @@ const CURRICULUM_LABELS: Record<Curriculum, string> = {
   US_GPA_PCT: 'US (GPA)',
 }
 
-// 11th grade (Year 12 in the UK system) is the AS-Level year, not full
-// A-Levels — a real, distinct qualification (no A* grade; see noAStar on
-// AcademicDetailInput). Everything else reuses the same label/shape as the
-// main curriculum picker.
-const ELEVENTH_CURRICULUM_LABELS: Record<Curriculum, string> = {
-  ...CURRICULUM_LABELS,
-  A_LEVELS: 'AS-Levels',
-}
-
 // SAT section scores are only ever reported in multiples of 10, from 200-800.
 const SAT_SECTION_SCORES = Array.from({ length: 61 }, (_, i) => 200 + i * 10)
 
@@ -133,10 +124,10 @@ function NinthTenthInput({ value, onChange }: { value: NinthTenthGrades; onChang
           onChange={(e) => onChange({ ...value, curriculum: e.target.value as NinthTenthCurriculum })}
           className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none focus:border-primary"
         >
-          <option value="IGCSE">IGCSE</option>
           <option value="CBSE_ICSE">CBSE / ICSE / other percentage board</option>
-          <option value="US_GPA">US (GPA)</option>
           <option value="IB_MYP">IB (Middle Years Programme)</option>
+          <option value="IGCSE">IGCSE</option>
+          <option value="US_GPA">US (GPA)</option>
         </select>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -217,9 +208,9 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
   function handleCurriculumChange(next: Curriculum) {
     setCurriculum(next)
     setAcademicDetail(defaultAcademicDetail(next))
-    // 11th grade's curriculum is independently selectable (see the dropdown
-    // next to "11th grade" below) — changing the main 12th curriculum no
-    // longer overrides whatever the user already picked for 11th.
+    // 11th grade reuses the main curriculum's shape (it's "a smaller part of
+    // the 12th section"), so it needs to switch shape along with it.
+    setEleventh((prev) => (prev ? defaultAcademicDetail(next) : null))
   }
 
   function toggleCountry(code: string) {
@@ -277,14 +268,14 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
   }
 
   const COUNTRIES = [
-    { code: 'US', label: 'USA' },
-    { code: 'UK', label: 'UK' },
     { code: 'AU', label: 'Australia' },
-    { code: 'SG', label: 'Singapore' },
+    { code: 'FR', label: 'France' },
+    { code: 'DE', label: 'Germany' },
     { code: 'HK', label: 'Hong Kong' },
     { code: 'IN', label: 'India' },
-    { code: 'DE', label: 'Germany' },
-    { code: 'FR', label: 'France' },
+    { code: 'SG', label: 'Singapore' },
+    { code: 'UK', label: 'UK' },
+    { code: 'US', label: 'USA' },
   ]
 
   const onlyAustralia = targetCountries.length === 1 && targetCountries[0] === 'AU'
@@ -322,9 +313,9 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
             <div>
               <label htmlFor="curriculum" className="text-xs text-muted-foreground block mb-2">Curriculum / board</label>
               <select id="curriculum" value={curriculum} onChange={(e) => handleCurriculumChange(e.target.value as Curriculum)} className="w-full bg-secondary border border-border rounded-xl p-3 text-xs text-foreground focus:outline-none focus:border-primary">
+                <option value="A_LEVELS">A-Levels</option>
                 <option value="CBSE">CBSE / ISC (India)</option>
                 <option value="IB_DIPLOMA">IB Diploma</option>
-                <option value="A_LEVELS">A-Levels</option>
                 <option value="US_GPA_PCT">US (GPA)</option>
               </select>
             </div>
@@ -357,7 +348,7 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
               <div className="space-y-4">
                 <div className="bg-secondary/40 border border-border rounded-2xl p-3">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[11px] font-semibold text-foreground/80">11th grade</span>
+                    <span className="text-[11px] font-semibold text-foreground/80">11th grade{curriculum === 'A_LEVELS' && ' (AS-Level)'}</span>
                     {eleventh && (
                       <button type="button" onClick={() => setEleventh(null)} className="text-[10px] text-muted-foreground hover:text-destructive flex items-center gap-0.5">
                         <X className="w-3 h-3" /> Remove
@@ -365,26 +356,14 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
                     )}
                   </div>
                   {eleventh ? (
-                    <div>
-                      <label className="text-[11px] text-muted-foreground block mb-1">Curriculum for 11th grade</label>
-                      <select
-                        value={eleventh.curriculum}
-                        onChange={(e) => setEleventh(defaultAcademicDetail(e.target.value as Curriculum))}
-                        className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none focus:border-primary mb-2"
-                      >
-                        {(Object.keys(ELEVENTH_CURRICULUM_LABELS) as Curriculum[]).map((c) => (
-                          <option key={c} value={c}>{ELEVENTH_CURRICULUM_LABELS[c]}</option>
-                        ))}
-                      </select>
-                      <div className="scale-[0.92] origin-top -mx-2 -mb-2">
-                        <AcademicDetailInput detail={eleventh} onChange={setEleventh} noAStar={eleventh.curriculum === 'A_LEVELS'} />
-                      </div>
+                    <div className="scale-[0.92] origin-top -mx-2 -mb-2">
+                      <AcademicDetailInput detail={eleventh} onChange={setEleventh} variant={curriculum === 'A_LEVELS' ? 'as' : 'full'} />
                     </div>
                   ) : (
                     <div>
                       <p className="text-[10px] text-primary/80 font-medium mb-1.5">Optional — adding this helps strengthen your analysis.</p>
                       <button type="button" onClick={() => setEleventh(defaultAcademicDetail(curriculum))} className="text-[11px] text-primary font-medium flex items-center gap-1">
-                        <Plus className="w-3 h-3" /> Add 11th grade detail ({ELEVENTH_CURRICULUM_LABELS[curriculum]})
+                        <Plus className="w-3 h-3" /> Add 11th grade detail ({CURRICULUM_LABELS[curriculum]})
                       </button>
                     </div>
                   )}
@@ -485,21 +464,21 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
             <div>
               <label htmlFor="climate" className="text-[11px] text-muted-foreground block mb-1">Preferred climate</label>
               <select id="climate" value={preferredClimate} onChange={(e) => setPreferredClimate(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none focus:border-primary">
-                <option>No preference</option><option>Warm</option><option>Balanced</option><option>Cold</option>
+                <option>No preference</option><option>Balanced</option><option>Cold</option><option>Warm</option>
               </select>
             </div>
             <div>
               <label htmlFor="sector" className="text-[11px] text-muted-foreground block mb-1">Industry hub</label>
               <select id="sector" value={preferredSector} onChange={(e) => setPreferredSector(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none focus:border-primary">
                 <option>No preference</option>
-                <option>Tech Hub</option>
-                <option>Finance Capital</option>
                 <option>Business</option>
                 <option>Creative Hub</option>
-                <option>Research</option>
-                <option>Healthcare & Biotech Hub</option>
+                <option>Finance Capital</option>
                 <option>Government & Policy Hub</option>
+                <option>Healthcare & Biotech Hub</option>
                 <option>Manufacturing & Engineering Hub</option>
+                <option>Research</option>
+                <option>Tech Hub</option>
               </select>
             </div>
             <div>

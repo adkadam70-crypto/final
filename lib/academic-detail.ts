@@ -154,23 +154,24 @@ export function defaultAcademicDetail(curriculum: AcademicDetail['curriculum']):
   }
 }
 
+// Alphabetical so the "intended field" dropdown is easy to scan.
 export const ACADEMIC_FIELDS = [
-  'Science & Technology / Research',
-  'Computer Science & IT',
-  'Engineering',
-  'Mathematics & Statistics',
-  'Business',
-  'Economics',
-  'Medicine & Health Sciences',
-  'Law',
-  'Education',
-  'Humanities',
-  'Social Sciences',
-  'Psychology',
-  'Arts',
-  'Architecture & Design',
-  'Communications & Media',
-  'Environmental Science & Sustainability',
   'Agriculture & Natural Resources',
+  'Architecture & Design',
+  'Arts',
+  'Business',
+  'Communications & Media',
+  'Computer Science & IT',
+  'Economics',
+  'Education',
+  'Engineering',
+  'Environmental Science & Sustainability',
+  'Humanities',
+  'Law',
+  'Mathematics & Statistics',
+  'Medicine & Health Sciences',
+  'Psychology',
+  'Science & Technology / Research',
+  'Social Sciences',
 ] as const
 export type AcademicField = (typeof ACADEMIC_FIELDS)[number]

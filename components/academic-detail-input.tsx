@@ -33,17 +33,19 @@ function alphabetical(subjects: readonly string[]): string[] {
 export function AcademicDetailInput({
   detail,
   onChange,
-  noAStar,
+  variant = 'full',
 }: {
   detail: AcademicDetail
   onChange: (d: AcademicDetail) => void
-  // AS-Levels (the real Year 12 / 11th-grade qualification) doesn't have an
-  // A* grade at all — only full 2-year A-Levels do. Set when this input is
-  // rendering 11th-grade A-Levels detail specifically.
-  noAStar?: boolean
+  // 'as': this instance represents an AS-Level year (this app's "11th grade"
+  // for an A-Levels student is the AS/Year-12 year, a distinct qualification
+  // from the full 2-year A-Level) — caps the grade at A since A* doesn't
+  // exist for standalone AS results. Only meaningful for A_LEVELS; ignored
+  // by every other curriculum.
+  variant?: 'full' | 'as'
 }) {
   if (detail.curriculum === 'CBSE') return <CBSEInput detail={detail} onChange={onChange} />
-  if (detail.curriculum === 'A_LEVELS') return <ALevelsInput detail={detail} onChange={onChange} noAStar={noAStar} />
+  if (detail.curriculum === 'A_LEVELS') return <ALevelsInput detail={detail} onChange={onChange} variant={variant} />
   if (detail.curriculum === 'US_GPA_PCT') return <USInput detail={detail} onChange={onChange} />
   return <IBInput detail={detail} onChange={onChange} />
 }
@@ -81,17 +83,26 @@ function CBSEInput({ detail, onChange }: { detail: Extract<AcademicDetail, { cur
 function ALevelsInput({
   detail,
   onChange,
-  noAStar,
+  variant,
 }: {
   detail: Extract<AcademicDetail, { curriculum: 'A_LEVELS' }>
   onChange: (d: AcademicDetail) => void
-  noAStar?: boolean
+  variant: 'full' | 'as'
 }) {
-  const points = detail.subjects.length >= 3 ? ucasPoints(detail.subjects) : null
-  const grades = noAStar ? A_LEVEL_GRADES.filter((g) => g !== 'A*') : A_LEVEL_GRADES
+  const isAS = variant === 'as'
+  // AS-Level (standalone) tops out at grade A — A* only exists for the full
+  // 2-year A-Level, so it's dropped from the option list entirely rather
+  // than just discouraged.
+  const gradeOptions = isAS ? A_LEVEL_GRADES.filter((g) => g !== 'A*') : A_LEVEL_GRADES
+  const points = !isAS && detail.subjects.length >= 3 ? ucasPoints(detail.subjects) : null
   return (
     <div className="space-y-2">
-      {detail.subjects.map((s, i) => (
+      {detail.subjects.map((s, i) => {
+        // Defensive clamp: a subject already saved with A* (e.g. switched
+        // out of full-A-Level mode) still can't render an option the select
+        // no longer offers.
+        const displayGrade = isAS && s.grade === 'A*' ? 'A' : s.grade
+        return (
         <div key={i} className="flex gap-2 items-center">
           <select className={nameInputClass} value={s.name} onChange={(e) => {
             const subjects = [...detail.subjects]; subjects[i] = { ...s, name: e.target.value }
@@ -100,19 +111,20 @@ function ALevelsInput({
             <option value="">Select subject</option>
             {alphabetical(A_LEVEL_SUBJECTS).map((subj) => <option key={subj} value={subj}>{subj}</option>)}
           </select>
-          <select className={`${inputClass} w-16 shrink-0`} value={s.grade === 'A*' && noAStar ? 'A' : s.grade} onChange={(e) => {
+          <select className={`${inputClass} w-16 shrink-0`} value={displayGrade} onChange={(e) => {
             const subjects = [...detail.subjects]; subjects[i] = { ...s, grade: e.target.value as ALevelGrade }
             onChange({ ...detail, subjects })
           }}>
-            {grades.map((g) => <option key={g} value={g}>{g}</option>)}
+            {gradeOptions.map((g) => <option key={g} value={g}>{g}</option>)}
           </select>
           {detail.subjects.length > 3 && (
             <button type="button" onClick={() => onChange({ ...detail, subjects: detail.subjects.filter((_, j) => j !== i) })} className="text-muted-foreground hover:text-destructive p-1 shrink-0" aria-label="Remove subject"><X className="w-3.5 h-3.5" /></button>
           )}
         </div>
-      ))}
+        )
+      })}
       <button type="button" onClick={() => onChange({ ...detail, subjects: [...detail.subjects, { name: '', grade: 'A' }] })} className="text-xs text-primary font-medium flex items-center gap-1"><Plus className="w-3.5 h-3.5" /> Add subject</button>
-      <p className="text-[11px] text-muted-foreground">{points !== null && <>UCAS points: <span className="text-primary font-mono font-semibold">{points}</span></>}</p>
+      {points !== null && <p className="text-[11px] text-muted-foreground">UCAS points: <span className="text-primary font-mono font-semibold">{points}</span></p>}
     </div>
   )
 }
