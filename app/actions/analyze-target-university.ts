@@ -209,10 +209,26 @@ STUDENT PROFILE:
  * same search could see the number drift run to run, which reads as the
  * tool being unreliable rather than as expected model variance.
  */
-export async function analyzeTargetUniversity(universityName: string): Promise<TargetAnalysisResult | { needsProfile: true }> {
+export type TargetAnalysisOutcome =
+  | TargetAnalysisResult
+  | { needsProfile: true }
+  | { notInCatalog: true; universityName: string }
+  | { rateLimited: true; message: string }
+
+export async function analyzeTargetUniversity(universityName: string): Promise<TargetAnalysisOutcome> {
   const userId = await getUserId()
   const clientIp = await getClientIp()
-  await assertAnalysisRateLimit(userId, clientIp)
+  // Rate-limit rejections are an expected, common outcome (not a bug), so
+  // this returns a normal result instead of throwing — a thrown Error here
+  // was hitting the same class of "non-serializable value crossing the
+  // Server Action boundary" issue this app has run into before with Neon
+  // (surfaces client-side as an opaque "Minified React error #441").
+  // Returning avoids relying on that boundary at all for expected cases.
+  try {
+    await assertAnalysisRateLimit(userId, clientIp)
+  } catch (err) {
+    return { rateLimited: true, message: err instanceof Error ? err.message : 'Rate limit exceeded — please try again later.' }
+  }
   const profile = await getLatestProfile()
   if (!profile || !profile.academicDetail) {
     return { needsProfile: true }
@@ -243,7 +259,7 @@ export async function analyzeTargetUniversity(universityName: string): Promise<T
     // to see a number come out, with nothing behind it we actually verified.
     // Now this feature only runs against our own verified catalog.
     if (!matched) {
-      throw new Error(`"${trimmed}" isn't in our university catalog yet. Try searching for one of the universities we support.`)
+      return { notInCatalog: true, universityName: trimmed }
     }
 
     const acc = resolveAcceptanceRate(matched)

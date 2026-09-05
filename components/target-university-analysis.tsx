@@ -46,6 +46,16 @@ export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }
         setPending(false)
         return
       }
+      if ('notInCatalog' in res) {
+        setError(`We're really sorry — "${res.universityName}" isn't in our university catalog yet. Try one of the universities we support.`)
+        setPending(false)
+        return
+      }
+      if ('rateLimited' in res) {
+        setError(res.message)
+        setPending(false)
+        return
+      }
       pendingResultRef.current = res
       setFinishing(true)
     } catch (e) {

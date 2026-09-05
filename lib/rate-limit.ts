@@ -84,11 +84,11 @@ export async function assertAnalysisRateLimit(userId: string, ip: string) {
   }
   if (Number(count) >= ANALYSIS_LIMIT) {
     throw new Error(
-      `You've analyzed ${ANALYSIS_LIMIT} schools in the last ${ANALYSIS_WINDOW_MINUTES} minutes — please wait a few minutes before trying another.`,
+      `You've reached your limit of ${ANALYSIS_LIMIT} school lookups every ${ANALYSIS_WINDOW_MINUTES} minutes. Please try again after your current limit resets.`,
     )
   }
   if (ipCount >= IP_ANALYSIS_LIMIT) {
-    throw new Error(`Too many analyses have been run from this network recently — please wait a few minutes before trying again.`)
+    throw new Error(`Too many analyses have been run from this network recently. Please try again after a few minutes.`)
   }
 }
 
