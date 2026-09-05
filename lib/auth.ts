@@ -44,6 +44,17 @@ export const auth = betterAuth({
     schema: authSchema,
   }),
 
+  // Surfaces user.banned/banReason (see auth-schema.ts) on the session
+  // object so lib/get-user-id.ts can reject banned users. `input: false` on
+  // both means no client-facing endpoint (sign-up, update-user) can ever
+  // set them — only a direct DB write can.
+  user: {
+    additionalFields: {
+      banned: { type: 'boolean', defaultValue: false, input: false },
+      banReason: { type: 'string', required: false, input: false },
+    },
+  },
+
   baseURL: {
     allowedHosts: [
       'auraadmit-smoky.vercel.app',

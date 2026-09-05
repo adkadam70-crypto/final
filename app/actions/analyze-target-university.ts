@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db'
 import { universities, universityAnalyses, programRankings, type MatchResult, type EarlyAdmissionInfo, type AcceptanceRateInfo } from '@/lib/db/schema'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, desc } from 'drizzle-orm'
 import { getUserId } from '@/lib/get-user-id'
 import { getLatestProfile } from '@/app/actions/profile'
 import { gradeBadge, gradeTier } from '@/lib/grade'
@@ -92,26 +92,6 @@ const UNIVERSITY_ALIASES: Record<string, string> = {
   jnu: 'Jawaharlal Nehru University',
 }
 
-/**
- * Extracts the final structured JSON payload from a Responses API call that
- * used tools (web_search) — response.output_parsed is only populated by the
- * .parse() convenience method, which doesn't support tools, so a tool-using
- * .create() call must be parsed manually from the last message-type output
- * item instead.
- */
-function extractToolCallStructuredOutput<T>(response: OpenAI.Responses.Response, schema: z.ZodType<T>): T | null {
-  const messageItem = [...response.output].reverse().find((item) => item.type === 'message')
-  if (!messageItem || messageItem.type !== 'message') return null
-  const textPart = messageItem.content.find((c) => c.type === 'output_text')
-  if (!textPart || textPart.type !== 'output_text') return null
-  try {
-    const parsed = schema.safeParse(JSON.parse(textPart.text))
-    return parsed.success ? parsed.data : null
-  } catch {
-    return null
-  }
-}
-
 // Catalog-grounded path — real ED/EA rounds only ever apply to schools we
 // actually have on file, so this schema is exclusive to the `matched` branch.
 const catalogAnalysisSchema = z.object({
@@ -139,26 +119,8 @@ const catalogAnalysisSchema = z.object({
   actionSteps: z.array(z.string()).max(3).describe('Up to 3 concrete actions to become more competitive for this exact school, each under 15 words.'),
 })
 
-// Non-catalog path — search + full analysis in ONE call (not two sequential
-// ones). Merging them cuts real end-to-end latency roughly in half versus a
-// separate research call followed by a separate analysis call (~20-25s vs
-// ~11-13s in repeated live testing), since it avoids a second full
-// prompt-processing round-trip.
-const nonCatalogAnalysisSchema = z.object({
-  foundRealAcceptanceRate: z.boolean(),
-  acceptanceRatePercent: z.number().min(0).max(100).nullable().describe('Only set when foundRealAcceptanceRate is true.'),
-  acceptanceRateSource: z.string().nullable().describe('Specific citation when a real rate was found. Null otherwise.'),
-  matchTier: z.enum(['Safety', 'Good Chance', 'Reach', 'Ultra Reach']),
-  acceptanceProbability: z.number().min(1).max(99),
-  admissionChanceSummary: z.string().describe('Under 25 words summarizing the overall admission picture at this specific school.'),
-  strengths: z.array(z.string()).max(3).describe('Up to 3 specific strengths in this profile relative to this school, each under 12 words. Specific, not generic.'),
-  weaknesses: z.array(z.string()).max(3).describe('Up to 3 specific weaknesses or gaps relative to this school, each under 12 words. Specific, not generic.'),
-  actionSteps: z.array(z.string()).max(3).describe('Up to 3 concrete actions to become more competitive for this exact school, each under 15 words.'),
-})
-
 export type TargetAnalysisResult = {
   resolvedUniversityName: string
-  usedCatalogGrounding: boolean
   matchTier: MatchResult['matchTier']
   acceptanceProbability: number
   admissionChanceSummary: string
@@ -167,12 +129,6 @@ export type TargetAnalysisResult = {
   actionSteps: string[]
   earlyAdmission: EarlyAdmissionInfo
   admissionsContext: { note: string; source: string } | null
-  // Only set for schools NOT in our verified catalog, when the live web
-  // search (run at request time, not from our own database) turned up a
-  // real, citable published acceptance rate. Distinct from admissionsContext
-  // (which is our own curated data) and from the plain "not in our catalog"
-  // disclaimer (which fires when live search finds nothing usable either).
-  liveResearch: { acceptanceRatePercent: number; source: string } | null
   // Our resolved acceptance-rate fact for a catalog school (official rate,
   // our estimate, or an explicit "no rate" note) — see lib/acceptance-rate.ts.
   acceptanceRate: AcceptanceRateInfo
@@ -192,14 +148,15 @@ STUDENT PROFILE:
 /**
  * Rigorous single-university deep-dive: strengths, weaknesses, and concrete
  * action steps for the user's latest saved profile against one named school.
+ * Catalog-only — see the comment on the `!matched` branch below for why the
+ * old "search the web for any school you type" path was removed.
  *
- * Catalog schools: grounded directly in our own verified data, single fast
- * call, no search needed.
- *
- * Non-catalog schools: a single call that both searches the web for this
- * specific school's real published acceptance rate AND produces the full
- * analysis in one shot (capped at 20s) — falls back to a fast, honest,
- * search-free estimate if that doesn't complete in time.
+ * Repeat requests for the same school against the same saved profile are
+ * served from the last stored analysis (see the cache check below) instead
+ * of asking the AI again — a generative call has no reason to reproduce the
+ * exact same probability twice, so without this a student re-opening the
+ * same search could see the number drift run to run, which reads as the
+ * tool being unreliable rather than as expected model variance.
  */
 export async function analyzeTargetUniversity(universityName: string): Promise<TargetAnalysisResult | { needsProfile: true }> {
   const userId = await getUserId()
@@ -230,6 +187,64 @@ export async function analyzeTargetUniversity(universityName: string): Promise<T
       (aliasTarget ? catalog.find((u) => u.name === aliasTarget) : undefined) ??
       catalog.find((u) => u.name.toLowerCase().includes(lower) || lower.includes(u.name.toLowerCase()))
 
+    // The old fallback here (web-search + AI-estimate any school typed in,
+    // catalog or not) got abused — people typing arbitrary/fake names just
+    // to see a number come out, with nothing behind it we actually verified.
+    // Now this feature only runs against our own verified catalog.
+    if (!matched) {
+      throw new Error(`"${trimmed}" isn't in our university catalog yet. Try searching for one of the universities we support.`)
+    }
+
+    const acc = resolveAcceptanceRate(matched)
+
+    const cached = (
+      await db
+        .select()
+        .from(universityAnalyses)
+        .where(
+          and(
+            eq(universityAnalyses.userId, userId),
+            eq(universityAnalyses.universityId, matched.id),
+            eq(universityAnalyses.profileId, profile.id),
+          ),
+        )
+        .orderBy(desc(universityAnalyses.createdAt))
+        .limit(1)
+    )[0]
+
+    if (cached) {
+      const earlyAdmission: EarlyAdmissionInfo = matched.earlyAdmissionSource
+        ? {
+            earlyDecision:
+              matched.earlyDecisionRate != null && cached.earlyDecisionProbability != null
+                ? { realRate: matched.earlyDecisionRate, yourChance: cached.earlyDecisionProbability }
+                : null,
+            earlyAction:
+              matched.earlyActionRate != null && cached.earlyActionProbability != null
+                ? { realRate: matched.earlyActionRate, yourChance: cached.earlyActionProbability }
+                : null,
+            regularDecision: matched.regularDecisionRate != null ? { realRate: matched.regularDecisionRate } : null,
+            publishedOverallRate: matched.actualAcceptanceRate,
+            source: matched.earlyAdmissionSource,
+          }
+        : null
+      const admissionsContext = matched.admissionsContextNote
+        ? { note: matched.admissionsContextNote, source: matched.admissionsContextNoteSource ?? 'Curated' }
+        : null
+      return {
+        resolvedUniversityName: matched.name,
+        matchTier: cached.matchTier as MatchResult['matchTier'],
+        acceptanceProbability: cached.acceptanceProbability ?? 0,
+        admissionChanceSummary: cached.admissionChanceSummary,
+        strengths: cached.strengths,
+        weaknesses: cached.weaknesses,
+        actionSteps: cached.actionSteps,
+        earlyAdmission,
+        admissionsContext,
+        acceptanceRate: acc,
+      }
+    }
+
     const apiKey = process.env.OPENAI_API_KEY
     if (!apiKey) {
       throw new Error('OPENAI_API_KEY environment variable is not set')
@@ -255,16 +270,8 @@ export async function analyzeTargetUniversity(universityName: string): Promise<T
     let actionSteps: string[]
     let earlyDecisionProbability: number | null = null
     let earlyActionProbability: number | null = null
-    let liveResearch: TargetAnalysisResult['liveResearch'] = null
 
-    // Our resolved acceptance-rate fact for the matched catalog row (or null
-    // for a non-catalog school). Returned to the UI and, for a catalog match,
-    // used to ground acceptanceProbability below.
-    const acc = matched
-      ? resolveAcceptanceRate(matched)
-      : null
-
-    if (matched) {
+    {
       const programRank =
         profile.intendedField !== 'No preference'
           ? (await db
@@ -346,120 +353,38 @@ Provide an honest tier + probability, and short, specific, scannable bullets for
       actionSteps = object.actionSteps
       earlyDecisionProbability = object.earlyDecisionProbability
       earlyActionProbability = object.earlyActionProbability
-    } else {
-      const mergedPrompt = `You are an expert college admissions analyst. TARGET UNIVERSITY: ${trimmed}
-
-This school is NOT in our own verified catalog — we have no selectivity, acceptance rate, or ranking data for it in our database. Do AT MOST 1 quick, targeted web search for this school's real published undergraduate acceptance rate — check its official site or a government/education-ministry source first, and stop as soon as you have an answer either way. Report exactly what you find with a specific citation (set foundRealAcceptanceRate, acceptanceRatePercent, acceptanceRateSource accordingly). If a quick search doesn't turn up an explicitly stated real rate, don't dig further — set foundRealAcceptanceRate to false and give an honest profile-based estimate instead; never invent a precise-sounding number.
-
-${BIAS_INSTRUCTION}
-${profileBlock}
-
-${requirementNote}
-
-If your search happens to surface this school's real published SAT/ACT admitted-student range (a 25th-75th percentile range, commonly reported by U.S. News or the school's Common Data Set), compare the student's own SAT composite or ACT score against it and fold that comparison into admissionChanceSummary as one factor among the others — never a hard cutoff. Also check whether the school is Test-Optional, Test-Blind, or Required: if it's Test-Blind (scores never considered, e.g. the University of California system), say so plainly and don't treat the student's score as relevant to this school at all; if it's Test-Optional and you can't find a range, say scores are optional here rather than implying none exists. Don't go out of your way to search for this specifically — only use it if it surfaces naturally within your one acceptance-rate search, or you already know it reliably.
-
-admissionChanceSummary MUST start with a brief, calm caveat before anything else — never lead with the tier or percentage as if it were a confident, grounded assessment, but don't dwell on it or apologize either; one short clause is enough. If a real rate was found, phrase the caveat positively around that (e.g. "Based on a real published rate found via research:") rather than leading with what our catalog lacks. Otherwise phrase it plainly, e.g. "Based on general research rather than a verified data point:". If you are genuinely unsure whether this is a highly selective or easily-entered school, prefer a wide middle-of-the-road tier ("Good Chance") over guessing "Reach" or "Safety" with false confidence.
-
-Provide short, specific, scannable bullets for strengths, weaknesses/gaps, and action steps — brevity over completeness.`
-
-      let merged: z.infer<typeof nonCatalogAnalysisSchema> | null = null
-      try {
-        const mergedResponse = await client.responses.create(
-          {
-            model: 'gpt-5.6-terra',
-            input: [{ role: 'user', content: mergedPrompt }],
-            tools: [{ type: 'web_search' }],
-            text: { format: zodTextFormat(nonCatalogAnalysisSchema, 'non_catalog_analysis') },
-          },
-          // Generous-but-bounded — repeated live testing landed this merged
-          // (search + analysis in one call) at ~11-13s; 20s leaves headroom
-          // for a slower run without approaching the old two-call ~40s+ tail.
-          { timeout: 20_000 },
-        )
-        merged = extractToolCallStructuredOutput(mergedResponse, nonCatalogAnalysisSchema)
-      } catch {
-        // Falls through to the no-search fallback below.
-      }
-
-      if (merged) {
-        matchTier = merged.matchTier
-        acceptanceProbability = merged.acceptanceProbability
-        admissionChanceSummary = merged.admissionChanceSummary
-        strengths = merged.strengths
-        weaknesses = merged.weaknesses
-        actionSteps = merged.actionSteps
-        if (merged.foundRealAcceptanceRate && merged.acceptanceRatePercent != null && merged.acceptanceRateSource) {
-          liveResearch = { acceptanceRatePercent: merged.acceptanceRatePercent, source: merged.acceptanceRateSource }
-        }
-      } else {
-        // Search timed out or failed outright — fast, honest, search-free
-        // fallback so the user still gets a result rather than an error.
-        const fallbackPrompt = `You are an expert college admissions analyst. TARGET UNIVERSITY: ${trimmed}
-
-This school is NOT in our own verified catalog, and a live web search was also attempted and found nothing usable. Rely on your general knowledge, but be honest about how thin that is — if you don't have reliable knowledge of this specific school's actual selectivity, don't invent a precise-sounding number anyway.
-
-${BIAS_INSTRUCTION}
-${profileBlock}
-
-${requirementNote}
-
-admissionChanceSummary MUST start with a brief, calm caveat before anything else, e.g. "Based on general research rather than a verified data point:" — one short clause, don't dwell on it. If you are genuinely unsure whether this is a highly selective or easily-entered school, prefer a wide middle-of-the-road tier ("Good Chance") over guessing "Reach" or "Safety" with false confidence.
-
-Provide short, specific, scannable bullets for strengths, weaknesses/gaps, and action steps — brevity over completeness.`
-
-        let response
-        try {
-          response = await client.responses.parse({
-            model: 'gpt-5.6-terra',
-            input: [{ role: 'user', content: fallbackPrompt }],
-            text: { format: zodTextFormat(catalogAnalysisSchema, 'target_analysis_fallback') },
-          })
-        } catch (err) {
-          const message = err instanceof Error ? err.message : 'OpenAI request failed'
-          throw new Error(`OpenAI request failed: ${message}`)
-        }
-        if (!response.output_parsed) {
-          throw new Error('OpenAI returned no parseable output for the analysis request')
-        }
-        const object = response.output_parsed
-        matchTier = object.matchTier
-        acceptanceProbability = object.acceptanceProbability
-        admissionChanceSummary = object.admissionChanceSummary
-        strengths = object.strengths
-        weaknesses = object.weaknesses
-        actionSteps = object.actionSteps
-      }
     }
 
-    const earlyAdmission: EarlyAdmissionInfo =
-      matched && matched.earlyAdmissionSource
-        ? {
-            earlyDecision:
-              matched.earlyDecisionRate != null && earlyDecisionProbability != null
-                ? { realRate: matched.earlyDecisionRate, yourChance: earlyDecisionProbability }
-                : null,
-            earlyAction:
-              matched.earlyActionRate != null && earlyActionProbability != null
-                ? { realRate: matched.earlyActionRate, yourChance: earlyActionProbability }
-                : null,
-            regularDecision: matched.regularDecisionRate != null ? { realRate: matched.regularDecisionRate } : null,
-            publishedOverallRate: matched.actualAcceptanceRate,
-            source: matched.earlyAdmissionSource,
-          }
-        : null
+    const earlyAdmission: EarlyAdmissionInfo = matched.earlyAdmissionSource
+      ? {
+          earlyDecision:
+            matched.earlyDecisionRate != null && earlyDecisionProbability != null
+              ? { realRate: matched.earlyDecisionRate, yourChance: earlyDecisionProbability }
+              : null,
+          earlyAction:
+            matched.earlyActionRate != null && earlyActionProbability != null
+              ? { realRate: matched.earlyActionRate, yourChance: earlyActionProbability }
+              : null,
+          regularDecision: matched.regularDecisionRate != null ? { realRate: matched.regularDecisionRate } : null,
+          publishedOverallRate: matched.actualAcceptanceRate,
+          source: matched.earlyAdmissionSource,
+        }
+      : null
 
-    const admissionsContext =
-      matched && matched.admissionsContextNote
-        ? { note: matched.admissionsContextNote, source: matched.admissionsContextNoteSource ?? 'Curated' }
-        : null
+    const admissionsContext = matched.admissionsContextNote
+      ? { note: matched.admissionsContextNote, source: matched.admissionsContextNoteSource ?? 'Curated' }
+      : null
 
     await db.insert(universityAnalyses).values({
       userId,
-      universityName: matched?.name ?? trimmed,
-      universityId: matched?.id ?? null,
-      usedCatalogGrounding: matched ? 1 : 0,
+      universityName: matched.name,
+      universityId: matched.id,
+      usedCatalogGrounding: 1,
+      profileId: profile.id,
       acceptanceProbability,
       matchTier,
+      earlyDecisionProbability,
+      earlyActionProbability,
       admissionChanceSummary,
       strengths,
       weaknesses,
@@ -468,8 +393,7 @@ Provide short, specific, scannable bullets for strengths, weaknesses/gaps, and a
     })
 
     return {
-      resolvedUniversityName: matched?.name ?? trimmed,
-      usedCatalogGrounding: !!matched,
+      resolvedUniversityName: matched.name,
       matchTier,
       acceptanceProbability,
       admissionChanceSummary,
@@ -478,7 +402,6 @@ Provide short, specific, scannable bullets for strengths, weaknesses/gaps, and a
       actionSteps,
       earlyAdmission,
       admissionsContext,
-      liveResearch,
       acceptanceRate: acc,
     }
   } catch (err) {

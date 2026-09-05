@@ -14,5 +14,10 @@ export async function getUserId(): Promise<string> {
     throw new Error(`Session lookup failed: ${message}`)
   }
   if (!session?.user) throw new Error('Unauthorized')
+  // banned/banReason are additionalFields (see lib/auth.ts) — not part of
+  // Better Auth's core User type, so read them defensively rather than
+  // assuming the field exists on every session shape.
+  const user = session.user as { banned?: boolean; banReason?: string }
+  if (user.banned) throw new Error('This account has been suspended.' + (user.banReason ? ` Reason: ${user.banReason}` : ''))
   return session.user.id
 }

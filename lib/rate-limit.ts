@@ -13,8 +13,8 @@ import { and, eq, gte, sql } from 'drizzle-orm'
 const MATCH_LIMIT = 5
 const MATCH_WINDOW_MINUTES = 10
 
-const ANALYSIS_LIMIT = 10
-const ANALYSIS_WINDOW_MINUTES = 10
+const ANALYSIS_LIMIT = 5
+const ANALYSIS_WINDOW_MINUTES = 15
 
 const PROFILE_STRENGTH_LIMIT = 10
 const PROFILE_STRENGTH_WINDOW_MINUTES = 10
@@ -26,7 +26,7 @@ const PROFILE_STRENGTH_WINDOW_MINUTES = 10
 // or office network full of legitimate simultaneous users won't hit it, but
 // low enough to blunt someone farming accounts from one connection.
 const IP_MATCH_LIMIT = 20
-const IP_ANALYSIS_LIMIT = 40
+const IP_ANALYSIS_LIMIT = 30
 const IP_PROFILE_STRENGTH_LIMIT = 40
 
 async function countByIp(table: typeof matches | typeof universityAnalyses | typeof aiRateLimitLog, ip: string, since: Date, extra?: ReturnType<typeof eq>) {

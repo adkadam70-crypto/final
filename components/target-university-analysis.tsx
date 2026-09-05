@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Search, TrendingUp, AlertTriangle, ListChecks, Sparkles, Globe, BrainCircuit } from 'lucide-react'
+import { Search, TrendingUp, AlertTriangle, ListChecks, Sparkles } from 'lucide-react'
 import { analyzeTargetUniversity, type TargetAnalysisResult } from '@/app/actions/analyze-target-university'
 import { tierBadgeClass } from '@/lib/match-tier'
 import { LoadingDots } from '@/components/loading-dots'
@@ -11,14 +11,12 @@ import { ProgressiveFluxLoader, type ProgressiveFluxPhase } from '@/components/u
 import { AcceptanceRateLine } from '@/components/acceptance-rate-line'
 
 // Mirrors the actual stages analyzeTargetUniversity() goes through
-// server-side (see app/actions/analyze-target-university.ts) — checking our
-// catalog first, researching live if the school isn't on file yet, then
-// comparing against the student's profile.
+// server-side (see app/actions/analyze-target-university.ts) — catalog-only
+// now, so this is just grounding lookup then the analysis call.
 const ANALYSIS_PHASES: ProgressiveFluxPhase[] = [
   { at: 0, label: 'checking our database' },
-  { at: 30, label: 'researching live' },
-  { at: 65, label: 'comparing your profile' },
-  { at: 90, label: 'finalizing your breakdown' },
+  { at: 40, label: 'comparing your profile' },
+  { at: 80, label: 'finalizing your breakdown' },
 ]
 
 export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }) {
@@ -122,16 +120,6 @@ export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }
               {result.matchTier} · {result.acceptanceProbability}%
             </span>
           </div>
-
-          {!result.usedCatalogGrounding && (
-            result.liveResearch ? (
-              <p className="text-[11px] text-primary flex items-center gap-1.5" title={`Source: ${result.liveResearch.source}`}>
-                <Globe className="w-3.5 h-3.5 shrink-0" /> Found via live research: real published acceptance rate of {result.liveResearch.acceptanceRatePercent}%, used directly above.
-              </p>
-            ) : (
-              <p className="text-[11px] text-muted-foreground flex items-center gap-1.5"><BrainCircuit className="w-3.5 h-3.5 shrink-0" /> This school isn't in our core database yet, so this is our AI's own research-based estimate rather than a verified data point.</p>
-            )
-          )}
 
           {result.acceptanceRate && <AcceptanceRateLine info={result.acceptanceRate} />}
 

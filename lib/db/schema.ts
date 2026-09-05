@@ -223,6 +223,14 @@ export const universityAnalyses = pgTable('universityAnalyses', {
   strengths: jsonb('strengths').$type<string[]>().notNull().default([]),
   weaknesses: jsonb('weaknesses').$type<string[]>().notNull().default([]),
   actionSteps: jsonb('actionSteps').$type<string[]>().notNull().default([]),
+  earlyDecisionProbability: integer('earlyDecisionProbability'),
+  earlyActionProbability: integer('earlyActionProbability'),
+  // FK-less reference (matching this table's own convention) to the exact
+  // profiles row this analysis was run against — lets a repeat request for
+  // the same school, same profile, reuse this row instead of asking the AI
+  // again and getting a different-sounding probability each time. Null on
+  // rows written before this column existed; those just never cache-hit.
+  profileId: integer('profileId'),
   ipAddress: text('ipAddress'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })

@@ -8,6 +8,12 @@ export const user = pgTable('user', {
   email: text('email').notNull().unique(),
   emailVerified: boolean('emailVerified').notNull(),
   image: text('image'),
+  // Manual block mechanism — not part of Better Auth's own schema, wired in
+  // via `user.additionalFields` in lib/auth.ts and enforced in
+  // lib/get-user-id.ts. Set directly in the DB (there's no admin UI yet);
+  // there is no self-service way for a user to change either field.
+  banned: boolean('banned').notNull().default(false),
+  banReason: text('banReason'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 })
