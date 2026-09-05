@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Search, TrendingUp, AlertTriangle, ListChecks, Sparkles } from 'lucide-react'
 import { analyzeTargetUniversity, getUniversityNames, type TargetAnalysisResult } from '@/app/actions/analyze-target-university'
+import { UNIVERSITY_ALIASES } from '@/lib/university-aliases'
 import { tierBadgeClass } from '@/lib/match-tier'
 import { LoadingDots } from '@/components/loading-dots'
 import { RevealGroup } from '@/components/reveal-group'
@@ -64,7 +65,18 @@ export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }
 
   const query = name.trim().toLowerCase()
   const suggestions = query
-    ? catalogNames.filter((n) => n.toLowerCase().startsWith(query)).slice(0, MAX_SUGGESTIONS)
+    ? [
+        // Abbreviations first (e.g. "NUS" -> National University of
+        // Singapore, "nu" -> still shows it) — these don't appear as a
+        // prefix of the real name, so the plain catalog scan below would
+        // never surface them at all, in any country.
+        ...Object.entries(UNIVERSITY_ALIASES)
+          .filter(([alias]) => alias.startsWith(query))
+          .map(([, realName]) => realName),
+        ...catalogNames.filter((n) => n.toLowerCase().startsWith(query)),
+      ]
+        .filter((n, i, arr) => arr.indexOf(n) === i)
+        .slice(0, MAX_SUGGESTIONS)
     : []
 
   function selectSuggestion(suggestion: string) {
