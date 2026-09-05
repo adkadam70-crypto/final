@@ -30,9 +30,20 @@ function alphabetical(subjects: readonly string[]): string[] {
   return [...subjects].sort((a, b) => a.localeCompare(b))
 }
 
-export function AcademicDetailInput({ detail, onChange }: { detail: AcademicDetail; onChange: (d: AcademicDetail) => void }) {
+export function AcademicDetailInput({
+  detail,
+  onChange,
+  noAStar,
+}: {
+  detail: AcademicDetail
+  onChange: (d: AcademicDetail) => void
+  // AS-Levels (the real Year 12 / 11th-grade qualification) doesn't have an
+  // A* grade at all — only full 2-year A-Levels do. Set when this input is
+  // rendering 11th-grade A-Levels detail specifically.
+  noAStar?: boolean
+}) {
   if (detail.curriculum === 'CBSE') return <CBSEInput detail={detail} onChange={onChange} />
-  if (detail.curriculum === 'A_LEVELS') return <ALevelsInput detail={detail} onChange={onChange} />
+  if (detail.curriculum === 'A_LEVELS') return <ALevelsInput detail={detail} onChange={onChange} noAStar={noAStar} />
   if (detail.curriculum === 'US_GPA_PCT') return <USInput detail={detail} onChange={onChange} />
   return <IBInput detail={detail} onChange={onChange} />
 }
@@ -67,8 +78,17 @@ function CBSEInput({ detail, onChange }: { detail: Extract<AcademicDetail, { cur
   )
 }
 
-function ALevelsInput({ detail, onChange }: { detail: Extract<AcademicDetail, { curriculum: 'A_LEVELS' }>; onChange: (d: AcademicDetail) => void }) {
+function ALevelsInput({
+  detail,
+  onChange,
+  noAStar,
+}: {
+  detail: Extract<AcademicDetail, { curriculum: 'A_LEVELS' }>
+  onChange: (d: AcademicDetail) => void
+  noAStar?: boolean
+}) {
   const points = detail.subjects.length >= 3 ? ucasPoints(detail.subjects) : null
+  const grades = noAStar ? A_LEVEL_GRADES.filter((g) => g !== 'A*') : A_LEVEL_GRADES
   return (
     <div className="space-y-2">
       {detail.subjects.map((s, i) => (
@@ -80,11 +100,11 @@ function ALevelsInput({ detail, onChange }: { detail: Extract<AcademicDetail, { 
             <option value="">Select subject</option>
             {alphabetical(A_LEVEL_SUBJECTS).map((subj) => <option key={subj} value={subj}>{subj}</option>)}
           </select>
-          <select className={`${inputClass} w-16 shrink-0`} value={s.grade} onChange={(e) => {
+          <select className={`${inputClass} w-16 shrink-0`} value={s.grade === 'A*' && noAStar ? 'A' : s.grade} onChange={(e) => {
             const subjects = [...detail.subjects]; subjects[i] = { ...s, grade: e.target.value as ALevelGrade }
             onChange({ ...detail, subjects })
           }}>
-            {A_LEVEL_GRADES.map((g) => <option key={g} value={g}>{g}</option>)}
+            {grades.map((g) => <option key={g} value={g}>{g}</option>)}
           </select>
           {detail.subjects.length > 3 && (
             <button type="button" onClick={() => onChange({ ...detail, subjects: detail.subjects.filter((_, j) => j !== i) })} className="text-muted-foreground hover:text-destructive p-1 shrink-0" aria-label="Remove subject"><X className="w-3.5 h-3.5" /></button>

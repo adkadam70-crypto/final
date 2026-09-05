@@ -28,6 +28,15 @@ const CURRICULUM_LABELS: Record<Curriculum, string> = {
   US_GPA_PCT: 'US (GPA)',
 }
 
+// 11th grade (Year 12 in the UK system) is the AS-Level year, not full
+// A-Levels — a real, distinct qualification (no A* grade; see noAStar on
+// AcademicDetailInput). Everything else reuses the same label/shape as the
+// main curriculum picker.
+const ELEVENTH_CURRICULUM_LABELS: Record<Curriculum, string> = {
+  ...CURRICULUM_LABELS,
+  A_LEVELS: 'AS-Levels',
+}
+
 // SAT section scores are only ever reported in multiples of 10, from 200-800.
 const SAT_SECTION_SCORES = Array.from({ length: 61 }, (_, i) => 200 + i * 10)
 
@@ -208,9 +217,9 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
   function handleCurriculumChange(next: Curriculum) {
     setCurriculum(next)
     setAcademicDetail(defaultAcademicDetail(next))
-    // 11th grade reuses the main curriculum's shape (it's "a smaller part of
-    // the 12th section"), so it needs to switch shape along with it.
-    setEleventh((prev) => (prev ? defaultAcademicDetail(next) : null))
+    // 11th grade's curriculum is independently selectable (see the dropdown
+    // next to "11th grade" below) — changing the main 12th curriculum no
+    // longer overrides whatever the user already picked for 11th.
   }
 
   function toggleCountry(code: string) {
@@ -356,14 +365,26 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
                     )}
                   </div>
                   {eleventh ? (
-                    <div className="scale-[0.92] origin-top -mx-2 -mb-2">
-                      <AcademicDetailInput detail={eleventh} onChange={setEleventh} />
+                    <div>
+                      <label className="text-[11px] text-muted-foreground block mb-1">Curriculum for 11th grade</label>
+                      <select
+                        value={eleventh.curriculum}
+                        onChange={(e) => setEleventh(defaultAcademicDetail(e.target.value as Curriculum))}
+                        className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none focus:border-primary mb-2"
+                      >
+                        {(Object.keys(ELEVENTH_CURRICULUM_LABELS) as Curriculum[]).map((c) => (
+                          <option key={c} value={c}>{ELEVENTH_CURRICULUM_LABELS[c]}</option>
+                        ))}
+                      </select>
+                      <div className="scale-[0.92] origin-top -mx-2 -mb-2">
+                        <AcademicDetailInput detail={eleventh} onChange={setEleventh} noAStar={eleventh.curriculum === 'A_LEVELS'} />
+                      </div>
                     </div>
                   ) : (
                     <div>
                       <p className="text-[10px] text-primary/80 font-medium mb-1.5">Optional — adding this helps strengthen your analysis.</p>
                       <button type="button" onClick={() => setEleventh(defaultAcademicDetail(curriculum))} className="text-[11px] text-primary font-medium flex items-center gap-1">
-                        <Plus className="w-3 h-3" /> Add 11th grade detail ({CURRICULUM_LABELS[curriculum]})
+                        <Plus className="w-3 h-3" /> Add 11th grade detail ({ELEVENTH_CURRICULUM_LABELS[curriculum]})
                       </button>
                     </div>
                   )}
