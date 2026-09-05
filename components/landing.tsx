@@ -9,15 +9,15 @@ import { marigold } from '@/lib/fonts'
 import { AppLogo } from '@/components/app-logo'
 
 const FEATURE_TAGS: TagItem[] = [
-  { text: 'US · UK · AU · SG · HK · India', background: 'var(--primary)', color: 'var(--primary-foreground)' },
-  { text: '500+ real universities', background: 'var(--chart-5)', color: '#ffffff' },
+  { text: 'US · UK · AU · SG · HK · India · Germany · France', background: 'var(--primary)', color: 'var(--primary-foreground)' },
+  { text: '750+ real universities', background: 'var(--chart-5)', color: '#ffffff' },
   { text: 'Tiered acceptance odds', background: 'var(--chart-2)', color: '#1a1a1a' },
   { text: 'Bias-checked analysis', background: 'var(--chart-3)', color: '#ffffff' },
 ]
 
-// Real names pulled from this app's own university catalog — spans all six
-// supported countries. Kept as a static list (not a DB fetch) since this is
-// a purely decorative background field, not data the user can act on.
+// Real names pulled from this app's own university catalog — spans all
+// eight supported countries. Kept as a static list (not a DB fetch) since
+// this is a purely decorative background field, not data the user can act on.
 const CENTERPIECE_UNIVERSITIES = [
   'Stanford University',
   'MIT',
@@ -53,6 +53,12 @@ const CENTERPIECE_UNIVERSITIES = [
   'Johns Hopkins University',
   'University of Pennsylvania',
   'Northwestern University',
+  'Technical University of Munich',
+  'Sciences Po',
+  'Heidelberg University',
+  'Sorbonne University',
+  'École Polytechnique',
+  'Humboldt University of Berlin',
 ]
 
 export function Landing() {
@@ -86,7 +92,7 @@ export function Landing() {
           <span className={marigold.className}>
             Real odds. Real universities.
             <br />
-            Across six countries.
+            Across eight countries.
           </span>
         }
         tags={FEATURE_TAGS}
