@@ -1,4 +1,4 @@
-import { pgTable, text, integer, timestamp, jsonb, uuid } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, timestamp, jsonb, uuid, uniqueIndex } from "drizzle-orm/pg-core";
 import type { AcademicDetail, AcademicField } from "@/lib/academic-detail";
 import type { StandardizedTests } from "@/lib/standardized-tests";
 import type { PriorGrades } from "@/lib/prior-grades";
@@ -233,7 +233,21 @@ export const universityAnalyses = pgTable('universityAnalyses', {
   profileId: integer('profileId'),
   ipAddress: text('ipAddress'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
-})
+}, (table) => [
+  // Closes the race the cache-read-then-write check above can't: two
+  // requests for the same (account, school, profile) fired at once — e.g.
+  // the same school analyzed from two open tabs — both miss the cache
+  // before either has written yet, so both independently call the AI. This
+  // constraint doesn't stop that double call, but it guarantees only ONE of
+  // the two results ever gets persisted; analyze-target-university.ts uses
+  // `onConflictDoNothing` + a re-read on conflict so whichever request loses
+  // the race returns the WINNER's stored numbers instead of its own,
+  // discarded ones — every tab ends up showing the same thing. Postgres
+  // treats NULL as distinct from NULL in a unique index, so historical rows
+  // with profileId IS NULL (written before this column existed) never
+  // collide with each other here.
+  uniqueIndex('university_analyses_user_uni_profile_idx').on(table.userId, table.universityId, table.profileId),
+])
 
 // Real Early Decision / Early Action / Regular-Decision-only facts, shared
 // shape between MatchResult and TargetAnalysisResult — see the field-level

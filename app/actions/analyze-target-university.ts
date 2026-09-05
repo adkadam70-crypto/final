@@ -16,6 +16,57 @@ import { z } from 'zod'
 import OpenAI from 'openai'
 import { zodTextFormat } from 'openai/helpers/zod'
 
+// Shared by both places a stored (not freshly-AI-computed) row becomes the
+// response: a same-profile cache hit, and the case where this request lost
+// a concurrent race to persist its own AI result (see the unique index on
+// universityAnalyses in lib/db/schema.ts) and must return the winner's
+// numbers instead of its own to keep every open tab in agreement.
+function buildResultFromRow(
+  matched: typeof universities.$inferSelect,
+  acc: AcceptanceRateInfo,
+  row: {
+    matchTier: string | null
+    acceptanceProbability: number | null
+    admissionChanceSummary: string
+    strengths: string[]
+    weaknesses: string[]
+    actionSteps: string[]
+    earlyDecisionProbability: number | null
+    earlyActionProbability: number | null
+  },
+): TargetAnalysisResult {
+  const earlyAdmission: EarlyAdmissionInfo = matched.earlyAdmissionSource
+    ? {
+        earlyDecision:
+          matched.earlyDecisionRate != null && row.earlyDecisionProbability != null
+            ? { realRate: matched.earlyDecisionRate, yourChance: row.earlyDecisionProbability }
+            : null,
+        earlyAction:
+          matched.earlyActionRate != null && row.earlyActionProbability != null
+            ? { realRate: matched.earlyActionRate, yourChance: row.earlyActionProbability }
+            : null,
+        regularDecision: matched.regularDecisionRate != null ? { realRate: matched.regularDecisionRate } : null,
+        publishedOverallRate: matched.actualAcceptanceRate,
+        source: matched.earlyAdmissionSource,
+      }
+    : null
+  const admissionsContext = matched.admissionsContextNote
+    ? { note: matched.admissionsContextNote, source: matched.admissionsContextNoteSource ?? 'Curated' }
+    : null
+  return {
+    resolvedUniversityName: matched.name,
+    matchTier: row.matchTier as MatchResult['matchTier'],
+    acceptanceProbability: row.acceptanceProbability ?? 0,
+    admissionChanceSummary: row.admissionChanceSummary,
+    strengths: row.strengths,
+    weaknesses: row.weaknesses,
+    actionSteps: row.actionSteps,
+    earlyAdmission,
+    admissionsContext,
+    acceptanceRate: acc,
+  }
+}
+
 // Common abbreviations/short forms that don't appear as a literal substring
 // in the official catalog name (e.g. "MIT" isn't a substring of
 // "Massachusetts Institute of Technology"), checked before the substring
@@ -213,36 +264,7 @@ export async function analyzeTargetUniversity(universityName: string): Promise<T
     )[0]
 
     if (cached) {
-      const earlyAdmission: EarlyAdmissionInfo = matched.earlyAdmissionSource
-        ? {
-            earlyDecision:
-              matched.earlyDecisionRate != null && cached.earlyDecisionProbability != null
-                ? { realRate: matched.earlyDecisionRate, yourChance: cached.earlyDecisionProbability }
-                : null,
-            earlyAction:
-              matched.earlyActionRate != null && cached.earlyActionProbability != null
-                ? { realRate: matched.earlyActionRate, yourChance: cached.earlyActionProbability }
-                : null,
-            regularDecision: matched.regularDecisionRate != null ? { realRate: matched.regularDecisionRate } : null,
-            publishedOverallRate: matched.actualAcceptanceRate,
-            source: matched.earlyAdmissionSource,
-          }
-        : null
-      const admissionsContext = matched.admissionsContextNote
-        ? { note: matched.admissionsContextNote, source: matched.admissionsContextNoteSource ?? 'Curated' }
-        : null
-      return {
-        resolvedUniversityName: matched.name,
-        matchTier: cached.matchTier as MatchResult['matchTier'],
-        acceptanceProbability: cached.acceptanceProbability ?? 0,
-        admissionChanceSummary: cached.admissionChanceSummary,
-        strengths: cached.strengths,
-        weaknesses: cached.weaknesses,
-        actionSteps: cached.actionSteps,
-        earlyAdmission,
-        admissionsContext,
-        acceptanceRate: acc,
-      }
+      return buildResultFromRow(matched, acc, cached)
     }
 
     const apiKey = process.env.OPENAI_API_KEY
@@ -375,22 +397,55 @@ Provide an honest tier + probability, and short, specific, scannable bullets for
       ? { note: matched.admissionsContextNote, source: matched.admissionsContextNoteSource ?? 'Curated' }
       : null
 
-    await db.insert(universityAnalyses).values({
-      userId,
-      universityName: matched.name,
-      universityId: matched.id,
-      usedCatalogGrounding: 1,
-      profileId: profile.id,
-      acceptanceProbability,
-      matchTier,
-      earlyDecisionProbability,
-      earlyActionProbability,
-      admissionChanceSummary,
-      strengths,
-      weaknesses,
-      actionSteps,
-      ipAddress: clientIp,
-    })
+    // onConflictDoNothing + re-read closes the multi-tab race: if another
+    // request for this exact (account, school, profile) already won and
+    // persisted its row between our cache check above and this insert, the
+    // unique index (lib/db/schema.ts) makes this insert a no-op instead of
+    // creating a second, different-numbered row — and we then hand back
+    // that winner's stored result instead of the one we just computed, so
+    // every tab converges on the same answer no matter which one "wins".
+    const inserted = await db
+      .insert(universityAnalyses)
+      .values({
+        userId,
+        universityName: matched.name,
+        universityId: matched.id,
+        usedCatalogGrounding: 1,
+        profileId: profile.id,
+        acceptanceProbability,
+        matchTier,
+        earlyDecisionProbability,
+        earlyActionProbability,
+        admissionChanceSummary,
+        strengths,
+        weaknesses,
+        actionSteps,
+        ipAddress: clientIp,
+      })
+      .onConflictDoNothing({
+        target: [universityAnalyses.userId, universityAnalyses.universityId, universityAnalyses.profileId],
+      })
+      .returning()
+
+    if (inserted.length === 0) {
+      const winner = (
+        await db
+          .select()
+          .from(universityAnalyses)
+          .where(
+            and(
+              eq(universityAnalyses.userId, userId),
+              eq(universityAnalyses.universityId, matched.id),
+              eq(universityAnalyses.profileId, profile.id),
+            ),
+          )
+          .limit(1)
+      )[0]
+      if (winner) return buildResultFromRow(matched, acc, winner)
+      // Extremely unlikely (the winning row would have to be deleted in the
+      // instant between the conflict and this re-read) — fall through and
+      // serve this request's own freshly computed result rather than error.
+    }
 
     return {
       resolvedUniversityName: matched.name,
