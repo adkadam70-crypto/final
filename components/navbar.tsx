@@ -3,11 +3,12 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { LayoutDashboard, User, Search, Bookmark, LogOut, Menu, X, BookOpenCheck, Settings } from 'lucide-react'
+import { LayoutDashboard, User, Search, Bookmark, LogOut, Menu, X, BookOpenCheck, Settings, ShieldCheck } from 'lucide-react'
 import { authClient } from '@/lib/auth-client'
 import { cn } from '@/lib/utils'
 import { ProfileMenu } from '@/components/profile-menu'
 import { AppLogo } from '@/components/app-logo'
+import { ADMIN_EMAIL } from '@/lib/admin'
 
 const NAV_LINKS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -20,6 +21,7 @@ const NAV_LINKS = [
 export function Navbar({ userName, userEmail }: { userName: string; userEmail: string }) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const isAdmin = userEmail === ADMIN_EMAIL
 
   async function handleSignOut() {
     await authClient.signOut()
@@ -61,6 +63,11 @@ export function Navbar({ userName, userEmail }: { userName: string; userEmail: s
         </div>
 
         <div className="flex items-center gap-3">
+          {isAdmin && (
+            <Link href="/admin" className={cn('hidden lg:flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl transition-colors whitespace-nowrap shrink-0', pathname === '/admin' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-muted')}>
+              <ShieldCheck className="w-4 h-4 shrink-0" /> Admin
+            </Link>
+          )}
           <div className="hidden sm:block">
             <ProfileMenu userName={userName} userEmail={userEmail} />
           </div>
@@ -85,6 +92,11 @@ export function Navbar({ userName, userEmail }: { userName: string; userEmail: s
             <Link href="/account" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 text-sm font-medium px-3 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
               <Settings className="w-4 h-4" /> Account settings
             </Link>
+            {isAdmin && (
+              <Link href="/admin" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 text-sm font-medium px-3 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+                <ShieldCheck className="w-4 h-4" /> Admin
+              </Link>
+            )}
             <button onClick={handleSignOut} className="w-full flex items-center gap-2 text-sm font-medium px-3 py-2.5 rounded-xl text-destructive hover:bg-destructive/10 transition-colors">
               <LogOut className="w-4 h-4" /> Sign out
             </button>
