@@ -24,6 +24,14 @@ import { notifyAdmin } from '@/lib/notify'
 const SIGNUP_LIMIT_PER_DEVICE = 3
 const SIGNUP_WINDOW_HOURS = 24
 
+// Purely observational — never blocks anything. Device fingerprint above is
+// the only thing that actually stops signups, deliberately not IP, since an
+// IP is shared by everyone on a school/office network. This just tells the
+// owner when one IP has made an unusual number of accounts, so they can look
+// closer and decide manually rather than the system guessing wrong and
+// locking out real students on a shared connection.
+const SAME_IP_SIGNUP_ALERT_THRESHOLD = 5
+
 // Resend's shared sandbox sender — works immediately with zero domain setup,
 // which is what we want while this is on a *.vercel.app testing URL. Once a
 // real domain is bought and verified in the Resend dashboard, swap this to
@@ -141,6 +149,23 @@ export const auth = betterAuth({
               ipAddress: ip,
               deviceHash: deviceHashFromHeaders(context.headers),
             })
+
+            if (ip !== 'unknown') {
+              const since = new Date(Date.now() - SIGNUP_WINDOW_HOURS * 60 * 60 * 1000)
+              const [ipRow] = await db
+                .select({ count: sql<number>`count(*)` })
+                .from(signupFingerprints)
+                .where(and(eq(signupFingerprints.ipAddress, ip), gte(signupFingerprints.createdAt, since)))
+              // Fires once, right when the count first reaches the threshold —
+              // not on every signup after, so one busy IP doesn't send an
+              // email per additional account.
+              if (Number(ipRow.count) === SAME_IP_SIGNUP_ALERT_THRESHOLD) {
+                void notifyAdmin(
+                  'Unusual signup activity: same IP',
+                  `<p><strong>${SAME_IP_SIGNUP_ALERT_THRESHOLD} accounts</strong> have been created from IP <strong>${ip}</strong> in the last ${SIGNUP_WINDOW_HOURS} hours.</p><p>This is informational only — nothing was blocked. Could be a shared network (school/office) or one person farming accounts.</p>`,
+                )
+              }
+            }
           }
           void notifyAdmin(
             'New Shortlisted signup',
