@@ -5,6 +5,7 @@ import { db } from '@/lib/db'
 import { user } from '@/lib/db/auth-schema'
 import { eq } from 'drizzle-orm'
 import { UnbanButton } from '@/components/admin/unban-button'
+import { BanUserForm } from '@/components/admin/ban-user-form'
 import { ADMIN_EMAIL } from '@/lib/admin'
 
 export const dynamic = 'force-dynamic'
@@ -21,7 +22,11 @@ export default async function AdminPage() {
   return (
     <div className="min-h-screen bg-background text-foreground px-4 sm:px-8 py-12">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-2xl font-bold tracking-tight mb-1">Banned users</h1>
+        <h1 className="text-2xl font-bold tracking-tight mb-1">Ban a user</h1>
+        <p className="text-sm text-muted-foreground mb-4">Look up by email — the reason you enter is shown directly to them.</p>
+        <BanUserForm />
+
+        <h2 className="text-2xl font-bold tracking-tight mt-12 mb-1">Banned users</h2>
         <p className="text-sm text-muted-foreground mb-8">{bannedUsers.length} account{bannedUsers.length === 1 ? '' : 's'} currently suspended.</p>
 
         {bannedUsers.length === 0 ? (
