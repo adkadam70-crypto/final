@@ -35,13 +35,19 @@ const PROFILE_STRENGTH_WINDOW_MINUTES = 10
 
 // Per-account limits above are easy to multiply by signing up with several
 // emails (the signup-fingerprint throttle in lib/auth.ts raises the cost of
-// that, but doesn't make it impossible). These are a much looser backstop on
-// the same IP across ALL accounts using it — set high enough that a school
-// or office network full of legitimate simultaneous users won't hit it, but
-// low enough to blunt someone farming accounts from one connection.
+// that, but doesn't make it impossible). These were a looser backstop on the
+// same IP across ALL accounts using it, meant to blunt someone farming
+// accounts from one connection — DISABLED for now per owner request: a
+// school/office network with several real students on it is exactly the
+// case this risked blocking, and the same-IP signup alert added in
+// lib/auth.ts already surfaces that pattern for manual review instead. Kept
+// here, unused, in case IP-level blocking is wanted again later.
 const IP_MATCH_LIMIT = 20
 const IP_ANALYSIS_LIMIT = 30
 const IP_PROFILE_STRENGTH_LIMIT = 40
+void IP_MATCH_LIMIT
+void IP_ANALYSIS_LIMIT
+void IP_PROFILE_STRENGTH_LIMIT
 
 async function countByIp(table: typeof matches | typeof universityAnalyses | typeof aiRateLimitLog, ip: string, since: Date, extra?: ReturnType<typeof eq>) {
   if (ip === 'unknown') return 0
@@ -61,13 +67,11 @@ async function countByIp(table: typeof matches | typeof universityAnalyses | typ
 export async function assertMatchRateLimit(userId: string, ip: string) {
   const since = new Date(Date.now() - MATCH_WINDOW_MINUTES * 60_000)
   let count: number
-  let ipCount: number
   try {
     ;[{ count }] = await db
       .select({ count: sql<number>`count(*)` })
       .from(matches)
       .where(and(eq(matches.userId, userId), gte(matches.createdAt, since)))
-    ipCount = await countByIp(matches, ip, since)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Rate limit check failed'
     throw new Error(`Rate limit check failed: ${message}`)
@@ -78,22 +82,17 @@ export async function assertMatchRateLimit(userId: string, ip: string) {
       `You've run a match ${MATCH_LIMIT} times in the last ${MATCH_WINDOW_MINUTES} minutes — please wait a few minutes before running another.`,
     )
   }
-  if (ipCount >= IP_MATCH_LIMIT) {
-    if (ipCount === IP_MATCH_LIMIT) void alertOnFirstBreach(userId, ip, 'Run Match (IP-level)', `${IP_MATCH_LIMIT}/${MATCH_WINDOW_MINUTES}min`)
-    throw new Error(`Too many matches have been run from this network recently — please wait a few minutes before trying again.`)
-  }
+  // IP-level check disabled — see comment above IP_MATCH_LIMIT.
 }
 
 export async function assertAnalysisRateLimit(userId: string, ip: string) {
   const since = new Date(Date.now() - ANALYSIS_WINDOW_MINUTES * 60_000)
   let count: number
-  let ipCount: number
   try {
     ;[{ count }] = await db
       .select({ count: sql<number>`count(*)` })
       .from(universityAnalyses)
       .where(and(eq(universityAnalyses.userId, userId), gte(universityAnalyses.createdAt, since)))
-    ipCount = await countByIp(universityAnalyses, ip, since)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Rate limit check failed'
     throw new Error(`Rate limit check failed: ${message}`)
@@ -104,10 +103,7 @@ export async function assertAnalysisRateLimit(userId: string, ip: string) {
       `You've reached your limit of ${ANALYSIS_LIMIT} school lookups every ${ANALYSIS_WINDOW_MINUTES} minutes. Please try again after your current limit resets.`,
     )
   }
-  if (ipCount >= IP_ANALYSIS_LIMIT) {
-    if (ipCount === IP_ANALYSIS_LIMIT) void alertOnFirstBreach(userId, ip, 'Target University Analysis (IP-level)', `${IP_ANALYSIS_LIMIT}/${ANALYSIS_WINDOW_MINUTES}min`)
-    throw new Error(`Too many analyses have been run from this network recently. Please try again after a few minutes.`)
-  }
+  // IP-level check disabled — see comment above IP_ANALYSIS_LIMIT.
 }
 
 // analyzeProfileStrength has no history table of its own to count against
@@ -118,13 +114,11 @@ export async function assertAnalysisRateLimit(userId: string, ip: string) {
 export async function assertProfileStrengthRateLimit(userId: string, ip: string) {
   const since = new Date(Date.now() - PROFILE_STRENGTH_WINDOW_MINUTES * 60_000)
   let count: number
-  let ipCount: number
   try {
     ;[{ count }] = await db
       .select({ count: sql<number>`count(*)` })
       .from(aiRateLimitLog)
       .where(and(eq(aiRateLimitLog.userId, userId), eq(aiRateLimitLog.action, 'profileStrength'), gte(aiRateLimitLog.createdAt, since)))
-    ipCount = await countByIp(aiRateLimitLog, ip, since, eq(aiRateLimitLog.action, 'profileStrength'))
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Rate limit check failed'
     throw new Error(`Rate limit check failed: ${message}`)
@@ -135,8 +129,5 @@ export async function assertProfileStrengthRateLimit(userId: string, ip: string)
       `You've checked your profile strength ${PROFILE_STRENGTH_LIMIT} times in the last ${PROFILE_STRENGTH_WINDOW_MINUTES} minutes — please wait a few minutes before trying again.`,
     )
   }
-  if (ipCount >= IP_PROFILE_STRENGTH_LIMIT) {
-    if (ipCount === IP_PROFILE_STRENGTH_LIMIT) void alertOnFirstBreach(userId, ip, 'Profile Strength (IP-level)', `${IP_PROFILE_STRENGTH_LIMIT}/${PROFILE_STRENGTH_WINDOW_MINUTES}min`)
-    throw new Error(`Too many profile-strength checks have been run from this network recently — please wait a few minutes before trying again.`)
-  }
+  // IP-level check disabled — see comment above IP_PROFILE_STRENGTH_LIMIT.
 }
