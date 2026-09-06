@@ -7,6 +7,7 @@ import { signupFingerprints } from '@/lib/db/schema'
 import { and, eq, gte, sql } from 'drizzle-orm'
 import { ipFromHeaders, deviceHashFromHeaders } from '@/lib/request-fingerprint'
 import { Resend } from 'resend'
+import { notifyAdmin } from '@/lib/notify'
 
 // Turnstile + the per-account AI rate limits (lib/rate-limit.ts) both reset
 // the moment someone signs up with a new email — so a user willing to make
@@ -133,12 +134,18 @@ export const auth = betterAuth({
           }
         },
         after: async (user, context) => {
-          if (!context?.headers) return
-          await db.insert(signupFingerprints).values({
-            userId: user.id,
-            ipAddress: ipFromHeaders(context.headers),
-            deviceHash: deviceHashFromHeaders(context.headers),
-          })
+          const ip = context?.headers ? ipFromHeaders(context.headers) : 'unknown'
+          if (context?.headers) {
+            await db.insert(signupFingerprints).values({
+              userId: user.id,
+              ipAddress: ip,
+              deviceHash: deviceHashFromHeaders(context.headers),
+            })
+          }
+          void notifyAdmin(
+            'New Shortlisted signup',
+            `<p>New account created:</p><p><strong>${user.name}</strong> — ${user.email}</p><p>IP: ${ip}</p>`,
+          )
         },
       },
     },

@@ -1,6 +1,20 @@
 import { db } from '@/lib/db'
 import { matches, universityAnalyses, aiRateLimitLog } from '@/lib/db/schema'
+import { user } from '@/lib/db/auth-schema'
 import { and, eq, gte, sql } from 'drizzle-orm'
+import { notifyAdmin } from '@/lib/notify'
+
+// Fires once per user per action the moment they first cross a limit (count
+// === limit, not >=) rather than on every subsequent blocked request in the
+// same window — otherwise someone hammering a blocked endpoint would flood
+// this inbox with one email per attempt.
+async function alertOnFirstBreach(userId: string, ip: string, action: string, limit: string) {
+  const [row] = await db.select({ name: user.name, email: user.email }).from(user).where(eq(user.id, userId))
+  void notifyAdmin(
+    `Rate limit hit: ${action}`,
+    `<p><strong>${row?.name ?? 'Unknown user'}</strong> (${row?.email ?? userId}) hit the ${action} limit (${limit}).</p><p>IP: ${ip}</p>`,
+  )
+}
 
 // Both AI-calling actions already insert one row per call into their own
 // history table (matches, universityAnalyses) with userId + createdAt — that
@@ -59,11 +73,13 @@ export async function assertMatchRateLimit(userId: string, ip: string) {
     throw new Error(`Rate limit check failed: ${message}`)
   }
   if (Number(count) >= MATCH_LIMIT) {
+    if (Number(count) === MATCH_LIMIT) void alertOnFirstBreach(userId, ip, 'Run Match', `${MATCH_LIMIT}/${MATCH_WINDOW_MINUTES}min`)
     throw new Error(
       `You've run a match ${MATCH_LIMIT} times in the last ${MATCH_WINDOW_MINUTES} minutes — please wait a few minutes before running another.`,
     )
   }
   if (ipCount >= IP_MATCH_LIMIT) {
+    if (ipCount === IP_MATCH_LIMIT) void alertOnFirstBreach(userId, ip, 'Run Match (IP-level)', `${IP_MATCH_LIMIT}/${MATCH_WINDOW_MINUTES}min`)
     throw new Error(`Too many matches have been run from this network recently — please wait a few minutes before trying again.`)
   }
 }
@@ -83,11 +99,13 @@ export async function assertAnalysisRateLimit(userId: string, ip: string) {
     throw new Error(`Rate limit check failed: ${message}`)
   }
   if (Number(count) >= ANALYSIS_LIMIT) {
+    if (Number(count) === ANALYSIS_LIMIT) void alertOnFirstBreach(userId, ip, 'Target University Analysis', `${ANALYSIS_LIMIT}/${ANALYSIS_WINDOW_MINUTES}min`)
     throw new Error(
       `You've reached your limit of ${ANALYSIS_LIMIT} school lookups every ${ANALYSIS_WINDOW_MINUTES} minutes. Please try again after your current limit resets.`,
     )
   }
   if (ipCount >= IP_ANALYSIS_LIMIT) {
+    if (ipCount === IP_ANALYSIS_LIMIT) void alertOnFirstBreach(userId, ip, 'Target University Analysis (IP-level)', `${IP_ANALYSIS_LIMIT}/${ANALYSIS_WINDOW_MINUTES}min`)
     throw new Error(`Too many analyses have been run from this network recently. Please try again after a few minutes.`)
   }
 }
@@ -112,11 +130,13 @@ export async function assertProfileStrengthRateLimit(userId: string, ip: string)
     throw new Error(`Rate limit check failed: ${message}`)
   }
   if (Number(count) >= PROFILE_STRENGTH_LIMIT) {
+    if (Number(count) === PROFILE_STRENGTH_LIMIT) void alertOnFirstBreach(userId, ip, 'Profile Strength', `${PROFILE_STRENGTH_LIMIT}/${PROFILE_STRENGTH_WINDOW_MINUTES}min`)
     throw new Error(
       `You've checked your profile strength ${PROFILE_STRENGTH_LIMIT} times in the last ${PROFILE_STRENGTH_WINDOW_MINUTES} minutes — please wait a few minutes before trying again.`,
     )
   }
   if (ipCount >= IP_PROFILE_STRENGTH_LIMIT) {
+    if (ipCount === IP_PROFILE_STRENGTH_LIMIT) void alertOnFirstBreach(userId, ip, 'Profile Strength (IP-level)', `${IP_PROFILE_STRENGTH_LIMIT}/${PROFILE_STRENGTH_WINDOW_MINUTES}min`)
     throw new Error(`Too many profile-strength checks have been run from this network recently — please wait a few minutes before trying again.`)
   }
 }
