@@ -14,6 +14,11 @@ export const user = pgTable('user', {
   // there is no self-service way for a user to change either field.
   banned: boolean('banned').notNull().default(false),
   banReason: text('banReason'),
+  // Set once, at signup, from the client's local clock the moment the
+  // required Terms/Privacy checkbox was checked — a timestamped consent
+  // record, not just a UI checkbox nobody can later prove was ticked. Never
+  // set for accounts created before this existed (nullable).
+  termsAcceptedAt: timestamp('termsAcceptedAt'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 })

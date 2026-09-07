@@ -18,6 +18,7 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   const errorRef = useRef<HTMLParagraphElement>(null)
   const [loading, setLoading] = useState(false)
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [termsAccepted, setTermsAccepted] = useState(false)
 
   const isSignUp = mode === 'sign-up'
 
@@ -34,11 +35,16 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
       return
     }
 
+    if (isSignUp && !termsAccepted) {
+      setError('Please agree to the Terms of Service & Privacy Policy to continue.')
+      return
+    }
+
     setLoading(true)
 
     const fetchOptions = { headers: { 'x-captcha-response': captchaToken } }
     const { error } = isSignUp
-      ? await authClient.signUp.email({ email, password, name, fetchOptions })
+      ? await authClient.signUp.email({ email, password, name, termsAcceptedAt: new Date(), fetchOptions })
       : await authClient.signIn.email({ email, password, fetchOptions })
 
     setLoading(false)
@@ -114,6 +120,25 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
             />
           </div>
 
+          {isSignUp && (
+            <label className="flex items-start gap-2 text-xs text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                required
+                className="mt-0.5 accent-primary shrink-0"
+              />
+              <span>
+                I agree to the{' '}
+                <Link href="/terms" target="_blank" className="text-foreground font-medium underline-offset-4 hover:underline">
+                  Terms of Service &amp; Privacy Policy
+                </Link>
+                , including how my data is used.
+              </span>
+            </label>
+          )}
+
           <TurnstileWidget onToken={setCaptchaToken} onExpire={() => setCaptchaToken(null)} />
 
           {error && (
@@ -124,7 +149,7 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
 
           <LiquidMetalButton
             type="submit"
-            disabled={loading}
+            disabled={loading || (isSignUp && !termsAccepted)}
             fullWidth
             label={loading ? 'Please wait…' : isSignUp ? 'Create account' : 'Sign in'}
           />

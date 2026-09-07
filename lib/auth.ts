@@ -61,6 +61,10 @@ export const auth = betterAuth({
     additionalFields: {
       banned: { type: 'boolean', defaultValue: false, input: false },
       banReason: { type: 'string', required: false, input: false },
+      // Client-supplied at sign-up only (see components/auth-form.tsx) —
+      // the server never fabricates this timestamp; if the client didn't
+      // send one (e.g. sign-in, or an old client), the column stays null.
+      termsAcceptedAt: { type: 'date', required: false, input: true },
     },
   },
 
