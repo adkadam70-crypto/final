@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Navbar } from '@/components/navbar'
+import { Footer } from '@/components/ui/footer-section'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,6 +16,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <main className="app-shell-background min-h-screen text-foreground pt-16">
         {children}
       </main>
+      <Footer />
     </>
   )
 }
