@@ -1,10 +1,10 @@
 import { Resend } from 'resend'
 import { ADMIN_EMAIL } from '@/lib/admin'
 
-// Same shared Resend sandbox sender already used for password-reset emails
-// in lib/auth.ts — swap both to a verified domain address together once one
-// is bought.
-const NOTIFY_FROM = 'Shortlisted <onboarding@resend.dev>'
+// shortlisted.space is now a verified sending domain in Resend (see
+// lib/auth.ts) — matches the sender used for every other transactional
+// email so these don't come from the old shared sandbox address.
+const NOTIFY_FROM = 'Shortlisted <noreply@shortlisted.space>'
 
 // Best-effort — a notification failing should never break the request that
 // triggered it (a signup or a rate-limited AI call). Errors are swallowed

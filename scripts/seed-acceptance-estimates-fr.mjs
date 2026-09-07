@@ -22,6 +22,14 @@
 // realigns baselineSelectivity to (100 - estimate). Tier 5: acceptanceRateNote
 // only. Never touches a row that already has a real actualAcceptanceRate.
 //
+// Extended for the tranche-4 rows (seed-universities-fr-4.mjs): École du
+// Louvre / CELSA get a direct applicant-to-admit estimate; the private
+// post-bac engineering and business schools and the Catholic universities
+// get a Parcoursup taux d'accès estimate; the three small public
+// universities get the non-selective-licence estimate; Sciences Po Toulouse
+// gets the common-IEP-concours estimate; ENTPE (concours after prépa) and
+// the portfolio schools (EnsAD, ENSP Arles, Villa Arson, ESA) are Tier 5.
+//
 // Usage: node --env-file=.env.local scripts/seed-acceptance-estimates-fr.mjs
 
 import { neon } from '@neondatabase/serverless'
@@ -92,6 +100,20 @@ const ESTIMATES = {
   // Tranche 3 — architecture / film (selective on portfolio or creative concours)
   'École nationale supérieure d\'architecture de Paris-La Villette': { rate: 18, note: `Estimated ~18% — selective post-bac admission on the school record via Parcoursup; France's national architecture schools admit roughly this share, and Paris schools are the most sought-after. ${D}` },
   'La Fémis': { rate: 5, note: `Estimated ~5% — one of the most selective concours in France; the national film school admits on the order of 1 candidate per 20 who sit the main creative competition. ${D}` },
+  // Tranche 4 — art-history / communication (direct competitive selection)
+  'École du Louvre': { rate: 13, note: `Estimated ~13% — the first-cycle entry examination admits on the order of 1 in 8 of the candidates who sit it each year (École du Louvre publishes the intake figures). ${D}` },
+  'CELSA – Sorbonne University': { rate: 15, note: `Estimated ~15% — CELSA recruits mainly at licence-3 and master level by competitive dossier and written exam; across its tracks it admits roughly this share of applicants (journalism is far tighter). ${D}` },
+  // Tranche 4 — post-bac engineering / business (private)
+  'Institut Mines-Télécom Business School': { rate: 40, note: `Estimated ~40% — a public business school recruiting via post-prépa concours and post-bac tracks; combined admit share around this level. ${D}` },
+  'ESIEA': { rate: 55, note: `Estimated ~55% — private post-bac digital-engineering school; Parcoursup taux d'accès typically in this range. ${D}` },
+  'EIGSI La Rochelle': { rate: 55, note: `Estimated ~55% — private post-bac generalist engineering school; Parcoursup taux d'accès typically in this range. ${D}` },
+  'ISEN Yncréa Ouest': { rate: 55, note: `Estimated ~55% — private post-bac digital-and-electronics engineering school; Parcoursup taux d'accès typically in this range. ${D}` },
+  // Tranche 4 — Catholic multi-faculty universities (private, admit on record via Parcoursup)
+  'Institut Catholique de Paris': { rate: 65, note: `Estimated ~65% — a private multi-faculty university admitting on the school record via Parcoursup; taux d'accès across its faculties typically sits around this level. ${D}` },
+  'Lille Catholic University': { rate: 60, note: `Estimated ~60% — France's largest private non-profit university; aggregated across its federated faculties and schools, admission on record via Parcoursup sits around this level (medicine is far tighter). ${D}` },
+  'UCLy (Lyon Catholic University)': { rate: 65, note: `Estimated ~65% — a private multi-faculty university admitting on the school record via Parcoursup; taux d'accès across its faculties typically sits around this level. ${D}` },
+  // Tranche 4 — regional IEP (common post-bac concours)
+  'Sciences Po Toulouse': { rate: 20, note: `Estimated ~20% — the common post-bac IEP entrance exam (concours commun); admit rates across the network sit around this level. ${D}` },
 }
 
 const NOTE_UNIV_TYPICAL = `Estimated ~85% — French public universities are non-selective at licence (bachelor) level; this reflects typical Parcoursup taux d'accès for non-capped programmes. Capped fields (medicine, and some law, psychology and sports science) are far more competitive. ${D}`
@@ -118,6 +140,8 @@ const UNIV_TYPICAL = new Set([
   'Université Polytechnique Hauts-de-France', 'University of Limoges', 'University of Toulon',
   'Avignon University', 'University of Perpignan', 'Université Côte d\'Opale',
   'University of Artois', 'University of New Caledonia', 'University of La Réunion',
+  // tranche 4
+  'University of Le Havre Normandy', 'University of Nîmes', 'University of Corsica Pascal Paoli',
 ])
 const UNIV_PARIS_CAPPED = new Set([
   'Sorbonne University', 'Université Paris Cité', 'Panthéon-Sorbonne University',
@@ -143,8 +167,15 @@ const CONCOURS_NAMES = new Set([
   'CPE Lyon', 'ISAE-ENSMA', 'ENSICAEN', 'Sigma Clermont', 'ENS Rennes',
   'École nationale vétérinaire d\'Alfort', 'École nationale vétérinaire de Toulouse',
   'Oniris Nantes', 'VetAgro Sup',
+  // tranche 4 — concours after prépa
+  'ENTPE',
 ])
-const PORTFOLIO_NAMES = new Set(['Beaux-Arts de Paris', 'ENSCI – Les Ateliers'])
+const PORTFOLIO_NAMES = new Set([
+  'Beaux-Arts de Paris', 'ENSCI – Les Ateliers',
+  // tranche 4 — portfolio / creative-concours schools
+  'École nationale supérieure des arts décoratifs', 'École nationale supérieure de la photographie',
+  'Villa Arson', 'École Spéciale d\'Architecture',
+])
 const UMBRELLA_NAMES = new Set(['PSL University', 'Institut Polytechnique de Paris'])
 
 const rows = await sql`SELECT id, name, "actualAcceptanceRate" FROM universities WHERE country = 'FR'`

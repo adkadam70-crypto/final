@@ -56,6 +56,11 @@ const ENTRIES = [
   { name: 'University of Bordeaux', rank: 11 },
   { name: 'University of Toulouse', rank: 12 },
   { name: 'Centrale Nantes', rank: 13 },
+  // ENTPE (tranche 4) — THE France 2026 lists it in the large tied group at
+  // #13, alongside Centrale Nantes, Claude Bernard Lyon 1, Mines
+  // Saint-Étienne, Nantes Université and Sciences Po. Ties in THE's list are
+  // real; the earlier entries here de-tied that band into 13-20.
+  { name: 'ENTPE', rank: 13 },
   { name: 'Claude Bernard University Lyon 1', rank: 14 },
   { name: 'Mines Saint-Étienne', rank: 15 },
   { name: 'Nantes Université', rank: 17 },

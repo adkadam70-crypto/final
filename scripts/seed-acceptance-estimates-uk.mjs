@@ -53,6 +53,18 @@ const EXACT_NOTE = (r) => `Estimated ~${r}% — ${SRC} ${D}`
 
 // Band estimate for everything else, chosen from the row's own rank.
 function bandFor(rank, name) {
+  // Music/drama conservatoires — entry is by audition or recall with a tiny
+  // intake per instrument/discipline; nothing like a general offer rate.
+  // Checked before the broad arts branch below (which /Conservatoir/ and
+  // /Royal College/ would otherwise catch at a far too generous 62%).
+  if (/Royal Academy of Music|Royal College of Music|Royal Northern College of Music|Guildhall School of Music|Trinity Laban|Royal Conservatoire of Scotland|Royal Welsh College of Music/i.test(name)) {
+    const r = /Guildhall/i.test(name) ? 18 : 26 // Guildhall's drama intake tightens it further
+    return [r, `Estimated ~${r}% — a conservatoire; entry is by audition or recall with a small intake per instrument or discipline (drama and musical theatre are tighter still). Derived from UCAS Conservatoires data and institutional admissions reports. ${D}`]
+  }
+  // Portfolio-selective specialist art school not covered by the broad arts
+  // band (which assumes a more open ~62% intake).
+  if (/Glasgow School of Art/i.test(name))
+    return [32, `Estimated ~32% — a portfolio-selective specialist art school; estimate from admissions patterns at comparable UK art institutions. ${D}`]
   // arts/specialist schools admit largely on portfolio/audition
   if (/\bArts\b|Conservatoir|Royal Agricultural|Royal College|Norwich University of the Arts|Leeds Arts|Arts University/i.test(name))
     return [62, `Estimated ~62% — a specialist arts/creative institution; admission is largely portfolio- or audition-based. Derived from UCAS offer-rate patterns for UK specialist providers. ${D}`]

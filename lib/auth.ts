@@ -1,5 +1,5 @@
 import { betterAuth, APIError } from 'better-auth'
-import { captcha } from 'better-auth/plugins'
+import { captcha, emailOTP } from 'better-auth/plugins'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { db } from '@/lib/db'
 import * as authSchema from '@/lib/db/auth-schema'
@@ -32,11 +32,28 @@ const SIGNUP_WINDOW_HOURS = 24
 // locking out real students on a shared connection.
 const SAME_IP_SIGNUP_ALERT_THRESHOLD = 5
 
-// Resend's shared sandbox sender — works immediately with zero domain setup,
-// which is what we want while this is on a *.vercel.app testing URL. Once a
-// real domain is bought and verified in the Resend dashboard, swap this to
-// an address on that domain (e.g. 'Shortlisted <noreply@yourdomain.com>').
-const RESET_PASSWORD_FROM = 'Shortlisted <onboarding@resend.dev>'
+// Sender address for every transactional email. shortlisted.space is a
+// verified sending domain in Resend (SPF on send.shortlisted.space, DKIM on
+// resend._domainkey.shortlisted.space, MX bounce record on
+// send.shortlisted.space) — unlike Resend's shared onboarding@resend.dev,
+// which only delivers to the Resend account owner's own inbox.
+const EMAIL_FROM = 'Shortlisted <noreply@shortlisted.space>'
+
+// How long a signup/sign-in verification OTP stays valid, in seconds.
+const EMAIL_OTP_EXPIRES_IN = 10 * 60
+
+// Single choke point for every transactional email this app sends, so the
+// "is the API key even set" check lives in exactly one place.
+async function sendMail({ to, subject, html }: { to: string; subject: string; html: string }) {
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) {
+    throw new Error('RESEND_API_KEY environment variable is not set — transactional emails cannot be sent')
+  }
+  const { error } = await new Resend(apiKey).emails.send({ from: EMAIL_FROM, to, subject, html })
+  if (error) {
+    throw new Error(`Failed to send email: ${error.message}`)
+  }
+}
 
 // No hardcoded fallback — a fallback secret sitting in source would let
 // anyone who's seen this file forge session tokens the moment a deploy ever
@@ -100,6 +117,12 @@ export const auth = betterAuth({
       // this name. The old key was a silent no-op (never matched anything).
       '/request-password-reset': { window: 60, max: 5 },
       '/reset-password': { window: 60, max: 5 },
+      // OTP endpoints: cheap to abuse as an email-spam vector (each call
+      // sends a real email), so cap resends hard. Verification attempts get
+      // a little more room so a genuine typo isn't an instant lockout — the
+      // plugin also enforces its own 3-wrong-guesses-per-code limit.
+      '/email-otp/send-verification-otp': { window: 300, max: 3 },
+      '/email-otp/verify-email': { window: 60, max: 5 },
     },
   },
 
@@ -118,6 +141,33 @@ export const auth = betterAuth({
         if (!key) throw new Error('TURNSTILE_SECRET_KEY environment variable is not set')
         return key
       })(),
+    }),
+
+    // Email verification by one-time code. `overrideDefaultEmailVerification`
+    // swaps Better Auth's usual "click this link" verification for a 6-digit
+    // OTP everywhere it's triggered — on sign-up (see emailVerification
+    // below) and on any sign-in attempt by an unverified account. Combined
+    // with `emailAndPassword.requireEmailVerification`, this means an account
+    // is unusable until the person proves they control the inbox: no session
+    // is ever issued for an unverified email, so signing up with a fake or
+    // mistyped address gets you nowhere.
+    emailOTP({
+      overrideDefaultEmailVerification: true,
+      otpLength: 6,
+      expiresIn: EMAIL_OTP_EXPIRES_IN,
+      sendVerificationOTP: async ({ email, otp, type }) => {
+        const heading =
+          type === 'sign-in' ? 'Your Shortlisted sign-in code' : 'Confirm your email for Shortlisted'
+        await sendMail({
+          to: email,
+          subject: `${otp} is your Shortlisted verification code`,
+          html: `
+            <p>${heading}:</p>
+            <p style="font-size:28px;font-weight:700;letter-spacing:4px;font-family:monospace">${otp}</p>
+            <p>This code expires in ${Math.round(EMAIL_OTP_EXPIRES_IN / 60)} minutes. If you didn't request it, you can ignore this email.</p>
+          `,
+        })
+      },
     }),
   ],
 
@@ -194,14 +244,14 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
+    // No session is issued until the email is verified (via the OTP flow in
+    // the emailOTP plugin above). An unverified sign-in attempt is rejected
+    // with EMAIL_NOT_VERIFIED and a fresh code is emailed (sendOnSignIn).
+    // Codes now send from the verified shortlisted.space domain, so this
+    // reaches every user, not just the Resend account owner.
+    requireEmailVerification: true,
     sendResetPassword: async ({ user, url }) => {
-      const apiKey = process.env.RESEND_API_KEY
-      if (!apiKey) {
-        throw new Error('RESEND_API_KEY environment variable is not set — password reset emails cannot be sent')
-      }
-      const resend = new Resend(apiKey)
-      const { error } = await resend.emails.send({
-        from: RESET_PASSWORD_FROM,
+      await sendMail({
         to: user.email,
         subject: 'Reset your Shortlisted password',
         html: `
@@ -210,9 +260,17 @@ export const auth = betterAuth({
           <p>If you didn't request this, you can safely ignore this email.</p>
         `,
       })
-      if (error) {
-        throw new Error(`Failed to send password reset email: ${error.message}`)
-      }
     },
+  },
+
+  emailVerification: {
+    // Fire the OTP email as soon as someone signs up, and again if an
+    // unverified account tries to sign in. After a successful verification
+    // the person is signed straight in — they've just proven both the
+    // password (checked before the code is requested) and the inbox.
+    sendOnSignUp: true,
+    sendOnSignIn: true,
+    autoSignInAfterVerification: true,
+    expiresIn: EMAIL_OTP_EXPIRES_IN,
   },
 })

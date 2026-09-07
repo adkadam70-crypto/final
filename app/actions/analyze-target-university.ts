@@ -10,6 +10,7 @@ import { formatStandardizedTests, testScoreRangeComparison } from '@/lib/standar
 import { formatPriorGrades, EMPTY_PRIOR_GRADES } from '@/lib/prior-grades'
 import { resolveAcceptanceRate, acceptanceRateForPrompt } from '@/lib/acceptance-rate'
 import { BIAS_INSTRUCTION } from '@/lib/bias-instruction'
+import { SELECTIVITY_CALIBRATION } from '@/lib/selectivity-calibration'
 import { assertAnalysisRateLimit } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/request-fingerprint'
 import { UNIVERSITY_ALIASES } from '@/lib/university-aliases'
@@ -287,6 +288,8 @@ ${BIAS_INSTRUCTION}
 
 TARGET UNIVERSITY: ${matched.name}
 ${groundingBlock}
+
+${SELECTIVITY_CALIBRATION}
 ${profileBlock}
 
 ${requirementNote}
