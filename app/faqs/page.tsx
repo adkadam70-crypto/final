@@ -9,7 +9,7 @@ export const metadata = {
 const FAQS: { q: string; a: React.ReactNode }[] = [
   {
     q: 'What is Shortlisted?',
-    a: 'A college-admissions tool for 11th and 12th graders. You enter your academic profile — curriculum, grades/scores, extracurriculars, and target countries — and we generate university match tiers and acceptance-odds estimates across 750+ real universities in eight countries.',
+    a: 'A college-admissions tool for 11th and 12th graders. You enter your academic profile — curriculum, grades/scores, extracurriculars, and target countries — and we generate university match tiers and acceptance-odds estimates across 900+ real universities in eight countries.',
   },
   {
     q: 'How are the acceptance-odds estimates calculated?',
