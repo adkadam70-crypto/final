@@ -29,7 +29,7 @@ export function resolveAcceptanceRate(u: {
 export function acceptanceRateForPrompt(info: AcceptanceRateInfo): string {
   if (!info) return 'Not on file.'
   if (info.kind === 'official') {
-    return `${info.rate}% overall admit rate, per ${info.source} — a real published figure, not an estimate.`
+    return `${info.rate}%, per ${info.source} — a real published figure, not an estimate. Cite it with the label its source gives it: an "acceptance rate" for a US-style admit rate, or a "UCAS offer rate" / "VTAC offer rate" where the source says so (an offer is the admission — treat it the same way).`
   }
   if (info.kind === 'estimated') {
     return `~${info.rate}% is OUR RESEARCH ESTIMATE, not a figure the university certifies (${info.note}). Anchor acceptanceProbability on it exactly as you would a real published rate, then adjust proportionately for this student's grades, tests, activities and country fit — but in the rationale say explicitly that the rate is an estimate, never state it as fact. baselineSelectivity was derived from this same number, so don't treat the two as separate signals.`

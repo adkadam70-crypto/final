@@ -7,12 +7,14 @@
 // prerequisites, you are almost always offered a place. So the honest
 // framing is a cut-off, not a rate — and that is what the note says.
 //
-// Where a usable offer-rate signal exists it is used: Victorian universities
-// report a VTAC domestic first-preference offer rate (Melbourne and Monash
-// ~71%). For the others the estimate is a Tier-4 band from where admissions-
-// data aggregators cluster, cross-checked — treated cautiously because those
-// aggregator numbers often mix undergraduate/postgraduate and domestic/
-// international streams.
+// Where a real published offer-rate signal exists it is used AS a real rate:
+// Victorian universities report a VTAC domestic first-preference offer rate
+// (Melbourne and Monash ~71%), published by the Victorian Tertiary Admissions
+// Centre — so those two go in actualAcceptanceRate + acceptanceRateSource,
+// not estimatedAcceptanceRate. For every other AU university the number is a
+// Tier-4 band from where admissions-data aggregators cluster, cross-checked —
+// treated cautiously because those aggregator numbers often mix undergraduate/
+// postgraduate and domestic/international streams — so it stays an estimate.
 //
 //   - Group of Eight: ~45-70% (more competitive courses well below that)
 //   - mid-tier universities: ~75-88%
@@ -28,6 +30,10 @@ import { neon } from '@neondatabase/serverless'
 const sql = neon(process.env.DATABASE_URL)
 
 const D = "A research estimate — Australian universities admit against a published ATAR/Selection-Rank cut-off per course and do not publish an institution-wide acceptance rate."
+
+// Real published figure for the two Victorian Go8 universities.
+const VTAC_SRC = 'VTAC domestic first-preference offer rate (offers ÷ first-preference applications), published by the Victorian Tertiary Admissions Centre. Counts applicants who ranked this university first; an offer is the admission.'
+const VTAC_NAMES = new Set(['University of Melbourne', 'Monash University'])
 
 const EST = {
   'University of Melbourne': 71,
@@ -58,18 +64,30 @@ const EST = {
   'University of Notre Dame Australia': 82,
 }
 
-const rows = await sql`SELECT id, name, "rankValue", "actualAcceptanceRate" FROM universities WHERE country = 'AU'`
-let n = 0
+const rows = await sql`SELECT id, name, "rankValue", "actualAcceptanceRate", "acceptanceRateSource" FROM universities WHERE country = 'AU'`
+let real = 0
+let estimated = 0
 for (const r of rows) {
-  if (r.actualAcceptanceRate != null) continue
+  if (r.actualAcceptanceRate != null && r.acceptanceRateSource !== VTAC_SRC) continue
+
   let rate = EST[r.name]
   if (rate == null) rate = r.rankValue != null && r.rankValue <= 20 ? 82 : 92
-  const isVic = r.name === 'University of Melbourne' || r.name === 'Monash University'
-  const basis = isVic
-    ? `the VTAC domestic first-preference offer rate is around ${rate}%`
-    : `band estimate for a university at this tier`
-  const note = `Estimated ~${rate}% — ${basis}. ${D}`
-  await sql`UPDATE universities SET "estimatedAcceptanceRate" = ${rate}, "acceptanceRateNote" = ${note}, "baselineSelectivity" = ${100 - rate} WHERE id = ${r.id}`
-  n++
+
+  if (VTAC_NAMES.has(r.name)) {
+    await sql`UPDATE universities SET
+      "actualAcceptanceRate" = ${rate}, "acceptanceRateSource" = ${VTAC_SRC},
+      "estimatedAcceptanceRate" = NULL, "acceptanceRateNote" = NULL,
+      "baselineSelectivity" = ${100 - rate}
+      WHERE id = ${r.id}`
+    real++
+  } else {
+    const note = `Estimated ~${rate}% — band estimate for a university at this tier. ${D}`
+    await sql`UPDATE universities SET
+      "estimatedAcceptanceRate" = ${rate}, "acceptanceRateNote" = ${note},
+      "actualAcceptanceRate" = NULL, "acceptanceRateSource" = NULL,
+      "baselineSelectivity" = ${100 - rate}
+      WHERE id = ${r.id}`
+    estimated++
+  }
 }
-console.log(`Australia: set estimated acceptance rate for ${n} universities.`)
+console.log(`Australia: ${real} real VTAC offer rates, ${estimated} band estimates.`)
