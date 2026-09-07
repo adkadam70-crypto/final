@@ -1,13 +1,12 @@
 import { Suspense } from 'react'
-import { auth } from '@/lib/auth'
-import { headers } from 'next/headers'
+import { getSession } from '@/lib/get-session'
 import { redirect } from 'next/navigation'
 import { ResetPasswordForm } from '@/components/reset-password-form'
 
 export const dynamic = 'force-dynamic'
 
 export default async function ResetPasswordPage() {
-  const session = await auth.api.getSession({ headers: await headers() })
+  const session = await getSession()
   if (session?.user) redirect('/dashboard')
   return (
     <Suspense>

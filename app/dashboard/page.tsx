@@ -1,5 +1,4 @@
-import { auth } from '@/lib/auth'
-import { headers } from 'next/headers'
+import { getSession } from '@/lib/get-session'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { profiles, matches, savedSchools } from '@/lib/db/schema'
@@ -15,7 +14,7 @@ import { GlowCard } from '@/components/ui/spotlight-card'
 export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
-  const session = await auth.api.getSession({ headers: await headers() })
+  const session = await getSession()
 
   // 🛡️ Route protection guard: If not logged in, redirect safely
   if (!session?.user) {

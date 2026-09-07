@@ -1,5 +1,4 @@
-import { auth } from '@/lib/auth'
-import { headers } from 'next/headers'
+import { getSession } from '@/lib/get-session'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { user } from '@/lib/db/auth-schema'
@@ -11,7 +10,7 @@ import { ADMIN_EMAIL } from '@/lib/admin'
 export const dynamic = 'force-dynamic'
 
 export default async function AdminPage() {
-  const session = await auth.api.getSession({ headers: await headers() })
+  const session = await getSession()
   if (!session?.user || session.user.email !== ADMIN_EMAIL) redirect('/')
 
   const bannedUsers = await db

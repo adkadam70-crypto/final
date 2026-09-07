@@ -1,5 +1,4 @@
-import { auth } from '@/lib/auth'
-import { headers } from 'next/headers'
+import { getSession } from '@/lib/get-session'
 import { redirect } from 'next/navigation'
 import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/ui/footer-section'
@@ -7,7 +6,7 @@ import { Footer } from '@/components/ui/footer-section'
 export const dynamic = 'force-dynamic'
 
 export default async function AccountLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth.api.getSession({ headers: await headers() })
+  const session = await getSession()
   if (!session?.user) redirect('/sign-in')
 
   return (

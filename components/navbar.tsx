@@ -8,6 +8,7 @@ import { authClient } from '@/lib/auth-client'
 import { cn } from '@/lib/utils'
 import { ProfileMenu } from '@/components/profile-menu'
 import { AppLogo } from '@/components/app-logo'
+import { NavBar } from '@/components/ui/tubelight-navbar'
 import { ADMIN_EMAIL } from '@/lib/admin'
 
 const NAV_LINKS = [
@@ -36,33 +37,22 @@ export function Navbar({ userName, userEmail }: { userName: string; userEmail: s
           last ~25% once the menu made the header much taller (Account
           settings / Sign out, at the bottom of the list). */}
       <nav
-        className="max-w-6xl mx-auto flex items-center justify-between px-4 h-16"
+        className="max-w-7xl mx-auto grid grid-cols-[1fr_auto_1fr] items-center px-6 h-16"
         style={{
           maskImage: 'linear-gradient(to bottom, black 75%, transparent 100%)',
           WebkitMaskImage: 'linear-gradient(to bottom, black 75%, transparent 100%)',
         }}
       >
-        <Link href="/dashboard" className="flex items-center gap-2.5 shrink-0">
+        <Link href="/dashboard" className="flex items-center gap-2.5 shrink-0 justify-self-start mr-6">
           <AppLogo className="h-9 w-auto" />
-          <div className="flex flex-col leading-tight">
-            <span className="text-lg font-bold tracking-tight">Shortlisted</span>
-            <span className="text-[11px] text-muted-foreground hidden sm:block">College Predictor: US, UK, AU, SG, HK, India, Germany & France</span>
-          </div>
+          <span className="text-lg font-bold tracking-tight">Shortlisted</span>
         </Link>
 
-        <div className="hidden lg:flex items-center gap-2">
-          {NAV_LINKS.map((link) => {
-            const Icon = link.icon
-            const active = pathname === link.href
-            return (
-              <Link key={link.href} href={link.href} className={cn('flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl transition-colors whitespace-nowrap shrink-0', active ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-muted')}>
-                <Icon className="w-4 h-4 shrink-0" /> {link.label}
-              </Link>
-            )
-          })}
+        <div className="hidden lg:block justify-self-center">
+          <NavBar items={NAV_LINKS.map((l) => ({ name: l.label, url: l.href, icon: l.icon }))} />
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 justify-self-end ml-6">
           {isAdmin && (
             <Link href="/admin" className={cn('hidden lg:flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl transition-colors whitespace-nowrap shrink-0', pathname === '/admin' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-muted')}>
               <ShieldCheck className="w-4 h-4 shrink-0" /> Admin
