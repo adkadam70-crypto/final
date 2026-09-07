@@ -19,6 +19,10 @@ export function ProfileStrengthCard({ hasProfile }: { hasProfile: boolean }) {
         setError('Set up your profile first.')
         return
       }
+      if ('error' in res) {
+        setError(res.message)
+        return
+      }
       setResult(res)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong.')

@@ -346,12 +346,32 @@ Assess every university in the list above and return one result per university, 
  */
 export async function runMatch(): Promise<
   | { needsProfile: true }
+  // Returned, never thrown — a thrown Error from this Server Action gets
+  // swallowed by the RSC boundary and shows to the user as an opaque
+  // "Minified React error #441" (see analyze-target-university.ts). The real
+  // cause is console.error'd server-side.
+  | { error: true; message: string }
   | { needsProfile?: false; gradeBadge: string; summary: string; results: MatchResult[] }
 > {
-  const userId = await getUserId()
-  const clientIp = await getClientIp()
-  await assertMatchRateLimit(userId, clientIp)
-  const profile = await getLatestProfile()
+  let userId: string
+  let clientIp: string
+  let profile: Awaited<ReturnType<typeof getLatestProfile>>
+  try {
+    userId = await getUserId()
+    clientIp = await getClientIp()
+    await assertMatchRateLimit(userId, clientIp)
+    profile = await getLatestProfile()
+  } catch (err) {
+    console.error('runMatch setup failed:', err)
+    const detail = err instanceof Error ? err.message : String(err)
+    const message =
+      err instanceof Error && err.message === 'Unauthorized'
+        ? 'Your session has expired — please sign in again.'
+        : detail.includes('limit') || detail.includes('Too many')
+          ? detail
+          : 'Something went wrong. Please refresh and try again.'
+    return { error: true, message }
+  }
   if (!profile || !profile.academicDetail || profile.targetCountries.length === 0) {
     return { needsProfile: true }
   }
@@ -598,10 +618,12 @@ export async function runMatch(): Promise<
 
     return { gradeBadge: badge, summary, results }
   } catch (err) {
-    if (err instanceof Error && err.message.startsWith('OpenAI request failed')) {
-      throw err
-    }
-    const message = err instanceof Error ? err.message : 'Match request failed'
-    throw new Error(`Match request failed: ${message}`)
+    // Return, don't throw — see the note on the return type above.
+    console.error('runMatch failed:', err)
+    const detail = err instanceof Error ? err.message : String(err)
+    const message = detail.startsWith('OpenAI request failed')
+      ? "We couldn't run your match right now — the AI service didn't respond. Please try again in a moment."
+      : 'Something went wrong running your match. Please try again in a moment.'
+    return { error: true, message }
   }
 }

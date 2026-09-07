@@ -106,6 +106,11 @@ export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }
         setPending(false)
         return
       }
+      if ('error' in res) {
+        setError(res.message)
+        setPending(false)
+        return
+      }
       pendingResultRef.current = res
       setFinishing(true)
     } catch (e) {
