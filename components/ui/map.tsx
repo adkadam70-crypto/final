@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import DottedMap from 'dotted-map'
+import proj4 from 'proj4'
 
 export interface WorldMapPoint {
   code: string
@@ -27,12 +28,67 @@ const DEFAULT_MARKER_COLOR = '#00ccab'
 // dotted-map's own getSVG output is natively a 0 0 198 100 viewBox — NOT the
 // 800x400 an earlier version's math assumed. That mismatch (background dots
 // in one coordinate space, marker overlay computed in a different,
-// unrelated one) is exactly why markers landed off their real country. Both
-// layers share this one native space, computed the same way dotted-map
-// itself projects lat/lng, so a marker always lands exactly on its dot
-// cluster.
-const NATIVE_W = 198
+// unrelated one) is exactly why markers landed off their real country.
+//
+// It gets worse: dotted-map doesn't even use simple linear lat/lng-to-pixel
+// scaling (equirectangular) — its default is a true Mercator projection
+// (`+proj=merc`) over a cropped region (lat -56..71, lng -168..168), per its
+// own source (node_modules/dotted-map/dist/index.mjs, getMap/PROJECTIONS).
+// A naive linear formula was therefore *systematically* wrong — worse the
+// further a country sits from the equator (exactly why India and Australia
+// were off — confirmed by comparing both formulas' output directly). Fixed
+// by running the identical proj4 projection + normalization dotted-map uses
+// internally, so a marker always lands exactly on its real dot cluster.
+const MERCATOR_PROJ4 = '+proj=merc +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m'
+const REGION = { lat: { min: -56, max: 71 }, lng: { min: -168, max: 168 } }
 const NATIVE_H = 100
+
+// Reproduces getMap()'s own bounding-box sampling (dist/index.mjs) — walks
+// the region's edges through the projection to find the true projected
+// min/max, since Mercator's Y axis isn't symmetric around the equator (the
+// region above isn't centered on lat 0, so this can't be shortcut to just
+// the four corners without risking drift if the region ever changes).
+function computeProjectedBounds() {
+  const SAMPLES = 100
+  let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity
+  for (let i = 0; i <= SAMPLES; i++) {
+    const frac = i / SAMPLES
+    const sampleLat = REGION.lat.min + frac * (REGION.lat.max - REGION.lat.min)
+    const sampleLng = REGION.lng.min + frac * (REGION.lng.max - REGION.lng.min)
+    const candidates: [number, number][] = [
+      [sampleLng, REGION.lat.min],
+      [sampleLng, REGION.lat.max],
+      [REGION.lng.min, sampleLat],
+      [REGION.lng.max, sampleLat],
+      [sampleLng, sampleLat],
+    ]
+    for (const point of candidates) {
+      const [px, py] = proj4(MERCATOR_PROJ4, point)
+      if (Number.isFinite(px) && Number.isFinite(py)) {
+        xMin = Math.min(xMin, px)
+        xMax = Math.max(xMax, px)
+        yMin = Math.min(yMin, py)
+        yMax = Math.max(yMax, py)
+      }
+    }
+  }
+  return { xMin, xMax, yMin, yMax }
+}
+
+const BOUNDS = computeProjectedBounds()
+const X_RANGE = BOUNDS.xMax - BOUNDS.xMin
+const Y_RANGE = BOUNDS.yMax - BOUNDS.yMin
+// Matches dotted-map's own width auto-derivation (getMap: width = height *
+// X_RANGE / Y_RANGE) — this must come out to 198 to match its real output;
+// verified directly against DottedMap({height:100}).getSVG()'s own viewBox.
+const NATIVE_W = Math.round(NATIVE_H * X_RANGE / Y_RANGE)
+
+function projectPoint(lat: number, lng: number) {
+  const [px, py] = proj4(MERCATOR_PROJ4, [lng, lat])
+  const x = ((px - BOUNDS.xMin) / X_RANGE) * NATIVE_W
+  const y = ((BOUNDS.yMax - py) / Y_RANGE) * NATIVE_H
+  return { x, y }
+}
 
 // Fixed zoom/center — deliberately NOT recalculated from whichever countries
 // are currently selected. An earlier version auto-fit/panned to whatever was
@@ -40,21 +96,20 @@ const NATIVE_H = 100
 // marker already on screen. Fixed instead: one static view, chosen so all 8
 // countries this app supports (US through AU, its widest real spread) are
 // always on-screen regardless of what's selected — markers never relocate.
-// Center is nudged up from true world-center (50) since the populated
-// landmass (all 8 countries sit between roughly 20-65 in native Y) reads as
-// better-centered a little above the equator than dead center, which leaves
-// a visibly empty band of ocean/Antarctica at the bottom.
-const FIXED_SCALE = 1.15
+const FIXED_SCALE = 1.08
 const FIXED_CENTER_X = NATIVE_W / 2
-const FIXED_CENTER_Y = 45
+const FIXED_CENTER_Y = NATIVE_H / 2
+// Additive horizontal pan (applied after the scale, in native units) — the
+// real Mercator-projected spread of these 8 countries runs from the US
+// (~x=41) to Australia (~x=178), whose midpoint (~109) sits right of true
+// world-center (99). Zooming around world-center alone left Australia
+// crammed against the right edge and a wide empty gap of ocean on the left;
+// shifting the pivot itself barely moved anything (its effect scales with
+// (FIXED_SCALE - 1), which is small) — this shifts the rendered content
+// directly instead.
+const PAN_X = -8
 
-function projectPoint(lat: number, lng: number) {
-  const x = (lng + 180) * (NATIVE_W / 360)
-  const y = (90 - lat) * (NATIVE_H / 180)
-  return { x, y }
-}
-
-const GROUP_TRANSFORM = `translate(${FIXED_CENTER_X} ${FIXED_CENTER_Y}) scale(${FIXED_SCALE}) translate(${-FIXED_CENTER_X} ${-FIXED_CENTER_Y})`
+const GROUP_TRANSFORM = `translate(${FIXED_CENTER_X + PAN_X} ${FIXED_CENTER_Y}) scale(${FIXED_SCALE}) translate(${-FIXED_CENTER_X} ${-FIXED_CENTER_Y})`
 
 export function WorldMap({ points = [], markerColor = DEFAULT_MARKER_COLOR }: WorldMapProps) {
   const map = useMemo(() => new DottedMap({ height: 100, grid: 'diagonal' }), [])
@@ -72,7 +127,7 @@ export function WorldMap({ points = [], markerColor = DEFAULT_MARKER_COLOR }: Wo
   const projected = useMemo(() => points.map((p) => ({ ...p, ...projectPoint(p.lat, p.lng) })), [points])
 
   return (
-    <div className="w-full aspect-[2.6/1] relative overflow-hidden rounded-2xl [mask-image:linear-gradient(to_bottom,transparent,white_14%,white_90%,transparent)]">
+    <div className="w-full aspect-[2.6/1] relative overflow-hidden rounded-2xl [mask-image:linear-gradient(to_bottom,transparent,white_6%,white_95%,transparent)]">
       <svg
         viewBox={`0 0 ${NATIVE_W} ${NATIVE_H}`}
         preserveAspectRatio="xMidYMid slice"
@@ -84,11 +139,11 @@ export function WorldMap({ points = [], markerColor = DEFAULT_MARKER_COLOR }: Wo
             transform, so they always stay in lockstep — a marker is a
             plain SVG circle here (not HTML/foreignObject), which scales
             correctly under this transform with no special-casing needed. */}
-        <g style={{ transform: GROUP_TRANSFORM }}>
+        <g transform={GROUP_TRANSFORM}>
           <g dangerouslySetInnerHTML={{ __html: dotsMarkup }} />
         </g>
 
-        <g style={{ transform: GROUP_TRANSFORM }}>
+        <g transform={GROUP_TRANSFORM}>
           <AnimatePresence>
             {projected.map((point) => (
               <g key={point.code}>
