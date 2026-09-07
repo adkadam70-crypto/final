@@ -10,8 +10,9 @@ import type { AcademicDetail } from '@/lib/academic-detail'
 // result as 12th, so gradeBadge() is accurate for them as-is.
 function formatEleventhGrade(detail: AcademicDetail): string {
   if (detail.curriculum === 'A_LEVELS') {
-    const grades = detail.subjects.map((s) => (s.grade === 'A*' ? 'A' : s.grade)).join('')
-    return `${detail.subjects.length} AS-Levels: ${grades}`
+    const subjects = Array.isArray(detail.subjects) ? detail.subjects : []
+    const grades = subjects.map((s) => (s.grade === 'A*' ? 'A' : s.grade)).join('')
+    return `${subjects.length} AS-Levels: ${grades}`
   }
   return gradeBadge(detail)
 }
@@ -126,21 +127,33 @@ function formatNinthTenthYear(label: string, curriculum: NinthTenthCurriculum, y
   return `${label}: ${value}${y.note ? ` (${y.note})` : ''}`.trim()
 }
 
-export function formatPriorGrades(p: PriorGrades): string {
-  const parts: string[] = []
+export function formatPriorGrades(p: PriorGrades | null | undefined): string {
+  // Some stored rows predate the current PriorGrades shape — a good number
+  // are an empty array, not an object — so this is defensive about every
+  // field access and never throws on a malformed blob (it feeds a prompt
+  // and a small UI line; "None provided" is the right fallback, not a crash).
+  try {
+    if (!p || typeof p !== 'object' || Array.isArray(p)) return 'None provided'
 
-  if (p.ninthTenth.curriculum) {
-    const g9 = formatNinthTenthYear('9th', p.ninthTenth.curriculum, p.ninthTenth.grade9)
-    const g10 = formatNinthTenthYear('10th', p.ninthTenth.curriculum, p.ninthTenth.grade10)
-    if (g9) parts.push(g9)
-    if (g10) parts.push(g10)
+    const parts: string[] = []
+    const ninthTenth = (p as PriorGrades).ninthTenth
+    const eleventh = (p as PriorGrades).eleventh
+
+    if (ninthTenth && typeof ninthTenth === 'object' && ninthTenth.curriculum) {
+      const g9 = formatNinthTenthYear('9th', ninthTenth.curriculum, ninthTenth.grade9 ?? {})
+      const g10 = formatNinthTenthYear('10th', ninthTenth.curriculum, ninthTenth.grade10 ?? {})
+      if (g9) parts.push(g9)
+      if (g10) parts.push(g10)
+    }
+
+    if (eleventh && typeof eleventh === 'object') {
+      parts.push(`11th: ${formatEleventhGrade(eleventh)}`)
+    }
+
+    return parts.length ? parts.join('; ') : 'None provided'
+  } catch {
+    return 'None provided'
   }
-
-  if (p.eleventh) {
-    parts.push(`11th: ${formatEleventhGrade(p.eleventh)}`)
-  }
-
-  return parts.length ? parts.join('; ') : 'None provided'
 }
 
 // Researched per country — see chat for sources (UCAS/GCSE coverage, US
