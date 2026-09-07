@@ -70,7 +70,12 @@ export function LiquidMetalButton({ label = 'Get Started', onClick, type = 'butt
             u_contour: 0,
             u_angle: 45,
             u_scale: 8,
-            u_shape: 1,
+            // shape 1 ("circle") uses fixed, aspect-ratio-independent UV math —
+            // on a wide pill button it renders squashed off to one side instead
+            // of wrapping the whole border. Shape 0 ("full-fill on canvas")
+            // hugs the actual rendered edge via v_responsiveUV, which adapts to
+            // any aspect ratio, so fullWidth buttons stay lit all the way across.
+            u_shape: fullWidth ? 0 : 1,
             u_offsetX: 0.1,
             u_offsetY: -0.1,
           },
