@@ -18,6 +18,8 @@ import {
   type NinthTenthCurriculum,
 } from '@/lib/prior-grades'
 import { HowWeAnalyze } from '@/components/how-we-analyze'
+import { WorldMap } from '@/components/ui/map'
+import { COUNTRY_COORDINATES } from '@/lib/country-coordinates'
 
 type Curriculum = 'CBSE' | 'IB_DIPLOMA' | 'A_LEVELS' | 'US_GPA_PCT'
 
@@ -292,14 +294,25 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
 
         <section className="bg-card border border-border rounded-3xl p-6">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-2"><Globe className="w-4 h-4 text-primary" /> Target countries</h2>
-          <p className="text-[11px] text-muted-foreground/70 mb-3">Select one or more — matches run across every country you pick.</p>
-          <div className="grid grid-cols-3 gap-2">
-            {COUNTRIES.map((c) => {
-              const active = targetCountries.includes(c.code)
-              return (
-                <button key={c.code} onClick={() => toggleCountry(c.code)} aria-pressed={active} className={`p-3 rounded-2xl text-xs font-medium transition-all border ${active ? 'bg-accent border-primary text-accent-foreground' : 'bg-secondary border-border text-muted-foreground hover:border-foreground/20'}`}>{c.label}</button>
-              )
-            })}
+          <p className="text-[11px] text-muted-foreground/70 mb-5">Select one or more — matches run across every country you pick.</p>
+          {/* One continuous box — the map sits "behind" (a slightly deeper
+              shade, no border of its own) and blends directly into the
+              country grid below it with no seam, rather than being a
+              separate boxed element crammed above the picker. */}
+          <div className="rounded-2xl border border-border overflow-hidden bg-secondary/30">
+            <div className="pt-3 px-3">
+              <WorldMap
+                points={targetCountries.flatMap((code) => (COUNTRY_COORDINATES[code] ? [{ code, ...COUNTRY_COORDINATES[code] }] : []))}
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-2 p-3">
+              {COUNTRIES.map((c) => {
+                const active = targetCountries.includes(c.code)
+                return (
+                  <button key={c.code} onClick={() => toggleCountry(c.code)} aria-pressed={active} className={`p-3 rounded-2xl text-xs font-medium transition-all border ${active ? 'bg-accent border-primary text-accent-foreground' : 'bg-secondary border-border text-muted-foreground hover:border-foreground/20'}`}>{c.label}</button>
+                )
+              })}
+            </div>
           </div>
           <Link href="/application-info" className="mt-4 flex items-center justify-between gap-2 p-3 bg-accent/40 border border-primary/25 rounded-2xl text-xs text-accent-foreground hover:bg-accent/60 transition-colors">
             <span>Want the specifics for your selected countries — how to apply, what to submit, what each one prioritizes?</span>
