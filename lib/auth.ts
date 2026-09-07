@@ -32,15 +32,12 @@ const SIGNUP_WINDOW_HOURS = 24
 // locking out real students on a shared connection.
 const SAME_IP_SIGNUP_ALERT_THRESHOLD = 5
 
-// Sender address for every transactional email. Resend's shared
-// onboarding@resend.dev ONLY delivers to the Resend account owner's own
-// inbox — which is why email verification silently failed for every other
-// user. Switch to 'Shortlisted <noreply@shortlisted.space>' the moment that
-// domain shows Verified in Resend (its SPF / DKIM / MX records are already
-// live: DKIM on resend._domainkey.shortlisted.space, bounce records on
-// send.shortlisted.space). Do NOT switch before it verifies — Resend
-// rejects every send from an unverified domain.
-const EMAIL_FROM = 'Shortlisted <onboarding@resend.dev>'
+// Sender address for every transactional email. shortlisted.space is a
+// verified sending domain in Resend (SPF on send.shortlisted.space, DKIM on
+// resend._domainkey.shortlisted.space, MX bounce record on
+// send.shortlisted.space) — unlike Resend's shared onboarding@resend.dev,
+// which only delivers to the Resend account owner's own inbox.
+const EMAIL_FROM = 'Shortlisted <noreply@shortlisted.space>'
 
 // How long a signup/sign-in verification OTP stays valid, in seconds.
 const EMAIL_OTP_EXPIRES_IN = 10 * 60
@@ -243,14 +240,12 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
-    // TEMPORARY STOPGAP (2026-09-07): set back to `true` the moment the
-    // shortlisted.space domain shows Verified in Resend. Until then, the OTP
-    // email only reaches the Resend account owner's own inbox, so hard-gating
-    // sign-up on verification blocks every other user. With this `false`, a
-    // session is issued at sign-up, the code is still sent (and still
-    // required for anyone who can receive it via the "Check your email"
-    // screen), but a user who never gets a code is not locked out.
-    requireEmailVerification: false,
+    // No session is issued until the email is verified (via the OTP flow in
+    // the emailOTP plugin above). An unverified sign-in attempt is rejected
+    // with EMAIL_NOT_VERIFIED and a fresh code is emailed (sendOnSignIn).
+    // Codes now send from the verified shortlisted.space domain, so this
+    // reaches every user, not just the Resend account owner.
+    requireEmailVerification: true,
     sendResetPassword: async ({ user, url }) => {
       await sendMail({
         to: user.email,
