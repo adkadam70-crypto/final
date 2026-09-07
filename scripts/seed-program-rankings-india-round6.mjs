@@ -1,24 +1,17 @@
-// Program-specific rankings for the India round-5 additions
-// (seed-universities-india-round5.mjs) — cross-referenced against the real
-// NIRF 2025 subject-category tables pulled from nirfindia.org, same
-// template/methodology as every earlier program-rankings pass.
+// Program-specific rankings for the India tranche-2 additions (commit
+// 0eeb385) — cross-referenced against the real NIRF 2025 category tables,
+// same template/methodology as every other program-rankings pass. Only
+// schools that carry a genuine NIRF category placement are here; the design,
+// media, performing-arts and comprehensive-university additions get their
+// standing from the overall NIRF Universities/College rank instead (NIRF has
+// no category for those disciplines).
 //
-// Only ranks <= 50 are carried: selectivityFromRank() maps an institutional
-// rank linearly to a 0-100 selectivity figure, which stays meaningful for
-// the top of a category but not the long tail (and it is context only — the
-// match/analysis prompt is explicit that a program-field rank never moves
-// acceptanceProbability). NIT Delhi (Engineering #65) is therefore left with
-// its acceptance-rate estimate but no programRankings row.
-//
-// Categories used and why each maps to the field it does:
-//   - Law -> 'Law'
-//   - Medical -> 'Medicine & Health Sciences'
-//   - Architecture and Planning -> 'Architecture & Design'
-//   - Engineering -> 'Engineering'
-//   - Management -> 'Business'
-//   - Research Institutions -> 'Science & Technology / Research' (ranks
-//     overall research output, not a single subject — same mapping choice as
-//     seed-program-rankings-india-round3.mjs)
+// Most of these rows were already seeded by an earlier India program pass
+// (shared DB); this script is idempotent — it skips a row that already
+// exists for the same (university, field, rankSource). Source strings here
+// match that earlier pass exactly (note "Architecture and Planning", not
+// "& Planning") so the skip works. The one row this pass actually added was
+// NIT Delhi in Engineering.
 //
 // Usage: node --env-file=.env.local scripts/seed-program-rankings-india-round6.mjs
 
@@ -45,16 +38,6 @@ const GROUPS = [
     ],
   },
   {
-    field: 'Medicine & Health Sciences',
-    source: 'NIRF (National Institutional Ranking Framework) 2025 — Medical category',
-    url: 'https://www.nirfindia.org/Rankings/2025/MedicalRanking.html',
-    entries: [
-      { name: 'Postgraduate Institute of Medical Education and Research, Chandigarh', rank: 2 },
-      { name: 'Jawaharlal Institute of Postgraduate Medical Education and Research', rank: 4 },
-      { name: 'National Institute of Mental Health and Neurosciences', rank: 7 },
-    ],
-  },
-  {
     field: 'Architecture & Design',
     source: 'NIRF (National Institutional Ranking Framework) 2025 — Architecture and Planning category',
     url: 'https://www.nirfindia.org/Rankings/2025/ArchitectureRanking.html',
@@ -73,6 +56,7 @@ const GROUPS = [
       { name: 'Indian Institute of Technology Jodhpur', rank: 27 },
       { name: 'Indian Institute of Technology Ropar', rank: 32 },
       { name: 'National Institute of Technology Silchar', rank: 50 },
+      { name: 'National Institute of Technology Delhi', rank: 65 },
     ],
   },
   {
@@ -81,16 +65,16 @@ const GROUPS = [
     url: 'https://www.nirfindia.org/Rankings/2025/ManagementRanking.html',
     entries: [
       { name: 'Indian Institute of Management Indore', rank: 8 },
-      { name: 'MICA', rank: 33 },
     ],
   },
   {
-    field: 'Science & Technology / Research',
-    source: 'NIRF (National Institutional Ranking Framework) 2025 — Research Institutions category',
-    url: 'https://www.nirfindia.org/Rankings/2025/ResearchRanking.html',
+    field: 'Medicine & Health Sciences',
+    source: 'NIRF (National Institutional Ranking Framework) 2025 — Medical category',
+    url: 'https://www.nirfindia.org/Rankings/2025/MedicalRanking.html',
     entries: [
-      { name: 'Indian Institute of Science Education and Research Pune', rank: 35 },
-      { name: 'Indian Institute of Science Education and Research Kolkata', rank: 46 },
+      { name: 'Postgraduate Institute of Medical Education and Research, Chandigarh', rank: 2 },
+      { name: 'Jawaharlal Institute of Postgraduate Medical Education and Research', rank: 4 },
+      { name: 'National Institute of Mental Health and Neurosciences', rank: 7 },
     ],
   },
 ]
@@ -121,5 +105,5 @@ for (const group of GROUPS) {
   }
 }
 
-console.log(`Inserted ${totalInserted} program-ranking rows (India round 6).`)
+console.log(`Inserted ${totalInserted} program-ranking rows.`)
 if (totalSkipped.length) console.log(`Could not match (not in catalog): ${totalSkipped.join(', ')}`)
