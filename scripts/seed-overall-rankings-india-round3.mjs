@@ -20,9 +20,12 @@ const ENTRIES = [
   { name: 'Hansraj College', rank: 3 },
   { name: 'Kirori Mal College', rank: 4 },
   { name: "St. Stephen's College, Delhi", rank: 5 },
+  { name: "St. Xavier's College, Kolkata", rank: 8 },
   { name: 'Loyola College, Chennai', rank: 14 },
+  { name: 'Madras Christian College', rank: 16 },
   { name: 'Lady Shri Ram College for Women', rank: 17 },
   { name: 'Shri Ram College of Commerce', rank: 18 },
+  { name: 'Stella Maris College', rank: 41 },
   { name: 'Fergusson College, Pune', rank: 57 },
 ]
 

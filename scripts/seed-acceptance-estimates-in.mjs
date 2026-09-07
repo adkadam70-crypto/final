@@ -105,6 +105,47 @@ const EXACT = {
   'Hansraj College': [8, `Estimated ~8% — high CUET cut-offs across Commerce and the sciences at one of Delhi University's largest colleges. ${D}`],
   'Kirori Mal College': [10, `Estimated ~10% — a well-regarded Delhi University college with competitive CUET cut-offs. ${D}`],
   'University of Delhi': [12, `Estimated ~12% — Delhi University admits centrally on CUET score; the flagship colleges need near-99th-percentile scores, mid-tier colleges around the 95th. This is a university-wide average. ${D}`],
+
+  // --- Round 5 additions ---
+  // National Law Universities — CLAT (or AILET for NLU Delhi); ~60,000
+  // candidates for ~3,200 NLU seats nationally (~5% collective), the top NLUs
+  // fill from the highest ranks.
+  'National Law School of India University': [1, `Estimated ~1% — ~180 seats filled from the very top of the CLAT merit list (~60,000 candidates for ~3,200 NLU seats nationally); NLSIU takes the highest ranks. ${D}`],
+  'National Law University Delhi': [1, `Estimated ~1% — admits ~120 through its own AILET exam (25,000+ candidates); among the most competitive law admissions in India. ${D}`],
+  'NALSAR University of Law': [2, `Estimated ~2% — ~120 seats filled from the top of the CLAT merit list. ${D}`],
+  'The West Bengal National University of Juridical Sciences': [3, `Estimated ~3% — CLAT rank; eastern India's leading national law university. ${D}`],
+  'Gujarat National Law University': [3, `Estimated ~3% — CLAT rank; a consistent top-five national law university. ${D}`],
+  'National Law University Odisha': [5, `Estimated ~5% — CLAT rank; a mid-tier NLU where a rank of a few thousand can still secure a seat. ${D}`],
+  // IISERs — IISER Aptitude Test (IAT); ~45,000 sit it for ~2,000 seats
+  // across all IISERs.
+  'Indian Institute of Science Education and Research Pune': [3, `Estimated ~3% — its 5-year BS-MS admits via the IISER Aptitude Test (IAT); ~45,000 sit the IAT for ~2,000 seats across all IISERs, and Pune fills from the top. ${D}`],
+  'Indian Institute of Science Education and Research Kolkata': [4, `Estimated ~4% — IAT-based admission to the research-focused 5-year BS-MS. ${D}`],
+  'Indian Institute of Science Education and Research Mohali': [4, `Estimated ~4% — IAT-based admission to the research-focused 5-year BS-MS. ${D}`],
+  // Medicine — NEET-UG; very small MBBS intakes at institutes of national
+  // importance.
+  'Jawaharlal Institute of Postgraduate Medical Education and Research': [1, `Estimated ~1% — a very small MBBS intake filled entirely on NEET-UG all-India rank; among the two or three most competitive medical admissions in India. ${D}`],
+  'Postgraduate Institute of Medical Education and Research, Chandigarh': [2, `Estimated ~2% — limited MBBS seats on NEET-UG rank at one of India's top medical-research institutes. ${D}`],
+  'National Institute of Mental Health and Neurosciences': [3, `Estimated ~3% — small, highly sought cohorts across medicine, psychology and nursing, admitted on NEET-UG rank or the institute's own entrance test. ${D}`],
+  'Armed Forces Medical College, Pune': [2, `Estimated ~2% — ~150 MBBS seats via NEET-UG rank plus a Toppers' interview and a medical test, against a very large qualified pool; comes with a service commitment. ${D}`],
+  // Design — NIFT entrance / own aptitude test + studio round.
+  'National Institute of Fashion Technology, New Delhi': [15, `Estimated ~15% — admission via the NIFT entrance (a creative-ability and general-ability test) plus a situation test; the Delhi campus is the most competitive. ${D}`],
+  'Srishti Manipal Institute of Art, Design and Technology': [45, `Estimated ~45% — a large private design institute admitting on its own aptitude test and portfolio review; broad intake. ${D}`],
+  'MIT Institute of Design': [50, `Estimated ~50% — a private design school admitting on its own aptitude test and portfolio review. ${D}`],
+  // Architecture — JEE Main Paper 2 / NATA + own assessment.
+  'School of Planning and Architecture, Delhi': [3, `Estimated ~3% — B.Arch admission on JEE Main Paper 2 rank at India's only dedicated planning-and-architecture institute of national importance; a very small intake. ${D}`],
+  'CEPT University': [25, `Estimated ~25% — admits on JEE Main Paper 2 / NATA plus its own assessment; selective but with a larger intake than SPA. ${D}`],
+  // Arts / humanities colleges — Class-12 merit with course-specific cut-offs.
+  "St. Xavier's College, Kolkata": [12, `Estimated ~12% — admission on Class-12 aggregate with course cut-offs among the highest in eastern India (often 90%+ for the strongest honours courses). ${D}`],
+  'Madras Christian College': [20, `Estimated ~20% — admission on Class-12 merit with course-specific cut-offs; community and management quotas apply. ${D}`],
+  'Stella Maris College': [18, `Estimated ~18% — a sought-after women's college admitting on Class-12 merit with high course cut-offs. ${D}`],
+  // Media / film / performing arts — competitive creative concours.
+  'Film and Television Institute of India': [1, `Estimated ~1% — a national written test plus an orientation round and interview, for cohorts of a handful per specialisation against thousands of applicants. ${D}`],
+  'Indian Institute of Mass Communication': [5, `Estimated ~5% — admission via the CUET (PG) journalism paper; small cohorts at a sought-after government institute. ${D}`],
+  'MICA': [15, `Estimated ~15% — its own multi-stage process (an aptitude test plus a psychometric test, group exercise and interview). ${D}`],
+  'National School of Drama': [1, `Estimated ~1% — a nationwide audition-and-workshop selection admitting roughly two dozen students a year. ${D}`],
+  'Kalakshetra Foundation': [30, `Estimated ~30% — admission by audition and interview; prior training in the art form is expected. ${D}`],
+  // Management — 5-year Integrated Programme in Management via IPMAT.
+  'Indian Institute of Management Indore': [2, `Estimated ~2% — its 5-year Integrated Programme in Management admits via the IPMAT exam; the shortlist-to-seat ratio is comparable to the ~1-2% at IIM Ahmedabad/Bangalore for the integrated route. ${D}`],
 }
 
 // Keyword-based estimate by institution type — only where the exam→seat
