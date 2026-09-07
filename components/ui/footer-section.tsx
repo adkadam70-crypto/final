@@ -40,9 +40,9 @@ const footerLinks: FooterSection[] = [
   {
     label: 'Company',
     links: [
-      { title: 'Why we built Shortlisted', href: '#why-shortlisted' },
+      { title: 'Why we built Shortlisted', href: '/about' },
       { title: 'Terms of Service & Privacy', href: '/terms' },
-      { title: 'FAQs', href: '#faqs' },
+      { title: 'FAQs', href: '/faqs' },
       { title: 'Contact', href: 'mailto:adkadam70@gmail.com' },
     ],
   },
