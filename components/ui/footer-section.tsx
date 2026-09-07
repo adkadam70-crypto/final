@@ -57,7 +57,7 @@ const footerLinks: FooterSection[] = [
   },
   {
     label: 'Social',
-    links: [{ title: 'Instagram', href: 'https://instagram.com/shortlisted', icon: InstagramIcon }],
+    links: [{ title: 'Instagram', href: 'https://www.instagram.com/shortlisted.__?stkn=MXNnMnJyYzR1eGExbw%3D%3D&utm_source=qr', icon: InstagramIcon }],
   },
 ]
 
