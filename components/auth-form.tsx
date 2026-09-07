@@ -75,7 +75,7 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
     const fetchOptions = { headers: { 'x-captcha-response': captchaToken } }
 
     if (isSignUp) {
-      const { error } = await authClient.signUp.email({ email, password, name, fetchOptions })
+      const { data, error } = await authClient.signUp.email({ email, password, name, fetchOptions })
       setLoading(false)
       if (error) {
         setError(error.message ?? 'Something went wrong')
@@ -83,7 +83,13 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
         setCaptchaKey((k) => k + 1)
         return
       }
-      // requireEmailVerification is on — sign-up never returns a session.
+      // When email verification is enforced server-side, sign-up returns no
+      // session (data.token is null) and the next step is the emailed code.
+      // When it isn't enforced, a session is issued straight away — go in.
+      if (data?.token) {
+        window.location.href = '/dashboard'
+        return
+      }
       goToOtpStep(`We sent a 6-digit code to ${email}. Enter it below to finish creating your account.`)
       return
     }
