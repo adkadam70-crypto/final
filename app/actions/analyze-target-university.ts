@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db'
 import { universities, universityAnalyses, programRankings, type MatchResult, type EarlyAdmissionInfo, type AcceptanceRateInfo } from '@/lib/db/schema'
-import { and, eq, desc } from 'drizzle-orm'
+import { and, eq, desc, asc } from 'drizzle-orm'
 import { getUserId } from '@/lib/get-user-id'
 import { getLatestProfile } from '@/app/actions/profile'
 import { gradeBadge, gradeTier } from '@/lib/grade'
@@ -241,7 +241,11 @@ export async function analyzeTargetUniversity(universityName: string): Promise<T
           ? (await db
               .select()
               .from(programRankings)
-              .where(and(eq(programRankings.universityId, matched.id), eq(programRankings.field, profile.intendedField))))[0]
+              .where(and(eq(programRankings.universityId, matched.id), eq(programRankings.field, profile.intendedField)))
+              // One row per (university, field) after
+              // scripts/dedupe-program-rankings.mjs; order deterministically
+              // anyway so a stray future duplicate can't flip the result.
+              .orderBy(desc(programRankings.programSelectivity), asc(programRankings.id)))[0]
           : undefined
 
       const admissionGrounding =

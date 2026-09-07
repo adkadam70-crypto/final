@@ -1,3 +1,10 @@
+// SUPERSEDED — re-verified against the paid US News Engineering list by
+// seed-program-rankings-us-engineering.mjs (+ -round2), which write a
+// "(verified directly via subscriber account)" source. The rows this file
+// created were removed by scripts/dedupe-program-rankings.mjs. Re-running is
+// a safe no-op (the (universityId, field) guard finds the verified row and
+// skips).
+//
 // Third real per-program ranking pass: Engineering (doctorate-granting track
 // — the large-research-university category; the separate "no doctorate"
 // US News track for undergrad-only engineering colleges like Harvey Mudd is

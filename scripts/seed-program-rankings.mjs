@@ -1,3 +1,11 @@
+// SUPERSEDED — the Business rows this seeds were re-verified against the
+// paid US News list by seed-program-rankings-us-business.mjs (+ -round2),
+// which write a "(verified directly via subscriber account)" source. The
+// early rows this file created were removed by
+// scripts/dedupe-program-rankings.mjs. Re-running is now a safe no-op (the
+// (universityId, field) guard below finds the verified row and skips), but
+// prefer the -us-business passes for any new work.
+//
 // First real per-program ranking data pass. Scope, deliberately: only
 // entries directly quoted from a numbered ranking list I could actually
 // verify — not search-tool summaries or synthesized "top 10-12" ranges.

@@ -10,7 +10,7 @@ import {
 } from '@/lib/db/schema'
 import type { AcademicField } from '@/lib/academic-detail'
 import { resolveAcceptanceRate, acceptanceRateForPrompt } from '@/lib/acceptance-rate'
-import { inArray, and, eq, desc } from 'drizzle-orm'
+import { inArray, and, eq, desc, asc } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { gradeTier, gradeBadge } from '@/lib/grade'
@@ -396,7 +396,13 @@ export async function runMatch(): Promise<
             eq(programRankings.field, profile.intendedField),
           ),
         )
+        // scripts/dedupe-program-rankings.mjs keeps one row per (university,
+        // field), but order deterministically as a safety net so a stray
+        // future duplicate can't make the shown rank flip run to run — the
+        // strongest (most selective) placement wins.
+        .orderBy(desc(programRankings.programSelectivity), asc(programRankings.id))
       for (const row of rankRows) {
+        if (programRankByUniversityId.has(row.universityId)) continue
         programRankByUniversityId.set(row.universityId, {
           rankValue: row.rankValue,
           rankSource: row.rankSource,
