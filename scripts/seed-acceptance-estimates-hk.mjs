@@ -41,14 +41,23 @@ const EST = {
   'Hong Kong Chu Hai College': 68,
   'Saint Francis University': 70,
   'Tung Wah College': 68,
+  // tranche 4
+  'The Hong Kong Academy for Performing Arts': 20,
+  'Technological and Higher Education Institute of Hong Kong': 55,
 }
+
+// HKAPA admits by audition/portfolio with a small intake per discipline —
+// not the JUPAS band-matching that the standard note describes.
+const AUDITION_NAMES = new Set(['The Hong Kong Academy for Performing Arts'])
 
 const rows = await sql`SELECT id, name, "actualAcceptanceRate" FROM universities WHERE country = 'HK'`
 let n = 0
 for (const r of rows) {
   if (r.actualAcceptanceRate != null) continue
   const rate = EST[r.name] ?? 55
-  const note = `Estimated ~${rate}% — blended JUPAS + non-JUPAS intake. ${D}`
+  const note = AUDITION_NAMES.has(r.name)
+    ? `Estimated ~${rate}% — a performing-arts academy; admission is by audition or portfolio with a small intake per discipline, not JUPAS band matching. ${D}`
+    : `Estimated ~${rate}% — blended JUPAS + non-JUPAS intake. ${D}`
   await sql`UPDATE universities SET "estimatedAcceptanceRate" = ${rate}, "acceptanceRateNote" = ${note}, "baselineSelectivity" = ${100 - rate} WHERE id = ${r.id}`
   n++
 }

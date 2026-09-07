@@ -35,6 +35,10 @@ const EST = {
   'PSB Academy': [80, 'a private institution delivering foreign-partner degrees; broad-access admission.'],
   'Singapore Institute of Management': [78, 'a private institution delivering foreign-partner degrees; broad-access admission.'],
   'University of the Arts Singapore': [45, 'an arts university (NAFA + LASALLE); admission is largely portfolio- or audition-based.'],
+  // tranche 4
+  'Curtin Singapore': [70, 'the Singapore campus of Curtin University (Australia); broad-access admission on the Perth curriculum.'],
+  'Kaplan Higher Education Academy': [80, 'a large private provider delivering foreign-partner degrees; broad-access admission with diploma pathways.'],
+  'Management Development Institute of Singapore': [80, 'a not-for-profit private institute delivering foreign-partner degrees; broad-access admission with diploma pathways.'],
 }
 
 const rows = await sql`SELECT id, name, "actualAcceptanceRate" FROM universities WHERE country = 'SG'`

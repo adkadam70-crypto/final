@@ -35,6 +35,13 @@ const D = "A research estimate — Australian universities admit against a publi
 const VTAC_SRC = 'VTAC domestic first-preference offer rate (offers ÷ first-preference applications), published by the Victorian Tertiary Admissions Centre. Counts applicants who ranked this university first; an offer is the admission.'
 const VTAC_NAMES = new Set(['University of Melbourne', 'Monash University'])
 
+// Specialist creative schools (tranche 4) admit by audition/folio with a
+// tiny intake — nothing like an ATAR cut-off, so they get a bespoke note.
+const AUDITION_NAMES = new Set([
+  'National Institute of Dramatic Art',
+  'Australian Film Television and Radio School',
+])
+
 const EST = {
   'University of Melbourne': 71,
   'Monash University': 71,
@@ -62,6 +69,11 @@ const EST = {
   'James Cook University': 88,
   'Bond University': 75,
   'University of Notre Dame Australia': 82,
+  // tranche 4
+  'University of Divinity': 85,
+  'Avondale University': 80,
+  'National Institute of Dramatic Art': 4,
+  'Australian Film Television and Radio School': 10,
 }
 
 const rows = await sql`SELECT id, name, "rankValue", "actualAcceptanceRate", "acceptanceRateSource" FROM universities WHERE country = 'AU'`
@@ -81,7 +93,9 @@ for (const r of rows) {
       WHERE id = ${r.id}`
     real++
   } else {
-    const note = `Estimated ~${rate}% — band estimate for a university at this tier. ${D}`
+    const note = AUDITION_NAMES.has(r.name)
+      ? `Estimated ~${rate}% — a specialist creative school; admission is by audition or folio with a very small intake per discipline. Derived from published audition-to-place ratios. A research estimate, not a figure certified by the school.`
+      : `Estimated ~${rate}% — band estimate for a university at this tier. ${D}`
     await sql`UPDATE universities SET
       "estimatedAcceptanceRate" = ${rate}, "acceptanceRateNote" = ${note},
       "actualAcceptanceRate" = NULL, "acceptanceRateSource" = NULL,
