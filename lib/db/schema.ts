@@ -24,8 +24,8 @@ export const universities = pgTable('universities', {
   academicFields: jsonb('academicFields').$type<AcademicField[]>().notNull().default([]),
   rankSource: text('rankSource'), // e.g. 'QS World University Rankings 2026' — nullable, curated (unverified) rows have no source yet
   rankValue: integer('rankValue'), // the cited rank number from rankSource — nullable
-  actualAcceptanceRate: integer('actualAcceptanceRate'), // 0-100, real published overall admit rate — nullable
-  acceptanceRateSource: text('acceptanceRateSource'), // e.g. 'U.S. Dept of Education College Scorecard' — nullable. When set, baselineSelectivity above was derived FROM this real rate (100 - rate), not curated/estimated — the two are not independent facts.
+  actualAcceptanceRate: integer('actualAcceptanceRate'), // 0-100, a REAL published selectivity figure — nullable. Usually a US-style admit rate (admits ÷ applicants), but also a nationally-published offer rate where that is the standard measure and means the same thing for the applicant (a UCAS provider offer rate, a VTAC first-preference offer rate) — an offer IS the admission; enrolling is the applicant's choice. acceptanceRateSource names which. NOT for our own inferred numbers — those go in estimatedAcceptanceRate.
+  acceptanceRateSource: text('acceptanceRateSource'), // e.g. 'U.S. Dept of Education College Scorecard' or 'UCAS 2024 end-of-cycle offer rate ...' — nullable. When set, baselineSelectivity above was derived FROM this real rate (100 - rate), not curated/estimated — the two are not independent facts. The string states what kind of figure it is (admit rate vs offer rate) so the UI and AI label it correctly.
   // Our own researched estimate of the overall undergrad acceptance rate, set
   // ONLY when actualAcceptanceRate is null AND credible data supported an
   // estimate (>=2 independent sources within tolerance, direct applicant/admit

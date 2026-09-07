@@ -1,3 +1,9 @@
+// SUPERSEDED — re-verified against the paid US News CS list by
+// seed-program-rankings-us-cs.mjs (+ -round2), which write a "(verified
+// directly via subscriber account)" source. The rows this file created were
+// removed by scripts/dedupe-program-rankings.mjs. Re-running is a safe no-op
+// (the (universityId, field) guard finds the verified row and skips).
+//
 // Second real per-program ranking pass: Computer Science & IT.
 // Source: U.S. News & World Report's Best Undergraduate Computer Science
 // Programs (peer-assessment survey of CS department chairs/faculty) — this

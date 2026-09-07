@@ -170,6 +170,15 @@ for (const group of GROUPS) {
     const existing = await sql`SELECT id FROM "programRankings" WHERE "universityId" = ${universityId} AND field = ${group.field} AND "rankSource" = ${group.source}`
     if (existing.length > 0) continue
 
+    // A generic "Medicine & Health Sciences" badge should reflect the general
+    // NIRF Medical ranking, not a Dental/Pharmacy sub-ranking — so don't add
+    // one for a school that already has a Medical-category row (see
+    // scripts/dedupe-program-rankings.mjs).
+    if (group.field === 'Medicine & Health Sciences' && /Dental|Pharmacy/.test(group.source)) {
+      const hasMedical = await sql`SELECT id FROM "programRankings" WHERE "universityId" = ${universityId} AND field = ${group.field} AND "rankSource" LIKE '%Medical category'`
+      if (hasMedical.length > 0) continue
+    }
+
     await sql`
       INSERT INTO "programRankings" ("universityId", field, "rankValue", "rankSource", "rankSourceUrl", "programSelectivity", notes)
       VALUES (

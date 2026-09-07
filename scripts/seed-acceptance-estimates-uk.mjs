@@ -4,28 +4,29 @@
 // The UK has a genuinely usable measure: the UCAS "offer rate" (offers ÷
 // applications), published per provider by UCAS (the official national
 // admissions body) in its end-of-cycle data. It is the standard UK number
-// and the closest equivalent to a US acceptance rate — so every UK row gets
-// an ESTIMATE here, none is Tier 5.
+// and — for a student asking "will they let me in?" — the same thing as a
+// US acceptance rate: a UCAS offer IS the admission; enrolling is the
+// applicant's choice, not the university's.
 //
-//   - 24 Russell Group universities + St Andrews, Loughborough, Bath and a
-//     few post-92s: the exact UCAS 2024 offer rate (or the widely-reported
-//     figure). Source: UCAS 2024 end-of-cycle provider data, as compiled by
-//     The Tab / Save the Student / university admissions pages.
+//   - ~30 Russell Group universities + St Andrews, Loughborough, Bath and a
+//     few post-92s where UCAS publishes an exact provider offer rate: this
+//     is a REAL published figure, so it goes in actualAcceptanceRate +
+//     acceptanceRateSource, exactly like a US College Scorecard rate. It is
+//     NOT flagged as our estimate, because it isn't one.
 //   - Everything else: estimated from the UCAS offer-rate pattern by tariff
 //     band — high-tariff non-RG ~55-70%, mid ~70-85%, post-92 ~85-93%,
-//     lowest-tariff ~90-96%. The note says it is a band estimate.
+//     lowest-tariff ~90-96%. Here the *number* is genuinely our inference,
+//     so it stays in estimatedAcceptanceRate + a note that says so.
 //
 // The offer rate is used rather than the "enrolled ÷ applications" figure
 // some aggregators quote (e.g. "LSE 7%") — that one is dragged down by yield
 // and by application volume and is not comparable across universities.
 //
-// Handled exactly like every other country's estimate and like a US
-// actualAcceptanceRate: estimatedAcceptanceRate is set and baselineSelectivity
-// is realigned to (100 - estimate). The match/analysis AI then anchors
-// acceptanceProbability on it and adjusts proportionately for the student's
-// grades, tests and (heavily, for the UK) demonstrated subject fit — the
-// UK country context already tells it to weight academics ~85%. Never
-// touches a row with a real actualAcceptanceRate.
+// Either way baselineSelectivity is realigned to (100 - rate). The
+// match/analysis AI then anchors acceptanceProbability on it and adjusts for
+// the student's grades and (heavily, for the UK) demonstrated subject fit —
+// citing an exact figure with full confidence and an estimate as an
+// estimate. Never touches a row that already has a real actualAcceptanceRate.
 //
 // Usage: node --env-file=.env.local scripts/seed-acceptance-estimates-uk.mjs
 
@@ -33,10 +34,11 @@ import { neon } from '@neondatabase/serverless'
 
 const sql = neon(process.env.DATABASE_URL)
 
-const SRC = 'UCAS 2024 end-of-cycle offer rate (offers ÷ applications) — the standard UK admissions measure, published per provider by UCAS.'
+const SRC = 'UCAS 2024 end-of-cycle offer rate (offers ÷ applications) — the standard UK admissions measure, published per provider by UCAS. An offer is the admission; whether the student enrols is their choice.'
 const D = 'A research estimate, not a figure certified by the university.'
 
-// Exact / well-reported UCAS 2024 offer rates.
+// Exact UCAS 2024 provider offer rates — real published figures, written to
+// actualAcceptanceRate + acceptanceRateSource (SRC), not treated as estimates.
 const EXACT = {
   'University of Oxford': 20, 'London School of Economics': 21, 'University of Cambridge': 25,
   'Imperial College London': 33, 'University College London': 35, 'University of Edinburgh': 44,
@@ -49,7 +51,6 @@ const EXACT = {
   'University of St Andrews': 27, 'Loughborough University': 72, 'University of Bath': 62,
   'Northumbria University': 91, 'Nottingham Trent University': 91, 'Coventry University': 88,
 }
-const EXACT_NOTE = (r) => `Estimated ~${r}% — ${SRC} ${D}`
 
 // Band estimate for everything else, chosen from the row's own rank.
 function bandFor(rank, name) {
@@ -76,14 +77,31 @@ function bandFor(rank, name) {
   return [92, `Estimated ~92% — a lower-tariff UK university; band estimate from the UCAS 2024 offer-rate pattern for comparably ranked providers. ${D}`]
 }
 
-const rows = await sql`SELECT id, name, "rankValue", "actualAcceptanceRate" FROM universities WHERE country = 'UK'`
-let n = 0
+const rows = await sql`SELECT id, name, "rankValue", "actualAcceptanceRate", "acceptanceRateSource" FROM universities WHERE country = 'UK'`
+let real = 0
+let estimated = 0
 for (const r of rows) {
-  if (r.actualAcceptanceRate != null) continue
-  let rate, note
-  if (EXACT[r.name] != null) { rate = EXACT[r.name]; note = EXACT_NOTE(rate) }
-  else { [rate, note] = bandFor(r.rankValue, r.name) }
-  await sql`UPDATE universities SET "estimatedAcceptanceRate" = ${rate}, "acceptanceRateNote" = ${note}, "baselineSelectivity" = ${100 - rate} WHERE id = ${r.id}`
-  n++
+  // Skip a row that carries a real published rate from another source (e.g.
+  // a US-style Scorecard figure) — but DO refresh a row we ourselves
+  // promoted with the UCAS SRC, so the exact figures stay editable here.
+  if (r.actualAcceptanceRate != null && r.acceptanceRateSource !== SRC) continue
+
+  if (EXACT[r.name] != null) {
+    const rate = EXACT[r.name]
+    await sql`UPDATE universities SET
+      "actualAcceptanceRate" = ${rate}, "acceptanceRateSource" = ${SRC},
+      "estimatedAcceptanceRate" = NULL, "acceptanceRateNote" = NULL,
+      "baselineSelectivity" = ${100 - rate}
+      WHERE id = ${r.id}`
+    real++
+  } else {
+    const [rate, note] = bandFor(r.rankValue, r.name)
+    await sql`UPDATE universities SET
+      "estimatedAcceptanceRate" = ${rate}, "acceptanceRateNote" = ${note},
+      "actualAcceptanceRate" = NULL, "acceptanceRateSource" = NULL,
+      "baselineSelectivity" = ${100 - rate}
+      WHERE id = ${r.id}`
+    estimated++
+  }
 }
-console.log(`UK: set estimated acceptance rate for ${n} universities.`)
+console.log(`UK: ${real} real UCAS offer rates, ${estimated} band estimates.`)

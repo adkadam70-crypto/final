@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db'
 import { universities, universityAnalyses, programRankings, type MatchResult, type EarlyAdmissionInfo, type AcceptanceRateInfo } from '@/lib/db/schema'
-import { and, eq, desc } from 'drizzle-orm'
+import { and, eq, desc, asc } from 'drizzle-orm'
 import { getUserId } from '@/lib/get-user-id'
 import { getLatestProfile } from '@/app/actions/profile'
 import { gradeBadge, gradeTier } from '@/lib/grade'
@@ -140,10 +140,30 @@ export type TargetAnalysisOutcome =
   | { needsProfile: true }
   | { notInCatalog: true; universityName: string }
   | { rateLimited: true; message: string }
+  // Any other failure (the AI call erroring, a DB blip). Returned, never
+  // thrown — a thrown Error from this Server Action gets swallowed by the
+  // RSC boundary and surfaces to the user as an opaque "Minified React
+  // error #441" instead of anything useful (see commit d1916a2). The real
+  // cause is console.error'd server-side.
+  | { error: true; message: string }
 
 export async function analyzeTargetUniversity(universityName: string): Promise<TargetAnalysisOutcome> {
-  const userId = await getUserId()
-  const clientIp = await getClientIp()
+  let userId: string
+  let clientIp: string
+  try {
+    userId = await getUserId()
+    clientIp = await getClientIp()
+  } catch (err) {
+    // A session/DB blip here would otherwise throw across the RSC boundary
+    // and show as "Minified React error #441". A genuine auth failure means
+    // the user should re-sign-in; either way, a plain message beats #441.
+    console.error('analyzeTargetUniversity auth/setup failed:', err)
+    const message =
+      err instanceof Error && err.message === 'Unauthorized'
+        ? 'Your session has expired — please sign in again.'
+        : 'Something went wrong. Please refresh and try again.'
+    return { error: true, message }
+  }
   // Rate-limit rejections are an expected, common outcome (not a bug), so
   // this returns a normal result instead of throwing — a thrown Error here
   // was hitting the same class of "non-serializable value crossing the
@@ -155,20 +175,26 @@ export async function analyzeTargetUniversity(universityName: string): Promise<T
   } catch (err) {
     return { rateLimited: true, message: err instanceof Error ? err.message : 'Rate limit exceeded — please try again later.' }
   }
-  const profile = await getLatestProfile()
+  let profile: Awaited<ReturnType<typeof getLatestProfile>>
+  try {
+    profile = await getLatestProfile()
+  } catch (err) {
+    console.error('analyzeTargetUniversity getLatestProfile failed:', err)
+    return { error: true, message: 'Something went wrong loading your profile. Please try again in a moment.' }
+  }
   if (!profile || !profile.academicDetail) {
     return { needsProfile: true }
   }
 
   const trimmed = universityName.trim()
   if (!trimmed) {
-    throw new Error('Enter a university name')
+    return { error: true, message: 'Enter a university name.' }
   }
   // No real school name is anywhere near this long — flows straight into
   // the AI prompt, so an unbounded string here is a cost vector, not a
   // real search query.
   if (trimmed.length > 200) {
-    throw new Error('That university name is too long.')
+    return { error: true, message: 'That university name is too long.' }
   }
 
   try {
@@ -241,7 +267,11 @@ export async function analyzeTargetUniversity(universityName: string): Promise<T
           ? (await db
               .select()
               .from(programRankings)
-              .where(and(eq(programRankings.universityId, matched.id), eq(programRankings.field, profile.intendedField))))[0]
+              .where(and(eq(programRankings.universityId, matched.id), eq(programRankings.field, profile.intendedField)))
+              // One row per (university, field) after
+              // scripts/dedupe-program-rankings.mjs; order deterministically
+              // anyway so a stray future duplicate can't flip the result.
+              .orderBy(desc(programRankings.programSelectivity), asc(programRankings.id)))[0]
           : undefined
 
       const admissionGrounding =
@@ -404,11 +434,15 @@ Provide an honest tier + probability, and short, specific, scannable bullets for
       acceptanceRate: acc,
     }
   } catch (err) {
-    if (err instanceof Error && err.message.startsWith('OpenAI request failed')) {
-      throw err
-    }
-    const message = err instanceof Error ? err.message : 'Analysis failed'
-    throw new Error(`Analysis failed: ${message}`)
+    // Return, don't throw — a thrown Error here crosses the RSC boundary and
+    // the user only ever sees "Minified React error #441". Log the real
+    // cause for the server logs; hand the user a plain, honest message.
+    console.error('analyzeTargetUniversity failed:', err)
+    const detail = err instanceof Error ? err.message : String(err)
+    const message = detail.startsWith('OpenAI request failed')
+      ? "We couldn't generate this analysis right now — the AI service didn't respond. Please try again in a moment."
+      : 'Something went wrong generating this analysis. Please try again in a moment.'
+    return { error: true, message }
   }
 }
 

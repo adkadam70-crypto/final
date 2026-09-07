@@ -84,6 +84,11 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
         setIsRunning(false)
         return
       }
+      if ('error' in res) {
+        setError(res.message)
+        setIsRunning(false)
+        return
+      }
       pendingResultRef.current = { results: res.results, summary: res.summary }
       setFinishing(true)
     } catch (e) {

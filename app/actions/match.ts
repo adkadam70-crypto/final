@@ -10,7 +10,7 @@ import {
 } from '@/lib/db/schema'
 import type { AcademicField } from '@/lib/academic-detail'
 import { resolveAcceptanceRate, acceptanceRateForPrompt } from '@/lib/acceptance-rate'
-import { inArray, and, eq, desc } from 'drizzle-orm'
+import { inArray, and, eq, desc, asc } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { gradeTier, gradeBadge } from '@/lib/grade'
@@ -295,7 +295,7 @@ ${JSON.stringify(
 
 When a school's academicFields includes the student's intended field of study, treat that as a genuine positive fit signal in your rationale — not just an admission-probability input. When it's "not yet tagged," don't penalize the school for it; assess it on selectivity and the other signals instead.
 
-IMPORTANT — acceptanceProbability reflects admission to the UNIVERSITY, never to a specific program. Most schools admit students holistically to the institution as a whole (major is a soft signal, sometimes declared a year or two later); this app has no verified data on which specific schools instead admit directly by college/major with a genuinely separate, harder process (a real phenomenon at a handful of schools, but not something to assume by default). So: ground acceptanceProbability using this priority order, falling through only when the higher one is unavailable: (1) regularDecisionRate, if present — the most realistic baseline for a typical non-early applicant, since it strips out any early-round effect the blended headline can't separate; (2) overallAcceptanceRate when it is a REAL published figure — cite it directly and with full confidence (e.g. "the actual acceptance rate is 12%"); (3) overallAcceptanceRate when it is marked OUR RESEARCH ESTIMATE — you may use the number to place the school, but in the rationale you MUST call it an estimate (e.g. "we estimate roughly 25% — not a figure the university publishes"), never state it as fact; (4) overallRanking, if present — a general prestige ranking, cite it plainly (e.g. "ranked #28 overall") but don't treat it as equivalent to a real acceptance rate; (5) baselineSelectivity alone — an internal estimate with no citation behind it. When overallAcceptanceRate says NO published or estimable rate exists (e.g. a Numerus Clausus system or a non-selective licence), do not invent a percentage — explain selectivity through ranking, requirements and baselineSelectivity, and it is fine to tell the student plainly that this school has no published acceptance rate. Never present tiers 3-5 with the confidence of tiers 1-2 in your rationale text. Note: whenever overallAcceptanceRate is present — a real published figure OR our research estimate — baselineSelectivity was already derived from it (100 minus the rate); they are the same fact, not two independent signals to stack. NEVER use programRankingForIntendedField to move acceptanceProbability up or down.
+IMPORTANT — acceptanceProbability reflects admission to the UNIVERSITY, never to a specific program. Most schools admit students holistically to the institution as a whole (major is a soft signal, sometimes declared a year or two later); this app has no verified data on which specific schools instead admit directly by college/major with a genuinely separate, harder process (a real phenomenon at a handful of schools, but not something to assume by default). So: ground acceptanceProbability using this priority order, falling through only when the higher one is unavailable: (1) regularDecisionRate, if present — the most realistic baseline for a typical non-early applicant, since it strips out any early-round effect the blended headline can't separate; (2) overallAcceptanceRate when it is a REAL published figure — cite it directly and with full confidence, using the label its source gives it (e.g. "the acceptance rate is 12%" for a US-style admit rate, or "LSE's UCAS offer rate is 21%" where the source says offer rate — a UK/Australian offer IS the admission, so weigh it exactly as you would an acceptance rate); (3) overallAcceptanceRate when it is marked OUR RESEARCH ESTIMATE — you may use the number to place the school, but in the rationale you MUST call it an estimate (e.g. "we estimate roughly 25% — not a figure the university publishes"), never state it as fact; (4) overallRanking, if present — a general prestige ranking, cite it plainly (e.g. "ranked #28 overall") but don't treat it as equivalent to a real acceptance rate; (5) baselineSelectivity alone — an internal estimate with no citation behind it. When overallAcceptanceRate says NO published or estimable rate exists (e.g. a Numerus Clausus system or a non-selective licence), do not invent a percentage — explain selectivity through ranking, requirements and baselineSelectivity, and it is fine to tell the student plainly that this school has no published acceptance rate. Never present tiers 3-5 with the confidence of tiers 1-2 in your rationale text. Note: whenever overallAcceptanceRate is present — a real published figure OR our research estimate — baselineSelectivity was already derived from it (100 minus the rate); they are the same fact, not two independent signals to stack. NEVER use programRankingForIntendedField to move acceptanceProbability up or down.
 
 ${SELECTIVITY_CALIBRATION}
 
@@ -346,12 +346,32 @@ Assess every university in the list above and return one result per university, 
  */
 export async function runMatch(): Promise<
   | { needsProfile: true }
+  // Returned, never thrown — a thrown Error from this Server Action gets
+  // swallowed by the RSC boundary and shows to the user as an opaque
+  // "Minified React error #441" (see analyze-target-university.ts). The real
+  // cause is console.error'd server-side.
+  | { error: true; message: string }
   | { needsProfile?: false; gradeBadge: string; summary: string; results: MatchResult[] }
 > {
-  const userId = await getUserId()
-  const clientIp = await getClientIp()
-  await assertMatchRateLimit(userId, clientIp)
-  const profile = await getLatestProfile()
+  let userId: string
+  let clientIp: string
+  let profile: Awaited<ReturnType<typeof getLatestProfile>>
+  try {
+    userId = await getUserId()
+    clientIp = await getClientIp()
+    await assertMatchRateLimit(userId, clientIp)
+    profile = await getLatestProfile()
+  } catch (err) {
+    console.error('runMatch setup failed:', err)
+    const detail = err instanceof Error ? err.message : String(err)
+    const message =
+      err instanceof Error && err.message === 'Unauthorized'
+        ? 'Your session has expired — please sign in again.'
+        : detail.includes('limit') || detail.includes('Too many')
+          ? detail
+          : 'Something went wrong. Please refresh and try again.'
+    return { error: true, message }
+  }
   if (!profile || !profile.academicDetail || profile.targetCountries.length === 0) {
     return { needsProfile: true }
   }
@@ -396,7 +416,13 @@ export async function runMatch(): Promise<
             eq(programRankings.field, profile.intendedField),
           ),
         )
+        // scripts/dedupe-program-rankings.mjs keeps one row per (university,
+        // field), but order deterministically as a safety net so a stray
+        // future duplicate can't make the shown rank flip run to run — the
+        // strongest (most selective) placement wins.
+        .orderBy(desc(programRankings.programSelectivity), asc(programRankings.id))
       for (const row of rankRows) {
+        if (programRankByUniversityId.has(row.universityId)) continue
         programRankByUniversityId.set(row.universityId, {
           rankValue: row.rankValue,
           rankSource: row.rankSource,
@@ -592,10 +618,12 @@ export async function runMatch(): Promise<
 
     return { gradeBadge: badge, summary, results }
   } catch (err) {
-    if (err instanceof Error && err.message.startsWith('OpenAI request failed')) {
-      throw err
-    }
-    const message = err instanceof Error ? err.message : 'Match request failed'
-    throw new Error(`Match request failed: ${message}`)
+    // Return, don't throw — see the note on the return type above.
+    console.error('runMatch failed:', err)
+    const detail = err instanceof Error ? err.message : String(err)
+    const message = detail.startsWith('OpenAI request failed')
+      ? "We couldn't run your match right now — the AI service didn't respond. Please try again in a moment."
+      : 'Something went wrong running your match. Please try again in a moment.'
+    return { error: true, message }
   }
 }

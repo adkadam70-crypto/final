@@ -37,19 +37,40 @@ export type ProfileStrengthResult = {
  * since real holistic admissions weigh both.
  */
 export async function analyzeProfileStrength(): Promise<
-  { needsProfile: true } | ({ needsProfile?: false } & ProfileStrengthResult)
+  { needsProfile: true }
+  // Returned, never thrown — a thrown Error from this Server Action surfaces
+  // to the user as an opaque "Minified React error #441" (see
+  // analyze-target-university.ts). The real cause is console.error'd.
+  | { error: true; message: string }
+  | ({ needsProfile?: false } & ProfileStrengthResult)
 > {
-  const userId = await getUserId()
-  const clientIp = await getClientIp()
-  await assertProfileStrengthRateLimit(userId, clientIp)
-  const profile = await getLatestProfile()
+  let userId: string
+  let clientIp: string
+  let profile: Awaited<ReturnType<typeof getLatestProfile>>
+  try {
+    userId = await getUserId()
+    clientIp = await getClientIp()
+    await assertProfileStrengthRateLimit(userId, clientIp)
+    profile = await getLatestProfile()
+  } catch (err) {
+    console.error('analyzeProfileStrength setup failed:', err)
+    const detail = err instanceof Error ? err.message : String(err)
+    const message =
+      err instanceof Error && err.message === 'Unauthorized'
+        ? 'Your session has expired — please sign in again.'
+        : detail.includes('limit') || detail.includes('Too many')
+          ? detail
+          : 'Something went wrong. Please refresh and try again.'
+    return { error: true, message }
+  }
   if (!profile || !profile.academicDetail) {
     return { needsProfile: true }
   }
 
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) {
-    throw new Error('OPENAI_API_KEY environment variable is not set')
+    console.error('analyzeProfileStrength: OPENAI_API_KEY not set')
+    return { error: true, message: 'The analysis service is not configured right now. Please try again later.' }
   }
 
   const client = new OpenAI({ apiKey })
@@ -69,23 +90,23 @@ STUDENT PROFILE:
 
 Score realistically. A 100 should be practically unreachable — reserved for a flawless, internationally-decorated profile with nothing left to add. Most genuinely strong applicants land in the 55-85 range. A profile with no extracurriculars listed must be capped well below that regardless of how strong the academics are, since real holistic admissions weigh both roughly equally. Be specific in the hint about what's actually missing, not generic encouragement.`
 
-  let response
   try {
-    response = await client.responses.parse({
+    const response = await client.responses.parse({
       model: 'gpt-5.6-terra',
       input: [{ role: 'user', content: prompt }],
       text: { format: zodTextFormat(strengthSchema, 'profile_strength') },
     })
+    if (!response.output_parsed) {
+      throw new Error('OpenAI returned no parseable output for the profile strength request')
+    }
+    await db.insert(aiRateLimitLog).values({ userId, action: 'profileStrength', ipAddress: clientIp })
+    return { ...response.output_parsed }
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Profile strength request failed'
-    throw new Error(`Profile strength request failed: ${message}`)
+    // Return, don't throw — see the note on the return type above.
+    console.error('analyzeProfileStrength failed:', err)
+    return {
+      error: true,
+      message: "We couldn't rate your profile right now — the AI service didn't respond. Please try again in a moment.",
+    }
   }
-
-  if (!response.output_parsed) {
-    throw new Error('OpenAI returned no parseable output for the profile strength request')
-  }
-
-  await db.insert(aiRateLimitLog).values({ userId, action: 'profileStrength', ipAddress: clientIp })
-
-  return { ...response.output_parsed }
 }

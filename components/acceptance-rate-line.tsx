@@ -9,13 +9,17 @@ export function AcceptanceRateLine({ info, className = '' }: { info: AcceptanceR
   if (!info) return null
 
   if (info.kind === 'official') {
+    // A UCAS / VTAC offer rate is a real published figure and means the same
+    // thing for the applicant (an offer is the admission), but label it
+    // accurately so the tooltip and the number agree.
+    const label = /offer rate/i.test(info.source) ? 'Offer rate' : 'Acceptance rate'
     return (
       <span
         className={`inline-flex items-center gap-1 text-[11px] text-muted-foreground ${className}`}
         title={`Source: ${info.source}`}
       >
         <Percent className="w-3 h-3 text-chart-2" />
-        Acceptance rate <strong className="font-semibold text-foreground/90">{info.rate}%</strong>
+        {label} <strong className="font-semibold text-foreground/90">{info.rate}%</strong>
       </span>
     )
   }
