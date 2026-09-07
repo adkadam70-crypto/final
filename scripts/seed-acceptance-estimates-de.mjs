@@ -26,7 +26,11 @@
 // is untouched — it stays a curated estimate.
 //
 // Data-driven: updates every country='DE' row that has no real
-// actualAcceptanceRate, classifying by name. Safe to re-run.
+// actualAcceptanceRate, classifying by name. Safe to re-run. Extended for
+// the tranche-3 rows (seed-universities-de-3.mjs) — 21 more applied-sciences
+// universities (NOTE_FH), 10 art/music/film colleges (NOTE_ARTS), 6 private
+// institutions (NOTE_PRIVATE), and 5 more research/hybrid universities
+// (NOTE_PUBLIC). Still every DE row is Tier 5 — no rate.
 //
 // Usage: node --env-file=.env.local scripts/seed-acceptance-estimates-de.mjs
 
@@ -62,15 +66,42 @@ const FH_NAMES = new Set([
   'Esslingen University of Applied Sciences', 'Aalen University of Applied Sciences',
   'Technische Hochschule Mittelhessen', 'HTWK Leipzig', 'Hannover University of Applied Sciences and Arts',
   'Osnabrück University of Applied Sciences', 'Deggendorf Institute of Technology', 'HTWG Konstanz',
+  // tranche 3
+  'Münster University of Applied Sciences', 'Dortmund University of Applied Sciences and Arts',
+  'Niederrhein University of Applied Sciences', 'Bielefeld University of Applied Sciences and Arts',
+  'Bochum University of Applied Sciences', 'Furtwangen University', 'Stuttgart Media University',
+  'Stuttgart University of Applied Sciences', 'RheinMain University of Applied Sciences',
+  'Offenburg University of Applied Sciences',
+  'Technical University of Applied Sciences Würzburg-Schweinfurt',
+  'Rosenheim Technical University of Applied Sciences', 'Kempten University of Applied Sciences',
+  'Fulda University of Applied Sciences', 'Trier University of Applied Sciences',
+  'Mannheim University of Applied Sciences', 'Augsburg University of Applied Sciences',
+  'Dresden University of Applied Sciences', 'Mittweida University of Applied Sciences',
+  'Weihenstephan-Triesdorf University of Applied Sciences',
+  'Eberswalde University for Sustainable Development',
+  // Hochschule Geisenheim University holds full public-university status (not
+  // FH) — it falls through to NOTE_PUBLIC, which fits: it is state-run and
+  // admits per-subject against a Numerus Clausus cutoff.
 ])
 
 const PRIVATE_NAMES = new Set([
   'Constructor University', 'WHU – Otto Beisheim School of Management',
   'Frankfurt School of Finance & Management', 'ESMT Berlin', 'Bucerius Law School',
   'Witten/Herdecke University',
+  // tranche 3
+  'EBS University', 'Zeppelin University', 'CODE University of Applied Sciences',
+  'Munich Business School', 'Hochschule Fresenius', 'SRH Berlin University of Applied Sciences',
 ])
 
-const ARTS_NAMES = new Set(['Berlin University of the Arts', 'Bauhaus-University Weimar'])
+const ARTS_NAMES = new Set([
+  'Berlin University of the Arts', 'Bauhaus-University Weimar',
+  // tranche 3
+  'Folkwang University of the Arts', 'Academy of Fine Arts Munich',
+  'Stuttgart State Academy of Art and Design', 'Karlsruhe University of Arts and Design',
+  'Film University Babelsberg Konrad Wolf', 'University of Music and Performing Arts Munich',
+  'Cologne University of Music and Dance', 'University of Music and Theatre Leipzig',
+  'University of Fine Arts of Hamburg', 'Burg Giebichenstein University of Art and Design Halle',
+])
 
 const OVERRIDES = {
   'Charité – Universitätsmedizin Berlin': NOTE_CHARITE,
