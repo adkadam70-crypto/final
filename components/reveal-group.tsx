@@ -12,8 +12,8 @@ import gsap from 'gsap'
 export function RevealGroup({
   children,
   className,
-  stagger = 0.06,
-  y = 16,
+  stagger = 0.02,
+  y = 6,
   replay,
 }: {
   children: ReactNode
@@ -31,10 +31,10 @@ export function RevealGroup({
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
       // Cap the total stagger spread so long lists (e.g. 100+ match results)
       // don't take many seconds for the last item to reveal.
-      const maxTotalSpread = 0.6
+      const maxTotalSpread = 0.15
       const each = count > 1 ? Math.min(stagger, maxTotalSpread / count) : stagger
       gsap.set(ref.current.children, { opacity: 0, y })
-      gsap.to(ref.current.children, { opacity: 1, y: 0, duration: 0.4, stagger: each, ease: 'power2.out' })
+      gsap.to(ref.current.children, { opacity: 1, y: 0, duration: 0.15, stagger: each, ease: 'power2.out' })
     },
     { scope: ref, dependencies: [replay] },
   )
