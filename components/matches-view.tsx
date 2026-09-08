@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useRef, useEffect } from 'react'
+import { useState, useTransition, useRef, useEffect, useSyncExternalStore } from 'react'
 import { useRouter } from 'next/navigation'
 import { Sparkles, GraduationCap, Wand2, Bookmark, BookmarkCheck, User, ArrowRight } from 'lucide-react'
 import { runMatch } from '@/app/actions/match'
@@ -15,6 +15,7 @@ import { RevealGroup } from '@/components/reveal-group'
 import { LiquidButton } from '@/components/ui/liquid-glass-button'
 import { ProgressiveFluxLoader, type ProgressiveFluxPhase } from '@/components/ui/progressive-flux-loader'
 import { saveSchool, unsaveSchool, getSavedSchoolIds } from '@/app/actions/saved-schools'
+import { getMatchState, setMatchState, subscribeMatchState, getMatchServerSnapshot } from '@/lib/match-results-store'
 
 // Mirrors the actual stages runMatch() goes through server-side (see
 // app/actions/match.ts) — reading the profile, filtering the catalog by
@@ -62,8 +63,14 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
     if (error) errorRef.current?.focus()
   }, [error])
 
-  const [results, setResults] = useState<MatchResult[]>([])
-  const [summary, setSummary] = useState('')
+  // Sourced from a module-level store, not local useState — /matches is a
+  // separate route segment from /profile and /saved, so plain component
+  // state here was wiped every time a student navigated away and back. See
+  // lib/match-results-store.ts for why this survives that but still clears
+  // on an actual page refresh.
+  const matchState = useSyncExternalStore(subscribeMatchState, getMatchState, getMatchServerSnapshot)
+  const results = matchState.results
+  const summary = matchState.summary
   // The real request finishing doesn't mean the loader bar has visually
   // caught up to 100% yet — `finishing` snaps the bar to complete and holds
   // the result in `pendingResult` for one beat so results only ever appear
@@ -110,8 +117,7 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
       setFinishing(false)
       setIsRunning(false)
       if (!pending) return
-      setResults(pending.results)
-      setSummary(pending.summary)
+      setMatchState({ results: pending.results, summary: pending.summary })
       startTransition(() => router.refresh())
       const ids = await getSavedSchoolIds()
       setSavedIds(new Set(ids))
