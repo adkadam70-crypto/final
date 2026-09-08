@@ -10,7 +10,7 @@ import { AppLogo } from '@/components/app-logo'
 
 const FEATURE_TAGS: TagItem[] = [
   { text: 'US · UK · AU · SG · HK · India · Germany · France', background: 'var(--primary)', color: 'var(--primary-foreground)' },
-  { text: '900+ real universities', background: 'var(--chart-5)', color: '#ffffff' },
+  { text: '970+ real universities', background: 'var(--chart-5)', color: '#ffffff' },
   { text: 'Tiered acceptance odds', background: 'var(--chart-2)', color: '#1a1a1a' },
   { text: 'Bias-checked analysis', background: 'var(--chart-3)', color: '#ffffff' },
 ]
