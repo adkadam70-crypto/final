@@ -204,7 +204,18 @@ export const auth = betterAuth({
             .from(signupFingerprints)
             .where(and(eq(signupFingerprints.deviceHash, deviceHash), gte(signupFingerprints.createdAt, since)))
           if (Number(deviceRow.count) >= SIGNUP_LIMIT_PER_DEVICE) {
+            // The OAuth callback route (node_modules/better-auth/dist/api/routes/callback.mjs)
+            // only redirects an APIError thrown from account creation back to
+            // errorCallbackURL with a friendly message if `e.body.code` is
+            // present — otherwise it just rethrows, which crashed the whole
+            // callback for a brand-new Google sign-up instead of bouncing
+            // them back to /sign-in with an explanation (existing users never
+            // hit this hook at all, so only new accounts were affected —
+            // exactly what looked like "Google sign-in doesn't work for new
+            // accounts"). `code` costs nothing for the email/password path,
+            // which already surfaces `error.message` directly.
             throw new APIError('TOO_MANY_REQUESTS', {
+              code: 'TOO_MANY_SIGNUPS_FROM_DEVICE',
               message: 'Too many accounts have been created from this device recently. Please try again later.',
             })
           }

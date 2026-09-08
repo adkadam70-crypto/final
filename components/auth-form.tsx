@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react'
 import { authClient } from '@/lib/auth-client'
@@ -41,10 +42,33 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   const [resendIn, setResendIn] = useState(0)
 
   const isSignUp = mode === 'sign-up'
+  const router = useRouter()
+  const searchParams = useSearchParams()
 
   useEffect(() => {
     if (error) errorRef.current?.focus()
   }, [error])
+
+  // Google (and any other social provider) errors that happen server-side
+  // during the OAuth callback — e.g. our own device-fingerprint signup
+  // throttle rejecting a brand-new account — never reach the promise-based
+  // `error` handled in handleGoogleSignIn below, since the browser already
+  // navigated away to Google and back by the time they occur. better-auth
+  // reports them by redirecting to errorCallbackURL with the failure in the
+  // query string instead. Without this, that failure was silently dropped —
+  // the user just landed back on the sign-in page with no explanation,
+  // which is exactly what "Google sign-in doesn't work" looks like.
+  useEffect(() => {
+    const code = searchParams.get('error')
+    if (!code) return
+    // ReadonlyURLSearchParams.get() already returns the decoded value —
+    // better-auth's redirectOnError() (oauth2/errors.mjs) builds this with
+    // plain URLSearchParams, so no further decoding is needed here.
+    const description = searchParams.get('error_description')
+    setError(description || 'Google sign-in failed. Please try again.')
+    router.replace(mode === 'sign-up' ? '/sign-up' : '/sign-in')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
 
   useEffect(() => {
     if (resendIn <= 0) return
