@@ -12,7 +12,7 @@ import { UniversityCard } from '@/components/university-card'
 import { TargetUniversityAnalysis } from '@/components/target-university-analysis'
 import { LoadingDots } from '@/components/loading-dots'
 import { RevealGroup } from '@/components/reveal-group'
-import { LiquidMetalButton } from '@/components/ui/liquid-metal-button'
+import { LiquidButton } from '@/components/ui/liquid-glass-button'
 import { ProgressiveFluxLoader, type ProgressiveFluxPhase } from '@/components/ui/progressive-flux-loader'
 import { saveSchool, unsaveSchool, getSavedSchoolIds } from '@/app/actions/saved-schools'
 
@@ -177,7 +177,7 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
               <LoadingDots /> Analyzing your profile…
             </button>
           ) : (
-            <LiquidMetalButton label="Run match" onClick={handleRun} disabled={!profile?.academicDetail} fullWidth />
+            <LiquidButton onClick={handleRun} disabled={!profile?.academicDetail} fullWidth>Run match</LiquidButton>
           )}
 
           {error && <p ref={errorRef} tabIndex={-1} className="text-xs text-destructive text-center outline-none" role="alert">{error}</p>}

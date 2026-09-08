@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { HeroScrollVideoReveal, type TagItem } from '@/components/ui/hero-scroll-video-pin-reveal'
-import { LiquidMetalButton } from '@/components/ui/liquid-metal-button'
+import { LiquidButton } from '@/components/ui/liquid-glass-button'
 import Velaris from '@/components/ui/velaris'
 import { marigold } from '@/lib/fonts'
 import { AppLogo } from '@/components/app-logo'
@@ -108,7 +108,7 @@ export function Landing() {
       >
         <section className="relative z-10 px-4 pb-24 pt-4 flex flex-col items-center">
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-            <LiquidMetalButton label="Get Started" onClick={() => router.push('/sign-up')} />
+            <LiquidButton onClick={() => router.push('/sign-up')}>Get Started</LiquidButton>
             <Link
               href="/sign-in"
               className="inline-flex items-center justify-center gap-2 border border-border text-foreground font-semibold text-sm px-6 py-3.5 rounded-2xl hover:bg-muted hover:-translate-y-0.5 transition-all"

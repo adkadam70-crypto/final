@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { authClient } from '@/lib/auth-client'
-import { LiquidMetalButton } from '@/components/ui/liquid-metal-button'
+import { LiquidButton } from '@/components/ui/liquid-glass-button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
@@ -192,12 +192,9 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
               </p>
             )}
 
-            <LiquidMetalButton
-              type="submit"
-              disabled={loading || otp.length !== 6}
-              fullWidth
-              label={loading ? 'Verifying…' : 'Verify and continue'}
-            />
+            <LiquidButton type="submit" disabled={loading || otp.length !== 6} fullWidth>
+              {loading ? 'Verifying…' : 'Verify and continue'}
+            </LiquidButton>
 
             <div className="flex items-center justify-between text-sm">
               <button
@@ -289,12 +286,9 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
               </p>
             )}
 
-            <LiquidMetalButton
-              type="submit"
-              disabled={loading || (isSignUp && !termsAccepted)}
-              fullWidth
-              label={loading ? 'Please wait…' : isSignUp ? 'Create account' : 'Sign in'}
-            />
+            <LiquidButton type="submit" disabled={loading || (isSignUp && !termsAccepted)} fullWidth>
+              {loading ? 'Please wait…' : isSignUp ? 'Create account' : 'Sign in'}
+            </LiquidButton>
           </form>
         )}
 

@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { authClient } from '@/lib/auth-client'
-import { LiquidMetalButton } from '@/components/ui/liquid-metal-button'
+import { LiquidButton } from '@/components/ui/liquid-glass-button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
@@ -113,7 +113,7 @@ export function ResetPasswordForm() {
               </p>
             )}
 
-            <LiquidMetalButton type="submit" disabled={loading} fullWidth label={loading ? 'Updating…' : 'Update password'} />
+            <LiquidButton type="submit" disabled={loading} fullWidth>{loading ? 'Updating…' : 'Update password'}</LiquidButton>
           </form>
         )}
       </Card>
