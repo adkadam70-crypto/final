@@ -44,6 +44,11 @@ export const account = pgTable('account', {
   accessTokenExpiresAt: timestamp('accessTokenExpiresAt'),
   refreshTokenExpiresAt: timestamp('refreshTokenExpiresAt'),
   scope: text('scope'),
+  // OIDC id_token, distinct from accessToken — Google's provider returns one
+  // (its scope includes 'openid') and better-auth persists it on the linked
+  // account row. Missing until now because this schema predates any social
+  // provider; email/password sign-in never touches this column.
+  idToken: text('idToken'),
   password: text('password'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull(),

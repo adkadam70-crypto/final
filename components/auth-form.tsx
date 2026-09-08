@@ -157,7 +157,18 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   const handleGoogleSignIn = async () => {
     setError(null)
     setGoogleLoading(true)
-    const { error } = await authClient.signIn.social({ provider: 'google', callbackURL: '/dashboard' })
+    // callbackURL covers a returning user; newUserCallbackURL is the
+    // separate redirect better-auth uses the FIRST time someone signs in via
+    // this provider (a distinct account-creation path) — without it, a
+    // brand-new Google sign-in fell back to better-auth's default target
+    // instead of /dashboard, landing back on '/' looking like sign-in never
+    // happened.
+    const { error } = await authClient.signIn.social({
+      provider: 'google',
+      callbackURL: '/dashboard',
+      newUserCallbackURL: '/dashboard',
+      errorCallbackURL: '/sign-in',
+    })
     if (error) {
       setGoogleLoading(false)
       setError(error.message ?? 'Could not sign in with Google. Please try again.')
