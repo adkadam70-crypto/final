@@ -64,6 +64,15 @@ if (!authSecret) {
   throw new Error('BETTER_AUTH_SECRET environment variable is not set')
 }
 
+// Google sign-in is optional, unlike the required secrets above — the app
+// (and every other sign-in method) must keep working for the whole team
+// even before someone sets up a Google OAuth client, so this stays
+// undefined instead of throwing when the two env vars aren't set yet.
+// authClient.signIn.social({ provider: 'google' }) simply errors with a
+// clear "provider not configured" message client-side until they are.
+const googleClientId = process.env.GOOGLE_CLIENT_ID
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: 'pg',
@@ -96,6 +105,11 @@ export const auth = betterAuth({
   },
 
   secret: authSecret,
+
+  socialProviders:
+    googleClientId && googleClientSecret
+      ? { google: { clientId: googleClientId, clientSecret: googleClientSecret } }
+      : undefined,
 
   // "memory" (the default) resets on every serverless cold start on Vercel,
   // which makes it a near-no-op in production — "database" persists through

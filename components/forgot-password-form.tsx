@@ -6,10 +6,10 @@ import { authClient } from '@/lib/auth-client'
 import { LiquidButton } from '@/components/ui/liquid-glass-button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card } from '@/components/ui/card'
-import { CheckCircle2 } from 'lucide-react'
+import { CheckCircle2, Mail } from 'lucide-react'
 import { TurnstileWidget } from '@/components/turnstile-widget'
 import { AppLogo } from '@/components/app-logo'
+import { AuthShell } from '@/components/auth-shell'
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState('')
@@ -51,8 +51,7 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <main className="min-h-svh bg-background flex items-center justify-center px-4">
-      <Card className="w-full max-w-sm p-6 rounded-3xl">
+    <AuthShell>
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-5">
             <AppLogo className="h-7 w-auto" />
@@ -76,14 +75,18 @@ export function ForgotPasswordForm() {
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-              />
+              <div className="relative flex items-center">
+                <Mail className="absolute left-3 w-4 h-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                  className="pl-9"
+                />
+              </div>
             </div>
 
             <TurnstileWidget onToken={setCaptchaToken} onExpire={() => setCaptchaToken(null)} />
@@ -103,7 +106,6 @@ export function ForgotPasswordForm() {
             Back to sign in
           </Link>
         </p>
-      </Card>
-    </main>
+    </AuthShell>
   )
 }

@@ -7,9 +7,9 @@ import { authClient } from '@/lib/auth-client'
 import { LiquidButton } from '@/components/ui/liquid-glass-button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card } from '@/components/ui/card'
-import { CheckCircle2 } from 'lucide-react'
+import { CheckCircle2, Lock, Eye, EyeOff } from 'lucide-react'
 import { AppLogo } from '@/components/app-logo'
+import { AuthShell } from '@/components/auth-shell'
 
 export function ResetPasswordForm() {
   const searchParams = useSearchParams()
@@ -21,6 +21,7 @@ export function ResetPasswordForm() {
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const errorRef = useRef<HTMLParagraphElement>(null)
 
   useEffect(() => {
@@ -55,8 +56,7 @@ export function ResetPasswordForm() {
   const invalidLink = !token || tokenError === 'INVALID_TOKEN'
 
   return (
-    <main className="min-h-svh bg-background flex items-center justify-center px-4">
-      <Card className="w-full max-w-sm p-6 rounded-3xl">
+    <AuthShell>
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-5">
             <AppLogo className="h-7 w-auto" />
@@ -84,27 +84,44 @@ export function ResetPasswordForm() {
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="newPassword">New password</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                minLength={8}
-                autoComplete="new-password"
-              />
+              <div className="relative flex items-center">
+                <Lock className="absolute left-3 w-4 h-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  id="newPassword"
+                  type={showPassword ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                  minLength={8}
+                  autoComplete="new-password"
+                  className="pl-9 pr-9"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 text-muted-foreground hover:text-foreground transition-colors duration-300"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="confirmPassword">Confirm new password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                minLength={8}
-                autoComplete="new-password"
-              />
+              <div className="relative flex items-center">
+                <Lock className="absolute left-3 w-4 h-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  id="confirmPassword"
+                  type={showPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  minLength={8}
+                  autoComplete="new-password"
+                  className="pl-9"
+                />
+              </div>
             </div>
 
             {error && (
@@ -116,7 +133,6 @@ export function ResetPasswordForm() {
             <LiquidButton type="submit" disabled={loading} fullWidth>{loading ? 'Updating…' : 'Update password'}</LiquidButton>
           </form>
         )}
-      </Card>
-    </main>
+    </AuthShell>
   )
 }
