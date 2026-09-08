@@ -33,7 +33,7 @@ export default function AboutPage() {
             <h2>What we built instead</h2>
             <p>
               Shortlisted was built to actually handle real curricula — CBSE, A-Levels/AS-Levels, IB Diploma, and
-              US GPA — properly, not as an afterthought. It covers 900+ real universities across eight countries
+              US GPA — properly, not as an afterthought. It covers 970+ real universities across eight countries
               (US, UK, Australia, Singapore, Hong Kong, India, Germany &amp; France), and every match or acceptance
               estimate is grounded in named, citable sources: U.S. News &amp; World Report, the U.S. Department of
               Education&apos;s College Scorecard, NIRF, The Complete University Guide, Times Higher Education, and
