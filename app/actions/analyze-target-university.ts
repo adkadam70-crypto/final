@@ -14,6 +14,7 @@ import { SELECTIVITY_CALIBRATION } from '@/lib/selectivity-calibration'
 import { assertAnalysisRateLimit } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/request-fingerprint'
 import { UNIVERSITY_ALIASES } from '@/lib/university-aliases'
+import { isGarbledStrings } from '@/lib/ai-response-guard'
 import { z } from 'zod'
 import OpenAI from 'openai'
 import { zodTextFormat } from 'openai/helpers/zod'
@@ -326,19 +327,38 @@ ${requirementNote}
 
 Provide an honest tier + probability, and short, specific, scannable bullets for strengths, weaknesses/gaps, and action steps — brevity over completeness.`
 
-      let response
-      try {
-        response = await client.responses.parse({
-          model: 'gpt-5.6-terra',
+      const call = () =>
+        client.responses.parse({
+          model: 'gpt-5.6-luna',
           input: [{ role: 'user', content: prompt }],
           text: { format: zodTextFormat(catalogAnalysisSchema, 'target_analysis') },
         })
+
+      const isBroken = (parsed: z.infer<typeof catalogAnalysisSchema> | null) =>
+        !parsed ||
+        parsed.weaknesses.length === 0 ||
+        parsed.actionSteps.length === 0 ||
+        isGarbledStrings([...parsed.strengths, ...parsed.weaknesses, ...parsed.actionSteps])
+
+      let response
+      try {
+        response = await call()
+        // Rare structured-output corruption (internal channel tokens leaking
+        // into a field, or a field coming back empty) slips past schema
+        // validation since the fields are still syntactically valid — retry
+        // once before giving up.
+        if (isBroken(response.output_parsed)) {
+          response = await call()
+        }
       } catch (err) {
         const message = err instanceof Error ? err.message : 'OpenAI request failed'
         throw new Error(`OpenAI request failed: ${message}`)
       }
       if (!response.output_parsed) {
         throw new Error('OpenAI returned no parseable output for the analysis request')
+      }
+      if (isBroken(response.output_parsed)) {
+        throw new Error('OpenAI returned corrupted output for the analysis request after retry')
       }
       const object = response.output_parsed
       matchTier = object.matchTier

@@ -13,6 +13,7 @@ import { formatPriorGrades, EMPTY_PRIOR_GRADES } from '@/lib/prior-grades'
 import { BIAS_INSTRUCTION } from '@/lib/bias-instruction'
 import { assertProfileStrengthRateLimit } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/request-fingerprint'
+import { isGarbledStrings } from '@/lib/ai-response-guard'
 
 const strengthSchema = z.object({
   score: z
@@ -100,13 +101,24 @@ STUDENT PROFILE:
 Score realistically. A 100 should be practically unreachable — reserved for a flawless, internationally-decorated profile with nothing left to add. Most genuinely strong applicants land in the 55-85 range. A profile with no extracurriculars listed must be capped well below that regardless of how strong the academics are, since real holistic admissions weigh both roughly equally. Be specific in the hint about what's actually missing, not generic encouragement.`
 
   try {
-    const response = await client.responses.parse({
-      model: 'gpt-5.6-terra',
-      input: [{ role: 'user', content: prompt }],
-      text: { format: zodTextFormat(strengthSchema, 'profile_strength') },
-    })
+    const call = () =>
+      client.responses.parse({
+        model: 'gpt-5.6-luna',
+        input: [{ role: 'user', content: prompt }],
+        text: { format: zodTextFormat(strengthSchema, 'profile_strength') },
+      })
+    let response = await call()
+    // Rare structured-output corruption (internal channel tokens leaking
+    // into a field) slips past schema validation — retry once before giving
+    // up.
+    if (response.output_parsed && isGarbledStrings([response.output_parsed.headline, response.output_parsed.hint])) {
+      response = await call()
+    }
     if (!response.output_parsed) {
       throw new Error('OpenAI returned no parseable output for the profile strength request')
+    }
+    if (isGarbledStrings([response.output_parsed.headline, response.output_parsed.hint])) {
+      throw new Error('OpenAI returned corrupted output for the profile strength request after retry')
     }
     await db.insert(aiRateLimitLog).values({ userId, action: 'profileStrength', ipAddress: clientIp })
     return { ...response.output_parsed }
