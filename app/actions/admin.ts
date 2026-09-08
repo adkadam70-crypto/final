@@ -8,21 +8,30 @@ import { eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { ADMIN_EMAIL } from '@/lib/admin'
 
-async function requireAdmin() {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session?.user || session.user.email !== ADMIN_EMAIL) throw new Error('Unauthorized')
+// Returns a boolean rather than throwing — a thrown Error from a Server
+// Action reaches the client as an opaque "Minified React error #441"
+// (see app/actions/analyze-target-university.ts). Both actions below are
+// also gated by the admin page itself; this is defence in depth.
+async function isAdmin(): Promise<boolean> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() })
+    return !!session?.user && session.user.email === ADMIN_EMAIL
+  } catch {
+    return false
+  }
 }
 
-export async function unbanUser(userId: string) {
-  await requireAdmin()
+export async function unbanUser(userId: string): Promise<{ ok: boolean }> {
+  if (!(await isAdmin())) return { ok: false }
   await db.update(user).set({ banned: false, banReason: null }).where(eq(user.id, userId))
   revalidatePath('/admin')
+  return { ok: true }
 }
 
 export type BanResult = { ok: true } | { ok: false; error: string }
 
 export async function banUserByEmail(email: string, reason: string): Promise<BanResult> {
-  await requireAdmin()
+  if (!(await isAdmin())) return { ok: false, error: 'Not authorized.' }
   const trimmedEmail = email.trim().toLowerCase()
   const trimmedReason = reason.trim()
   if (!trimmedEmail) return { ok: false, error: 'Enter an email address.' }

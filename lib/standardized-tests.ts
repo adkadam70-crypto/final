@@ -92,7 +92,10 @@ export function testScoreRangeComparison(student: StandardizedTests, school: Tes
     if (value > hi) {
       return `${prefix}Student's ${label} of ${value}${unit} is ABOVE this school's published 75th percentile of ${hi}${unit} (range ${lo}-${hi}${unit}, per ${school.testScoreSource}) — a strong academic profile relative to admitted students on this measure.`
     }
-    const percentilePosition = Math.round(25 + ((value - lo) / (hi - lo)) * 50)
+    // Guard against a degenerate range (lo === hi would divide by zero and
+    // print "NaNth percentile"); fall back to the midpoint.
+    const span = hi - lo
+    const percentilePosition = span > 0 ? Math.round(25 + ((value - lo) / span) * 50) : 50
     return `${prefix}Student's ${label} of ${value}${unit} falls WITHIN this school's published 25th-75th percentile range of ${lo}-${hi}${unit} (per ${school.testScoreSource}) — roughly the ${percentilePosition}th percentile position among admitted students.`
   }
 

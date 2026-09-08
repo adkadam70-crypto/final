@@ -21,27 +21,16 @@ export async function getSavedSchools() {
   }))
 }
 
-/**
- * Simple hash function to convert string IDs to integers
- * Used for compatibility when university IDs are text but need to be stored as integers
- */
-function hashStringToInt(str: string): number {
-  let hash = 0
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i)
-    hash = (hash << 5) - hash + char
-    hash = hash & hash // Convert to 32bit integer
-  }
-  return Math.abs(hash % 2147483647) || 1 // Ensure positive non-zero number
-}
-
-/**
- * Convert universityId to integer format for database storage
- */
-function toIntegerId(id: string | number): number {
-  if (typeof id === 'number') return id
-  const parsed = parseInt(id, 10)
-  return isNaN(parsed) ? hashStringToInt(id) : parsed
+// Every real universityId in this app is a numeric string (MatchResult sets
+// it as String(universities.id), an integer PK). The old fallback here
+// hashed a non-numeric id into an arbitrary 32-bit int — which could
+// silently collide with a *different* real university's row, so a user
+// would save "School A" and it would be stored pointing at school #<hash>.
+// Reject a non-numeric id instead: it can only mean a bug or a crafted
+// request, never a real save.
+function toIntegerId(id: string | number): number | null {
+  if (typeof id === 'number') return Number.isInteger(id) ? id : null
+  return /^\d+$/.test(id.trim()) ? parseInt(id, 10) : null
 }
 
 export async function saveSchool(input: {
@@ -53,6 +42,7 @@ export async function saveSchool(input: {
 }) {
   const userId = await getUserId()
   const universityIdNum = toIntegerId(input.universityId)
+  if (universityIdNum === null) return { saved: false, message: 'Invalid school.' }
   const existing = await db
     .select()
     .from(savedSchools)
@@ -76,6 +66,7 @@ export async function saveSchool(input: {
 export async function unsaveSchool(universityId: string | number) {
   const userId = await getUserId()
   const universityIdNum = toIntegerId(universityId)
+  if (universityIdNum === null) return
   await db
     .delete(savedSchools)
     .where(and(eq(savedSchools.userId, userId), eq(savedSchools.universityId, universityIdNum)))

@@ -16,8 +16,8 @@ export function UnbanButton({ userId }: { userId: string }) {
       size="sm"
       disabled={isPending}
       onClick={() => startTransition(async () => {
-        await unbanUser(userId)
-        setDone(true)
+        const res = await unbanUser(userId)
+        if (res.ok) setDone(true)
       })}
     >
       {isPending ? 'Unbanning…' : 'Unban'}

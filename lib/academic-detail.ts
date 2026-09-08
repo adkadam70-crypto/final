@@ -102,12 +102,18 @@ export function validateAcademicDetail(detail: AcademicDetail): string | null {
       return null
     case 'A_LEVELS':
       if (detail.subjects.length < 3) return 'Enter at least 3 A-Level subjects.'
+      if (detail.subjects.some((s) => !['A*', 'A', 'B', 'C', 'D', 'E'].includes(s.grade)))
+        return 'A-Level grades must be A*, A, B, C, D or E.'
       return null
     case 'US_GPA_PCT':
       if (detail.unweightedGPA < 0 || detail.unweightedGPA > 4.0) return 'GPA must be between 0.0 and 4.0.'
       return null
     case 'IB_DIPLOMA':
       if (detail.subjects.length !== 6) return 'Enter all 6 IB subjects.'
+      if (detail.subjects.some((s) => !Number.isInteger(s.grade) || s.grade < 1 || s.grade > 7))
+        return 'IB subject grades must be whole numbers from 1 to 7.'
+      if (ibCorePoints(detail.tokGrade, detail.eeGrade) === 'FAIL')
+        return 'An E in the Extended Essay or Theory of Knowledge fails the IB Diploma — please check those grades.'
       return null
   }
 }
