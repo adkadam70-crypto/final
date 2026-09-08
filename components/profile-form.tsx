@@ -156,6 +156,21 @@ const SERVICE_EXAMPLES = [
   'Internship or part-time work with measurable impact',
 ]
 
+// A third, distinct dimension from Honors (peak competitive achievement) and
+// Leadership/service (impact on others): sustained personal interest and
+// talent — what admissions offices call "depth" or a "spike" — that doesn't
+// require a national title or a leadership role to be worth showing. Common
+// App's own activity list treats Arts, Athletics, Music, and "personal
+// project" categories as distinct from both Honors and Volunteer/Community
+// Service, so this closes a real gap rather than duplicating either field.
+const PROJECT_EXAMPLES = [
+  'School/club-level sports, music, or art — years of commitment, not just national wins',
+  'A personal project: an app, a piece of writing, a research idea, a small business',
+  'A portfolio, exhibition, performance, or publication of creative work',
+  'A self-taught skill pursued in real depth (e.g. 3 years of competitive chess, a YouTube channel with a real audience)',
+  'A sustained hobby that shows genuine, long-term interest rather than a single entry',
+]
+
 function ExamplesHint({ examples }: { examples: string[] }) {
   return (
     <details className="group mt-1.5">
@@ -194,6 +209,7 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
   const [intendedField, setIntendedField] = useState(latestProfile?.intendedField ?? 'No preference')
   const [ec1, setEc1] = useState(latestProfile?.extracurriculars?.[0] ?? '')
   const [ec2, setEc2] = useState(latestProfile?.extracurriculars?.[1] ?? '')
+  const [ec3, setEc3] = useState(latestProfile?.extracurriculars?.[2] ?? '')
   const [standardizedTests, setStandardizedTests] = useState<StandardizedTests>(latestProfile?.standardizedTests ?? {})
   const [ninthTenth, setNinthTenth] = useState<NinthTenthGrades>(
     latestProfile?.priorGrades?.ninthTenth ?? {
@@ -233,6 +249,7 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
     setIntendedField(p.intendedField)
     setEc1(p.extracurriculars?.[0] ?? '')
     setEc2(p.extracurriculars?.[1] ?? '')
+    setEc3(p.extracurriculars?.[2] ?? '')
     setStandardizedTests(p.standardizedTests ?? {})
     setNinthTenth(p.priorGrades?.ninthTenth ?? { curriculum: defaultNinthTenthCurriculum(p.curriculum as Curriculum), grade9: {}, grade10: {} })
     setEleventh(p.priorGrades?.eleventh ?? null)
@@ -253,7 +270,7 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
       preferredSector,
       preferredRank,
       intendedField,
-      extracurriculars: [ec1, ec2].map((s) => s.trim()).filter(Boolean),
+      extracurriculars: [ec1, ec2, ec3].map((s) => s.trim()).filter(Boolean),
     }
     startTransition(async () => {
       try {
@@ -465,11 +482,19 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
                 </div>
               </div>
               <div>
-                <label className="text-[11px] text-muted-foreground block mb-1.5">Community & service activities</label>
+                <label className="text-[11px] text-muted-foreground block mb-1.5">Leadership, service & work experience</label>
                 <input type="text" maxLength={200} placeholder="e.g. 2 years volunteering with a local literacy NGO" value={ec2} onChange={(e) => setEc2(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-chart-2" />
                 <div className="flex items-start justify-between gap-2">
                   <ExamplesHint examples={SERVICE_EXAMPLES} />
                   <div className="text-[10px] text-muted-foreground/70 shrink-0 mt-1.5">{ec2.length}/200</div>
+                </div>
+              </div>
+              <div>
+                <label className="text-[11px] text-muted-foreground block mb-1.5">Creative pursuits, sports & personal projects</label>
+                <input type="text" maxLength={200} placeholder="e.g. 3 years on the school badminton team; built and published a personal app" value={ec3} onChange={(e) => setEc3(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-chart-2" />
+                <div className="flex items-start justify-between gap-2">
+                  <ExamplesHint examples={PROJECT_EXAMPLES} />
+                  <div className="text-[10px] text-muted-foreground/70 shrink-0 mt-1.5">{ec3.length}/200</div>
                 </div>
               </div>
             </div>
