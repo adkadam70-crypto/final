@@ -1,0 +1,85 @@
+import { db } from '@/lib/db'
+import { profiles, matches, savedSchools } from '@/lib/db/schema'
+import { eq, desc, count } from 'drizzle-orm'
+import Link from 'next/link'
+import { Search, Bookmark, GraduationCap, Sparkles, ArrowRight } from 'lucide-react'
+import { tierBadgeClass } from '@/lib/match-tier'
+import { StatCard } from '@/components/stat-card'
+import { ProfileStrengthCard } from '@/components/profile-strength-card'
+import { RevealGroup } from '@/components/reveal-group'
+import { GlowCard } from '@/components/ui/spotlight-card'
+
+// Split out from the dashboard page and wrapped in <Suspense> there so the
+// static shell (greeting, quick-action cards) streams to the browser
+// immediately instead of the whole page blocking on this section's four DB
+// queries — only this card grid shows a skeleton while they resolve.
+export async function DashboardStats({ userId }: { userId: string }) {
+  const [profileCountRes, matchCountRes, savedCountRes, recentMatches] = await Promise.all([
+    db.select({ count: count() }).from(profiles).where(eq(profiles.userId, userId)),
+    db.select({ count: count() }).from(matches).where(eq(matches.userId, userId)),
+    db.select({ count: count() }).from(savedSchools).where(eq(savedSchools.userId, userId)),
+    db.select().from(matches).where(eq(matches.userId, userId)).orderBy(desc(matches.createdAt)).limit(1),
+  ])
+
+  const profileCount = profileCountRes[0]?.count ?? 0
+  const matchCount = matchCountRes[0]?.count ?? 0
+  const savedCount = savedCountRes[0]?.count ?? 0
+  const featured = (recentMatches[0]?.results ?? []).slice(0, 3)
+
+  return (
+    <>
+      <RevealGroup className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <ProfileStrengthCard hasProfile={profileCount > 0} />
+        <StatCard icon={<Search className="w-5 h-5 text-primary" />} label="Matches Found" value={matchCount} hint={matchCount === 0 ? 'Run your first match' : 'Keep exploring'} />
+        <StatCard icon={<Bookmark className="w-5 h-5 text-primary" />} label="Saved Schools" value={savedCount} hint={savedCount === 0 ? 'Bookmark schools you like' : 'Track your apps'} />
+      </RevealGroup>
+
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold flex items-center gap-2"><Sparkles className="w-5 h-5 text-primary" /> Featured Recommendations</h2>
+          {featured.length > 0 && <Link href="/matches" className="text-xs text-primary font-medium flex items-center gap-1 hover:brightness-125">View all <ArrowRight className="w-3 h-3" /></Link>}
+        </div>
+        {featured.length === 0 ? (
+          <div className="bg-card border border-border border-dashed rounded-3xl p-12 text-center">
+            <div className="inline-flex bg-secondary p-3 rounded-2xl mb-4"><GraduationCap className="w-6 h-6 text-primary" /></div>
+            <h3 className="text-base font-bold mb-1">No matches yet</h3>
+            <p className="text-xs text-muted-foreground max-w-xs mx-auto text-pretty mb-4">Run your first match to see personalized university recommendations here.</p>
+            <Link href="/matches" className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold text-sm px-5 py-2.5 rounded-2xl hover:brightness-110 transition-all">Find Matches <ArrowRight className="w-4 h-4" /></Link>
+          </div>
+        ) : (
+          <RevealGroup className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {featured.map((uni: any) => (
+              <GlowCard key={uni.universityId} className="rounded-3xl block">
+                <div className="bg-card border border-border rounded-3xl p-5">
+                  <h3 className="text-sm font-bold mb-1 text-balance">{uni.name}</h3>
+                  <p className="text-xs text-muted-foreground mb-3">{uni.location}</p>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${tierBadgeClass(uni.matchTier)}`}>{uni.matchTier}</span>
+                    <span className="text-sm font-mono font-bold text-primary">{uni.acceptanceProbability}%</span>
+                  </div>
+                </div>
+              </GlowCard>
+            ))}
+          </RevealGroup>
+        )}
+      </section>
+    </>
+  )
+}
+
+export function DashboardStatsSkeleton() {
+  return (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="bg-card border border-border rounded-3xl p-5 h-[120px] animate-pulse" />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="bg-card border border-border rounded-3xl p-5 h-[100px] animate-pulse" />
+        ))}
+      </div>
+    </>
+  )
+}
