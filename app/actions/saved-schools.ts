@@ -90,11 +90,15 @@ export async function updateApplicationStatus(id: number, status: ApplicationSta
   revalidatePath('/dashboard')
 }
 
-export async function getSavedSchoolIds(): Promise<(string | number)[]> {
+// Returns string ids to match MatchResult.universityId (which is a string —
+// see lib/db/schema.ts). The saved indicator on /matches compares against
+// this set, and a Set<number> never matches a string key, so returning the
+// raw integer column here silently broke that indicator for every user.
+export async function getSavedSchoolIds(): Promise<string[]> {
   const userId = await getUserId()
   const rows = await db
     .select({ universityId: savedSchools.universityId })
     .from(savedSchools)
     .where(eq(savedSchools.userId, userId))
-  return rows.map((r) => r.universityId)
+  return rows.map((r) => String(r.universityId))
 }

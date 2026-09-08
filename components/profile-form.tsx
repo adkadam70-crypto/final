@@ -257,7 +257,12 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
     }
     startTransition(async () => {
       try {
-        await saveProfile(input)
+        const res = await saveProfile(input)
+        if (!res.success) {
+          setError(res.message)
+          setTimeout(() => setError(null), 5000)
+          return
+        }
         setSaved(true)
         setTimeout(() => setSaved(false), 3000)
       } catch (e) {

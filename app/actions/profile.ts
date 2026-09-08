@@ -61,16 +61,40 @@ function validateFreeTextLengths(input: SaveProfileInput): string | null {
 }
 
 export async function saveProfile(input: SaveProfileInput): Promise<{ success: boolean; message: string }> {
-  const userId = await getUserId()
+  let userId: string
+  try {
+    userId = await getUserId()
+  } catch (err) {
+    // Return, don't throw — a thrown Error from a Server Action reaches the
+    // user as an opaque "Minified React error #441" (see
+    // app/actions/analyze-target-university.ts).
+    return {
+      success: false,
+      message: err instanceof Error && err.message === 'Unauthorized'
+        ? 'Your session has expired — please sign in again.'
+        : 'Something went wrong. Please refresh and try again.',
+    }
+  }
 
-  if (input.targetCountries.length === 0) throw new Error('Select at least one target country.')
+  if (input.targetCountries.length === 0) {
+    return { success: false, message: 'Select at least one target country.' }
+  }
 
-  const validationError =
-    validateAcademicDetail(input.academicDetail) ??
-    validateStandardizedTests(input.standardizedTests) ??
-    validatePriorGrades(input.priorGrades) ??
-    validateFreeTextLengths(input)
-  if (validationError) throw new Error(validationError)
+  let validationError: string | null = null
+  try {
+    validationError =
+      validateAcademicDetail(input.academicDetail) ??
+      validateStandardizedTests(input.standardizedTests) ??
+      validatePriorGrades(input.priorGrades) ??
+      validateFreeTextLengths(input)
+  } catch {
+    // A malformed request body (e.g. priorGrades that isn't the expected
+    // shape) should be rejected, not crash the action.
+    return { success: false, message: 'Your profile data looks malformed. Please reload the page and try again.' }
+  }
+  if (validationError) {
+    return { success: false, message: validationError }
+  }
 
   try {
     await db
@@ -100,9 +124,8 @@ export async function saveProfile(input: SaveProfileInput): Promise<{ success: b
       message: `Profile saved successfully for ${input.targetCountries.join(', ')}.`,
     }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Failed to save profile'
-    console.error('Profile save error:', errorMessage)
-    throw new Error(`Failed to save profile: ${errorMessage}`)
+    console.error('Profile save error:', error)
+    return { success: false, message: 'Something went wrong saving your profile. Please try again in a moment.' }
   }
 }
 

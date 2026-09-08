@@ -50,18 +50,27 @@ export async function analyzeProfileStrength(): Promise<
   try {
     userId = await getUserId()
     clientIp = await getClientIp()
+  } catch (err) {
+    console.error('analyzeProfileStrength auth failed:', err)
+    return {
+      error: true,
+      message:
+        err instanceof Error && err.message === 'Unauthorized'
+          ? 'Your session has expired — please sign in again.'
+          : 'Something went wrong. Please refresh and try again.',
+    }
+  }
+  try {
     await assertProfileStrengthRateLimit(userId, clientIp)
+  } catch (err) {
+    // The rate-limit message is user-facing copy — pass it straight through.
+    return { error: true, message: err instanceof Error ? err.message : 'You have checked your profile strength too many times recently. Please wait a few minutes.' }
+  }
+  try {
     profile = await getLatestProfile()
   } catch (err) {
-    console.error('analyzeProfileStrength setup failed:', err)
-    const detail = err instanceof Error ? err.message : String(err)
-    const message =
-      err instanceof Error && err.message === 'Unauthorized'
-        ? 'Your session has expired — please sign in again.'
-        : detail.includes('limit') || detail.includes('Too many')
-          ? detail
-          : 'Something went wrong. Please refresh and try again.'
-    return { error: true, message }
+    console.error('analyzeProfileStrength getLatestProfile failed:', err)
+    return { error: true, message: 'Something went wrong loading your profile. Please try again in a moment.' }
   }
   if (!profile || !profile.academicDetail) {
     return { needsProfile: true }

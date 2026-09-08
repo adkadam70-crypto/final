@@ -57,11 +57,23 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
   const [isRunning, setIsRunning] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const errorRef = useRef<HTMLParagraphElement>(null)
-  const [savedIds, setSavedIds] = useState<Set<string | number>>(new Set())
+  // String ids throughout — MatchResult.universityId is a string and
+  // getSavedSchoolIds() now returns strings, so `.has()` actually matches.
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (error) errorRef.current?.focus()
   }, [error])
+
+  // Load which schools are already saved on mount — results now persist
+  // across navigation (the module store below), so a student returning to
+  // /matches sees their list without re-running, and the bookmark icons
+  // need to reflect the real saved state, not wait for the next run.
+  useEffect(() => {
+    getSavedSchoolIds()
+      .then((ids) => setSavedIds(new Set(ids)))
+      .catch(() => {})
+  }, [])
 
   // Sourced from a module-level store, not local useState — /matches is a
   // separate route segment from /profile and /saved, so plain component

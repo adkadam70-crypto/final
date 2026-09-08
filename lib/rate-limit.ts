@@ -4,16 +4,37 @@ import { user } from '@/lib/db/auth-schema'
 import { and, eq, gte, sql } from 'drizzle-orm'
 import { notifyAdmin } from '@/lib/notify'
 
-// Fires once per user per action the moment they first cross a limit (count
-// === limit, not >=) rather than on every subsequent blocked request in the
-// same window — otherwise someone hammering a blocked endpoint would flood
-// this inbox with one email per attempt.
-async function alertOnFirstBreach(userId: string, ip: string, action: string, limit: string) {
-  const [row] = await db.select({ name: user.name, email: user.email }).from(user).where(eq(user.id, userId))
-  void notifyAdmin(
-    `Rate limit hit: ${action}`,
-    `<p><strong>${row?.name ?? 'Unknown user'}</strong> (${row?.email ?? userId}) hit the ${action} limit (${limit}).</p><p>IP: ${ip}</p>`,
-  )
+// Fires the admin alert at most once per user per action per window. The
+// old approach ("count === limit") was wrong: a blocked request never
+// inserts a history row, so the count stays pinned exactly at the limit and
+// every subsequent blocked attempt re-triggered the email — the exact flood
+// it was meant to prevent. Instead, drop a "<action>:blocked" marker into
+// aiRateLimitLog on the first breach and check for it before alerting.
+async function alertOnceOnBreach(
+  userId: string,
+  ip: string,
+  action: string,
+  limit: string,
+  windowMinutes: number,
+) {
+  const marker = `${action}:blocked`
+  const since = new Date(Date.now() - windowMinutes * 60_000)
+  try {
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(aiRateLimitLog)
+      .where(and(eq(aiRateLimitLog.userId, userId), eq(aiRateLimitLog.action, marker), gte(aiRateLimitLog.createdAt, since)))
+    if (Number(count) > 0) return // already alerted this window
+    await db.insert(aiRateLimitLog).values({ userId, action: marker, ipAddress: ip })
+
+    const [row] = await db.select({ name: user.name, email: user.email }).from(user).where(eq(user.id, userId))
+    void notifyAdmin(
+      `Rate limit hit: ${action}`,
+      `<p><strong>${row?.name ?? 'Unknown user'}</strong> (${row?.email ?? userId}) hit the ${action} limit (${limit}).</p><p>IP: ${ip}</p>`,
+    )
+  } catch {
+    // A logging/alert failure must never block the rate-limit response.
+  }
 }
 
 // Both AI-calling actions already insert one row per call into their own
@@ -77,7 +98,7 @@ export async function assertMatchRateLimit(userId: string, ip: string) {
     throw new Error(`Rate limit check failed: ${message}`)
   }
   if (Number(count) >= MATCH_LIMIT) {
-    if (Number(count) === MATCH_LIMIT) void alertOnFirstBreach(userId, ip, 'Run Match', `${MATCH_LIMIT}/${MATCH_WINDOW_MINUTES}min`)
+    void alertOnceOnBreach(userId, ip, 'Run Match', `${MATCH_LIMIT}/${MATCH_WINDOW_MINUTES}min`, MATCH_WINDOW_MINUTES)
     throw new Error(
       `You've run a match ${MATCH_LIMIT} times in the last ${MATCH_WINDOW_MINUTES} minutes — please wait a few minutes before running another.`,
     )
@@ -98,7 +119,7 @@ export async function assertAnalysisRateLimit(userId: string, ip: string) {
     throw new Error(`Rate limit check failed: ${message}`)
   }
   if (Number(count) >= ANALYSIS_LIMIT) {
-    if (Number(count) === ANALYSIS_LIMIT) void alertOnFirstBreach(userId, ip, 'Target University Analysis', `${ANALYSIS_LIMIT}/${ANALYSIS_WINDOW_MINUTES}min`)
+    void alertOnceOnBreach(userId, ip, 'Target University Analysis', `${ANALYSIS_LIMIT}/${ANALYSIS_WINDOW_MINUTES}min`, ANALYSIS_WINDOW_MINUTES)
     throw new Error(
       `You've reached your limit of ${ANALYSIS_LIMIT} school lookups every ${ANALYSIS_WINDOW_MINUTES} minutes. Please try again after your current limit resets.`,
     )
@@ -124,7 +145,7 @@ export async function assertProfileStrengthRateLimit(userId: string, ip: string)
     throw new Error(`Rate limit check failed: ${message}`)
   }
   if (Number(count) >= PROFILE_STRENGTH_LIMIT) {
-    if (Number(count) === PROFILE_STRENGTH_LIMIT) void alertOnFirstBreach(userId, ip, 'Profile Strength', `${PROFILE_STRENGTH_LIMIT}/${PROFILE_STRENGTH_WINDOW_MINUTES}min`)
+    void alertOnceOnBreach(userId, ip, 'Profile Strength', `${PROFILE_STRENGTH_LIMIT}/${PROFILE_STRENGTH_WINDOW_MINUTES}min`, PROFILE_STRENGTH_WINDOW_MINUTES)
     throw new Error(
       `You've checked your profile strength ${PROFILE_STRENGTH_LIMIT} times in the last ${PROFILE_STRENGTH_WINDOW_MINUTES} minutes — please wait a few minutes before trying again.`,
     )
