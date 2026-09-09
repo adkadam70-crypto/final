@@ -76,7 +76,7 @@ export function DreamUniversitySearch({ country, hasProfile }: { country: string
     setError(null)
     setPending(true)
     try {
-      const res = await analyzeTargetUniversity(targetName)
+      const res = await analyzeTargetUniversity(targetName, undefined, true)
       if ('needsProfile' in res) {
         setError('Set up your profile first — we need your academics to analyze a specific school.')
         setPending(false)

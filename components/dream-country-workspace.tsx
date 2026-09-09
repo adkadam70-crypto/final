@@ -2,8 +2,18 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, User, Search, TrendingUp, AlertTriangle, RotateCcw, Sparkles, CheckCircle2, GraduationCap } from 'lucide-react'
-import { analyzeDreamProfile, toggleDreamChecklistItem, toggleDreamUniversityTask, type DreamCountryProfileRow, type DreamUniversityTrackRow } from '@/app/actions/dream'
+import { ArrowLeft, User, Search, TrendingUp, AlertTriangle, RotateCcw, Sparkles, CheckCircle2, GraduationCap, ChevronDown, Lightbulb, PlusCircle } from 'lucide-react'
+import {
+  analyzeDreamProfile,
+  generateDreamRoadmap,
+  toggleDreamChecklistItem,
+  toggleDreamUniversityTask,
+  addSuggestedActivity,
+  markSuggestedActivityDone,
+  type DreamCountryProfileRow,
+  type DreamUniversityTrackRow,
+  type SuggestedActivityRow,
+} from '@/app/actions/dream'
 import { DreamUniversitySearch } from '@/components/dream-university-search'
 import { mergeChecklistProgress, overallCompletionPct } from '@/lib/dream-checklist'
 import { APPLICATION_INFO } from '@/lib/application-info'
@@ -53,20 +63,27 @@ export function DreamCountryWorkspace({
   confirmedField,
   initialCountryProfile,
   initialUniversityTracks,
+  initialSuggestedActivities,
   profile,
 }: {
   country: string
   confirmedField: string
   initialCountryProfile: NonNullable<DreamCountryProfileRow>
   initialUniversityTracks: DreamUniversityTrackRow[]
+  initialSuggestedActivities: SuggestedActivityRow[]
   profile: WorkspaceProfile | null
 }) {
   const router = useRouter()
   const [tab, setTab] = useState<'profile' | 'search'>('profile')
   const [countryProfile, setCountryProfile] = useState(initialCountryProfile)
   const [universityTracks, setUniversityTracks] = useState(initialUniversityTracks)
+  const [suggestedActivities, setSuggestedActivities] = useState(initialSuggestedActivities)
   const [analysisPending, setAnalysisPending] = useState(false)
+  const [roadmapPending, setRoadmapPending] = useState(false)
+  const [customActivity, setCustomActivity] = useState('')
+  const [activityPendingId, setActivityPendingId] = useState<number | 'custom' | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [expandedSection, setExpandedSection] = useState<string | null>(null)
 
   const countryInfo = APPLICATION_INFO[country]
   const hasAnalysis = !!(countryProfile.analysisStrengths?.length || countryProfile.analysisGaps?.length)
@@ -108,6 +125,36 @@ export function DreamCountryWorkspace({
       return setError('Complete the steps on the Build Your Dream home page first.')
     }
     setCountryProfile((c) => ({ ...c, analysisStrengths: res.strengths, analysisGaps: res.gaps }))
+  }
+
+  async function handleGenerateRoadmap() {
+    setRoadmapPending(true)
+    setError(null)
+    const res = await generateDreamRoadmap(country)
+    setRoadmapPending(false)
+    if ('error' in res && res.error) return setError(res.message)
+    if ('rateLimited' in res && res.rateLimited) return setError(res.message)
+    if (('needsOnboarding' in res && res.needsOnboarding) || ('needsField' in res && res.needsField) || ('needsCountry' in res && res.needsCountry) || ('needsProfile' in res && res.needsProfile)) {
+      return setError('Complete the steps on the Build Your Dream home page first.')
+    }
+    setCountryProfile((c) => ({ ...c, roadmapSummary: res.timeframeSummary, roadmapSteps: res.steps }))
+  }
+
+  async function handleAddSuggestedActivity(text: string, key: number | 'custom') {
+    setActivityPendingId(key)
+    const res = await addSuggestedActivity(text)
+    setActivityPendingId(null)
+    if (!res.success) return setError(res.message)
+    if (key === 'custom') setCustomActivity('')
+    setSuggestedActivities((prev) => [...prev, { id: Date.now(), userId: '', text, status: 'shortlisted', createdAt: new Date() }])
+  }
+
+  async function handleMarkActivityDone(id: number) {
+    setActivityPendingId(id)
+    const res = await markSuggestedActivityDone(id)
+    setActivityPendingId(null)
+    if (!res.success) return setError(res.message)
+    setSuggestedActivities((prev) => prev.map((a) => (a.id === id ? { ...a, status: 'completed' } : a)))
   }
 
   async function handleToggleChecklist(item: string, done: boolean) {
@@ -196,6 +243,104 @@ export function DreamCountryWorkspace({
             {error && <p className="text-[11px] text-destructive mt-3">{error}</p>}
           </section>
 
+          {/* "Build your own profile" — a forward-looking, time-aware plan
+              (what to DO next, paced against how much runway is left), sits
+              above the application checklist since it's meant to inform what
+              a student is building before they get to the paperwork below. */}
+          {country === 'US' && (
+            <section className="bg-card border border-border rounded-3xl p-6">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
+                <Lightbulb className="w-4 h-4 text-chart-5" /> Build your own profile
+              </h2>
+              {countryProfile.roadmapSteps && countryProfile.roadmapSteps.length > 0 ? (
+                <div className="space-y-4">
+                  {countryProfile.roadmapSummary && <p className="text-xs text-muted-foreground leading-relaxed text-pretty">{countryProfile.roadmapSummary}</p>}
+                  <ul className="space-y-2">
+                    {countryProfile.roadmapSteps.map((step, i) => {
+                      const already = suggestedActivities.some((a) => a.text === step.title)
+                      return (
+                        <li key={i} className="p-3 rounded-xl border border-border bg-secondary">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="text-xs font-semibold text-foreground">{step.title}</p>
+                              <p className="text-[11px] text-muted-foreground mt-0.5 text-pretty">{step.detail}</p>
+                            </div>
+                            <button
+                              type="button"
+                              disabled={already || activityPendingId === i}
+                              onClick={() => handleAddSuggestedActivity(step.title, i)}
+                              className="shrink-0 flex items-center gap-1 text-[11px] font-medium text-primary hover:brightness-125 disabled:opacity-50 disabled:text-muted-foreground"
+                            >
+                              <PlusCircle className="w-3.5 h-3.5" /> {already ? 'Added' : 'Add to my profile'}
+                            </button>
+                          </div>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                  <button onClick={handleGenerateRoadmap} disabled={roadmapPending} className="text-[11px] text-primary font-medium flex items-center gap-1 hover:brightness-125 disabled:opacity-50">
+                    {roadmapPending ? <LoadingDots /> : <><RotateCcw className="w-3 h-3" /> Regenerate</>}
+                  </button>
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-xs text-muted-foreground mb-3">Get a personalized, time-paced plan for what to build before you apply — based on where you stand and how much time you have left.</p>
+                  <button
+                    onClick={handleGenerateRoadmap}
+                    disabled={roadmapPending || !hasProfile}
+                    className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold text-xs px-4 py-2.5 rounded-xl hover:brightness-110 disabled:opacity-50 transition-all"
+                  >
+                    {roadmapPending ? <LoadingDots /> : <><Sparkles className="w-3.5 h-3.5" /> Build my plan</>}
+                  </button>
+                </div>
+              )}
+
+              {suggestedActivities.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-border">
+                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Your shortlisted activities</p>
+                  <ul className="space-y-1.5">
+                    {suggestedActivities.map((a) => (
+                      <li key={a.id} className="flex items-center justify-between gap-2 text-xs">
+                        <span className={a.status === 'completed' ? 'text-muted-foreground line-through' : 'text-foreground/90'}>{a.text}</span>
+                        {a.status === 'completed' ? (
+                          <span className="shrink-0 text-[10px] font-semibold text-chart-2 uppercase flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Completed</span>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={activityPendingId === a.id}
+                            onClick={() => handleMarkActivityDone(a.id)}
+                            className="shrink-0 text-[10px] font-semibold text-primary uppercase hover:brightness-125 disabled:opacity-50"
+                          >
+                            Mark completed
+                          </button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className="mt-4 flex gap-2">
+                <input
+                  type="text"
+                  value={customActivity}
+                  onChange={(e) => setCustomActivity(e.target.value)}
+                  maxLength={200}
+                  placeholder="Add your own activity"
+                  className="flex-1 min-w-0 bg-secondary border border-border rounded-lg p-2 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary"
+                />
+                <button
+                  type="button"
+                  disabled={!customActivity.trim() || activityPendingId === 'custom'}
+                  onClick={() => handleAddSuggestedActivity(customActivity.trim(), 'custom')}
+                  className="shrink-0 text-xs font-semibold text-primary px-3 py-2 rounded-lg border border-primary/30 hover:bg-primary/10 disabled:opacity-50"
+                >
+                  {activityPendingId === 'custom' ? <LoadingDots /> : 'Add'}
+                </button>
+              </div>
+            </section>
+          )}
+
           {/* Section 1: the country-wide application checklist (Common App's
               real sections for US; the generic per-country list for
               everyone else until that research pass is done too). */}
@@ -213,19 +358,44 @@ export function DreamCountryWorkspace({
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {checklistItems.map(({ requirement, progress, autoDetected }) => {
                   const sectionInfo = COMMON_APP_SECTIONS.find((s) => s.label === requirement)
+                  const expanded = expandedSection === requirement
                   return (
                     <li key={requirement} className="p-2.5 rounded-xl border border-border bg-secondary">
-                      <button
-                        type="button"
-                        disabled={autoDetected}
-                        onClick={() => !autoDetected && handleToggleChecklist(requirement, progress < 100)}
-                        className={`w-full text-left text-xs flex items-start gap-2 ${autoDetected ? 'cursor-default' : 'cursor-pointer'}`}
-                      >
-                        <CheckCircle2 className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${progress >= 100 ? 'text-primary' : 'text-muted-foreground/40'}`} />
-                        <span className={progress >= 100 ? 'text-muted-foreground line-through' : 'text-foreground/90'}>{requirement}</span>
-                        {autoDetected && <span className="ml-auto shrink-0 text-[9px] text-muted-foreground/60 uppercase">auto</span>}
-                      </button>
+                      <div className="flex items-start gap-2">
+                        <button
+                          type="button"
+                          disabled={autoDetected}
+                          onClick={() => !autoDetected && handleToggleChecklist(requirement, progress < 100)}
+                          className={`flex-1 min-w-0 text-left text-xs flex items-start gap-2 ${autoDetected ? 'cursor-default' : 'cursor-pointer'}`}
+                        >
+                          <CheckCircle2 className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${progress >= 100 ? 'text-primary' : 'text-muted-foreground/40'}`} />
+                          <span className={progress >= 100 ? 'text-muted-foreground line-through' : 'text-foreground/90'}>{requirement}</span>
+                          {autoDetected && <span className="shrink-0 text-[9px] text-muted-foreground/60 uppercase">auto</span>}
+                        </button>
+                        {sectionInfo && (
+                          <button
+                            type="button"
+                            onClick={() => setExpandedSection(expanded ? null : requirement)}
+                            aria-expanded={expanded}
+                            aria-label={`What goes in ${requirement}`}
+                            className="shrink-0 text-muted-foreground/60 hover:text-primary p-0.5"
+                          >
+                            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+                          </button>
+                        )}
+                      </div>
                       {sectionInfo && <p className="text-[10px] text-muted-foreground/70 mt-1 ml-5.5 text-pretty">{sectionInfo.description}</p>}
+                      {expanded && sectionInfo && (
+                        <div className="mt-2 ml-5.5 p-2.5 bg-card border border-border rounded-lg space-y-1.5">
+                          <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">What to put here</p>
+                          <ul className="text-[11px] text-muted-foreground space-y-1 list-disc list-inside">
+                            {sectionInfo.whatToInclude.map((w, i) => <li key={i}>{w}</li>)}
+                          </ul>
+                          {sectionInfo.example && (
+                            <p className="text-[10px] text-muted-foreground/80 italic pt-1 border-t border-border/60 mt-1.5">{sectionInfo.example}</p>
+                          )}
+                        </div>
+                      )}
                       <div className="h-1 w-full bg-border rounded-full overflow-hidden mt-2">
                         <div className={`h-full rounded-full transition-all ${progress >= 100 ? 'bg-chart-2' : 'bg-primary/50'}`} style={{ width: `${progress}%` }} />
                       </div>

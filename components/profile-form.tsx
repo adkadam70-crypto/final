@@ -4,6 +4,7 @@ import { useState, useTransition, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { GraduationCap, Globe, Flame, Compass, Loader2, CheckCircle2, Award, ChevronDown, History, ArrowRight, Plus, X, BookOpen, Info } from 'lucide-react'
 import { saveProfile, type SaveProfileInput } from '@/app/actions/profile'
+import { markSuggestedActivityDone, type SuggestedActivityRow } from '@/app/actions/dream'
 import { AP_COURSE_CATEGORIES, AP_COURSES } from '@/lib/ap-courses'
 import { LiquidButton } from '@/components/ui/liquid-glass-button'
 import { gradeBadge } from '@/lib/grade'
@@ -187,7 +188,25 @@ function ExamplesHint({ examples }: { examples: string[] }) {
   )
 }
 
-export function ProfileForm({ initialProfiles, latestProfile }: { initialProfiles: ProfileRow[]; latestProfile: LatestProfile }) {
+export function ProfileForm({
+  initialProfiles,
+  latestProfile,
+  suggestedActivities,
+}: {
+  initialProfiles: ProfileRow[]
+  latestProfile: LatestProfile
+  suggestedActivities: SuggestedActivityRow[] | null
+}) {
+  const [activities, setActivities] = useState(suggestedActivities ?? [])
+  const [activityPendingId, setActivityPendingId] = useState<number | null>(null)
+
+  async function handleMarkActivityDone(id: number) {
+    setActivityPendingId(id)
+    const res = await markSuggestedActivityDone(id)
+    setActivityPendingId(null)
+    if (res.success) setActivities((prev) => prev.map((a) => (a.id === id ? { ...a, status: 'completed' } : a)))
+  }
+
   const [pending, startTransition] = useTransition()
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -569,6 +588,37 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
                 </div>
               </div>
             </div>
+          </section>
+        )}
+
+        {suggestedActivities !== null && activities.length > 0 && (
+          <section className="bg-card border border-border rounded-3xl p-6">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-2">
+              <Flame className="w-4 h-4 text-chart-5" /> Suggested activities
+            </h2>
+            <p className="text-[11px] text-muted-foreground mb-3">From your Build Your Dream roadmap — mark one completed to fold it into your extracurriculars above.</p>
+            <ul className="space-y-1.5">
+              {activities.map((a) => (
+                <li key={a.id} className="flex items-center justify-between gap-2 text-xs bg-secondary border border-border rounded-xl px-3 py-2">
+                  <span className={a.status === 'completed' ? 'text-muted-foreground line-through' : 'text-foreground/90'}>{a.text}</span>
+                  {a.status === 'completed' ? (
+                    <span className="shrink-0 text-[10px] font-semibold text-chart-2 uppercase flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Completed</span>
+                  ) : (
+                    <span className="shrink-0 flex items-center gap-2">
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase">Shortlisted</span>
+                      <button
+                        type="button"
+                        disabled={activityPendingId === a.id}
+                        onClick={() => handleMarkActivityDone(a.id)}
+                        className="text-[10px] font-semibold text-primary uppercase hover:brightness-125 disabled:opacity-50"
+                      >
+                        Mark completed
+                      </button>
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
           </section>
         )}
 

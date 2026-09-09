@@ -137,6 +137,40 @@ export async function saveProfile(input: SaveProfileInput): Promise<{ success: b
   }
 }
 
+// Folds one more extracurricular into the master profile without touching
+// anything else on it — used when a Build Your Dream roadmap suggestion is
+// marked "completed" (see markSuggestedActivityDone in app/actions/dream.ts).
+// Profiles are insert-only/versioned (see saveProfile above), so this reads
+// the latest row and inserts a new one with the same fields plus the
+// addition, same pattern as every other profile save.
+export async function appendExtracurricularToProfile(text: string): Promise<{ success: boolean; message: string }> {
+  const userId = await getUserId()
+  const latest = await getLatestProfile()
+  if (!latest) return { success: false, message: 'Set up your main profile first.' }
+  if (latest.extracurriculars.includes(text)) return { success: true, message: 'Already on your profile.' }
+
+  await db.insert(profiles).values({
+    userId,
+    targetCountries: latest.targetCountries,
+    curriculum: latest.curriculum,
+    gradeValue: latest.gradeValue,
+    academicDetail: latest.academicDetail,
+    standardizedTests: latest.standardizedTests,
+    priorGrades: latest.priorGrades,
+    preferredClimate: latest.preferredClimate,
+    preferredSector: latest.preferredSector,
+    preferredRank: latest.preferredRank,
+    intendedField: latest.intendedField,
+    extracurriculars: [...latest.extracurriculars, text],
+    apCourses: latest.apCourses,
+  })
+
+  revalidatePath('/profile')
+  revalidatePath('/dashboard')
+  revalidatePath('/matches')
+  return { success: true, message: 'Added to your profile.' }
+}
+
 export type ProfileRow = Awaited<ReturnType<typeof getLatestProfile>>
 
 /**

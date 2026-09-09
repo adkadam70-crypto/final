@@ -225,6 +225,12 @@ export const dreamProfiles = pgTable('dreamProfiles', {
   recommendedField: text('recommendedField'),
   recommendedFieldRationale: text('recommendedFieldRationale'),
   confirmedField: text('confirmedField'),
+  // Timeline context for the "Build your own profile" roadmap — lets the AI
+  // reason about how much runway is actually left (e.g. "10th grade,
+  // applying Fall 2028" vs. "12th grade, applying this fall") instead of
+  // giving the same generic advice regardless of where the student is.
+  currentGrade: text('currentGrade'), // e.g. '9th', '10th', '11th', '12th'
+  applicationYear: integer('applicationYear'), // the fall they intend to start college, e.g. 2028
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 })
@@ -253,6 +259,13 @@ export const dreamCountryProfiles = pgTable('dreamCountryProfiles', {
   // no detectable profile signal (essays, recommendation letters, etc.) —
   // student-toggled, 0 or 100.
   checklist: jsonb('checklist').$type<Record<string, number>>().notNull().default({}),
+  // AI-generated "Build your own profile" roadmap for this country: a plain
+  // summary of how much time is left (grade + intended application year,
+  // see dreamProfiles above) and a phased list of what to work on before
+  // applying — separate from analysisStrengths/Gaps above, which grade the
+  // profile as it stands today rather than plan what to do next.
+  roadmapSummary: text('roadmapSummary'),
+  roadmapSteps: jsonb('roadmapSteps').$type<{ title: string; detail: string }[]>(),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 }, (table) => ({
@@ -289,6 +302,22 @@ export const dreamUniversityTracks = pgTable('dreamUniversityTracks', {
 }, (table) => ({
   userCountryUniversityUnique: uniqueIndex('dreamUniversityTracks_user_country_university_idx').on(table.userId, table.country, table.universityId),
 }))
+
+// AI-recommended (or self-added) extracurricular ideas surfaced by the
+// "Build your own profile" roadmap. Tracked separately from the master
+// profile's own `extracurriculars` so a suggestion can sit as "shortlisted"
+// before the student has actually done it — only marking one "completed"
+// folds its text into the real master-profile extracurriculars array (see
+// appendExtracurricularToProfile in app/actions/profile.ts), so AI
+// match/analysis prompts everywhere else only ever see things the student
+// has actually confirmed doing.
+export const profileSuggestedActivities = pgTable('profileSuggestedActivities', {
+  id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
+  userId: uuid('userId').notNull(),
+  text: text('text').notNull(),
+  status: text('status').notNull().default('shortlisted'), // 'shortlisted' | 'completed'
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+})
 
 export type ApplicationStatus = 'Researching' | 'Applying' | 'Submitted'
 

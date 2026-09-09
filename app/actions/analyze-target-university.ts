@@ -179,7 +179,14 @@ export type TargetAnalysisOutcome =
 // short summary of that country-specific analysis already on file, so this
 // deep-dive reasons from it instead of starting cold. Ignored entirely for
 // every other caller (Target University Analysis on the main matches page).
-export async function analyzeTargetUniversity(universityName: string, dreamContext?: string): Promise<TargetAnalysisOutcome> {
+// dreamPriorityMode: the Build Your Dream "Search" tab wants actionSteps
+// framed as a per-college task list, led by supplemental-essay requirements
+// specifically (see components/dream-university-search.tsx) — a materially
+// different instruction from the generic Target University Analysis's
+// action-step prompt, so a dream-mode call always hits the AI fresh instead
+// of risking a cache hit that was computed under the other framing (or
+// vice versa) from the shared universityAnalyses cache.
+export async function analyzeTargetUniversity(universityName: string, dreamContext?: string, dreamPriorityMode?: boolean): Promise<TargetAnalysisOutcome> {
   let userId: string
   let clientIp: string
   try {
@@ -248,20 +255,22 @@ export async function analyzeTargetUniversity(universityName: string, dreamConte
 
     const acc = resolveAcceptanceRate(matched)
 
-    const cached = (
-      await db
-        .select()
-        .from(universityAnalyses)
-        .where(
-          and(
-            eq(universityAnalyses.userId, userId),
-            eq(universityAnalyses.universityId, matched.id),
-            eq(universityAnalyses.profileId, profile.id),
-          ),
-        )
-        .orderBy(desc(universityAnalyses.createdAt))
-        .limit(1)
-    )[0]
+    const cached = dreamPriorityMode
+      ? undefined
+      : (
+          await db
+            .select()
+            .from(universityAnalyses)
+            .where(
+              and(
+                eq(universityAnalyses.userId, userId),
+                eq(universityAnalyses.universityId, matched.id),
+                eq(universityAnalyses.profileId, profile.id),
+              ),
+            )
+            .orderBy(desc(universityAnalyses.createdAt))
+            .limit(1)
+        )[0]
 
     if (cached) {
       return buildResultFromRow(matched, acc, cached)
@@ -355,6 +364,11 @@ ${SELECTIVITY_CALIBRATION}
 ${profileBlock}
 ${dreamContext ? `\nADDITIONAL CONTEXT FROM THE STUDENT'S SAVED COUNTRY-SPECIFIC PROFILE ANALYSIS (use this to ground your points more specifically, don't just repeat it back):\n${dreamContext}\n` : ''}
 ${requirementNote}
+${
+  dreamPriorityMode
+    ? `\nIMPORTANT — actionSteps ordering for this request: this is feeding a per-college task checklist, not general advice. actionSteps[0] MUST specifically address whether this school requires supplemental essays beyond the Common App main essay — state plainly whether it does, and if so what they're generally known for (e.g. a "why this school" essay, a program-specific essay), grounded only in what you're actually confident is real; if genuinely uncertain of the specific prompt, say a supplemental exists and to check the school's own site rather than inventing a prompt. The remaining actionSteps (up to 3 more) must be concrete, specific tasks tied directly to an actual gap in THIS student's profile relative to THIS school (a specific missing score, requirement, or activity type) — never generic advice like "improve your essays" or "get better grades."\n`
+    : ''
+}
 
 ${ENGLISH_TEST_GUIDANCE}
 
@@ -424,54 +438,62 @@ Provide an honest tier + probability, a summary that names the concrete number/f
       ? { note: matched.admissionsContextNote, source: matched.admissionsContextNoteSource ?? 'Curated' }
       : null
 
-    // onConflictDoNothing + re-read closes the multi-tab race: if another
-    // request for this exact (account, school, profile) already won and
-    // persisted its row between our cache check above and this insert, the
-    // unique index (lib/db/schema.ts) makes this insert a no-op instead of
-    // creating a second, different-numbered row — and we then hand back
-    // that winner's stored result instead of the one we just computed, so
-    // every tab converges on the same answer no matter which one "wins".
-    const inserted = await db
-      .insert(universityAnalyses)
-      .values({
-        userId,
-        universityName: matched.name,
-        universityId: matched.id,
-        usedCatalogGrounding: 1,
-        profileId: profile.id,
-        acceptanceProbability,
-        matchTier,
-        earlyDecisionProbability,
-        earlyActionProbability,
-        admissionChanceSummary,
-        strengths,
-        weaknesses,
-        actionSteps,
-        ipAddress: clientIp,
-      })
-      .onConflictDoNothing({
-        target: [universityAnalyses.userId, universityAnalyses.universityId, universityAnalyses.profileId],
-      })
-      .returning()
+    // A dreamPriorityMode result is computed under a different actionSteps
+    // framing than the generic cache (see the comment on the function
+    // signature) — never write it into the shared universityAnalyses cache,
+    // and never read the "winner" of a race from it either, or a later
+    // plain Target University Analysis request could silently inherit this
+    // essay-first framing (or vice versa).
+    if (!dreamPriorityMode) {
+      // onConflictDoNothing + re-read closes the multi-tab race: if another
+      // request for this exact (account, school, profile) already won and
+      // persisted its row between our cache check above and this insert, the
+      // unique index (lib/db/schema.ts) makes this insert a no-op instead of
+      // creating a second, different-numbered row — and we then hand back
+      // that winner's stored result instead of the one we just computed, so
+      // every tab converges on the same answer no matter which one "wins".
+      const inserted = await db
+        .insert(universityAnalyses)
+        .values({
+          userId,
+          universityName: matched.name,
+          universityId: matched.id,
+          usedCatalogGrounding: 1,
+          profileId: profile.id,
+          acceptanceProbability,
+          matchTier,
+          earlyDecisionProbability,
+          earlyActionProbability,
+          admissionChanceSummary,
+          strengths,
+          weaknesses,
+          actionSteps,
+          ipAddress: clientIp,
+        })
+        .onConflictDoNothing({
+          target: [universityAnalyses.userId, universityAnalyses.universityId, universityAnalyses.profileId],
+        })
+        .returning()
 
-    if (inserted.length === 0) {
-      const winner = (
-        await db
-          .select()
-          .from(universityAnalyses)
-          .where(
-            and(
-              eq(universityAnalyses.userId, userId),
-              eq(universityAnalyses.universityId, matched.id),
-              eq(universityAnalyses.profileId, profile.id),
-            ),
-          )
-          .limit(1)
-      )[0]
-      if (winner) return buildResultFromRow(matched, acc, winner)
-      // Extremely unlikely (the winning row would have to be deleted in the
-      // instant between the conflict and this re-read) — fall through and
-      // serve this request's own freshly computed result rather than error.
+      if (inserted.length === 0) {
+        const winner = (
+          await db
+            .select()
+            .from(universityAnalyses)
+            .where(
+              and(
+                eq(universityAnalyses.userId, userId),
+                eq(universityAnalyses.universityId, matched.id),
+                eq(universityAnalyses.profileId, profile.id),
+              ),
+            )
+            .limit(1)
+        )[0]
+        if (winner) return buildResultFromRow(matched, acc, winner)
+        // Extremely unlikely (the winning row would have to be deleted in the
+        // instant between the conflict and this re-read) — fall through and
+        // serve this request's own freshly computed result rather than error.
+      }
     }
 
     return {

@@ -27,6 +27,10 @@ const INTEREST_OPTIONS = [
   'Science & Research', 'Law & Government', 'Design & Architecture',
 ]
 
+const GRADE_OPTIONS = ['9th', '10th', '11th', '12th']
+const CURRENT_YEAR = new Date().getFullYear()
+const APPLICATION_YEAR_OPTIONS = Array.from({ length: 6 }, (_, i) => CURRENT_YEAR + i)
+
 const COUNTRY_OPTIONS = [
   { code: 'US', label: 'United States' },
   { code: 'UK', label: 'United Kingdom' },
@@ -123,6 +127,8 @@ export function DreamBuilder({
   const [hobbies, setHobbies] = useState(initialDream?.hobbies ?? '')
   const [interests, setInterests] = useState<string[]>(initialDream?.interests ?? [])
   const [interestsOther, setInterestsOther] = useState(initialDream?.interestsOther ?? '')
+  const [currentGrade, setCurrentGrade] = useState(initialDream?.currentGrade ?? '')
+  const [applicationYear, setApplicationYear] = useState<number | ''>(initialDream?.applicationYear ?? '')
 
   const [recommendation, setRecommendation] = useState<{ field: string; rationale: string } | null>(
     initialDream?.recommendedField ? { field: initialDream.recommendedField, rationale: initialDream.recommendedFieldRationale ?? '' } : null,
@@ -135,7 +141,7 @@ export function DreamBuilder({
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const onboardingDone = !!dream && (dream.strengths.length > 0 || !!dream.hobbies || dream.interests.length > 0)
+  const onboardingDone = !!dream && (dream.strengths.length > 0 || !!dream.hobbies || dream.interests.length > 0) && !!dream.currentGrade && !!dream.applicationYear
   const fieldConfirmed = !!dream?.confirmedField
 
   function toggle(list: string[], setList: (v: string[]) => void, tag: string) {
@@ -143,15 +149,16 @@ export function DreamBuilder({
   }
 
   async function saveOnboardingIfLastStep() {
+    if (!currentGrade || applicationYear === '') return
     setPending(true)
     setError(null)
-    const res = await saveDreamOnboarding({ strengths, hobbies, interests, interestsOther })
+    const res = await saveDreamOnboarding({ strengths, hobbies, interests, interestsOther, currentGrade, applicationYear })
     setPending(false)
     if (!res.success) {
       setError(res.message)
       return
     }
-    setDream((d) => ({ ...(d as NonNullable<DreamProfileRow>), strengths, hobbies, interests, interestsOther }))
+    setDream((d) => ({ ...(d as NonNullable<DreamProfileRow>), strengths, hobbies, interests, interestsOther, currentGrade, applicationYear }))
   }
 
   async function handleGetRecommendation() {
@@ -232,6 +239,31 @@ export function DreamBuilder({
               placeholder="Anything else? (optional)"
               className="w-full bg-secondary border border-border rounded-xl p-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary"
             />
+          </div>
+        ),
+      },
+      {
+        label: 'What grade are you in, and when do you plan to start college?',
+        valid: !!currentGrade && applicationYear !== '',
+        content: (
+          <div className="space-y-4">
+            <div>
+              <p className="text-[11px] text-muted-foreground mb-2">Current grade</p>
+              <div className="flex flex-wrap gap-2">
+                {GRADE_OPTIONS.map((g) => (
+                  <Pill key={g} label={g} active={currentGrade === g} onClick={() => setCurrentGrade(g)} />
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-[11px] text-muted-foreground mb-2">Year you plan to start college</p>
+              <div className="flex flex-wrap gap-2">
+                {APPLICATION_YEAR_OPTIONS.map((y) => (
+                  <Pill key={y} label={`Fall ${y}`} active={applicationYear === y} onClick={() => setApplicationYear(y)} />
+                ))}
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground/70">This tells us how much runway you have left, so your roadmap can be paced to your actual timeline instead of generic advice.</p>
           </div>
         ),
       },

@@ -8,11 +8,11 @@ import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { dreamProfiles, dreamCountryProfiles, dreamUniversityTracks, aiRateLimitLog } from '@/lib/db/schema'
+import { dreamProfiles, dreamCountryProfiles, dreamUniversityTracks, profileSuggestedActivities, aiRateLimitLog } from '@/lib/db/schema'
 import { PER_UNIVERSITY_TASK_TEMPLATE } from '@/lib/common-app-sections'
 import { getUserId } from '@/lib/get-user-id'
 import { getClientIp } from '@/lib/request-fingerprint'
-import { getLatestProfile } from '@/app/actions/profile'
+import { getLatestProfile, appendExtracurricularToProfile } from '@/app/actions/profile'
 import { gradeBadge } from '@/lib/grade'
 import { formatStandardizedTests } from '@/lib/standardized-tests'
 import { ACADEMIC_FIELDS, type AcademicField } from '@/lib/academic-detail'
@@ -36,6 +36,7 @@ async function assertDreamAdmin(): Promise<void> {
 export type DreamProfileRow = Awaited<ReturnType<typeof getDreamProfile>>
 export type DreamCountryProfileRow = Awaited<ReturnType<typeof getDreamCountryProfile>>
 export type DreamUniversityTrackRow = Awaited<ReturnType<typeof getDreamUniversityTracks>>[number]
+export type SuggestedActivityRow = Awaited<ReturnType<typeof getSuggestedActivities>>[number]
 
 // User-level row: onboarding answers + field recommendation. Done once —
 // see dreamCountryProfiles for the per-country data built on top of it.
@@ -63,15 +64,20 @@ export async function getDreamCountryProfile(country: string) {
   return rows[0] ?? null
 }
 
+const CURRENT_GRADES = ['9th', '10th', '11th', '12th'] as const
+
 export type DreamOnboardingInput = {
   strengths: string[]
   hobbies: string
   interests: string[]
   interestsOther: string
+  currentGrade: string
+  applicationYear: number
 }
 
 const MAX_FIELD_LENGTH = 300
 const MAX_TAGS = 12
+const CURRENT_YEAR = new Date().getFullYear()
 
 function validateOnboarding(input: DreamOnboardingInput): string | null {
   if (input.strengths.length > MAX_TAGS) return `Select at most ${MAX_TAGS} subjects.`
@@ -80,6 +86,10 @@ function validateOnboarding(input: DreamOnboardingInput): string | null {
   if (input.interestsOther.length > MAX_FIELD_LENGTH) return 'That answer is too long.'
   if (input.strengths.some((s) => s.length > MAX_FIELD_LENGTH) || input.interests.some((s) => s.length > MAX_FIELD_LENGTH)) {
     return 'One of your entries is too long.'
+  }
+  if (!CURRENT_GRADES.includes(input.currentGrade as (typeof CURRENT_GRADES)[number])) return 'Select your current grade.'
+  if (!Number.isInteger(input.applicationYear) || input.applicationYear < CURRENT_YEAR || input.applicationYear > CURRENT_YEAR + 6) {
+    return 'Select a valid application year.'
   }
   return null
 }
@@ -103,10 +113,27 @@ export async function saveDreamOnboarding(input: DreamOnboardingInput): Promise<
   try {
     await db
       .insert(dreamProfiles)
-      .values({ userId, strengths: input.strengths, hobbies: input.hobbies, interests: input.interests, interestsOther: input.interestsOther, updatedAt: new Date() })
+      .values({
+        userId,
+        strengths: input.strengths,
+        hobbies: input.hobbies,
+        interests: input.interests,
+        interestsOther: input.interestsOther,
+        currentGrade: input.currentGrade,
+        applicationYear: input.applicationYear,
+        updatedAt: new Date(),
+      })
       .onConflictDoUpdate({
         target: dreamProfiles.userId,
-        set: { strengths: input.strengths, hobbies: input.hobbies, interests: input.interests, interestsOther: input.interestsOther, updatedAt: new Date() },
+        set: {
+          strengths: input.strengths,
+          hobbies: input.hobbies,
+          interests: input.interests,
+          interestsOther: input.interestsOther,
+          currentGrade: input.currentGrade,
+          applicationYear: input.applicationYear,
+          updatedAt: new Date(),
+        },
       })
     revalidatePath('/dream')
     return { success: true, message: 'Saved.' }
@@ -367,6 +394,129 @@ Identify up to 5 specific strengths and up to 5 specific gaps for THIS field+cou
   }
 }
 
+const roadmapSchema = z.object({
+  timeframeSummary: z
+    .string()
+    .describe(
+      'Under 30 words stating plainly how much runway this student has — reference their actual current grade and application year (e.g. "You\'re in 10th grade applying Fall 2028 — about 2.5 years out, still time to build depth.").',
+    ),
+  steps: z
+    .array(
+      z.object({
+        title: z.string().describe('Under 10 words — a short, concrete action item, e.g. "Take on a leadership role in an existing club".'),
+        detail: z
+          .string()
+          .describe(
+            'Under 35 words explaining specifically why this fits THIS student (cite their actual hobbies/interests/strengths from onboarding, or a gap in their current profile) and roughly when to do it given their timeline.',
+          ),
+      }),
+    )
+    .max(6)
+    .describe('Up to 6 concrete, personalized next steps — extracurriculars to start or deepen, grades to keep up, tests to plan for — ordered roughly by what to prioritize first given the time left.'),
+})
+
+export type DreamRoadmapResult = { timeframeSummary: string; steps: { title: string; detail: string }[] }
+
+export type GenerateRoadmapOutcome =
+  | { needsOnboarding: true }
+  | { needsField: true }
+  | { needsCountry: true }
+  | { needsProfile: true }
+  | { rateLimited: true; message: string }
+  | { error: true; message: string }
+  | ({ error?: false; needsOnboarding?: false; needsField?: false; needsCountry?: false; needsProfile?: false; rateLimited?: false } & DreamRoadmapResult)
+
+// "Build your own profile" — a forward-looking plan (unlike analyzeDreamProfile,
+// which grades the profile as it stands today) that reasons from how much
+// time the student actually has left (currentGrade + applicationYear from
+// onboarding) to pace concrete extracurricular/prep recommendations, tied to
+// their own stated hobbies/interests so it reads as personalized guidance,
+// not a generic checklist.
+export async function generateDreamRoadmap(country: string): Promise<GenerateRoadmapOutcome> {
+  let userId: string
+  let clientIp: string
+  try {
+    await assertDreamAdmin()
+    userId = await getUserId()
+    clientIp = await getClientIp()
+  } catch (err) {
+    return { error: true, message: err instanceof Error && err.message === 'Unauthorized' ? 'Your session has expired — please sign in again.' : 'Something went wrong. Please refresh and try again.' }
+  }
+  try {
+    await assertDreamAnalysisRateLimit(userId, clientIp)
+  } catch (err) {
+    return { rateLimited: true, message: err instanceof Error ? err.message : 'Rate limit exceeded — please try again later.' }
+  }
+
+  const dream = await getDreamProfile()
+  if (!dream) return { needsOnboarding: true }
+  if (!dream.confirmedField) return { needsField: true }
+
+  const countryRow = await getDreamCountryProfile(country)
+  if (!countryRow) return { needsCountry: true }
+
+  const profile = await getLatestProfile()
+  if (!profile || !profile.academicDetail) return { needsProfile: true }
+
+  const apiKey = process.env.OPENAI_API_KEY
+  if (!apiKey) return { error: true, message: 'The roadmap service is not configured right now. Please try again later.' }
+
+  const badge = gradeBadge(profile.academicDetail)
+  const client = new OpenAI({ apiKey })
+  const countryInfo = APPLICATION_INFO[country]
+
+  const prompt = `You are an expert college admissions counselor building a personalized, time-aware action plan. This is NOT a grading exercise — don't just list gaps. Instead, given how much time this student actually has left before applying, tell them specifically what to do next, paced to their real timeline.
+
+${BIAS_INSTRUCTION}
+
+STUDENT TIMELINE: currently in ${dream.currentGrade ?? 'an unspecified'} grade, planning to start college Fall ${dream.applicationYear ?? 'an unspecified year'}.
+TARGET FIELD: ${dream.confirmedField}
+TARGET COUNTRY: ${countryInfo?.name ?? country}
+${countryInfo ? `HOW EXTRACURRICULARS ARE WEIGHED HERE: ${countryInfo.extracurriculars}` : ''}
+
+WHAT THEY SAID ABOUT THEMSELVES (onboarding):
+- Subjects they excel in / enjoy: ${dream.strengths.length ? dream.strengths.join('; ') : 'Not answered'}
+- What they spend free time on: ${dream.hobbies || 'Not answered'}
+- Real-world problems/industries that excite them: ${[...dream.interests, dream.interestsOther].filter(Boolean).join('; ') || 'Not answered'}
+
+EXISTING ACADEMIC PROFILE:
+- Academics: ${badge}
+- Extracurriculars already doing: ${profile.extracurriculars.length ? profile.extracurriculars.join('; ') : 'None provided'}
+- AP courses taken: ${profile.apCourses.length ? profile.apCourses.join('; ') : 'None reported'}
+
+Give a short timeframe summary (how much runway they actually have), then up to 6 concrete steps — extracurriculars to start or deepen (grounded in their OWN stated hobbies/interests, not generic suggestions), grades/rigor to sustain or improve, tests to plan for — each one specific to this exact student and paced against how much time they have left. If they're close to applying, prioritize depth/finishing strong over starting new things; if they have years left, prioritize building genuine, sustained commitment over resume padding.`
+
+  try {
+    const call = () =>
+      client.responses.parse({
+        model: 'gpt-5.6-luna',
+        input: [{ role: 'user', content: prompt }],
+        text: { format: zodTextFormat(roadmapSchema, 'dream_roadmap') },
+      })
+    let response = await call()
+    if (response.output_parsed && isGarbledStrings([response.output_parsed.timeframeSummary, ...response.output_parsed.steps.flatMap((s) => [s.title, s.detail])])) {
+      response = await call()
+    }
+    if (!response.output_parsed) throw new Error('OpenAI returned no parseable output for the roadmap request')
+    if (isGarbledStrings([response.output_parsed.timeframeSummary, ...response.output_parsed.steps.flatMap((s) => [s.title, s.detail])])) {
+      throw new Error('OpenAI returned corrupted output after retry')
+    }
+
+    const { timeframeSummary, steps } = response.output_parsed
+    await db
+      .update(dreamCountryProfiles)
+      .set({ roadmapSummary: timeframeSummary, roadmapSteps: steps, updatedAt: new Date() })
+      .where(and(eq(dreamCountryProfiles.userId, userId), eq(dreamCountryProfiles.country, country)))
+    await db.insert(aiRateLimitLog).values({ userId, action: 'dreamRoadmap', ipAddress: clientIp })
+    revalidatePath(`/dream/${country}`)
+
+    return { timeframeSummary, steps }
+  } catch (err) {
+    console.error('generateDreamRoadmap failed:', err)
+    return { error: true, message: "We couldn't build your roadmap right now — the AI service didn't respond. Please try again in a moment." }
+  }
+}
+
 // Sets the MANUAL override for one checklist item (0 or 100) — only ever
 // meaningful for items computeAutoChecklistProgress (lib/dream-checklist.ts)
 // can't auto-detect from the master profile; auto-detected items ignore
@@ -435,6 +585,73 @@ export async function addUniversityToDreamList(
     return { success: true, message: 'Added to your list.' }
   } catch (error) {
     console.error('addUniversityToDreamList error:', error)
+    return { success: false, message: 'Something went wrong. Please try again.' }
+  }
+}
+
+// Activities suggested by the roadmap above (or typed in by the student
+// themselves) — tracked as "shortlisted" until the student actually marks
+// them done. See markSuggestedActivityDone below for what "done" triggers.
+export async function getSuggestedActivities() {
+  await assertDreamAdmin()
+  const userId = await getUserId()
+  return db.select().from(profileSuggestedActivities).where(eq(profileSuggestedActivities.userId, userId)).orderBy(asc(profileSuggestedActivities.createdAt))
+}
+
+const MAX_ACTIVITY_LENGTH = 200
+
+export async function addSuggestedActivity(text: string): Promise<{ success: boolean; message: string }> {
+  let userId: string
+  try {
+    await assertDreamAdmin()
+    userId = await getUserId()
+  } catch {
+    return { success: false, message: 'Your session has expired — please sign in again.' }
+  }
+  const trimmed = text.trim()
+  if (!trimmed) return { success: false, message: 'Enter an activity.' }
+  if (trimmed.length > MAX_ACTIVITY_LENGTH) return { success: false, message: 'That activity is too long.' }
+  try {
+    await db.insert(profileSuggestedActivities).values({ userId, text: trimmed })
+    revalidatePath('/dream')
+    revalidatePath('/profile')
+    return { success: true, message: 'Added.' }
+  } catch (error) {
+    console.error('addSuggestedActivity error:', error)
+    return { success: false, message: 'Something went wrong. Please try again.' }
+  }
+}
+
+// Marking an activity "completed" is the one point where Build Your Dream is
+// allowed to write into the actual master profile (see
+// appendExtracurricularToProfile in app/actions/profile.ts) — everything the
+// student hasn't confirmed doing stays "shortlisted" and never reaches the
+// real extracurriculars array the rest of the app's AI prompts read from.
+export async function markSuggestedActivityDone(id: number): Promise<{ success: boolean; message: string }> {
+  let userId: string
+  try {
+    await assertDreamAdmin()
+    userId = await getUserId()
+  } catch {
+    return { success: false, message: 'Your session has expired — please sign in again.' }
+  }
+  try {
+    const rows = await db
+      .select()
+      .from(profileSuggestedActivities)
+      .where(and(eq(profileSuggestedActivities.id, id), eq(profileSuggestedActivities.userId, userId)))
+      .limit(1)
+    const row = rows[0]
+    if (!row) return { success: false, message: 'Activity not found.' }
+    await db.update(profileSuggestedActivities).set({ status: 'completed' }).where(eq(profileSuggestedActivities.id, id))
+    await appendExtracurricularToProfile(row.text)
+    revalidatePath('/dream')
+    revalidatePath('/profile')
+    revalidatePath('/dashboard')
+    revalidatePath('/matches')
+    return { success: true, message: 'Marked complete and added to your profile.' }
+  } catch (error) {
+    console.error('markSuggestedActivityDone error:', error)
     return { success: false, message: 'Something went wrong. Please try again.' }
   }
 }
