@@ -54,6 +54,12 @@ const ANALYSIS_WINDOW_MINUTES = 15
 const PROFILE_STRENGTH_LIMIT = 10
 const PROFILE_STRENGTH_WINDOW_MINUTES = 10
 
+const DREAM_FIELD_LIMIT = 8
+const DREAM_FIELD_WINDOW_MINUTES = 15
+
+const DREAM_ANALYSIS_LIMIT = 8
+const DREAM_ANALYSIS_WINDOW_MINUTES = 15
+
 // Per-account limits above are easy to multiply by signing up with several
 // emails (the signup-fingerprint throttle in lib/auth.ts raises the cost of
 // that, but doesn't make it impossible). These were a looser backstop on the
@@ -151,4 +157,48 @@ export async function assertProfileStrengthRateLimit(userId: string, ip: string)
     )
   }
   // IP-level check disabled — see comment above IP_PROFILE_STRENGTH_LIMIT.
+}
+
+// Same shape as assertProfileStrengthRateLimit — no dedicated history table
+// for either "Build Your Dream" AI call, so both log to the generic
+// aiRateLimitLog ledger (caller inserts on an allowed call, see
+// app/actions/dream.ts).
+export async function assertDreamFieldRateLimit(userId: string, ip: string) {
+  const since = new Date(Date.now() - DREAM_FIELD_WINDOW_MINUTES * 60_000)
+  let count: number
+  try {
+    ;[{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(aiRateLimitLog)
+      .where(and(eq(aiRateLimitLog.userId, userId), eq(aiRateLimitLog.action, 'dreamFieldRecommend'), gte(aiRateLimitLog.createdAt, since)))
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Rate limit check failed'
+    throw new Error(`Rate limit check failed: ${message}`)
+  }
+  if (Number(count) >= DREAM_FIELD_LIMIT) {
+    void alertOnceOnBreach(userId, ip, 'Dream Field Recommendation', `${DREAM_FIELD_LIMIT}/${DREAM_FIELD_WINDOW_MINUTES}min`, DREAM_FIELD_WINDOW_MINUTES)
+    throw new Error(
+      `You've requested a field recommendation ${DREAM_FIELD_LIMIT} times in the last ${DREAM_FIELD_WINDOW_MINUTES} minutes — please wait a few minutes before trying again.`,
+    )
+  }
+}
+
+export async function assertDreamAnalysisRateLimit(userId: string, ip: string) {
+  const since = new Date(Date.now() - DREAM_ANALYSIS_WINDOW_MINUTES * 60_000)
+  let count: number
+  try {
+    ;[{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(aiRateLimitLog)
+      .where(and(eq(aiRateLimitLog.userId, userId), eq(aiRateLimitLog.action, 'dreamProfileAnalysis'), gte(aiRateLimitLog.createdAt, since)))
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Rate limit check failed'
+    throw new Error(`Rate limit check failed: ${message}`)
+  }
+  if (Number(count) >= DREAM_ANALYSIS_LIMIT) {
+    void alertOnceOnBreach(userId, ip, 'Dream Profile Analysis', `${DREAM_ANALYSIS_LIMIT}/${DREAM_ANALYSIS_WINDOW_MINUTES}min`, DREAM_ANALYSIS_WINDOW_MINUTES)
+    throw new Error(
+      `You've re-analyzed your dream profile ${DREAM_ANALYSIS_LIMIT} times in the last ${DREAM_ANALYSIS_WINDOW_MINUTES} minutes — please wait a few minutes before trying again.`,
+    )
+  }
 }
