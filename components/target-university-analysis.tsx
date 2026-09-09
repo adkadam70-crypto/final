@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { Search, TrendingUp, AlertTriangle, ListChecks, Sparkles } from 'lucide-react'
 import { analyzeTargetUniversity, getUniversityNames, type TargetAnalysisResult } from '@/app/actions/analyze-target-university'
 import { UNIVERSITY_ALIASES } from '@/lib/university-aliases'
@@ -24,7 +24,17 @@ const ANALYSIS_PHASES: ProgressiveFluxPhase[] = [
 // can't possibly still be narrowing toward a real match.
 const MAX_SUGGESTIONS = 8
 
-export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }) {
+export type TargetUniversityAnalysisHandle = {
+  /** Fills the search box with `universityName` and runs the analysis
+   * immediately — used by a "Get a deeper analysis" button on a match
+   * result card so the student doesn't have to re-type the name. */
+  analyzeFor: (universityName: string) => void
+}
+
+export const TargetUniversityAnalysis = forwardRef<TargetUniversityAnalysisHandle, { hasProfile: boolean }>(function TargetUniversityAnalysis(
+  { hasProfile },
+  ref,
+) {
   const [name, setName] = useState('')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -84,13 +94,14 @@ export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }
     setShowSuggestions(false)
   }
 
-  async function handleAnalyze() {
-    if (!name.trim()) return
+  async function handleAnalyze(nameOverride?: string) {
+    const targetName = (nameOverride ?? name).trim()
+    if (!targetName) return
     setShowSuggestions(false)
     setError(null)
     setPending(true)
     try {
-      const res = await analyzeTargetUniversity(name)
+      const res = await analyzeTargetUniversity(targetName)
       if ('needsProfile' in res) {
         setError('Set up your profile first — we need your academics to analyze a specific school.')
         setPending(false)
@@ -119,6 +130,13 @@ export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }
     }
   }
 
+  useImperativeHandle(ref, () => ({
+    analyzeFor(universityName: string) {
+      setName(universityName)
+      handleAnalyze(universityName)
+    },
+  }))
+
   // See MatchesView's identical timer for why this can't just be the
   // loader's own onComplete — that fires the instant `value` hits 100, not
   // once the fill transition has actually finished playing.
@@ -135,7 +153,7 @@ export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }
   }, [finishing])
 
   return (
-    <section className="bg-card border border-border rounded-3xl p-6">
+    <section id="target-university-analysis" className="bg-card border border-border rounded-3xl p-6 scroll-mt-24">
       <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-2"><Search className="w-4 h-4 text-primary" /> Target university analysis</h2>
       <p className="text-xs text-muted-foreground mb-4">Get a rigorous, school-specific breakdown: your odds, strengths, gaps, and exactly what to do about them.</p>
 
@@ -175,7 +193,7 @@ export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }
           )}
         </div>
         <button
-          onClick={handleAnalyze}
+          onClick={() => handleAnalyze()}
           disabled={pending || !hasProfile || !name.trim()}
           className="flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold text-xs px-5 py-3 rounded-xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed shrink-0"
         >
@@ -245,4 +263,4 @@ export function TargetUniversityAnalysis({ hasProfile }: { hasProfile: boolean }
       )}
     </section>
   )
-}
+})

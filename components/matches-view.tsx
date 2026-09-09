@@ -9,7 +9,7 @@ import type { AcademicDetail } from '@/lib/academic-detail'
 import type { MatchResult } from '@/lib/db/schema'
 import { ProbabilityGraph } from '@/components/probability-graph'
 import { UniversityCard } from '@/components/university-card'
-import { TargetUniversityAnalysis } from '@/components/target-university-analysis'
+import { TargetUniversityAnalysis, type TargetUniversityAnalysisHandle } from '@/components/target-university-analysis'
 import { LoadingDots } from '@/components/loading-dots'
 import { RevealGroup } from '@/components/reveal-group'
 import { LiquidButton } from '@/components/ui/liquid-glass-button'
@@ -57,6 +57,15 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
   const [isRunning, setIsRunning] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const errorRef = useRef<HTMLParagraphElement>(null)
+  const targetAnalysisRef = useRef<TargetUniversityAnalysisHandle>(null)
+
+  // "Get a deeper analysis" on a match card runs the same target-university
+  // analysis above instead of making the student re-type the name, then
+  // scrolls it into view since it lives above the match grid.
+  function handleDeepAnalysis(universityName: string) {
+    targetAnalysisRef.current?.analyzeFor(universityName)
+    document.getElementById('target-university-analysis')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
   // String ids throughout — MatchResult.universityId is a string and
   // getSavedSchoolIds() now returns strings, so `.has()` actually matches.
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
@@ -154,7 +163,7 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
         <p className="text-sm text-muted-foreground">Powered by your saved profile.</p>
       </div>
 
-      <TargetUniversityAnalysis hasProfile={!!profile?.academicDetail} />
+      <TargetUniversityAnalysis ref={targetAnalysisRef} hasProfile={!!profile?.academicDetail} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6">
         <section className="bg-card border border-border rounded-3xl p-6">
@@ -255,7 +264,7 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
               <RevealGroup className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start" replay={results} stagger={0.08}>
                 {results.map((r) => (
                   <div key={r.universityId} id={`university-${r.universityId}`} className="relative scroll-mt-24 match-card-target rounded-3xl">
-                    <UniversityCard uni={r} />
+                    <UniversityCard uni={r} onDeepAnalysis={handleDeepAnalysis} />
                     <button onClick={() => toggleSave(r)} className="absolute top-4 right-4 p-2 rounded-xl bg-secondary border border-border hover:border-primary/30 transition-colors" aria-label={savedIds.has(r.universityId) ? 'Unsave school' : 'Save school'}>
                       {savedIds.has(r.universityId) ? <BookmarkCheck className="w-4 h-4 text-primary" /> : <Bookmark className="w-4 h-4 text-muted-foreground" />}
                     </button>

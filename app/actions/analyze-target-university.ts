@@ -91,10 +91,14 @@ const catalogAnalysisSchema = z.object({
     .describe(
       'Only set when a real earlyActionRate is on file for this school — this student\'s estimated chance if applying non-binding Early Action. Null if no real EA rate on file; never invent one.',
     ),
-  admissionChanceSummary: z.string().describe('Under 25 words summarizing the overall admission picture at this specific school.'),
-  strengths: z.array(z.string()).max(3).describe('Up to 3 specific strengths in this profile relative to this school, each under 12 words. Specific, not generic.'),
-  weaknesses: z.array(z.string()).max(3).describe('Up to 3 specific weaknesses or gaps relative to this school, each under 12 words. Specific, not generic.'),
-  actionSteps: z.array(z.string()).max(3).describe('Up to 3 concrete actions to become more competitive for this exact school, each under 15 words.'),
+  admissionChanceSummary: z
+    .string()
+    .describe(
+      'Under 40 words explaining WHY acceptanceProbability is what it is — name the actual number/signal it\'s grounded in (e.g. "grounded in the real 12% regular-decision rate" or "based on baseline selectivity, since no published rate exists") and how this student\'s profile stacks up against it. Not just a mood summary — the student should see exactly what number or fact produced this percentage.',
+    ),
+  strengths: z.array(z.string()).max(3).describe('Up to 3 specific strengths in this profile relative to this school, each under 16 words. Reference the actual profile detail or school data point behind each one (a specific test score, GPA band, activity, or requirement met) — never generic praise.'),
+  weaknesses: z.array(z.string()).max(3).describe('Up to 3 specific weaknesses or gaps relative to this school, each under 16 words. Reference the actual profile detail or school data point behind each one (a missing score, an unmet requirement, a thin activity) — never generic caution.'),
+  actionSteps: z.array(z.string()).max(3).describe('Up to 3 concrete, specific actions to become more competitive for this exact school, each under 18 words — name the specific test, score, activity, or requirement to target, not generic advice like "get better grades."'),
 })
 
 export type TargetAnalysisResult = {
@@ -325,7 +329,7 @@ ${profileBlock}
 
 ${requirementNote}
 
-Provide an honest tier + probability, and short, specific, scannable bullets for strengths, weaknesses/gaps, and action steps — brevity over completeness.`
+Provide an honest tier + probability, a summary that names the concrete number/fact acceptanceProbability is grounded in (not just a mood statement), and short, specific, scannable bullets for strengths, weaknesses/gaps, and action steps — every bullet must cite an actual detail from this student's profile or this school's data, brevity over completeness but never so terse it becomes generic filler.`
 
       const call = () =>
         client.responses.parse({
