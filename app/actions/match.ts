@@ -39,8 +39,10 @@ import { isGarbledStrings } from '@/lib/ai-response-guard'
 // a live test toward a ~20s target; sampling across selectivity bands
 // (rather than truncating) still keeps a representative spread from Safety
 // through Ultra Reach regardless of size, and the UI already nudges
-// re-running 2-3 times to cover more of the catalog.
-const MAX_CATALOG_FOR_AI = 14
+// re-running 2-3 times to cover more of the catalog. 14 confirmed live to
+// meaningfully cut run time; bumping to 15 for a touch more breadth per
+// run since it's a small enough step not to meaningfully affect that gain.
+const MAX_CATALOG_FOR_AI = 15
 
 function shuffle<T>(items: T[]): T[] {
   const copy = [...items]

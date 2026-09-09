@@ -225,14 +225,19 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
               phases={MATCH_PHASES}
               // A single AI call assesses MAX_CATALOG_FOR_AI schools at once
               // (see match.ts) — no parallel batching, that was tried and
-              // reverted (see the comment there). Measured live at 20
-              // schools: ~46s warm, ~65s cold. MAX_CATALOG_FOR_AI was just
-              // dropped from 20 to 14 to test whether fewer schools per run
-              // (the one real lever on wall time) gets closer to a ~20s
-              // target — re-measure and adjust this duration once real
-              // numbers come in. `loop` is the safety net for slower runs.
-              duration={34}
-              loop={!finishing}
+              // reverted (see the comment there). Dropping from 20 to
+              // 14-15 schools confirmed live to meaningfully cut run time.
+              // loop is deliberately false: with it on, a run that outlasts
+              // `duration` made the bar visibly restart from 0 and sweep
+              // again, reading as "it loaded twice" — confusing even though
+              // the real reveal was always correctly gated on the actual
+              // API response (see the `finishing` effect below), never on
+              // the bar's own animation. Now it plays through once and
+              // holds at full while still waiting, and only actually
+              // reveals results once `finishing` flips `value` to 100 for
+              // real.
+              duration={36}
+              loop={false}
               value={finishing ? 100 : undefined}
             />
           </section>
