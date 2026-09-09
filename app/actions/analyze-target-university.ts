@@ -14,6 +14,7 @@ import { SELECTIVITY_CALIBRATION } from '@/lib/selectivity-calibration'
 import { assertAnalysisRateLimit } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/request-fingerprint'
 import { UNIVERSITY_ALIASES } from '@/lib/university-aliases'
+import { ENGLISH_TEST_GUIDANCE } from '@/lib/english-test-guidance'
 import { isGarbledStrings } from '@/lib/ai-response-guard'
 import { z } from 'zod'
 import OpenAI from 'openai'
@@ -329,6 +330,8 @@ ${SELECTIVITY_CALIBRATION}
 ${profileBlock}
 
 ${requirementNote}
+
+${ENGLISH_TEST_GUIDANCE}
 
 Provide an honest tier + probability, a summary that names the concrete number/fact acceptanceProbability is grounded in (not just a mood statement), and short, specific, scannable bullets for strengths, weaknesses/gaps, and action steps — every bullet must cite an actual detail from this student's profile or this school's data, brevity over completeness but never so terse it becomes generic filler.`
 
