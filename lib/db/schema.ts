@@ -259,6 +259,37 @@ export const dreamCountryProfiles = pgTable('dreamCountryProfiles', {
   userCountryUnique: uniqueIndex('dreamCountryProfiles_user_country_idx').on(table.userId, table.country),
 }))
 
+// One row per (user, country, university) added to a Build Your Dream
+// country's "My Universities" list — created by the "Add to list" action on
+// a deep-dive analysis (see components/dream-country-workspace.tsx). Each
+// school gets its own real per-college Common App tasks (see
+// lib/common-app-sections.ts's PER_UNIVERSITY_TASK_TEMPLATE) plus the
+// specific gaps the AI analysis found for that exact school, tracked
+// separately from the country-wide Common App checklist above.
+export const dreamUniversityTracks = pgTable('dreamUniversityTracks', {
+  id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
+  userId: uuid('userId').notNull(),
+  country: text('country').notNull(),
+  universityId: integer('universityId').notNull(),
+  universityName: text('universityName').notNull(),
+  // Snapshot of the analysis that was showing when this school was added —
+  // kept alongside the school so its card can show the "why" without
+  // re-running the AI call every time the list renders.
+  strengths: jsonb('strengths').$type<string[]>().notNull().default([]),
+  weaknesses: jsonb('weaknesses').$type<string[]>().notNull().default([]),
+  // The real per-college tasks for this school: PER_UNIVERSITY_TASK_TEMPLATE
+  // plus whatever school-specific gaps the analysis surfaced (a required
+  // portfolio, a missing score, a specific supplemental essay) — all
+  // manually toggled, since none of these have a master-profile field to
+  // auto-detect from.
+  tasks: jsonb('tasks').$type<string[]>().notNull().default([]),
+  taskProgress: jsonb('taskProgress').$type<Record<string, number>>().notNull().default({}),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+}, (table) => ({
+  userCountryUniversityUnique: uniqueIndex('dreamUniversityTracks_user_country_university_idx').on(table.userId, table.country, table.universityId),
+}))
+
 export type ApplicationStatus = 'Researching' | 'Applying' | 'Submitted'
 
 export type SavedSchool = {

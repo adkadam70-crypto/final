@@ -26,6 +26,15 @@ export function computeAutoChecklistProgress(requirement: string, profile: Check
   const hasAct = t.act !== undefined
   const hasEnglishTest = t.englishTestType !== undefined && t.englishTestScore !== undefined
 
+  // Common App section labels (US-specific, see lib/common-app-sections.ts)
+  // — matched as exact section names, not substrings, so "Education" here
+  // doesn't collide with a country requirements string that happens to
+  // mention "education" in passing.
+  if (r === 'testing') return hasSat || hasAct || hasEnglishTest ? 100 : 0
+  if (r === 'activities') return profile.extracurriculars.length > 0 ? 100 : 0
+  if (r === 'education') return 100 // reaching this feature already requires a filled-in academic profile
+  if (r === 'profile' || r === 'family' || r === 'writing') return null // no matching master-profile field — manual
+
   if (r.includes('jee')) return t.jeePercentile !== undefined ? 100 : 0
   if (r.includes('neet')) return t.neetScore !== undefined ? 100 : 0
   if (r.includes('cuet')) return null // no dedicated CUET field on the profile yet

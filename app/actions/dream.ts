@@ -8,7 +8,8 @@ import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { dreamProfiles, dreamCountryProfiles, aiRateLimitLog } from '@/lib/db/schema'
+import { dreamProfiles, dreamCountryProfiles, dreamUniversityTracks, aiRateLimitLog } from '@/lib/db/schema'
+import { PER_UNIVERSITY_TASK_TEMPLATE } from '@/lib/common-app-sections'
 import { getUserId } from '@/lib/get-user-id'
 import { getClientIp } from '@/lib/request-fingerprint'
 import { getLatestProfile } from '@/app/actions/profile'
@@ -34,6 +35,7 @@ async function assertDreamAdmin(): Promise<void> {
 
 export type DreamProfileRow = Awaited<ReturnType<typeof getDreamProfile>>
 export type DreamCountryProfileRow = Awaited<ReturnType<typeof getDreamCountryProfile>>
+export type DreamUniversityTrackRow = Awaited<ReturnType<typeof getDreamUniversityTracks>>[number]
 
 // User-level row: onboarding answers + field recommendation. Done once —
 // see dreamCountryProfiles for the per-country data built on top of it.
@@ -388,6 +390,78 @@ export async function toggleDreamChecklistItem(country: string, item: string, do
     return { success: true }
   } catch (error) {
     console.error('toggleDreamChecklistItem error:', error)
+    return { success: false }
+  }
+}
+
+export async function getDreamUniversityTracks(country: string) {
+  await assertDreamAdmin()
+  const userId = await getUserId()
+  return db
+    .select()
+    .from(dreamUniversityTracks)
+    .where(and(eq(dreamUniversityTracks.userId, userId), eq(dreamUniversityTracks.country, country)))
+    .orderBy(asc(dreamUniversityTracks.createdAt))
+}
+
+// Adds a school to this country's "My Universities" list from a Target
+// University Analysis result — snapshots the strengths/weaknesses that were
+// showing at the time, and seeds its task list with the real generic
+// per-college Common App tasks (lib/common-app-sections.ts) plus whatever
+// school-specific gaps the analysis surfaced (actionSteps), deduplicated.
+// Idempotent: adding an already-added school just returns success.
+export async function addUniversityToDreamList(
+  country: string,
+  universityId: number,
+  universityName: string,
+  strengths: string[],
+  weaknesses: string[],
+  schoolSpecificTasks: string[],
+): Promise<{ success: boolean; message: string }> {
+  let userId: string
+  try {
+    await assertDreamAdmin()
+    userId = await getUserId()
+  } catch {
+    return { success: false, message: 'Your session has expired — please sign in again.' }
+  }
+  try {
+    const tasks = [...PER_UNIVERSITY_TASK_TEMPLATE, ...schoolSpecificTasks].filter((t, i, arr) => arr.indexOf(t) === i)
+    await db
+      .insert(dreamUniversityTracks)
+      .values({ userId, country, universityId, universityName, strengths, weaknesses, tasks })
+      .onConflictDoNothing()
+    revalidatePath(`/dream/${country}`)
+    return { success: true, message: 'Added to your list.' }
+  } catch (error) {
+    console.error('addUniversityToDreamList error:', error)
+    return { success: false, message: 'Something went wrong. Please try again.' }
+  }
+}
+
+export async function toggleDreamUniversityTask(country: string, universityId: number, task: string, done: boolean): Promise<{ success: boolean }> {
+  let userId: string
+  try {
+    await assertDreamAdmin()
+    userId = await getUserId()
+  } catch {
+    return { success: false }
+  }
+  try {
+    const rows = await db
+      .select()
+      .from(dreamUniversityTracks)
+      .where(and(eq(dreamUniversityTracks.userId, userId), eq(dreamUniversityTracks.country, country), eq(dreamUniversityTracks.universityId, universityId)))
+      .limit(1)
+    const nextProgress = { ...(rows[0]?.taskProgress ?? {}), [task]: done ? 100 : 0 }
+    await db
+      .update(dreamUniversityTracks)
+      .set({ taskProgress: nextProgress, updatedAt: new Date() })
+      .where(and(eq(dreamUniversityTracks.userId, userId), eq(dreamUniversityTracks.country, country), eq(dreamUniversityTracks.universityId, universityId)))
+    revalidatePath(`/dream/${country}`)
+    return { success: true }
+  } catch (error) {
+    console.error('toggleDreamUniversityTask error:', error)
     return { success: false }
   }
 }

@@ -59,6 +59,7 @@ function buildResultFromRow(
     : null
   return {
     resolvedUniversityName: matched.name,
+    universityId: matched.id,
     matchTier: row.matchTier as MatchResult['matchTier'],
     acceptanceProbability: row.acceptanceProbability ?? 0,
     admissionChanceSummary: row.admissionChanceSummary,
@@ -119,6 +120,10 @@ const catalogAnalysisSchema = z.object({
 
 export type TargetAnalysisResult = {
   resolvedUniversityName: string
+  // The catalog's real numeric id for this school — lets a caller (e.g. the
+  // Build Your Dream "add to list" flow) persist a stable reference instead
+  // of matching on name text again later.
+  universityId: number
   matchTier: MatchResult['matchTier']
   acceptanceProbability: number
   admissionChanceSummary: string
@@ -471,6 +476,7 @@ Provide an honest tier + probability, a summary that names the concrete number/f
 
     return {
       resolvedUniversityName: matched.name,
+      universityId: matched.id,
       matchTier,
       acceptanceProbability,
       admissionChanceSummary,

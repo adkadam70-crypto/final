@@ -2,11 +2,12 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, User, Search, TrendingUp, AlertTriangle, RotateCcw, Sparkles, CheckCircle2 } from 'lucide-react'
-import { analyzeDreamProfile, toggleDreamChecklistItem, type DreamCountryProfileRow } from '@/app/actions/dream'
-import { TargetUniversityAnalysis } from '@/components/target-university-analysis'
+import { ArrowLeft, User, Search, TrendingUp, AlertTriangle, RotateCcw, Sparkles, CheckCircle2, GraduationCap } from 'lucide-react'
+import { analyzeDreamProfile, toggleDreamChecklistItem, toggleDreamUniversityTask, type DreamCountryProfileRow, type DreamUniversityTrackRow } from '@/app/actions/dream'
+import { DreamUniversitySearch } from '@/components/dream-university-search'
 import { mergeChecklistProgress, overallCompletionPct } from '@/lib/dream-checklist'
 import { APPLICATION_INFO } from '@/lib/application-info'
+import { COMMON_APP_SECTIONS } from '@/lib/common-app-sections'
 import { LoadingDots } from '@/components/loading-dots'
 import type { StandardizedTests } from '@/lib/standardized-tests'
 
@@ -16,20 +17,54 @@ type WorkspaceProfile = {
   extracurriculars: string[]
 }
 
+// Simple circular completion ring — SVG stroke-dashoffset trick, no chart
+// library needed for one number.
+function CompletionRing({ pct, size = 96 }: { pct: number; size?: number }) {
+  const stroke = 8
+  const radius = (size - stroke) / 2
+  const circumference = 2 * Math.PI * radius
+  const offset = circumference - (Math.min(100, Math.max(0, pct)) / 100) * circumference
+  return (
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="var(--secondary)" strokeWidth={stroke} />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="var(--primary)"
+          strokeWidth={stroke}
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-lg font-bold text-primary">{pct}%</span>
+      </div>
+    </div>
+  )
+}
+
 export function DreamCountryWorkspace({
   country,
   confirmedField,
   initialCountryProfile,
+  initialUniversityTracks,
   profile,
 }: {
   country: string
   confirmedField: string
   initialCountryProfile: NonNullable<DreamCountryProfileRow>
+  initialUniversityTracks: DreamUniversityTrackRow[]
   profile: WorkspaceProfile | null
 }) {
   const router = useRouter()
   const [tab, setTab] = useState<'profile' | 'search'>('profile')
   const [countryProfile, setCountryProfile] = useState(initialCountryProfile)
+  const [universityTracks, setUniversityTracks] = useState(initialUniversityTracks)
   const [analysisPending, setAnalysisPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -37,18 +72,30 @@ export function DreamCountryWorkspace({
   const hasAnalysis = !!(countryProfile.analysisStrengths?.length || countryProfile.analysisGaps?.length)
   const hasProfile = !!profile?.academicDetail
 
+  // US gets the real, researched Common App section list (see
+  // lib/common-app-sections.ts) instead of the generic per-country
+  // requirements text every other country still uses — that generic list
+  // stays the fallback until the same research pass is done for them too.
+  const checklistDefs = country === 'US' ? COMMON_APP_SECTIONS.map((s) => s.label) : (countryInfo?.requirements ?? [])
+
   const checklistItems =
-    countryInfo && profile
-      ? mergeChecklistProgress(countryInfo.requirements, countryProfile.checklist, {
+    checklistDefs.length && profile
+      ? mergeChecklistProgress(checklistDefs, countryProfile.checklist, {
           standardizedTests: profile.standardizedTests,
           extracurriculars: profile.extracurriculars,
         })
       : []
-  const completionPct = overallCompletionPct(checklistItems)
+  const commonAppCompletionPct = overallCompletionPct(checklistItems)
 
-  const dreamContext = hasAnalysis
-    ? `For ${confirmedField} in ${countryInfo?.name ?? country}, this student's saved profile analysis found — Strengths: ${(countryProfile.analysisStrengths ?? []).join('; ') || 'none on file'}. Gaps: ${(countryProfile.analysisGaps ?? []).join('; ') || 'none on file'}.`
-    : undefined
+  const universityCompletionPcts = universityTracks.map((u) => {
+    if (u.tasks.length === 0) return 0
+    const done = u.tasks.filter((t) => (u.taskProgress[t] ?? 0) >= 100).length
+    return Math.round((done / u.tasks.length) * 100)
+  })
+  const overallPct =
+    universityTracks.length > 0
+      ? Math.round((commonAppCompletionPct + universityCompletionPcts.reduce((a, b) => a + b, 0)) / (1 + universityTracks.length))
+      : commonAppCompletionPct
 
   async function handleAnalyze() {
     setAnalysisPending(true)
@@ -66,6 +113,13 @@ export function DreamCountryWorkspace({
   async function handleToggleChecklist(item: string, done: boolean) {
     setCountryProfile((c) => ({ ...c, checklist: { ...c.checklist, [item]: done ? 100 : 0 } }))
     await toggleDreamChecklistItem(country, item, done)
+  }
+
+  async function handleToggleUniversityTask(universityId: number, task: string, done: boolean) {
+    setUniversityTracks((tracks) =>
+      tracks.map((t) => (t.universityId === universityId ? { ...t, taskProgress: { ...t.taskProgress, [task]: done ? 100 : 0 } } : t)),
+    )
+    await toggleDreamUniversityTask(country, universityId, task, done)
   }
 
   return (
@@ -90,13 +144,17 @@ export function DreamCountryWorkspace({
         </div>
       </div>
 
-      <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-1">{countryInfo?.name ?? country}</h1>
-        <p className="text-sm text-muted-foreground">Target field: {confirmedField}</p>
+      <div className="mb-6 flex items-center gap-5">
+        <CompletionRing pct={overallPct} />
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-1">{countryInfo?.name ?? country}</h1>
+          <p className="text-sm text-muted-foreground">Target field: {confirmedField}</p>
+          <p className="text-[11px] text-muted-foreground/70 mt-0.5">{overallPct}% of your overall application work is done</p>
+        </div>
       </div>
 
       {tab === 'profile' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="space-y-6">
           <section className="bg-card border border-border rounded-3xl p-6">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-primary" /> Profile analysis
@@ -138,41 +196,97 @@ export function DreamCountryWorkspace({
             {error && <p className="text-[11px] text-destructive mt-3">{error}</p>}
           </section>
 
+          {/* Section 1: the country-wide application checklist (Common App's
+              real sections for US; the generic per-country list for
+              everyone else until that research pass is done too). */}
           <section className="bg-card border border-border rounded-3xl p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-chart-2" /> Application checklist</h2>
-              <span className="text-xs font-bold text-primary">{completionPct}%</span>
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-chart-2" /> {country === 'US' ? 'Common App checklist' : 'Application checklist'}
+              </h2>
+              <span className="text-xs font-bold text-primary">{commonAppCompletionPct}%</span>
             </div>
             <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden mb-4">
-              <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${completionPct}%` }} />
+              <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${commonAppCompletionPct}%` }} />
             </div>
             {checklistItems.length > 0 ? (
-              <ul className="space-y-2">
-                {checklistItems.map(({ requirement, progress, autoDetected }) => (
-                  <li key={requirement} className="p-2.5 rounded-xl border border-border bg-secondary">
-                    <button
-                      type="button"
-                      disabled={autoDetected}
-                      onClick={() => !autoDetected && handleToggleChecklist(requirement, progress < 100)}
-                      className={`w-full text-left text-xs flex items-start gap-2 ${autoDetected ? 'cursor-default' : 'cursor-pointer'} ${progress >= 100 ? 'text-muted-foreground' : 'text-foreground/90'}`}
-                    >
-                      <CheckCircle2 className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${progress >= 100 ? 'text-primary' : 'text-muted-foreground/40'}`} />
-                      <span className={progress >= 100 ? 'line-through' : ''}>{requirement}</span>
-                      {autoDetected && <span className="ml-auto shrink-0 text-[9px] text-muted-foreground/60 uppercase">auto</span>}
-                    </button>
-                    <div className="h-1 w-full bg-border rounded-full overflow-hidden mt-2">
-                      <div className={`h-full rounded-full transition-all ${progress >= 100 ? 'bg-chart-2' : 'bg-primary/50'}`} style={{ width: `${progress}%` }} />
-                    </div>
-                  </li>
-                ))}
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {checklistItems.map(({ requirement, progress, autoDetected }) => {
+                  const sectionInfo = COMMON_APP_SECTIONS.find((s) => s.label === requirement)
+                  return (
+                    <li key={requirement} className="p-2.5 rounded-xl border border-border bg-secondary">
+                      <button
+                        type="button"
+                        disabled={autoDetected}
+                        onClick={() => !autoDetected && handleToggleChecklist(requirement, progress < 100)}
+                        className={`w-full text-left text-xs flex items-start gap-2 ${autoDetected ? 'cursor-default' : 'cursor-pointer'}`}
+                      >
+                        <CheckCircle2 className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${progress >= 100 ? 'text-primary' : 'text-muted-foreground/40'}`} />
+                        <span className={progress >= 100 ? 'text-muted-foreground line-through' : 'text-foreground/90'}>{requirement}</span>
+                        {autoDetected && <span className="ml-auto shrink-0 text-[9px] text-muted-foreground/60 uppercase">auto</span>}
+                      </button>
+                      {sectionInfo && <p className="text-[10px] text-muted-foreground/70 mt-1 ml-5.5 text-pretty">{sectionInfo.description}</p>}
+                      <div className="h-1 w-full bg-border rounded-full overflow-hidden mt-2">
+                        <div className={`h-full rounded-full transition-all ${progress >= 100 ? 'bg-chart-2' : 'bg-primary/50'}`} style={{ width: `${progress}%` }} />
+                      </div>
+                    </li>
+                  )
+                })}
               </ul>
             ) : (
               <p className="text-xs text-muted-foreground">No checklist data for this country yet.</p>
             )}
           </section>
+
+          {/* Section 2: schools added from the Search tab, each tracked
+              separately with its own real per-college Common App tasks. */}
+          <section className="bg-card border border-border rounded-3xl p-6">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
+              <GraduationCap className="w-4 h-4 text-chart-4" /> My universities
+            </h2>
+            {universityTracks.length === 0 ? (
+              <p className="text-xs text-muted-foreground">
+                None added yet — use the <button onClick={() => setTab('search')} className="text-primary font-medium underline underline-offset-2">Search</button> tab to analyze a school and add it here.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {universityTracks.map((track) => {
+                  const done = track.tasks.filter((t) => (track.taskProgress[t] ?? 0) >= 100).length
+                  const pct = track.tasks.length ? Math.round((done / track.tasks.length) * 100) : 0
+                  return (
+                    <div key={track.universityId} className="border border-border rounded-2xl p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm font-bold">{track.universityName}</p>
+                        <span className="text-xs font-bold text-primary">{pct}% · {done}/{track.tasks.length} tasks</span>
+                      </div>
+                      <div className="h-1 w-full bg-secondary rounded-full overflow-hidden mb-3">
+                        <div className="h-full bg-chart-4 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                      </div>
+                      <ul className="space-y-1.5">
+                        {track.tasks.map((task) => {
+                          const taskDone = (track.taskProgress[task] ?? 0) >= 100
+                          return (
+                            <li key={task}>
+                              <button
+                                onClick={() => handleToggleUniversityTask(track.universityId, task, !taskDone)}
+                                className="w-full flex items-start gap-2 text-left text-xs"
+                              >
+                                <CheckCircle2 className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${taskDone ? 'text-primary' : 'text-muted-foreground/40'}`} />
+                                <span className={taskDone ? 'text-muted-foreground line-through' : 'text-foreground/90'}>{task}</span>
+                              </button>
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </section>
         </div>
       ) : (
-        <TargetUniversityAnalysis hasProfile={hasProfile} dreamContext={dreamContext} />
+        <DreamUniversitySearch country={country} hasProfile={hasProfile} />
       )}
     </main>
   )
