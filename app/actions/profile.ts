@@ -20,6 +20,7 @@ export type SaveProfileInput = {
   preferredRank: string
   intendedField: string
   extracurriculars: string[]
+  apCourses: string[]
 }
 
 /**
@@ -36,6 +37,9 @@ export type SaveProfileInput = {
 const MAX_FIELD_LENGTH = 500
 const MAX_EXTRACURRICULARS = 20
 const MAX_SUBJECTS = 10
+// Generous headroom above the real AP catalog size (42 courses as of this
+// session, see lib/ap-courses.ts) — this caps abuse, not genuine use.
+const MAX_AP_COURSES = 50
 
 function validateFreeTextLengths(input: SaveProfileInput): string | null {
   if (input.curriculum.length > MAX_FIELD_LENGTH) return 'Curriculum value is too long.'
@@ -46,6 +50,9 @@ function validateFreeTextLengths(input: SaveProfileInput): string | null {
 
   if (input.extracurriculars.length > MAX_EXTRACURRICULARS) return `Enter at most ${MAX_EXTRACURRICULARS} extracurricular entries.`
   if (input.extracurriculars.some((e) => e.length > MAX_FIELD_LENGTH)) return 'One of your extracurricular entries is too long.'
+
+  if (input.apCourses.length > MAX_AP_COURSES) return `Enter at most ${MAX_AP_COURSES} AP courses.`
+  if (input.apCourses.some((c) => c.length > MAX_FIELD_LENGTH)) return 'One of your AP course entries is too long.'
 
   if ('subjects' in input.academicDetail) {
     if (input.academicDetail.subjects.length > MAX_SUBJECTS) return `Enter at most ${MAX_SUBJECTS} subjects.`
@@ -112,6 +119,7 @@ export async function saveProfile(input: SaveProfileInput): Promise<{ success: b
         preferredRank: input.preferredRank,
         intendedField: input.intendedField,
         extracurriculars: input.extracurriculars,
+        apCourses: input.apCourses,
       })
       .returning()
 

@@ -194,6 +194,7 @@ async function generateOpenAIMatch({
     preferredRank: string
     intendedField: string
     extracurriculars: string[]
+    apCourses: string[]
   }
   catalog: Array<{
     universityId: string | number
@@ -254,6 +255,7 @@ STUDENT PROFILE:
 - Preferred university ranking: ${studentProfile.preferredRank} (soft preference — weigh it alongside fit, don't treat it as a hard filter)
 - Intended field of study: ${studentProfile.intendedField}
 - Extracurriculars: ${studentProfile.extracurriculars.length ? studentProfile.extracurriculars.join('; ') : 'None provided'}
+- AP courses taken: ${studentProfile.apCourses.length ? studentProfile.apCourses.join('; ') : 'None reported'}
 
 TIER DEFINITIONS:
 - Safety: student clearly exceeds the bar (prob ~75-95%).
@@ -542,6 +544,7 @@ export async function runMatch(): Promise<
       preferredRank: profile.preferredRank,
       intendedField: profile.intendedField,
       extracurriculars: profile.extracurriculars,
+      apCourses: profile.apCourses,
     }
 
     const { object } = await generateOpenAIMatch({

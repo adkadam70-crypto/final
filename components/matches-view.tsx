@@ -49,6 +49,7 @@ type ProfileRow = {
   preferredRank: string
   intendedField: string
   extracurriculars: string[]
+  apCourses: string[]
 } | null
 
 export function MatchesView({ profile }: { profile: ProfileRow }) {
@@ -187,6 +188,13 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
                 <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
                   {profile.extracurriculars.map((ec, i) => <li key={i}>{ec}</li>)}
                 </ul>
+              )}
+              {profile.apCourses.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {profile.apCourses.map((c) => (
+                    <span key={c} className="text-[10px] bg-secondary border border-border text-foreground/80 px-2 py-0.5 rounded-md">{c}</span>
+                  ))}
+                </div>
               )}
               <a href="/profile" className="text-xs text-primary font-medium flex items-center gap-1 hover:brightness-125">Edit profile <ArrowRight className="w-3 h-3" /></a>
             </div>

@@ -107,6 +107,7 @@ STUDENT PROFILE:
 - Target countries: ${profile.targetCountries.join(', ')}
 - Intended field: ${profile.intendedField}
 - Extracurriculars: ${profile.extracurriculars.length ? profile.extracurriculars.join('; ') : 'None provided'}
+- AP courses taken: ${profile.apCourses.length ? profile.apCourses.join('; ') : 'None reported'}
 
 Score realistically. A 100 should be practically unreachable — reserved for a flawless, internationally-decorated profile with nothing left to add. Most genuinely strong applicants land in the 55-85 range. A profile with no extracurriculars listed must be capped well below that regardless of how strong the academics are, since real holistic admissions weigh both roughly equally. Be specific in the hint about what's actually missing, not generic encouragement.
 

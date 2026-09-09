@@ -142,6 +142,12 @@ export const profiles = pgTable('profiles', {
   standardizedTests: jsonb('standardizedTests').$type<StandardizedTests>().notNull().default({}), // orthogonal to curriculum — SAT/ACT, JEE/NEET etc.
   priorGrades: jsonb('priorGrades').$type<PriorGrades>(), // nullable — 9th-11th context, curriculum-aware; see lib/prior-grades.ts
   extracurriculars: jsonb('extracurriculars').$type<string[]>().notNull().default([]),
+  // Real AP (Advanced Placement) courses taken, independent of curriculum —
+  // a student on any curriculum (CBSE, A-Levels, IB, etc.) may also take AP
+  // exams alongside it. Picked from the College Board's real course catalog
+  // (see lib/ap-courses.ts), not free text, so this is always a genuine,
+  // real course name the AI can weigh directly.
+  apCourses: jsonb('apCourses').$type<string[]>().notNull().default([]),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
 

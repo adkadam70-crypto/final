@@ -125,7 +125,8 @@ STUDENT PROFILE:
 - Preferred industry hub: ${profile.preferredSector}
 - Preferred university ranking: ${profile.preferredRank} (soft preference — weigh it alongside fit, don't treat it as a hard filter)
 - Intended field of study: ${profile.intendedField}
-- Extracurriculars: ${profile.extracurriculars.length ? profile.extracurriculars.join('; ') : 'None provided'}`
+- Extracurriculars: ${profile.extracurriculars.length ? profile.extracurriculars.join('; ') : 'None provided'}
+- AP courses taken: ${profile.apCourses.length ? profile.apCourses.join('; ') : 'None reported'}`
 
 /**
  * Rigorous single-university deep-dive: strengths, weaknesses, and concrete

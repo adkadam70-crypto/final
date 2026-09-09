@@ -4,12 +4,40 @@
 // curriculum-specific discriminated union. Which fields are relevant is
 // driven by the student's selected target countries, not their curriculum.
 
+// English-language proficiency tests — relevant to every target country in
+// this app (all 8 either require or commonly accept one of these from
+// non-native speakers; see lib/application-info.ts), so kept orthogonal to
+// both curriculum and target country the same way SAT/ACT are. A student
+// only ever sits one of these for a given application cycle, so this is a
+// single tagged choice (test type + its own score) rather than a fixed
+// field per test the way SAT/ACT are.
+export const ENGLISH_TEST_TYPES = ['IELTS', 'TOEFL iBT', 'Duolingo English Test', 'PTE Academic', 'Cambridge English Scale'] as const
+export type EnglishTestType = (typeof ENGLISH_TEST_TYPES)[number]
+
+// Real score ranges per test, verified this session:
+// - IELTS: 0-9 overall band score, in 0.5 increments.
+// - TOEFL iBT: 0-120 (four sections of 30 points each).
+// - Duolingo English Test: 10-160.
+// - PTE Academic: 10-90 (Global Scale of English).
+// - Cambridge English Scale: 80-230 — shared across every Cambridge
+//   qualification (A2 Key through C2 Proficiency), so one range covers all
+//   of them rather than needing a separate entry per exam.
+export const ENGLISH_TEST_RANGES: Record<EnglishTestType, { min: number; max: number; step: number }> = {
+  IELTS: { min: 0, max: 9, step: 0.5 },
+  'TOEFL iBT': { min: 0, max: 120, step: 1 },
+  'Duolingo English Test': { min: 10, max: 160, step: 1 },
+  'PTE Academic': { min: 10, max: 90, step: 1 },
+  'Cambridge English Scale': { min: 80, max: 230, step: 1 },
+}
+
 export type StandardizedTests = {
   satMath?: number // 200-800
   satReadingWriting?: number // 200-800
   act?: number // 1-36
   jeePercentile?: number // 0-100 — JEE Main is reported as a percentile, not a raw score
   neetScore?: number // 0-720 — NEET is reported as a raw marks score, not a percentile
+  englishTestType?: EnglishTestType
+  englishTestScore?: number // range depends on englishTestType — see ENGLISH_TEST_RANGES
 }
 
 export function satComposite(t: StandardizedTests): number | null {
@@ -26,6 +54,9 @@ export function formatStandardizedTests(t: StandardizedTests): string {
   if (t.act !== undefined) parts.push(`ACT ${t.act}/36`)
   if (t.jeePercentile !== undefined) parts.push(`JEE Main ${t.jeePercentile}th percentile`)
   if (t.neetScore !== undefined) parts.push(`NEET ${t.neetScore}/720`)
+  if (t.englishTestType !== undefined && t.englishTestScore !== undefined) {
+    parts.push(`${t.englishTestType} ${t.englishTestScore}/${ENGLISH_TEST_RANGES[t.englishTestType].max}`)
+  }
   return parts.length ? parts.join('; ') : 'None provided'
 }
 
@@ -120,5 +151,12 @@ export function validateStandardizedTests(t: StandardizedTests): string | null {
   if (t.act !== undefined && (t.act < 1 || t.act > 36)) return 'ACT must be between 1 and 36.'
   if (t.jeePercentile !== undefined && (t.jeePercentile < 0 || t.jeePercentile > 100)) return 'JEE percentile must be between 0 and 100.'
   if (t.neetScore !== undefined && (t.neetScore < 0 || t.neetScore > 720)) return 'NEET score must be between 0 and 720.'
+  if (t.englishTestScore !== undefined) {
+    if (t.englishTestType === undefined) return 'Select which English test that score is from.'
+    const range = ENGLISH_TEST_RANGES[t.englishTestType]
+    if (t.englishTestScore < range.min || t.englishTestScore > range.max) {
+      return `${t.englishTestType} score must be between ${range.min} and ${range.max}.`
+    }
+  }
   return null
 }
