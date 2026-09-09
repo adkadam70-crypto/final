@@ -97,9 +97,24 @@ const catalogAnalysisSchema = z.object({
     .describe(
       'Under 40 words explaining WHY acceptanceProbability is what it is — name the actual number/signal it\'s grounded in (e.g. "grounded in the real 12% regular-decision rate" or "based on baseline selectivity, since no published rate exists") and how this student\'s profile stacks up against it. Not just a mood summary — the student should see exactly what number or fact produced this percentage.',
     ),
-  strengths: z.array(z.string()).max(3).describe('Up to 3 specific strengths in this profile relative to this school, each under 16 words. Reference the actual profile detail or school data point behind each one (a specific test score, GPA band, activity, or requirement met) — never generic praise.'),
-  weaknesses: z.array(z.string()).max(3).describe('Up to 3 specific weaknesses or gaps relative to this school, each under 16 words. Reference the actual profile detail or school data point behind each one (a missing score, an unmet requirement, a thin activity) — never generic caution.'),
-  actionSteps: z.array(z.string()).max(3).describe('Up to 3 concrete, specific actions to become more competitive for this exact school, each under 18 words — name the specific test, score, activity, or requirement to target, not generic advice like "get better grades."'),
+  strengths: z
+    .array(z.string())
+    .max(4)
+    .describe(
+      'Up to 4 specific strengths in this profile relative to this school, each under 16 words. Draw from across the full profile, not just one dimension — academics/GPA band, standardized tests (SAT/ACT and/or English proficiency test), AP courses, prior-year grades, extracurriculars/honors, program fit — cite the actual detail behind each one, never generic praise, and never repeat the same underlying fact twice in different words.',
+    ),
+  weaknesses: z
+    .array(z.string())
+    .max(4)
+    .describe(
+      'Up to 4 specific weaknesses or gaps relative to this school, each under 16 words. Draw from across the full profile the same way strengths does — a missing or borderline test score, an unmet requirement, thin extracurriculars, no AP courses where peers typically have some, a weak prior-grade trend — cite the actual detail behind each one, never generic caution, never repeat the same gap twice.',
+    ),
+  actionSteps: z
+    .array(z.string())
+    .max(4)
+    .describe(
+      'Up to 4 concrete, specific actions to become more competitive for this exact school, each under 18 words — name the specific test, score, AP course, activity, or requirement to target, not generic advice like "get better grades." Each should map to a specific weakness above where possible.',
+    ),
 })
 
 export type TargetAnalysisResult = {
@@ -333,7 +348,7 @@ ${requirementNote}
 
 ${ENGLISH_TEST_GUIDANCE}
 
-Provide an honest tier + probability, a summary that names the concrete number/fact acceptanceProbability is grounded in (not just a mood statement), and short, specific, scannable bullets for strengths, weaknesses/gaps, and action steps — every bullet must cite an actual detail from this student's profile or this school's data, brevity over completeness but never so terse it becomes generic filler.`
+Provide an honest tier + probability, a summary that names the concrete number/fact acceptanceProbability is grounded in (not just a mood statement), and short, specific, scannable bullets for strengths, weaknesses/gaps, and action steps. Spread these bullets across the different dimensions of the student profile above (academics/grade trend, standardized tests including any English proficiency test, AP courses, extracurriculars, program fit) rather than clustering several bullets around the same one or two facts — every bullet must cite an actual detail from this student's profile or this school's data, brevity over completeness but never so terse it becomes generic filler.`
 
       const call = () =>
         client.responses.parse({
