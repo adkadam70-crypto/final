@@ -31,12 +31,15 @@ import { getClientIp } from '@/lib/request-fingerprint'
 // smaller calls beat one big one, but live A/B testing (2 timed runs at
 // 46s/65s vs. a single call at 51s) showed no reliable win, just the same
 // noisy range — while the single call is strictly cheaper (no duplicated
-// system prompt/instructions across two requests) and simpler. 20 trades
-// some breadth for real detail per school; sampling across selectivity bands
-// (rather than truncating) keeps a representative spread from Safety through
-// Ultra Reach regardless of size, and the UI already nudges re-running 2-3
-// times to cover more of the catalog rather than shrinking this per run.
-const MAX_CATALOG_FOR_AI = 20
+// system prompt/instructions across two requests) and simpler. Total wall
+// time is driven by how much the model has to generate (a rationale + 2
+// tips per school), not call count, so the only real lever is fewer
+// schools per run — trading breadth for speed. Trying 14 (down from 20) as
+// a live test toward a ~20s target; sampling across selectivity bands
+// (rather than truncating) still keeps a representative spread from Safety
+// through Ultra Reach regardless of size, and the UI already nudges
+// re-running 2-3 times to cover more of the catalog.
+const MAX_CATALOG_FOR_AI = 14
 
 function shuffle<T>(items: T[]): T[] {
   const copy = [...items]

@@ -223,13 +223,15 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
           <section className="bg-card border border-border rounded-3xl p-12 text-center">
             <ProgressiveFluxLoader
               phases={MATCH_PHASES}
-              // Measured live with performance.now(): ~46s on a warm dev
-              // server, ~65s on a cold one (2 parallel AI batches over ~10
-              // schools each — see MAX_CATALOG_FOR_AI/PARALLEL_BATCHES in
-              // match.ts). Sized near the warm number so the sweep usually
-              // completes in one pass; `loop` is the safety net for slower
-              // runs.
-              duration={48}
+              // A single AI call assesses MAX_CATALOG_FOR_AI schools at once
+              // (see match.ts) — no parallel batching, that was tried and
+              // reverted (see the comment there). Measured live at 20
+              // schools: ~46s warm, ~65s cold. MAX_CATALOG_FOR_AI was just
+              // dropped from 20 to 14 to test whether fewer schools per run
+              // (the one real lever on wall time) gets closer to a ~20s
+              // target — re-measure and adjust this duration once real
+              // numbers come in. `loop` is the safety net for slower runs.
+              duration={34}
               loop={!finishing}
               value={finishing ? 100 : undefined}
             />
