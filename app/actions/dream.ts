@@ -3,14 +3,13 @@
 import { z } from 'zod'
 import OpenAI from 'openai'
 import { zodTextFormat } from 'openai/helpers/zod'
-import { eq } from 'drizzle-orm'
+import { eq, and, asc } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { dreamProfiles, aiRateLimitLog } from '@/lib/db/schema'
+import { dreamProfiles, dreamCountryProfiles, aiRateLimitLog } from '@/lib/db/schema'
 import { getUserId } from '@/lib/get-user-id'
-import { ADMIN_EMAIL } from '@/lib/admin'
 import { getClientIp } from '@/lib/request-fingerprint'
 import { getLatestProfile } from '@/app/actions/profile'
 import { gradeBadge } from '@/lib/grade'
@@ -18,6 +17,7 @@ import { formatStandardizedTests } from '@/lib/standardized-tests'
 import { ACADEMIC_FIELDS, type AcademicField } from '@/lib/academic-detail'
 import { APPLICATION_INFO } from '@/lib/application-info'
 import { BIAS_INSTRUCTION } from '@/lib/bias-instruction'
+import { ADMIN_EMAIL } from '@/lib/admin'
 import { assertDreamFieldRateLimit, assertDreamAnalysisRateLimit } from '@/lib/rate-limit'
 import { isGarbledStrings } from '@/lib/ai-response-guard'
 
@@ -33,14 +33,31 @@ async function assertDreamAdmin(): Promise<void> {
 }
 
 export type DreamProfileRow = Awaited<ReturnType<typeof getDreamProfile>>
+export type DreamCountryProfileRow = Awaited<ReturnType<typeof getDreamCountryProfile>>
 
-// One row per user (see lib/db/schema.ts) — this is the read path every
-// other action/page below builds on, always fetched fresh, never cached
-// client-side across steps.
+// User-level row: onboarding answers + field recommendation. Done once —
+// see dreamCountryProfiles for the per-country data built on top of it.
 export async function getDreamProfile() {
   await assertDreamAdmin()
   const userId = await getUserId()
   const rows = await db.select().from(dreamProfiles).where(eq(dreamProfiles.userId, userId)).limit(1)
+  return rows[0] ?? null
+}
+
+export async function getDreamCountryProfiles() {
+  await assertDreamAdmin()
+  const userId = await getUserId()
+  return db.select().from(dreamCountryProfiles).where(eq(dreamCountryProfiles.userId, userId)).orderBy(asc(dreamCountryProfiles.createdAt))
+}
+
+export async function getDreamCountryProfile(country: string) {
+  await assertDreamAdmin()
+  const userId = await getUserId()
+  const rows = await db
+    .select()
+    .from(dreamCountryProfiles)
+    .where(and(eq(dreamCountryProfiles.userId, userId), eq(dreamCountryProfiles.country, country)))
+    .limit(1)
   return rows[0] ?? null
 }
 
@@ -49,7 +66,6 @@ export type DreamOnboardingInput = {
   hobbies: string
   interests: string[]
   interestsOther: string
-  country: string
 }
 
 const MAX_FIELD_LENGTH = 300
@@ -63,16 +79,11 @@ function validateOnboarding(input: DreamOnboardingInput): string | null {
   if (input.strengths.some((s) => s.length > MAX_FIELD_LENGTH) || input.interests.some((s) => s.length > MAX_FIELD_LENGTH)) {
     return 'One of your entries is too long.'
   }
-  if (!input.country.trim()) return 'Select your primary target country.'
   return null
 }
 
-// Saves the 4 onboarding answers — upserted in place (one row per user),
-// not appended, since this is a single evolving workspace. Changing the
-// answers here does NOT clear a previously confirmed field/analysis on its
-// own; recommendDreamField / analyzeDreamProfile are separate, explicit
-// re-runs so a student editing one earlier answer doesn't silently lose
-// work they already confirmed.
+// Saves the onboarding answers — upserted in place (one row per user), not
+// appended, since this is a single evolving profile.
 export async function saveDreamOnboarding(input: DreamOnboardingInput): Promise<{ success: boolean; message: string }> {
   let userId: string
   try {
@@ -90,25 +101,10 @@ export async function saveDreamOnboarding(input: DreamOnboardingInput): Promise<
   try {
     await db
       .insert(dreamProfiles)
-      .values({
-        userId,
-        strengths: input.strengths,
-        hobbies: input.hobbies,
-        interests: input.interests,
-        interestsOther: input.interestsOther,
-        country: input.country,
-        updatedAt: new Date(),
-      })
+      .values({ userId, strengths: input.strengths, hobbies: input.hobbies, interests: input.interests, interestsOther: input.interestsOther, updatedAt: new Date() })
       .onConflictDoUpdate({
         target: dreamProfiles.userId,
-        set: {
-          strengths: input.strengths,
-          hobbies: input.hobbies,
-          interests: input.interests,
-          interestsOther: input.interestsOther,
-          country: input.country,
-          updatedAt: new Date(),
-        },
+        set: { strengths: input.strengths, hobbies: input.hobbies, interests: input.interests, interestsOther: input.interestsOther, updatedAt: new Date() },
       })
     revalidatePath('/dream')
     return { success: true, message: 'Saved.' }
@@ -133,8 +129,8 @@ export type RecommendFieldOutcome =
   | ({ error?: false; needsOnboarding?: false; needsProfile?: false; rateLimited?: false } & DreamFieldRecommendation)
 
 // AI call #1 of 2 in this feature — see the cost estimate given before
-// building this: small input (4 onboarding answers + master profile),
-// small structured output (one enum value + a short rationale).
+// building this: small input (onboarding answers + master profile), small
+// structured output (one enum value + a short rationale).
 export async function recommendDreamField(): Promise<RecommendFieldOutcome> {
   let userId: string
   let clientIp: string
@@ -152,7 +148,7 @@ export async function recommendDreamField(): Promise<RecommendFieldOutcome> {
   }
 
   const dream = await getDreamProfile()
-  if (!dream || !dream.country) return { needsOnboarding: true }
+  if (!dream || (!dream.strengths.length && !dream.hobbies && !dream.interests.length)) return { needsOnboarding: true }
 
   const profile = await getLatestProfile()
   if (!profile || !profile.academicDetail) return { needsProfile: true }
@@ -173,7 +169,6 @@ ONBOARDING ANSWERS:
 - Subjects they excel in / enjoy: ${dream.strengths.length ? dream.strengths.join('; ') : 'Not answered'}
 - What they spend free time on: ${dream.hobbies || 'Not answered'}
 - Real-world problems/industries that excite them: ${[...dream.interests, dream.interestsOther].filter(Boolean).join('; ') || 'Not answered'}
-- Primary target country: ${dream.country}
 
 EXISTING ACADEMIC PROFILE:
 - Academics: ${badge}
@@ -236,9 +231,42 @@ export async function confirmDreamField(field: string): Promise<{ success: boole
   }
 }
 
+// Adds a new country to the student's Build Your Dream dashboard — one row
+// per (user, country), idempotent (picking an already-added country just
+// returns the existing row rather than erroring). Requires a confirmed
+// field first, since every country's analysis is grounded in it.
+export async function addDreamCountry(country: string): Promise<{ success: boolean; message: string }> {
+  let userId: string
+  try {
+    await assertDreamAdmin()
+    userId = await getUserId()
+  } catch {
+    return { success: false, message: 'Your session has expired — please sign in again.' }
+  }
+  if (!APPLICATION_INFO[country]) return { success: false, message: 'Not a supported country.' }
+
+  const dream = await getDreamProfile()
+  if (!dream?.confirmedField) return { success: false, message: 'Confirm your field of study first.' }
+
+  try {
+    await db.insert(dreamCountryProfiles).values({ userId, country }).onConflictDoNothing()
+    revalidatePath('/dream')
+    return { success: true, message: 'Country added.' }
+  } catch (error) {
+    console.error('addDreamCountry error:', error)
+    return { success: false, message: 'Something went wrong. Please try again.' }
+  }
+}
+
 const analysisSchema = z.object({
-  strengths: z.array(z.string()).max(4).describe('Up to 4 specific strengths for this field+country combination, each under 16 words, citing an actual profile detail.'),
-  gaps: z.array(z.string()).max(4).describe('Up to 4 specific gaps for this field+country combination, each under 16 words, citing an actual missing/thin profile detail.'),
+  strengths: z
+    .array(z.string())
+    .max(5)
+    .describe('Up to 5 specific strengths for this field+country combination, each under 18 words, citing an actual profile detail (academics, tests, AP courses, extracurriculars).'),
+  gaps: z
+    .array(z.string())
+    .max(5)
+    .describe('Up to 5 specific gaps for this field+country combination, each under 18 words, citing an actual missing/thin profile detail — spread across different dimensions of the profile, not clustered on one fact.'),
 })
 
 export type DreamAnalysisResult = { strengths: string[]; gaps: string[] }
@@ -246,15 +274,17 @@ export type DreamAnalysisResult = { strengths: string[]; gaps: string[] }
 export type AnalyzeDreamOutcome =
   | { needsOnboarding: true }
   | { needsField: true }
+  | { needsCountry: true }
   | { needsProfile: true }
   | { rateLimited: true; message: string }
   | { error: true; message: string }
-  | ({ error?: false; needsOnboarding?: false; needsField?: false; needsProfile?: false; rateLimited?: false } & DreamAnalysisResult)
+  | ({ error?: false; needsOnboarding?: false; needsField?: false; needsCountry?: false; needsProfile?: false; rateLimited?: false } & DreamAnalysisResult)
 
 // AI call #2 of 2 — analyzes the master profile specifically against the
-// confirmed field + country pair, same size/cost class as Target University
-// Analysis (see the estimate given before building this feature).
-export async function analyzeDreamProfile(): Promise<AnalyzeDreamOutcome> {
+// confirmed field + this country pair. Deepened per explicit feedback: up
+// to 5 points each side instead of the earlier 3-4, spread across the full
+// profile rather than clustered on one or two facts.
+export async function analyzeDreamProfile(country: string): Promise<AnalyzeDreamOutcome> {
   let userId: string
   let clientIp: string
   try {
@@ -271,8 +301,11 @@ export async function analyzeDreamProfile(): Promise<AnalyzeDreamOutcome> {
   }
 
   const dream = await getDreamProfile()
-  if (!dream || !dream.country) return { needsOnboarding: true }
+  if (!dream) return { needsOnboarding: true }
   if (!dream.confirmedField) return { needsField: true }
+
+  const countryRow = await getDreamCountryProfile(country)
+  if (!countryRow) return { needsCountry: true }
 
   const profile = await getLatestProfile()
   if (!profile || !profile.academicDetail) return { needsProfile: true }
@@ -282,15 +315,16 @@ export async function analyzeDreamProfile(): Promise<AnalyzeDreamOutcome> {
 
   const badge = gradeBadge(profile.academicDetail)
   const client = new OpenAI({ apiKey })
-  const countryInfo = APPLICATION_INFO[dream.country]
+  const countryInfo = APPLICATION_INFO[country]
 
-  const prompt = `You are an expert college admissions counselor. Give a specific, well-grounded analysis of how well this student's existing academic profile fits their chosen field of study and target country — not generic encouragement.
+  const prompt = `You are an expert college admissions counselor. Give a specific, well-grounded, DEEP analysis of how well this student's existing academic profile fits their chosen field of study and target country — not generic encouragement. Go beyond the obvious: look for second-order signals too (e.g. course rigor trend across years, how a specific extracurricular actually maps to the field, whether test scores are strong enough for THIS country's norm specifically).
 
 ${BIAS_INSTRUCTION}
 
 TARGET FIELD: ${dream.confirmedField}
-TARGET COUNTRY: ${countryInfo?.name ?? dream.country}
+TARGET COUNTRY: ${countryInfo?.name ?? country}
 ${countryInfo ? `WHAT THIS COUNTRY'S ADMISSIONS ACTUALLY PRIORITIZES: ${countryInfo.prioritizes}` : ''}
+${countryInfo ? `HOW EXTRACURRICULARS ARE WEIGHED HERE: ${countryInfo.extracurriculars}` : ''}
 
 STUDENT PROFILE:
 - Academics: ${badge}
@@ -298,7 +332,7 @@ STUDENT PROFILE:
 - Extracurriculars: ${profile.extracurriculars.length ? profile.extracurriculars.join('; ') : 'None provided'}
 - AP courses taken: ${profile.apCourses.length ? profile.apCourses.join('; ') : 'None reported'}
 
-Identify up to 4 specific strengths and up to 4 specific gaps for THIS field+country combination specifically — e.g. a student with strong grades but no leadership roles is a real gap for a US-style holistic application, but largely irrelevant for a grades-only system, so weigh each point against what this specific country's admissions process above actually prioritizes. Cite the actual profile detail behind every point — never generic filler.`
+Identify up to 5 specific strengths and up to 5 specific gaps for THIS field+country combination specifically — e.g. a student with strong grades but no leadership roles is a real gap for a US-style holistic application, but largely irrelevant for a grades-only system, so weigh each point against what this specific country's admissions process above actually prioritizes. Spread points across different dimensions of the profile (academics/rigor, tests, AP courses, extracurriculars, field-specific fit) rather than repeating the same one or two facts in different words. Cite the actual profile detail behind every point — never generic filler.`
 
   try {
     const call = () =>
@@ -318,11 +352,11 @@ Identify up to 4 specific strengths and up to 4 specific gaps for THIS field+cou
 
     const { strengths, gaps } = response.output_parsed
     await db
-      .update(dreamProfiles)
+      .update(dreamCountryProfiles)
       .set({ analysisStrengths: strengths, analysisGaps: gaps, updatedAt: new Date() })
-      .where(eq(dreamProfiles.userId, userId))
+      .where(and(eq(dreamCountryProfiles.userId, userId), eq(dreamCountryProfiles.country, country)))
     await db.insert(aiRateLimitLog).values({ userId, action: 'dreamProfileAnalysis', ipAddress: clientIp })
-    revalidatePath('/dream')
+    revalidatePath(`/dream/${country}`)
 
     return { strengths, gaps }
   } catch (err) {
@@ -331,10 +365,11 @@ Identify up to 4 specific strengths and up to 4 specific gaps for THIS field+cou
   }
 }
 
-// Toggles one checklist item done/not-done — items come from
-// APPLICATION_INFO[country].requirements (see lib/application-info.ts), so
-// this is keyed by that exact requirement string.
-export async function toggleDreamChecklistItem(item: string, done: boolean): Promise<{ success: boolean }> {
+// Sets the MANUAL override for one checklist item (0 or 100) — only ever
+// meaningful for items computeAutoChecklistProgress (lib/dream-checklist.ts)
+// can't auto-detect from the master profile; auto-detected items ignore
+// this and are recomputed fresh on every read.
+export async function toggleDreamChecklistItem(country: string, item: string, done: boolean): Promise<{ success: boolean }> {
   let userId: string
   try {
     await assertDreamAdmin()
@@ -343,10 +378,13 @@ export async function toggleDreamChecklistItem(item: string, done: boolean): Pro
     return { success: false }
   }
   try {
-    const dream = await getDreamProfile()
-    const nextChecklist = { ...(dream?.checklist ?? {}), [item]: done }
-    await db.update(dreamProfiles).set({ checklist: nextChecklist, updatedAt: new Date() }).where(eq(dreamProfiles.userId, userId))
-    revalidatePath('/dream')
+    const countryRow = await getDreamCountryProfile(country)
+    const nextChecklist = { ...(countryRow?.checklist ?? {}), [item]: done ? 100 : 0 }
+    await db
+      .update(dreamCountryProfiles)
+      .set({ checklist: nextChecklist, updatedAt: new Date() })
+      .where(and(eq(dreamCountryProfiles.userId, userId), eq(dreamCountryProfiles.country, country)))
+    revalidatePath(`/dream/${country}`)
     return { success: true }
   } catch (error) {
     console.error('toggleDreamChecklistItem error:', error)

@@ -169,7 +169,12 @@ export type TargetAnalysisOutcome =
   // cause is console.error'd server-side.
   | { error: true; message: string }
 
-export async function analyzeTargetUniversity(universityName: string): Promise<TargetAnalysisOutcome> {
+// dreamContext is optional extra grounding passed in from a Build Your
+// Dream country workspace (see components/dream-country-workspace.tsx) — a
+// short summary of that country-specific analysis already on file, so this
+// deep-dive reasons from it instead of starting cold. Ignored entirely for
+// every other caller (Target University Analysis on the main matches page).
+export async function analyzeTargetUniversity(universityName: string, dreamContext?: string): Promise<TargetAnalysisOutcome> {
   let userId: string
   let clientIp: string
   try {
@@ -343,7 +348,7 @@ ${groundingBlock}
 
 ${SELECTIVITY_CALIBRATION}
 ${profileBlock}
-
+${dreamContext ? `\nADDITIONAL CONTEXT FROM THE STUDENT'S SAVED COUNTRY-SPECIFIC PROFILE ANALYSIS (use this to ground your points more specifically, don't just repeat it back):\n${dreamContext}\n` : ''}
 ${requirementNote}
 
 ${ENGLISH_TEST_GUIDANCE}

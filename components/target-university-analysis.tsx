@@ -31,8 +31,8 @@ export type TargetUniversityAnalysisHandle = {
   analyzeFor: (universityName: string) => void
 }
 
-export const TargetUniversityAnalysis = forwardRef<TargetUniversityAnalysisHandle, { hasProfile: boolean }>(function TargetUniversityAnalysis(
-  { hasProfile },
+export const TargetUniversityAnalysis = forwardRef<TargetUniversityAnalysisHandle, { hasProfile: boolean; dreamContext?: string }>(function TargetUniversityAnalysis(
+  { hasProfile, dreamContext },
   ref,
 ) {
   const [name, setName] = useState('')
@@ -101,7 +101,7 @@ export const TargetUniversityAnalysis = forwardRef<TargetUniversityAnalysisHandl
     setError(null)
     setPending(true)
     try {
-      const res = await analyzeTargetUniversity(targetName)
+      const res = await analyzeTargetUniversity(targetName, dreamContext)
       if ('needsProfile' in res) {
         setError('Set up your profile first — we need your academics to analyze a specific school.')
         setPending(false)

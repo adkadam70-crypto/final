@@ -203,20 +203,20 @@ export const signupFingerprints = pgTable('signupFingerprints', {
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
 
-// "Build Your Dream" — a guided onboarding + country-specific workspace
-// layered on top of the master profile above, not a replacement for it (see
-// app/actions/dream.ts). One row per user, updated in place as they move
-// through the flow rather than one row per attempt like `profiles`, since
-// this is a single evolving workspace, not a history of runs.
+// "Build Your Dream" — a guided onboarding layered on top of the master
+// profile above, not a replacement for it (see app/actions/dream.ts). One
+// row per user: the onboarding answers and field recommendation are
+// student-level, done once — the countries a student is actively building
+// toward live in dreamCountryProfiles below (one row per user+country, so a
+// student can build several countries off this same onboarding/field).
 export const dreamProfiles = pgTable('dreamProfiles', {
   id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
   userId: uuid('userId').notNull().unique(),
-  // Onboarding answers (step 2 of the flow).
+  // Onboarding answers.
   strengths: jsonb('strengths').$type<string[]>().notNull().default([]), // Q1: subjects they excel in/enjoy
   hobbies: text('hobbies').notNull().default(''), // Q2: free-text passions/hobbies
   interests: jsonb('interests').$type<string[]>().notNull().default([]), // Q3: real-world problem/industry tags
   interestsOther: text('interestsOther').notNull().default(''), // Q3: open-text addition
-  country: text('country'), // Q4: primary target country — null until onboarding is completed
   // AI field-recommendation output — recommendedField is one of
   // ACADEMIC_FIELDS, proposed from the onboarding answers + master profile;
   // confirmedField is what the student actually locked in (their own choice
@@ -225,19 +225,39 @@ export const dreamProfiles = pgTable('dreamProfiles', {
   recommendedField: text('recommendedField'),
   recommendedFieldRationale: text('recommendedFieldRationale'),
   confirmedField: text('confirmedField'),
-  // AI profile-analysis output for the confirmed field + country pair —
-  // re-generated when the student re-runs the analysis, never silently
-  // stale-merged with a prior country/field's result.
-  analysisStrengths: jsonb('analysisStrengths').$type<string[]>(),
-  analysisGaps: jsonb('analysisGaps').$type<string[]>(),
-  // Country-specific application checklist, keyed by the requirement string
-  // itself (from lib/application-info.ts) -> whether the student has marked
-  // it done. Deliberately NOT normalized into its own table — this is a
-  // simple per-user toggle state, not data other features read.
-  checklist: jsonb('checklist').$type<Record<string, boolean>>().notNull().default({}),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 })
+
+// One row per (user, country) the student has added to their Build Your
+// Dream dashboard. Each gets its own AI profile analysis and its own
+// application checklist against that country's real requirements (see
+// lib/application-info.ts) — deliberately separate rows, not a single
+// jsonb blob keyed by country, so querying "all countries for this user"
+// and per-row timestamps stay simple.
+export const dreamCountryProfiles = pgTable('dreamCountryProfiles', {
+  id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
+  userId: uuid('userId').notNull(),
+  country: text('country').notNull(),
+  // AI profile-analysis output for this student's confirmed field in this
+  // specific country — re-generated on demand, never silently stale-merged
+  // with another country's result since each country has its own row.
+  analysisStrengths: jsonb('analysisStrengths').$type<string[]>(),
+  analysisGaps: jsonb('analysisGaps').$type<string[]>(),
+  // Per-item checklist progress, keyed by the requirement string itself
+  // (from lib/application-info.ts) -> a 0-100 completion percentage. Items
+  // with a real matching field on the master profile (test scores,
+  // transcript, extracurriculars) are auto-computed fresh on every read
+  // (see computeAutoChecklistProgress in app/actions/dream.ts) and never
+  // stored here; this column only stores the MANUAL override for items with
+  // no detectable profile signal (essays, recommendation letters, etc.) —
+  // student-toggled, 0 or 100.
+  checklist: jsonb('checklist').$type<Record<string, number>>().notNull().default({}),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+}, (table) => ({
+  userCountryUnique: uniqueIndex('dreamCountryProfiles_user_country_idx').on(table.userId, table.country),
+}))
 
 export type ApplicationStatus = 'Researching' | 'Applying' | 'Submitted'
 

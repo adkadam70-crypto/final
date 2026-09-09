@@ -1,14 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { Sparkles, ArrowRight, ArrowLeft, CheckCircle2, TrendingUp, AlertTriangle, Wand2, RotateCcw } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Sparkles, ArrowRight, ArrowLeft, CheckCircle2, Wand2, Plus } from 'lucide-react'
 import {
   saveDreamOnboarding,
   recommendDreamField,
   confirmDreamField,
-  analyzeDreamProfile,
-  toggleDreamChecklistItem,
+  addDreamCountry,
   type DreamProfileRow,
+  type DreamCountryProfileRow,
 } from '@/app/actions/dream'
 import { ACADEMIC_FIELDS } from '@/lib/academic-detail'
 import { APPLICATION_INFO } from '@/lib/application-info'
@@ -52,10 +53,6 @@ function Pill({ label, active, onClick }: { label: string; active: boolean; onCl
   )
 }
 
-// Persistent bottom guidance bar — the whole flow's "do this next" pattern,
-// replacing an interactive chatbot (deliberately not built yet, see cost
-// estimate: a chatbot's per-message cost is the one open-ended variable in
-// this feature, everything else here is a fixed, small one-shot AI call).
 function BottomBar({
   label,
   nextLabel,
@@ -109,26 +106,36 @@ function Header({ title, subtitle }: { title: string; subtitle: string }) {
   )
 }
 
-export function DreamBuilder({ hasProfile, initialDream }: { hasProfile: boolean; initialDream: DreamProfileRow }) {
+export function DreamBuilder({
+  hasProfile,
+  initialDream,
+  initialCountries,
+}: {
+  hasProfile: boolean
+  initialDream: DreamProfileRow
+  initialCountries: DreamCountryProfileRow[]
+}) {
+  const router = useRouter()
   const [dream, setDream] = useState(initialDream)
+  const [countries, setCountries] = useState(initialCountries ?? [])
   const [onboardingStep, setOnboardingStep] = useState(1)
   const [strengths, setStrengths] = useState<string[]>(initialDream?.strengths ?? [])
   const [hobbies, setHobbies] = useState(initialDream?.hobbies ?? '')
   const [interests, setInterests] = useState<string[]>(initialDream?.interests ?? [])
   const [interestsOther, setInterestsOther] = useState(initialDream?.interestsOther ?? '')
-  const [country, setCountry] = useState(initialDream?.country ?? '')
 
   const [recommendation, setRecommendation] = useState<{ field: string; rationale: string } | null>(
     initialDream?.recommendedField ? { field: initialDream.recommendedField, rationale: initialDream.recommendedFieldRationale ?? '' } : null,
   )
   const [chooseOwnField, setChooseOwnField] = useState(false)
   const [manualField, setManualField] = useState('')
+  const [addingCountry, setAddingCountry] = useState(false)
+  const [newCountry, setNewCountry] = useState('')
 
   const [pending, setPending] = useState(false)
-  const [analysisPending, setAnalysisPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const onboardingDone = !!dream?.country
+  const onboardingDone = !!dream && (dream.strengths.length > 0 || !!dream.hobbies || dream.interests.length > 0)
   const fieldConfirmed = !!dream?.confirmedField
 
   function toggle(list: string[], setList: (v: string[]) => void, tag: string) {
@@ -138,13 +145,13 @@ export function DreamBuilder({ hasProfile, initialDream }: { hasProfile: boolean
   async function saveOnboardingIfLastStep() {
     setPending(true)
     setError(null)
-    const res = await saveDreamOnboarding({ strengths, hobbies, interests, interestsOther, country })
+    const res = await saveDreamOnboarding({ strengths, hobbies, interests, interestsOther })
     setPending(false)
     if (!res.success) {
       setError(res.message)
       return
     }
-    setDream((d) => ({ ...(d as NonNullable<DreamProfileRow>), strengths, hobbies, interests, interestsOther, country }))
+    setDream((d) => ({ ...(d as NonNullable<DreamProfileRow>), strengths, hobbies, interests, interestsOther }))
   }
 
   async function handleGetRecommendation() {
@@ -169,29 +176,15 @@ export function DreamBuilder({ hasProfile, initialDream }: { hasProfile: boolean
     setDream((d) => ({ ...(d as NonNullable<DreamProfileRow>), confirmedField: field }))
   }
 
-  async function handleAnalyze() {
-    setAnalysisPending(true)
+  async function handleAddCountry(code: string) {
+    if (!code) return
+    setPending(true)
     setError(null)
-    const res = await analyzeDreamProfile()
-    setAnalysisPending(false)
-    if ('error' in res && res.error) return setError(res.message)
-    if ('rateLimited' in res && res.rateLimited) return setError(res.message)
-    if (('needsOnboarding' in res && res.needsOnboarding) || ('needsField' in res && res.needsField) || ('needsProfile' in res && res.needsProfile)) {
-      return setError('Complete the steps above first.')
-    }
-    setDream((d) => (d ? { ...d, analysisStrengths: res.strengths, analysisGaps: res.gaps } : d))
+    const res = await addDreamCountry(code)
+    setPending(false)
+    if (!res.success) return setError(res.message)
+    router.push(`/dream/${code}`)
   }
-
-  async function handleToggleChecklist(item: string, done: boolean) {
-    setDream((d) => (d ? { ...d, checklist: { ...d.checklist, [item]: done } } : d))
-    await toggleDreamChecklistItem(item, done)
-  }
-
-  const countryInfo = dream?.country ? APPLICATION_INFO[dream.country] : undefined
-  const checklistItems = countryInfo?.requirements ?? []
-  const checklistDoneCount = checklistItems.filter((r) => dream?.checklist?.[r]).length
-  const completionPct = checklistItems.length ? Math.round((checklistDoneCount / checklistItems.length) * 100) : 0
-  const hasAnalysis = !!(dream?.analysisStrengths?.length || dream?.analysisGaps?.length)
 
   // ---------------------------------------------------------------- ONBOARDING
   if (!onboardingDone) {
@@ -239,17 +232,6 @@ export function DreamBuilder({ hasProfile, initialDream }: { hasProfile: boolean
               placeholder="Anything else? (optional)"
               className="w-full bg-secondary border border-border rounded-xl p-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary"
             />
-          </div>
-        ),
-      },
-      {
-        label: 'What is your primary target country for university?',
-        valid: country.trim().length > 0,
-        content: (
-          <div className="grid grid-cols-2 gap-2">
-            {COUNTRY_OPTIONS.map((c) => (
-              <Pill key={c.code} label={c.label} active={country === c.code} onClick={() => setCountry(c.code)} />
-            ))}
           </div>
         ),
       },
@@ -304,9 +286,6 @@ export function DreamBuilder({ hasProfile, initialDream }: { hasProfile: boolean
                 {pending ? <LoadingDots /> : <><Wand2 className="w-4 h-4" /> Get my recommendation</>}
               </button>
               {!hasProfile && <p className="text-[11px] text-muted-foreground mt-2">Set up your main profile first.</p>}
-              {/* Escape hatch: the recommendation is one AI call, which can
-                  occasionally fail or be unavailable — never leave the
-                  student stuck with no way to proceed past this screen. */}
               <button onClick={() => setChooseOwnField(true)} className="block mx-auto mt-3 text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2">
                 Or just pick your own field
               </button>
@@ -347,7 +326,7 @@ export function DreamBuilder({ hasProfile, initialDream }: { hasProfile: boolean
                   {pending ? <LoadingDots /> : 'Confirm field'}
                 </button>
                 <button onClick={() => setChooseOwnField(false)} className="text-xs font-medium text-muted-foreground hover:text-foreground px-4 py-2.5 rounded-xl border border-border">
-                  Back to recommendation
+                  Back
                 </button>
               </div>
             </div>
@@ -359,93 +338,70 @@ export function DreamBuilder({ hasProfile, initialDream }: { hasProfile: boolean
     )
   }
 
-  // ---------------------------------------------------------------- COUNTRY WORKSPACE
-  const nextGuidance = !hasAnalysis
-    ? 'Up next: run your profile analysis below'
-    : completionPct < 100
-      ? `Up next: work through your ${countryInfo?.name ?? dream!.country} application checklist`
-      : "You're all set here — head to Find Matches or Target University Analysis next"
+  // ---------------------------------------------------------------- DASHBOARD
+  const addedCodes = new Set(countries.map((c) => c.country))
+  const availableToAdd = COUNTRY_OPTIONS.filter((c) => !addedCodes.has(c.code))
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-8 pb-28">
-      <Header title={`Build Your Dream — ${countryInfo?.name ?? dream!.country}`} subtitle={`Target field: ${dream!.confirmedField}`} />
+      <Header title="Build Your Dream" subtitle={`Target field: ${dream!.confirmedField}`} />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <section className="bg-card border border-border rounded-3xl p-6">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-primary" /> Profile analysis
-          </h2>
-          {hasAnalysis ? (
-            <div className="space-y-3">
-              {dream!.analysisStrengths && dream!.analysisStrengths.length > 0 && (
-                <div>
-                  <div className="text-[11px] font-semibold text-primary uppercase tracking-wider mb-1.5">Strengths</div>
-                  <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                    {dream!.analysisStrengths.map((s, i) => <li key={i}>{s}</li>)}
-                  </ul>
-                </div>
-              )}
-              {dream!.analysisGaps && dream!.analysisGaps.length > 0 && (
-                <div>
-                  <div className="text-[11px] font-semibold text-chart-2 uppercase tracking-wider mb-1.5 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Gaps</div>
-                  <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                    {dream!.analysisGaps.map((s, i) => <li key={i}>{s}</li>)}
-                  </ul>
-                </div>
-              )}
-              <button onClick={handleAnalyze} disabled={analysisPending} className="text-[11px] text-primary font-medium mt-2 flex items-center gap-1 hover:brightness-125 disabled:opacity-50">
-                {analysisPending ? <LoadingDots /> : <><RotateCcw className="w-3 h-3" /> Re-analyze</>}
-              </button>
-            </div>
-          ) : (
-            <div className="text-center py-4">
-              <p className="text-xs text-muted-foreground mb-3">See how your profile stacks up for {dream!.confirmedField} in {countryInfo?.name ?? dream!.country}.</p>
+      {countries.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          {countries.map((c) => {
+            const info = APPLICATION_INFO[c.country]
+            return (
               <button
-                onClick={handleAnalyze}
-                disabled={analysisPending}
-                className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold text-xs px-4 py-2.5 rounded-xl hover:brightness-110 disabled:opacity-50 transition-all"
+                key={c.country}
+                onClick={() => router.push(`/dream/${c.country}`)}
+                className="text-left bg-card border border-border rounded-3xl p-5 hover:border-primary/30 transition-colors"
               >
-                {analysisPending ? <LoadingDots /> : <><Sparkles className="w-3.5 h-3.5" /> Analyze my profile</>}
+                <p className="text-sm font-bold mb-1">{info?.name ?? c.country}</p>
+                <p className="text-[11px] text-muted-foreground mb-3">
+                  {c.analysisStrengths?.length ? 'Analysis ready' : 'Not analyzed yet'}
+                </p>
+                <span className="text-xs text-primary font-medium flex items-center gap-1">Open workspace <ArrowRight className="w-3 h-3" /></span>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      <div className="bg-card border border-border rounded-3xl p-6">
+        {!addingCountry ? (
+          <button
+            onClick={() => setAddingCountry(true)}
+            disabled={availableToAdd.length === 0}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-primary disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Plus className="w-4 h-4" /> Add a country
+          </button>
+        ) : (
+          <div>
+            <label className="text-[11px] text-muted-foreground block mb-1.5">Which country do you want to build next?</label>
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              {availableToAdd.map((c) => (
+                <Pill key={c.code} label={c.label} active={newCountry === c.code} onClick={() => setNewCountry(c.code)} />
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleAddCountry(newCountry)}
+                disabled={!newCountry || pending}
+                className="flex items-center gap-1.5 bg-primary text-primary-foreground font-semibold text-xs px-4 py-2.5 rounded-xl hover:brightness-110 disabled:opacity-50"
+              >
+                {pending ? <LoadingDots /> : 'Add & open'}
+              </button>
+              <button onClick={() => setAddingCountry(false)} className="text-xs font-medium text-muted-foreground hover:text-foreground px-4 py-2.5 rounded-xl border border-border">
+                Cancel
               </button>
             </div>
-          )}
-        </section>
-
-        <section className="bg-card border border-border rounded-3xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-chart-2" /> Application checklist</h2>
-            <span className="text-xs font-bold text-primary">{completionPct}%</span>
           </div>
-          <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden mb-4">
-            <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${completionPct}%` }} />
-          </div>
-          {checklistItems.length > 0 ? (
-            <ul className="space-y-2">
-              {checklistItems.map((item) => {
-                const done = !!dream!.checklist?.[item]
-                return (
-                  <li key={item}>
-                    <button
-                      type="button"
-                      onClick={() => handleToggleChecklist(item, !done)}
-                      className={`w-full flex items-start gap-2 text-left text-xs p-2.5 rounded-xl border transition-colors ${done ? 'bg-primary/10 border-primary/30 text-muted-foreground line-through' : 'bg-secondary border-border text-foreground/90 hover:border-foreground/20'}`}
-                    >
-                      <CheckCircle2 className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${done ? 'text-primary' : 'text-muted-foreground/40'}`} />
-                      {item}
-                    </button>
-                  </li>
-                )
-              })}
-            </ul>
-          ) : (
-            <p className="text-xs text-muted-foreground">No checklist data for this country yet.</p>
-          )}
-        </section>
+        )}
+        {error && <p className="text-[11px] text-destructive mt-3">{error}</p>}
       </div>
 
-      {error && <p className="text-[11px] text-destructive mt-4">{error}</p>}
-
-      <BottomBar label={nextGuidance} />
+      <BottomBar label={countries.length === 0 ? 'Up next: add your first country' : 'Click a country above to keep building it'} />
     </main>
   )
 }
