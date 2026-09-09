@@ -24,6 +24,7 @@ import { BIAS_INSTRUCTION } from '@/lib/bias-instruction'
 import { SELECTIVITY_CALIBRATION } from '@/lib/selectivity-calibration'
 import { assertMatchRateLimit } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/request-fingerprint'
+import { isGarbledStrings } from '@/lib/ai-response-guard'
 
 // Caps how many universities go to the model per run. A single call for all
 // 20 measured at ~45-65s live — real variance run to run, not a bug. This
@@ -296,7 +297,7 @@ ${JSON.stringify(
   2,
 )}
 
-When a school's academicFields includes the student's intended field of study, treat that as a genuine positive fit signal in your rationale — not just an admission-probability input. When it's "not yet tagged," don't penalize the school for it; assess it on selectivity and the other signals instead.
+When a school's academicFields includes the student's intended field of study, treat that as a genuine positive fit signal in your rationale — not just an admission-probability input. When it's "not yet tagged," don't penalize the school for it; assess it on selectivity and the other signals instead. Even when academicFields is populated but doesn't list the student's intended field, this list is a known-incomplete tagging effort, not a verified course catalog — its absence is NOT proof the school doesn't offer that field. Treat a missing field as, at most, a mild caveat worth a small downward nudge — never a hard penalty or a claim that the school lacks the program, and never enough on its own to flip a tier.
 
 IMPORTANT — acceptanceProbability reflects admission to the UNIVERSITY, never to a specific program. Most schools admit students holistically to the institution as a whole (major is a soft signal, sometimes declared a year or two later); this app has no verified data on which specific schools instead admit directly by college/major with a genuinely separate, harder process (a real phenomenon at a handful of schools, but not something to assume by default). So: ground acceptanceProbability using this priority order, falling through only when the higher one is unavailable: (1) regularDecisionRate, if present — the most realistic baseline for a typical non-early applicant, since it strips out any early-round effect the blended headline can't separate; (2) overallAcceptanceRate when it is a REAL published figure — cite it directly and with full confidence, using the label its source gives it (e.g. "the acceptance rate is 12%" for a US-style admit rate, or "LSE's UCAS offer rate is 21%" where the source says offer rate — a UK/Australian offer IS the admission, so weigh it exactly as you would an acceptance rate); (3) overallAcceptanceRate when it is marked OUR RESEARCH ESTIMATE — you may use the number to place the school, but in the rationale you MUST call it an estimate (e.g. "we estimate roughly 25% — not a figure the university publishes"), never state it as fact; (4) overallRanking, if present — a general prestige ranking, cite it plainly (e.g. "ranked #28 overall") but don't treat it as equivalent to a real acceptance rate; (5) baselineSelectivity alone — an internal estimate with no citation behind it. When overallAcceptanceRate says NO published or estimable rate exists (e.g. a Numerus Clausus system or a non-selective licence), do not invent a percentage — explain selectivity through ranking, requirements and baselineSelectivity, and it is fine to tell the student plainly that this school has no published acceptance rate. Never present tiers 3-5 with the confidence of tiers 1-2 in your rationale text. Note: whenever overallAcceptanceRate is present — a real published figure OR our research estimate — baselineSelectivity was already derived from it (100 minus the rate); they are the same fact, not two independent signals to stack. NEVER use programRankingForIntendedField to move acceptanceProbability up or down.
 
@@ -318,15 +319,24 @@ Do the same cross-reference for programSpecificAdditionalRequirements, when it's
 
 Assess every university in the list above and return one result per university, including exactly 2 specific improvementTips per school. Keep rationale and tips terse — brevity over completeness.`
 
-  let response
-  try {
-    response = await client.responses.parse({
-      model: 'gpt-5.6-terra',
+  const call = () =>
+    client.responses.parse({
+      model: 'gpt-5.6-luna',
       input: [{ role: 'user', content: userPrompt }],
       text: {
         format: zodTextFormat(resultSchema, 'match_results'),
       },
     })
+
+  let response
+  try {
+    response = await call()
+    // Rare structured-output corruption (internal channel tokens leaking
+    // into a field) slips past schema validation since the field is still a
+    // syntactically valid string — retry once before giving up.
+    if (response.output_parsed && isGarbledStrings(response.output_parsed.results.map((r) => r.rationale))) {
+      response = await call()
+    }
   } catch (err) {
     // Server Actions must throw plain, serializable Errors — the OpenAI SDK's
     // error classes carry extra non-serializable fields that fail silently
@@ -337,6 +347,9 @@ Assess every university in the list above and return one result per university, 
 
   if (!response.output_parsed) {
     throw new Error('OpenAI returned no parseable output for the match request')
+  }
+  if (isGarbledStrings(response.output_parsed.results.map((r) => r.rationale))) {
+    throw new Error('OpenAI returned corrupted output for the match request after retry')
   }
 
   return { object: response.output_parsed }
