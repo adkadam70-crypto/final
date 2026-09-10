@@ -146,7 +146,7 @@ export function DreamUniversitySearch({ country, hasProfile }: { country: string
   return (
     <section className="bg-card border border-primary/20 rounded-3xl p-6 font-mono">
       <h2 className="text-xs font-bold uppercase tracking-widest text-primary mb-1 flex items-center gap-2"><Search className="w-4 h-4" /> Deep target search</h2>
-      <p className="text-[11px] text-muted-foreground mb-4">Analyze a {country} school, then add it straight to your list to start tracking its application tasks. Only {country} schools are searchable here.</p>
+      <p className="text-sm text-muted-foreground mb-4">Analyze a {country} school, then add it straight to your list to start tracking its application tasks. Only {country} schools are searchable here.</p>
 
       <div className="flex flex-col sm:flex-row gap-2">
         <div ref={inputWrapperRef} className="relative flex-1 min-w-0">
@@ -180,7 +180,7 @@ export function DreamUniversitySearch({ country, hasProfile }: { country: string
         </button>
       </div>
 
-      {!hasProfile && <p className="text-[11px] text-muted-foreground mt-2">Set up your main profile first.</p>}
+      {!hasProfile && <p className="text-sm text-muted-foreground mt-2">Set up your main profile first.</p>}
       {pending && (
         <div className="mt-3">
           <ProgressiveFluxLoader phases={ANALYSIS_PHASES} duration={16} loop={!finishing} value={finishing ? 100 : undefined} />
@@ -203,13 +203,13 @@ export function DreamUniversitySearch({ country, hasProfile }: { country: string
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <div className="text-[11px] font-bold text-primary uppercase tracking-widest mb-2 flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5" /> Strengths</div>
+              <div className="text-sm font-bold text-primary uppercase tracking-widest mb-2 flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5" /> Strengths</div>
               <ul className="text-xs text-muted-foreground space-y-1.5 list-disc list-inside">
                 {result.strengths.map((s, i) => <li key={i}>{s}</li>)}
               </ul>
             </div>
             <div>
-              <div className="text-[11px] font-bold text-chart-2 uppercase tracking-widest mb-2 flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5" /> Weaknesses</div>
+              <div className="text-sm font-bold text-chart-2 uppercase tracking-widest mb-2 flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5" /> Weaknesses</div>
               <ul className="text-xs text-muted-foreground space-y-1.5 list-disc list-inside">
                 {result.weaknesses.map((s, i) => <li key={i}>{s}</li>)}
               </ul>
@@ -220,7 +220,7 @@ export function DreamUniversitySearch({ country, hasProfile }: { country: string
               "action steps" elsewhere, restyled as concrete tasks since this
               view's whole point is to feed a per-school task list, not prose. */}
           <div className="bg-secondary/60 border border-border rounded-2xl p-4">
-            <div className="text-[11px] font-bold text-chart-5 uppercase tracking-widest mb-2 flex items-center gap-1.5"><ListChecks className="w-3.5 h-3.5" /> Requirements checklist</div>
+            <div className="text-sm font-bold text-chart-5 uppercase tracking-widest mb-2 flex items-center gap-1.5"><ListChecks className="w-3.5 h-3.5" /> Requirements checklist</div>
             <ul className="space-y-1.5">
               {result.actionSteps.map((s, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs text-foreground/90">

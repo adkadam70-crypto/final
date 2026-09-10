@@ -159,7 +159,7 @@ export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
     <div className={`w-full text-foreground ${className}`}>
       {topText && (
         <section className="relative w-full min-h-screen flex flex-col justify-center items-center text-center px-4 sm:px-8 py-8">
-          {topBrand && <div className="absolute top-6 sm:top-10">{topBrand}</div>}
+          {topBrand && <div className="absolute top-6 sm:top-10 left-4 sm:left-8">{topBrand}</div>}
           <div className="text-[clamp(1.8rem,4.5vw,4.5rem)] font-bold tracking-tight text-balance leading-tight">{topText}</div>
         </section>
       )}
