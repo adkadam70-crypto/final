@@ -112,7 +112,7 @@ export function Landing() {
             Across eight countries.
           </span>
         }
-        aboveTags={<RotatingEarth width={480} height={480} className="mb-10 sm:mb-14" />}
+        aboveTags={<RotatingEarth width={620} height={620} className="mb-10 sm:mb-14" />}
         tags={FEATURE_TAGS}
         subText="Every recommendation is grounded in real selectivity data for real universities — not vibes, and not guesswork."
         centerpieceNames={CENTERPIECE_UNIVERSITIES}

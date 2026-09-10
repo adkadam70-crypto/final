@@ -167,12 +167,12 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
     function resize() {
       if (!container || !canvas) return
       // Square, sized mostly off viewport width (not container.clientWidth,
-      // which would otherwise still be capped by max-w-5xl's ancestor). A
-      // medium fixed pixel ceiling — big enough to read clearly, small
-      // enough to not dominate the page or destabilize the hero's GSAP
-      // ScrollTrigger pin calculation above (which cares about this
-      // section's height staying reasonably predictable).
-      const side = Math.min(window.innerWidth * 0.5, 480, width)
+      // which would otherwise still be capped by max-w-5xl's ancestor). The
+      // 480px ceiling this used to have looked fine on a narrow test
+      // viewport but was way too conservative on an actual wide desktop
+      // monitor — bumped so it keeps growing on real screens instead of
+      // capping out early.
+      const side = Math.min(window.innerWidth * 0.55, 620, width)
       containerWidth = side
       containerHeight = side
       // Zoom is fixed, not user-adjustable — this is "max zoom" (the

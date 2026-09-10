@@ -168,7 +168,7 @@ export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 md:py-12 flex flex-col items-center text-center relative z-10">
           {headingText && (
             <div className="w-full mb-4 sm:mb-5 md:mb-6">
-              <p ref={paraRef} className="text-[clamp(2rem,4.2vw,3.8rem)] font-extrabold tracking-tight text-balance leading-tight overflow-visible">
+              <p ref={paraRef} className="text-[clamp(2rem,4.8vw,4.6rem)] font-extrabold tracking-tight text-balance leading-tight overflow-visible">
                 {headingText}
               </p>
             </div>
