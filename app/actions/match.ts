@@ -573,24 +573,7 @@ export async function runMatch(): Promise<
       testScoreFit: testScoreRangeComparison(profile.standardizedTests, u),
     }))
 
-    // Two parallel half-size calls instead of one call for all
-    // MAX_CATALOG_FOR_AI schools. Measured against gpt-5.6-luna: a single
-    // 20-school call runs ~34-37s; two parallel 10-school calls finish in
-    // ~22s (bounded by the slower half), a ~35% real wall-clock win, for a
-    // few tenths of a cent in extra tokens (each half repeats the shared
-    // system instructions). This reverses the earlier single-call decision,
-    // which was measured against gpt-5.6-terra and showed no split benefit
-    // there — the win is specific to Luna's lower per-call overhead.
-    const half = Math.ceil(aiCatalog.length / 2)
-    const [firstHalf, secondHalf] = await Promise.all([
-      generateOpenAIMatch({ studentProfile, catalog: aiCatalog.slice(0, half), targetCountries: profile.targetCountries, contextByCountry }),
-      generateOpenAIMatch({ studentProfile, catalog: aiCatalog.slice(half), targetCountries: profile.targetCountries, contextByCountry }),
-    ])
-    // Both halves generate a full "summary" per the shared schema (it only
-    // makes sense as one whole-list overview) — keep the first half's, since
-    // showing both would just repeat the same encouraging-overview framing
-    // twice for no added information.
-    const object = { summary: firstHalf.object.summary, results: [...firstHalf.object.results, ...secondHalf.object.results] }
+    const { object } = await generateOpenAIMatch({ studentProfile, catalog: aiCatalog, targetCountries: profile.targetCountries, contextByCountry })
 
     // Merge AI output back with DB records (source of truth for display fields).
     const byId = new Map(catalog.map((u) => [String(u.id), u]))
