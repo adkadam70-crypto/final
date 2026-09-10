@@ -16,6 +16,9 @@ export type CommonAppSection = {
   // is the clearest case) — omitted for sections where an example wouldn't
   // add anything beyond the whatToInclude bullets.
   example?: string
+  // Real published essay archives — schools that put out real admitted
+  // students' essays each year, not a generic "how to write an essay" blog.
+  essayExampleLinks?: { label: string; url: string }[]
 }
 
 export const COMMON_APP_SECTIONS: CommonAppSection[] = [
@@ -85,6 +88,11 @@ export const COMMON_APP_SECTIONS: CommonAppSection[] = [
       'This essay is shared with every school on your list — it should tell a story only you could tell, with a specific, concrete anecdote rather than a general statement of values',
       'The optional Additional Information section (up to 650 words) — use it only for context that genuinely needs explaining (an extenuating circumstance, a gap in your record, COVID impact), never as a second essay to restate your resume',
       'Some individual schools ALSO require their own supplemental essays on top of this — those live under that school\'s own tab, not here (see the per-school checklist when you add a university)',
+    ],
+    essayExampleLinks: [
+      { label: 'Johns Hopkins — Essays That Worked', url: 'https://apply.jhu.edu/application-tips/essays-that-worked/' },
+      { label: 'Connecticut College — Essays That Worked', url: 'https://www.conncoll.edu/admission-financial-aid/apply/essays-that-worked/' },
+      { label: 'Common App — Writing Prompts', url: 'https://www.commonapp.org/apply/essay-prompts' },
     ],
   },
 ]

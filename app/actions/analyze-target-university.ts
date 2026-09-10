@@ -60,6 +60,8 @@ function buildResultFromRow(
   return {
     resolvedUniversityName: matched.name,
     universityId: matched.id,
+    imageUrl: matched.imageUrl,
+    link: matched.link,
     matchTier: row.matchTier as MatchResult['matchTier'],
     acceptanceProbability: row.acceptanceProbability ?? 0,
     admissionChanceSummary: row.admissionChanceSummary,
@@ -124,6 +126,10 @@ export type TargetAnalysisResult = {
   // Build Your Dream "add to list" flow) persist a stable reference instead
   // of matching on name text again later.
   universityId: number
+  // Snapshotted so the Build Your Dream "My Universities" list can show a
+  // thumbnail and a direct link without a join back to the catalog.
+  imageUrl: string | null
+  link: string
   matchTier: MatchResult['matchTier']
   acceptanceProbability: number
   admissionChanceSummary: string
@@ -510,6 +516,8 @@ Provide an honest tier + probability, a summary that names the concrete number/f
     return {
       resolvedUniversityName: matched.name,
       universityId: matched.id,
+      imageUrl: matched.imageUrl,
+      link: matched.link,
       matchTier,
       acceptanceProbability,
       admissionChanceSummary,

@@ -407,7 +407,7 @@ const roadmapSchema = z.object({
         detail: z
           .string()
           .describe(
-            'Under 35 words explaining specifically why this fits THIS student (cite their actual hobbies/interests/strengths from onboarding, or a gap in their current profile) and roughly when to do it given their timeline.',
+            'Under 60 words, in two parts: first, WHAT to actually do, specifically; second, WHY it helps THIS student — cite their actual hobbies/interests/strengths from onboarding, or a real gap in their current profile, and roughly when to do it given their timeline. Never generic ("this will strengthen your application") — always tie it to a specific fact about this student.',
           ),
         howTo: z
           .array(z.string())
@@ -576,6 +576,10 @@ export async function addUniversityToDreamList(
   strengths: string[],
   weaknesses: string[],
   schoolSpecificTasks: string[],
+  acceptanceProbability: number,
+  matchTier: string,
+  imageUrl: string | null,
+  link: string,
 ): Promise<{ success: boolean; message: string }> {
   let userId: string
   try {
@@ -588,12 +592,125 @@ export async function addUniversityToDreamList(
     const tasks = [...PER_UNIVERSITY_TASK_TEMPLATE, ...schoolSpecificTasks].filter((t, i, arr) => arr.indexOf(t) === i)
     await db
       .insert(dreamUniversityTracks)
-      .values({ userId, country, universityId, universityName, strengths, weaknesses, tasks })
+      .values({ userId, country, universityId, universityName, strengths, weaknesses, tasks, acceptanceProbability, matchTier, universityImageUrl: imageUrl, universityLink: link })
       .onConflictDoNothing()
     revalidatePath(`/dream/${country}`)
     return { success: true, message: 'Added to your list.' }
   } catch (error) {
     console.error('addUniversityToDreamList error:', error)
+    return { success: false, message: 'Something went wrong. Please try again.' }
+  }
+}
+
+const activitiesPlanSchema = z.object({
+  slots: z
+    .array(
+      z.object({
+        category: z.string().describe('A realistic Common App activity category, e.g. "Athletics: Club", "Community Service (Volunteer)", "Research", "Computer/Technology", "Debate/Speech".'),
+        position: z.string().max(60).describe('Under 50 characters — the position/leadership description as it would appear on Common App, e.g. "Founder & President".'),
+        description: z.string().max(170).describe('Under 150 characters — a concrete, specific description of what the student actually did, in the exact terse style Common App activity descriptions use. Never invent specifics not implied by the input text.'),
+      }),
+    )
+    .max(10)
+    .describe('Up to 10 Common App Activities slots. Real activities the student already listed come first, ranked by depth of commitment (their most significant, sustained activity first) — never reordered by which "sounds" most impressive. Shortlisted-but-not-yet-done suggestions fill any remaining slots after that, clearly building on real commitments rather than replacing them.'),
+})
+
+// Formats the student's real extracurriculars (and, to fill any remaining
+// slots, their shortlisted-but-not-yet-completed roadmap suggestions — see
+// profileSuggestedActivities) into actual Common App Activities entries:
+// category, position, and a terse Common App-style description. Never
+// invents activities beyond what the student actually gave it.
+export async function generateActivitiesPlan(country: string): Promise<{ success: boolean; message: string; slots?: { category: string; position: string; description: string }[] }> {
+  let userId: string
+  let clientIp: string
+  try {
+    await assertDreamAdmin()
+    userId = await getUserId()
+    clientIp = await getClientIp()
+  } catch (err) {
+    return { success: false, message: err instanceof Error && err.message === 'Unauthorized' ? 'Your session has expired — please sign in again.' : 'Something went wrong. Please refresh and try again.' }
+  }
+  try {
+    await assertDreamAnalysisRateLimit(userId, clientIp)
+  } catch (err) {
+    return { success: false, message: err instanceof Error ? err.message : 'Rate limit exceeded — please try again later.' }
+  }
+
+  const profile = await getLatestProfile()
+  if (!profile) return { success: false, message: 'Set up your main profile first.' }
+
+  const shortlisted = (await getSuggestedActivities()).filter((a) => a.status === 'shortlisted').map((a) => a.text)
+
+  if (profile.extracurriculars.length === 0 && shortlisted.length === 0) {
+    return { success: false, message: 'Add an extracurricular to your profile, or shortlist one from your roadmap, first.' }
+  }
+
+  const apiKey = process.env.OPENAI_API_KEY
+  if (!apiKey) return { success: false, message: 'The formatting service is not configured right now. Please try again later.' }
+
+  const client = new OpenAI({ apiKey })
+  const prompt = `You are helping a student format their real extracurriculars into the Common App's Activities section (up to 10 slots: category, position/leadership description, and a terse ~150-character description of what they actually did).
+
+REAL ACTIVITIES ALREADY ON THEIR PROFILE (use these first, ranked by depth of commitment — most sustained/significant first):
+${profile.extracurriculars.length ? profile.extracurriculars.map((e, i) => `${i + 1}. ${e}`).join('\n') : 'None yet.'}
+
+SHORTLISTED BUT NOT YET DONE (only use these to fill remaining slots after the real ones above, and only if there's room):
+${shortlisted.length ? shortlisted.map((e, i) => `${i + 1}. ${e}`).join('\n') : 'None.'}
+
+Format each into a realistic Common App entry. Never invent specifics (numbers, durations, outcomes) that aren't implied by the text — if the input is vague, keep the output equally general rather than fabricating detail.`
+
+  try {
+    const call = () =>
+      client.responses.parse({
+        model: 'gpt-5.6-luna',
+        input: [{ role: 'user', content: prompt }],
+        text: { format: zodTextFormat(activitiesPlanSchema, 'activities_plan') },
+      })
+    let response = await call()
+    if (response.output_parsed && isGarbledStrings(response.output_parsed.slots.flatMap((s) => [s.category, s.position, s.description]))) {
+      response = await call()
+    }
+    if (!response.output_parsed) throw new Error('OpenAI returned no parseable output for the activities plan request')
+    if (isGarbledStrings(response.output_parsed.slots.flatMap((s) => [s.category, s.position, s.description]))) {
+      throw new Error('OpenAI returned corrupted output after retry')
+    }
+
+    const { slots } = response.output_parsed
+    await db
+      .update(dreamCountryProfiles)
+      .set({ activitiesPlan: slots, updatedAt: new Date() })
+      .where(and(eq(dreamCountryProfiles.userId, userId), eq(dreamCountryProfiles.country, country)))
+    await db.insert(aiRateLimitLog).values({ userId, action: 'dreamActivitiesPlan', ipAddress: clientIp })
+    revalidatePath(`/dream/${country}`)
+
+    return { success: true, message: 'Formatted.', slots }
+  } catch (err) {
+    console.error('generateActivitiesPlan failed:', err)
+    return { success: false, message: "We couldn't format your activities right now — the AI service didn't respond. Please try again in a moment." }
+  }
+}
+
+// Adds/overwrites the manually-typed slots past whatever the AI could fill
+// from real data (see generateActivitiesPlan above) — the student's own
+// words for an activity too new/small to be on their formal profile yet.
+export async function saveActivitiesPlan(country: string, slots: { category: string; position: string; description: string }[]): Promise<{ success: boolean; message: string }> {
+  let userId: string
+  try {
+    await assertDreamAdmin()
+    userId = await getUserId()
+  } catch {
+    return { success: false, message: 'Your session has expired — please sign in again.' }
+  }
+  if (slots.length > 10) return { success: false, message: 'Common App allows at most 10 activities.' }
+  try {
+    await db
+      .update(dreamCountryProfiles)
+      .set({ activitiesPlan: slots, updatedAt: new Date() })
+      .where(and(eq(dreamCountryProfiles.userId, userId), eq(dreamCountryProfiles.country, country)))
+    revalidatePath(`/dream/${country}`)
+    return { success: true, message: 'Saved.' }
+  } catch (error) {
+    console.error('saveActivitiesPlan error:', error)
     return { success: false, message: 'Something went wrong. Please try again.' }
   }
 }

@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, User, Search, TrendingUp, AlertTriangle, RotateCcw, Sparkles, CheckCircle2, GraduationCap, ChevronDown, Lightbulb, PlusCircle } from 'lucide-react'
+import { ArrowLeft, User, Search, TrendingUp, AlertTriangle, RotateCcw, Sparkles, CheckCircle2, GraduationCap, ChevronDown, Lightbulb, PlusCircle, ExternalLink } from 'lucide-react'
+import { tierBadgeClass } from '@/lib/match-tier'
 import {
   analyzeDreamProfile,
   generateDreamRoadmap,
@@ -10,6 +11,8 @@ import {
   toggleDreamUniversityTask,
   addSuggestedActivity,
   markSuggestedActivityDone,
+  generateActivitiesPlan,
+  saveActivitiesPlan,
   type DreamCountryProfileRow,
   type DreamUniversityTrackRow,
   type SuggestedActivityRow,
@@ -95,6 +98,9 @@ export function DreamCountryWorkspace({
   const [checklistDraft, setChecklistDraft] = useState(initialCountryProfile.checklist)
   const [checklistSaving, setChecklistSaving] = useState(false)
   const checklistDirty = JSON.stringify(checklistDraft) !== JSON.stringify(countryProfile.checklist)
+  const [activitiesPending, setActivitiesPending] = useState(false)
+  const [manualActivity, setManualActivity] = useState('')
+  const [manualActivityPending, setManualActivityPending] = useState(false)
 
   const countryInfo = APPLICATION_INFO[country]
   const hasAnalysis = !!(countryProfile.analysisStrengths?.length || countryProfile.analysisGaps?.length)
@@ -166,6 +172,30 @@ export function DreamCountryWorkspace({
     setActivityPendingId(null)
     if (!res.success) return setError(res.message)
     setSuggestedActivities((prev) => prev.map((a) => (a.id === id ? { ...a, status: 'completed' } : a)))
+  }
+
+  async function handleGenerateActivitiesPlan() {
+    setActivitiesPending(true)
+    setError(null)
+    const res = await generateActivitiesPlan(country)
+    setActivitiesPending(false)
+    if (!res.success || !res.slots) return setError(res.message)
+    setCountryProfile((c) => ({ ...c, activitiesPlan: res.slots! }))
+  }
+
+  async function handleAddManualActivitySlot() {
+    const text = manualActivity.trim()
+    if (!text) return
+    const plan = countryProfile.activitiesPlan ?? []
+    if (plan.length >= 10) return setError('Common App allows at most 10 activities.')
+    setManualActivityPending(true)
+    setError(null)
+    const nextPlan = [...plan, { category: 'Self-described', position: '', description: text }]
+    const res = await saveActivitiesPlan(country, nextPlan)
+    setManualActivityPending(false)
+    if (!res.success) return setError(res.message)
+    setCountryProfile((c) => ({ ...c, activitiesPlan: nextPlan }))
+    setManualActivity('')
   }
 
   function handleToggleChecklist(item: string, done: boolean) {
@@ -294,7 +324,7 @@ export function DreamCountryWorkspace({
                               className="min-w-0 flex-1 text-left flex items-center gap-1.5"
                             >
                               <ChevronDown className={`w-3.5 h-3.5 shrink-0 text-muted-foreground/60 transition-transform ${stepExpanded ? 'rotate-180' : ''}`} />
-                              <p className="text-xs font-semibold text-foreground">{step.title}</p>
+                              <p className="text-xs font-semibold text-foreground">{i + 1}. {step.title}</p>
                             </button>
                             <button
                               type="button"
@@ -395,6 +425,11 @@ export function DreamCountryWorkspace({
               </h2>
               <span className="text-xs font-bold text-primary">{commonAppCompletionPct}%</span>
             </div>
+            {country === 'US' && (
+              <a href="https://www.commonapp.org" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-primary font-medium hover:brightness-125 mb-3">
+                <ExternalLink className="w-3 h-3" /> Open the Common App
+              </a>
+            )}
             <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden mb-4">
               <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${commonAppCompletionPct}%` }} />
             </div>
@@ -444,6 +479,62 @@ export function DreamCountryWorkspace({
                           </ul>
                           {sectionInfo.example && (
                             <p className="text-[10px] text-muted-foreground/80 italic pt-1 border-t border-border/60 mt-1.5">{sectionInfo.example}</p>
+                          )}
+                          {sectionInfo.essayExampleLinks && sectionInfo.essayExampleLinks.length > 0 && (
+                            <div className="pt-1.5 border-t border-border/60 space-y-1">
+                              <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">Real essay examples</p>
+                              {sectionInfo.essayExampleLinks.map((l) => (
+                                <a key={l.url} href={l.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[11px] text-primary hover:brightness-125">
+                                  <ExternalLink className="w-3 h-3 shrink-0" /> {l.label}
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                          {requirement === 'Activities' && (
+                            <div className="pt-1.5 border-t border-border/60 space-y-2">
+                              <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">Your 10 Common App slots</p>
+                              {(countryProfile.activitiesPlan?.length ?? 0) > 0 ? (
+                                <ol className="space-y-1.5">
+                                  {countryProfile.activitiesPlan!.map((slot, i) => (
+                                    <li key={i} className="text-[11px] bg-secondary/60 border border-border rounded-lg p-2">
+                                      <span className="font-semibold text-foreground">{i + 1}. {slot.category}</span>
+                                      {slot.position && <span className="text-muted-foreground"> — {slot.position}</span>}
+                                      <p className="text-muted-foreground mt-0.5">{slot.description}</p>
+                                    </li>
+                                  ))}
+                                </ol>
+                              ) : (
+                                <p className="text-[11px] text-muted-foreground">Format your real extracurriculars (and any shortlisted activities) into real Common App entries.</p>
+                              )}
+                              <button
+                                type="button"
+                                onClick={handleGenerateActivitiesPlan}
+                                disabled={activitiesPending}
+                                className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-primary hover:brightness-125 disabled:opacity-50"
+                              >
+                                {activitiesPending ? <LoadingDots /> : <><Sparkles className="w-3.5 h-3.5" /> {(countryProfile.activitiesPlan?.length ?? 0) > 0 ? 'Re-format' : 'Format for Common App'}</>}
+                              </button>
+                              {(countryProfile.activitiesPlan?.length ?? 0) < 10 && (
+                                <div className="flex gap-2 pt-1">
+                                  <input
+                                    type="text"
+                                    value={manualActivity}
+                                    onChange={(e) => setManualActivity(e.target.value)}
+                                    maxLength={170}
+                                    placeholder={`Slot ${(countryProfile.activitiesPlan?.length ?? 0) + 1} — type your own`}
+                                    className="flex-1 min-w-0 bg-secondary border border-border rounded-lg p-2 text-[11px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary"
+                                  />
+                                  <button
+                                    type="button"
+                                    disabled={!manualActivity.trim() || manualActivityPending}
+                                    onClick={handleAddManualActivitySlot}
+                                    className="shrink-0 text-[11px] font-semibold text-primary px-3 py-2 rounded-lg border border-primary/30 hover:bg-primary/10 disabled:opacity-50"
+                                  >
+                                    {manualActivityPending ? <LoadingDots /> : 'Add'}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           )}
                         </div>
                       )}
@@ -495,13 +586,43 @@ export function DreamCountryWorkspace({
                   const uniExpanded = expandedUniversity === track.universityId
                   return (
                     <div key={track.universityId} className="border border-border rounded-2xl p-4">
-                      <button type="button" onClick={() => setExpandedUniversity(uniExpanded ? null : track.universityId)} aria-expanded={uniExpanded} className="w-full flex items-center justify-between mb-2 gap-2 text-left">
-                        <span className="flex items-center gap-1.5 min-w-0">
-                          <ChevronDown className={`w-3.5 h-3.5 shrink-0 text-muted-foreground/60 transition-transform ${uniExpanded ? 'rotate-180' : ''}`} />
-                          <span className="text-sm font-bold truncate">{track.universityName}</span>
-                        </span>
-                        <span className="text-xs font-bold text-primary shrink-0">{pct}% · {done}/{track.tasks.length} tasks</span>
-                      </button>
+                      <div className="flex items-start gap-3 mb-2">
+                        {/* Left-side thumbnail — same catalog imageUrl the main match
+                            cards use (see components/university-card.tsx), snapshotted
+                            at add-time so this doesn't need a join back to `universities`. */}
+                        {track.universityImageUrl ? (
+                          <div className="w-11 h-11 rounded-lg bg-white border border-border shrink-0 flex items-center justify-center overflow-hidden">
+                            <img src={track.universityImageUrl} alt={`${track.universityName} logo`} loading="lazy" className="max-w-full max-h-full object-contain" />
+                          </div>
+                        ) : (
+                          <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-accent to-secondary shrink-0 flex items-center justify-center" aria-hidden="true">
+                            <GraduationCap className="w-5 h-5 text-primary/50" />
+                          </div>
+                        )}
+                        <button type="button" onClick={() => setExpandedUniversity(uniExpanded ? null : track.universityId)} aria-expanded={uniExpanded} className="flex-1 min-w-0 text-left">
+                          <span className="flex items-center gap-1.5 min-w-0">
+                            <ChevronDown className={`w-3.5 h-3.5 shrink-0 text-muted-foreground/60 transition-transform ${uniExpanded ? 'rotate-180' : ''}`} />
+                            <span className="text-sm font-bold truncate">{track.universityName}</span>
+                          </span>
+                          <span className="flex items-center gap-2 mt-1 flex-wrap">
+                            {track.matchTier && track.acceptanceProbability != null && (
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border ${tierBadgeClass(track.matchTier)}`}>{track.matchTier} · {track.acceptanceProbability}% chance</span>
+                            )}
+                            <span className="text-[11px] font-bold text-primary">{pct}% · {done}/{track.tasks.length} tasks</span>
+                          </span>
+                        </button>
+                        {track.universityLink && (
+                          <a
+                            href={track.universityLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={`Visit ${track.universityName}'s website`}
+                            className="shrink-0 text-muted-foreground/60 hover:text-primary p-1"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
+                        )}
+                      </div>
                       <div className="h-1 w-full bg-secondary rounded-full overflow-hidden mb-3">
                         <div className="h-full bg-chart-4 rounded-full transition-all" style={{ width: `${pct}%` }} />
                       </div>

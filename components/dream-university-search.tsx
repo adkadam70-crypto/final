@@ -120,7 +120,18 @@ export function DreamUniversitySearch({ country, hasProfile }: { country: string
   async function handleAddToList() {
     if (!result) return
     setAddPending(true)
-    const res = await addUniversityToDreamList(country, result.universityId, result.resolvedUniversityName, result.strengths, result.weaknesses, result.actionSteps)
+    const res = await addUniversityToDreamList(
+      country,
+      result.universityId,
+      result.resolvedUniversityName,
+      result.strengths,
+      result.weaknesses,
+      result.actionSteps,
+      result.acceptanceProbability,
+      result.matchTier,
+      result.imageUrl,
+      result.link,
+    )
     setAddPending(false)
     if (res.success) setAddedIds((prev) => new Set(prev).add(result.universityId))
   }
