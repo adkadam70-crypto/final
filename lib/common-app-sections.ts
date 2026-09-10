@@ -16,7 +16,23 @@ export type CommonAppSection = {
   // is the clearest case) — omitted for sections where an example wouldn't
   // add anything beyond the whatToInclude bullets.
   example?: string
+  // Real published essay archives — schools that put out real admitted
+  // students' essays each year, not a generic "how to write an essay" blog.
+  essayExampleLinks?: { label: string; url: string }[]
 }
+
+// The real, current Common App Personal Essay prompts (the student picks
+// exactly one) — shown alongside the Writing section so the student can
+// actually choose one instead of just being told "one of 7 fixed prompts".
+export const COMMON_APP_ESSAY_PROMPTS: string[] = [
+  "Some students have a background, identity, interest, or talent that is so meaningful they believe their application would be incomplete without it. If this sounds like you, please share your story.",
+  'The lessons we take from obstacles we encounter can be fundamental to later success. Recount a time when you faced a challenge, setback, or failure. How did it affect you, and what did you learn from the experience?',
+  'Reflect on a time when you questioned or challenged a belief or idea. What prompted your thinking? What was the outcome?',
+  'Reflect on something that someone has done for you that has made you happy or thankful in a surprising way. How has this gratitude affected or motivated you?',
+  'Discuss an accomplishment, event, or realization that sparked a period of personal growth and a new understanding of yourself or others.',
+  'Describe a topic, idea, or concept you find so engaging that it makes you lose all track of time. Why does it captivate you? What or who do you turn to when you want to learn more?',
+  "Share an essay on any topic of your choice. It can be one you've already written, one that responds to a different prompt, or one of your own design.",
+]
 
 export const COMMON_APP_SECTIONS: CommonAppSection[] = [
   {
@@ -86,6 +102,11 @@ export const COMMON_APP_SECTIONS: CommonAppSection[] = [
       'The optional Additional Information section (up to 650 words) — use it only for context that genuinely needs explaining (an extenuating circumstance, a gap in your record, COVID impact), never as a second essay to restate your resume',
       'Some individual schools ALSO require their own supplemental essays on top of this — those live under that school\'s own tab, not here (see the per-school checklist when you add a university)',
     ],
+    essayExampleLinks: [
+      { label: 'Johns Hopkins — Essays That Worked', url: 'https://apply.jhu.edu/application-tips/essays-that-worked/' },
+      { label: 'Connecticut College — Essays That Worked', url: 'https://www.conncoll.edu/admission-financial-aid/apply/essays-that-worked/' },
+      { label: 'Common App — Writing Prompts', url: 'https://www.commonapp.org/apply/essay-prompts' },
+    ],
   },
 ]
 
@@ -101,3 +122,16 @@ export const PER_UNIVERSITY_TASK_TEMPLATE: string[] = [
   "Confirm this school's testing policy and submit or withhold scores accordingly",
   'Check whether this school requires self-reported Courses & Grades',
 ]
+
+// Deep-dive guidance for the generic template tasks above — real Common App
+// "My Colleges" tab behavior, so this is accurate for every school without
+// needing a per-school AI call. Keyed by the exact task string so the UI can
+// look up a deeper explanation on click; school-SPECIFIC tasks (from the AI
+// analysis) have no entry here since they're already concrete single-line
+// instructions by construction (see the dreamPriorityMode prompt in
+// app/actions/analyze-target-university.ts).
+export const PER_UNIVERSITY_TASK_DETAILS: Record<string, string> = {
+  'Complete FERPA release & assign recommenders for this school': 'On this school\'s "My Colleges" tab, sign the FERPA release waiving your right to see recommendation letters (schools weigh waived letters as more candid), then assign which teachers/counselor write for THIS school specifically — Common App lets you assign different recommenders per school, so don\'t assume your first school\'s assignments carry over.',
+  "Confirm this school's testing policy and submit or withhold scores accordingly": 'Testing policy is set PER SCHOOL, not app-wide — open this school\'s own admissions/testing page (policies range from required to test-optional to test-blind and have been shifting back toward required at some selective schools). If required or you\'re submitting voluntarily, self-report your scores on this school\'s Testing tab now; official reports only matter later if you enroll.',
+  'Check whether this school requires self-reported Courses & Grades': 'Some schools require you to manually enter every course and grade from 9th grade on, on top of your official transcript — this is separate work, not automatic. Check this school\'s own requirements page for "Self-Reported Academic Record" or similar, and budget real time for it if required; it is not optional busywork, some admissions offices review it before the transcript arrives.',
+}

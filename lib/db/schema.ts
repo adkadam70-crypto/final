@@ -265,7 +265,14 @@ export const dreamCountryProfiles = pgTable('dreamCountryProfiles', {
   // applying — separate from analysisStrengths/Gaps above, which grade the
   // profile as it stands today rather than plan what to do next.
   roadmapSummary: text('roadmapSummary'),
-  roadmapSteps: jsonb('roadmapSteps').$type<{ title: string; detail: string }[]>(),
+  roadmapSteps: jsonb('roadmapSteps').$type<{ title: string; detail: string; howTo: string[] }[]>(),
+  // Up to 10 Common App "Activities" slots, formatted from the student's
+  // existing extracurriculars first (real commitments, most important
+  // first) then padded out with shortlisted-but-not-yet-completed roadmap
+  // suggestions — see generateActivitiesPlan in app/actions/dream.ts. Any
+  // slot the student types in by hand (past what the AI could fill) is
+  // stored the same shape, category/position left blank.
+  activitiesPlan: jsonb('activitiesPlan').$type<{ category: string; position: string; description: string }[]>(),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 }, (table) => ({
@@ -290,6 +297,17 @@ export const dreamUniversityTracks = pgTable('dreamUniversityTracks', {
   // re-running the AI call every time the list renders.
   strengths: jsonb('strengths').$type<string[]>().notNull().default([]),
   weaknesses: jsonb('weaknesses').$type<string[]>().notNull().default([]),
+  // Snapshot of the analysis' headline numbers at add-time, so the list can
+  // show "your chance" without re-running the AI call every render — and a
+  // snapshot of the catalog's real image, so the list can show a thumbnail
+  // without a join back to `universities` on every read.
+  acceptanceProbability: integer('acceptanceProbability'),
+  matchTier: text('matchTier'),
+  universityImageUrl: text('universityImageUrl'),
+  // The university's own real site link (universities.link) — lets a click
+  // from this list go straight to that school's own application pages,
+  // where the tasks below actually get done.
+  universityLink: text('universityLink'),
   // The real per-college tasks for this school: PER_UNIVERSITY_TASK_TEMPLATE
   // plus whatever school-specific gaps the analysis surfaced (a required
   // portfolio, a missing score, a specific supplemental essay) — all

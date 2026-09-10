@@ -407,7 +407,13 @@ const roadmapSchema = z.object({
         detail: z
           .string()
           .describe(
-            'Under 35 words explaining specifically why this fits THIS student (cite their actual hobbies/interests/strengths from onboarding, or a gap in their current profile) and roughly when to do it given their timeline.',
+            'Under 60 words, in two parts: first, WHAT to actually do, specifically; second, WHY it helps THIS student — cite their actual hobbies/interests/strengths from onboarding, or a real gap in their current profile, and roughly when to do it given their timeline. Never generic ("this will strengthen your application") — always tie it to a specific fact about this student.',
+          ),
+        howTo: z
+          .array(z.string())
+          .max(4)
+          .describe(
+            'Up to 4 concrete, sequential sub-steps for actually DOING this — real first moves (who to talk to, what to start building, what to sign up for), not restatements of the title. Shown only when the student clicks in for a deeper breakdown, so this should go beyond detail rather than repeat it.',
           ),
       }),
     )
@@ -415,7 +421,7 @@ const roadmapSchema = z.object({
     .describe('Up to 6 concrete, personalized next steps — extracurriculars to start or deepen, grades to keep up, tests to plan for — ordered roughly by what to prioritize first given the time left.'),
 })
 
-export type DreamRoadmapResult = { timeframeSummary: string; steps: { title: string; detail: string }[] }
+export type DreamRoadmapResult = { timeframeSummary: string; steps: { title: string; detail: string; howTo: string[] }[] }
 
 export type GenerateRoadmapOutcome =
   | { needsOnboarding: true }
@@ -480,11 +486,15 @@ WHAT THEY SAID ABOUT THEMSELVES (onboarding):
 - Real-world problems/industries that excite them: ${[...dream.interests, dream.interestsOther].filter(Boolean).join('; ') || 'Not answered'}
 
 EXISTING ACADEMIC PROFILE:
+- Curriculum: ${profile.curriculum}
 - Academics: ${badge}
+- Standardized tests already taken: ${formatStandardizedTests(profile.standardizedTests)}
 - Extracurriculars already doing: ${profile.extracurriculars.length ? profile.extracurriculars.join('; ') : 'None provided'}
 - AP courses taken: ${profile.apCourses.length ? profile.apCourses.join('; ') : 'None reported'}
 
-Give a short timeframe summary (how much runway they actually have), then up to 6 concrete steps — extracurriculars to start or deepen (grounded in their OWN stated hobbies/interests, not generic suggestions), grades/rigor to sustain or improve, tests to plan for — each one specific to this exact student and paced against how much time they have left. If they're close to applying, prioritize depth/finishing strong over starting new things; if they have years left, prioritize building genuine, sustained commitment over resume padding.`
+CRITICAL — testing: check "Standardized tests already taken" above before suggesting ANYTHING about the SAT/ACT/English proficiency tests. If a test is listed there as already taken, NEVER suggest taking it (or "an" attempt at it) as a step — at most suggest a retake ONLY if the existing score is genuinely weak for this student's target field/country, and say so explicitly citing the actual score. If no test is listed there at all, it's genuinely fine to suggest planning for one.
+
+Give a short timeframe summary (how much runway they actually have), then up to 6 concrete steps — extracurriculars to start or deepen (grounded in their OWN stated hobbies/interests, not generic suggestions), grades/rigor to sustain or improve within their actual curriculum, tests to plan for ONLY if not already taken (per the CRITICAL note above) — each one specific to this exact student and paced against how much time they have left. If they're close to applying, prioritize depth/finishing strong over starting new things; if they have years left, prioritize building genuine, sustained commitment over resume padding. For each step, also give up to 4 concrete "how to" sub-steps — real first moves to actually start doing it, not a restatement of the title.`
 
   try {
     const call = () =>
@@ -493,12 +503,13 @@ Give a short timeframe summary (how much runway they actually have), then up to 
         input: [{ role: 'user', content: prompt }],
         text: { format: zodTextFormat(roadmapSchema, 'dream_roadmap') },
       })
+    const flatten = (r: z.infer<typeof roadmapSchema>) => [r.timeframeSummary, ...r.steps.flatMap((s) => [s.title, s.detail, ...s.howTo])]
     let response = await call()
-    if (response.output_parsed && isGarbledStrings([response.output_parsed.timeframeSummary, ...response.output_parsed.steps.flatMap((s) => [s.title, s.detail])])) {
+    if (response.output_parsed && isGarbledStrings(flatten(response.output_parsed))) {
       response = await call()
     }
     if (!response.output_parsed) throw new Error('OpenAI returned no parseable output for the roadmap request')
-    if (isGarbledStrings([response.output_parsed.timeframeSummary, ...response.output_parsed.steps.flatMap((s) => [s.title, s.detail])])) {
+    if (isGarbledStrings(flatten(response.output_parsed))) {
       throw new Error('OpenAI returned corrupted output after retry')
     }
 
@@ -517,30 +528,31 @@ Give a short timeframe summary (how much runway they actually have), then up to 
   }
 }
 
-// Sets the MANUAL override for one checklist item (0 or 100) — only ever
-// meaningful for items computeAutoChecklistProgress (lib/dream-checklist.ts)
-// can't auto-detect from the master profile; auto-detected items ignore
-// this and are recomputed fresh on every read.
-export async function toggleDreamChecklistItem(country: string, item: string, done: boolean): Promise<{ success: boolean }> {
+// Bulk-persists the MANUAL checklist overrides in one write — the student
+// toggles freely in the UI (local state only, see components/dream-country-
+// workspace.tsx) and this is only called once they press "Save changes",
+// deliberately not auto-saved per click. Only ever meaningful for items
+// computeAutoChecklistProgress (lib/dream-checklist.ts) can't auto-detect
+// from the master profile; auto-detected items ignore this entirely and are
+// recomputed fresh on every read.
+export async function saveDreamChecklist(country: string, checklist: Record<string, number>): Promise<{ success: boolean; message: string }> {
   let userId: string
   try {
     await assertDreamAdmin()
     userId = await getUserId()
   } catch {
-    return { success: false }
+    return { success: false, message: 'Your session has expired — please sign in again.' }
   }
   try {
-    const countryRow = await getDreamCountryProfile(country)
-    const nextChecklist = { ...(countryRow?.checklist ?? {}), [item]: done ? 100 : 0 }
     await db
       .update(dreamCountryProfiles)
-      .set({ checklist: nextChecklist, updatedAt: new Date() })
+      .set({ checklist, updatedAt: new Date() })
       .where(and(eq(dreamCountryProfiles.userId, userId), eq(dreamCountryProfiles.country, country)))
     revalidatePath(`/dream/${country}`)
-    return { success: true }
+    return { success: true, message: 'Saved.' }
   } catch (error) {
-    console.error('toggleDreamChecklistItem error:', error)
-    return { success: false }
+    console.error('saveDreamChecklist error:', error)
+    return { success: false, message: 'Something went wrong saving your checklist. Please try again.' }
   }
 }
 
@@ -567,6 +579,10 @@ export async function addUniversityToDreamList(
   strengths: string[],
   weaknesses: string[],
   schoolSpecificTasks: string[],
+  acceptanceProbability: number,
+  matchTier: string,
+  imageUrl: string | null,
+  link: string,
 ): Promise<{ success: boolean; message: string }> {
   let userId: string
   try {
@@ -579,12 +595,125 @@ export async function addUniversityToDreamList(
     const tasks = [...PER_UNIVERSITY_TASK_TEMPLATE, ...schoolSpecificTasks].filter((t, i, arr) => arr.indexOf(t) === i)
     await db
       .insert(dreamUniversityTracks)
-      .values({ userId, country, universityId, universityName, strengths, weaknesses, tasks })
+      .values({ userId, country, universityId, universityName, strengths, weaknesses, tasks, acceptanceProbability, matchTier, universityImageUrl: imageUrl, universityLink: link })
       .onConflictDoNothing()
     revalidatePath(`/dream/${country}`)
     return { success: true, message: 'Added to your list.' }
   } catch (error) {
     console.error('addUniversityToDreamList error:', error)
+    return { success: false, message: 'Something went wrong. Please try again.' }
+  }
+}
+
+const activitiesPlanSchema = z.object({
+  slots: z
+    .array(
+      z.object({
+        category: z.string().describe('A realistic Common App activity category, e.g. "Athletics: Club", "Community Service (Volunteer)", "Research", "Computer/Technology", "Debate/Speech".'),
+        position: z.string().max(60).describe('Under 50 characters — the position/leadership description as it would appear on Common App, e.g. "Founder & President".'),
+        description: z.string().max(170).describe('Under 150 characters — a concrete, specific description of what the student actually did, in the exact terse style Common App activity descriptions use. Never invent specifics not implied by the input text.'),
+      }),
+    )
+    .max(10)
+    .describe('Up to 10 Common App Activities slots. Real activities the student already listed come first, ranked by depth of commitment (their most significant, sustained activity first) — never reordered by which "sounds" most impressive. Shortlisted-but-not-yet-done suggestions fill any remaining slots after that, clearly building on real commitments rather than replacing them.'),
+})
+
+// Formats the student's real extracurriculars (and, to fill any remaining
+// slots, their shortlisted-but-not-yet-completed roadmap suggestions — see
+// profileSuggestedActivities) into actual Common App Activities entries:
+// category, position, and a terse Common App-style description. Never
+// invents activities beyond what the student actually gave it.
+export async function generateActivitiesPlan(country: string): Promise<{ success: boolean; message: string; slots?: { category: string; position: string; description: string }[] }> {
+  let userId: string
+  let clientIp: string
+  try {
+    await assertDreamAdmin()
+    userId = await getUserId()
+    clientIp = await getClientIp()
+  } catch (err) {
+    return { success: false, message: err instanceof Error && err.message === 'Unauthorized' ? 'Your session has expired — please sign in again.' : 'Something went wrong. Please refresh and try again.' }
+  }
+  try {
+    await assertDreamAnalysisRateLimit(userId, clientIp)
+  } catch (err) {
+    return { success: false, message: err instanceof Error ? err.message : 'Rate limit exceeded — please try again later.' }
+  }
+
+  const profile = await getLatestProfile()
+  if (!profile) return { success: false, message: 'Set up your main profile first.' }
+
+  const shortlisted = (await getSuggestedActivities()).filter((a) => a.status === 'shortlisted').map((a) => a.text)
+
+  if (profile.extracurriculars.length === 0 && shortlisted.length === 0) {
+    return { success: false, message: 'Add an extracurricular to your profile, or shortlist one from your roadmap, first.' }
+  }
+
+  const apiKey = process.env.OPENAI_API_KEY
+  if (!apiKey) return { success: false, message: 'The formatting service is not configured right now. Please try again later.' }
+
+  const client = new OpenAI({ apiKey })
+  const prompt = `You are helping a student format their real extracurriculars into the Common App's Activities section (up to 10 slots: category, position/leadership description, and a terse ~150-character description of what they actually did).
+
+REAL ACTIVITIES ALREADY ON THEIR PROFILE (use these first, ranked by depth of commitment — most sustained/significant first):
+${profile.extracurriculars.length ? profile.extracurriculars.map((e, i) => `${i + 1}. ${e}`).join('\n') : 'None yet.'}
+
+SHORTLISTED BUT NOT YET DONE (only use these to fill remaining slots after the real ones above, and only if there's room):
+${shortlisted.length ? shortlisted.map((e, i) => `${i + 1}. ${e}`).join('\n') : 'None.'}
+
+Format each into a realistic Common App entry. Never invent specifics (numbers, durations, outcomes) that aren't implied by the text — if the input is vague, keep the output equally general rather than fabricating detail.`
+
+  try {
+    const call = () =>
+      client.responses.parse({
+        model: 'gpt-5.6-luna',
+        input: [{ role: 'user', content: prompt }],
+        text: { format: zodTextFormat(activitiesPlanSchema, 'activities_plan') },
+      })
+    let response = await call()
+    if (response.output_parsed && isGarbledStrings(response.output_parsed.slots.flatMap((s) => [s.category, s.position, s.description]))) {
+      response = await call()
+    }
+    if (!response.output_parsed) throw new Error('OpenAI returned no parseable output for the activities plan request')
+    if (isGarbledStrings(response.output_parsed.slots.flatMap((s) => [s.category, s.position, s.description]))) {
+      throw new Error('OpenAI returned corrupted output after retry')
+    }
+
+    const { slots } = response.output_parsed
+    await db
+      .update(dreamCountryProfiles)
+      .set({ activitiesPlan: slots, updatedAt: new Date() })
+      .where(and(eq(dreamCountryProfiles.userId, userId), eq(dreamCountryProfiles.country, country)))
+    await db.insert(aiRateLimitLog).values({ userId, action: 'dreamActivitiesPlan', ipAddress: clientIp })
+    revalidatePath(`/dream/${country}`)
+
+    return { success: true, message: 'Formatted.', slots }
+  } catch (err) {
+    console.error('generateActivitiesPlan failed:', err)
+    return { success: false, message: "We couldn't format your activities right now — the AI service didn't respond. Please try again in a moment." }
+  }
+}
+
+// Adds/overwrites the manually-typed slots past whatever the AI could fill
+// from real data (see generateActivitiesPlan above) — the student's own
+// words for an activity too new/small to be on their formal profile yet.
+export async function saveActivitiesPlan(country: string, slots: { category: string; position: string; description: string }[]): Promise<{ success: boolean; message: string }> {
+  let userId: string
+  try {
+    await assertDreamAdmin()
+    userId = await getUserId()
+  } catch {
+    return { success: false, message: 'Your session has expired — please sign in again.' }
+  }
+  if (slots.length > 10) return { success: false, message: 'Common App allows at most 10 activities.' }
+  try {
+    await db
+      .update(dreamCountryProfiles)
+      .set({ activitiesPlan: slots, updatedAt: new Date() })
+      .where(and(eq(dreamCountryProfiles.userId, userId), eq(dreamCountryProfiles.country, country)))
+    revalidatePath(`/dream/${country}`)
+    return { success: true, message: 'Saved.' }
+  } catch (error) {
+    console.error('saveActivitiesPlan error:', error)
     return { success: false, message: 'Something went wrong. Please try again.' }
   }
 }
@@ -652,6 +781,26 @@ export async function markSuggestedActivityDone(id: number): Promise<{ success: 
     return { success: true, message: 'Marked complete and added to your profile.' }
   } catch (error) {
     console.error('markSuggestedActivityDone error:', error)
+    return { success: false, message: 'Something went wrong. Please try again.' }
+  }
+}
+
+export async function deleteDreamUniversityTrack(country: string, universityId: number): Promise<{ success: boolean; message: string }> {
+  let userId: string
+  try {
+    await assertDreamAdmin()
+    userId = await getUserId()
+  } catch {
+    return { success: false, message: 'Your session has expired — please sign in again.' }
+  }
+  try {
+    await db
+      .delete(dreamUniversityTracks)
+      .where(and(eq(dreamUniversityTracks.userId, userId), eq(dreamUniversityTracks.country, country), eq(dreamUniversityTracks.universityId, universityId)))
+    revalidatePath(`/dream/${country}`)
+    return { success: true, message: 'Removed.' }
+  } catch (error) {
+    console.error('deleteDreamUniversityTrack error:', error)
     return { success: false, message: 'Something went wrong. Please try again.' }
   }
 }
