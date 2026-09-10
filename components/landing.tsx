@@ -76,17 +76,21 @@ export function Landing() {
           without fighting that. */}
       <Velaris height="100vh" className="fixed inset-0" />
       {/* Fixed, not scrolled-with-content, so sign in/up stay reachable from
-          anywhere on the page without scrolling back to the bottom CTAs. */}
-      <div className="fixed top-4 sm:top-6 right-4 sm:right-6 z-50 flex items-center gap-2 sm:gap-3">
+          anywhere on the page without scrolling back to the bottom CTAs.
+          Wrapped in its own blurred backdrop pill — plain text with no
+          background here used to visibly overlap/clash with whatever
+          heading text scrolled underneath it, especially on mobile where
+          the heading wraps to 4 lines and reaches right up to this corner. */}
+      <div className="fixed top-4 sm:top-6 right-4 sm:right-6 z-50 flex items-center gap-2 sm:gap-3 bg-background/70 backdrop-blur-md border border-border rounded-full pl-3 pr-1.5 py-1.5 sm:pl-4 sm:pr-2 sm:py-2">
         <Link
           href="/sign-in"
-          className="text-sm font-semibold text-foreground/90 hover:text-primary transition-colors px-3 py-2"
+          className="text-sm font-semibold text-foreground/90 hover:text-primary transition-colors px-2 py-1.5"
         >
           Sign In
         </Link>
         <Link
           href="/sign-up"
-          className="inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-semibold px-4 py-2 shadow-lg hover:-translate-y-0.5 transition-all"
+          className="inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-semibold px-4 py-1.5 sm:py-2 shadow-lg hover:-translate-y-0.5 transition-all"
         >
           Sign Up
         </Link>
@@ -94,8 +98,11 @@ export function Landing() {
       <HeroScrollVideoReveal
         topBrand={
           <div className="flex items-center gap-2.5">
-            <AppLogo className="h-9 w-auto" />
-            <span className="text-2xl font-bold tracking-tight">Shortlisted</span>
+            <AppLogo className="h-8 w-auto sm:h-9" />
+            {/* Wordmark hidden below sm — at mobile widths this, plus the
+                fixed Sign In/Sign Up pill on the right, don't both fit
+                without overlapping. Icon alone is enough for the corner. */}
+            <span className="hidden sm:inline text-2xl font-bold tracking-tight">Shortlisted</span>
           </div>
         }
         topText={
