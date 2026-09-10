@@ -6,7 +6,7 @@ import { ArrowLeft, User, Search, TrendingUp, AlertTriangle, RotateCcw, Sparkles
 import {
   analyzeDreamProfile,
   generateDreamRoadmap,
-  toggleDreamChecklistItem,
+  saveDreamChecklist,
   toggleDreamUniversityTask,
   addSuggestedActivity,
   markSuggestedActivityDone,
@@ -15,9 +15,9 @@ import {
   type SuggestedActivityRow,
 } from '@/app/actions/dream'
 import { DreamUniversitySearch } from '@/components/dream-university-search'
-import { mergeChecklistProgress, overallCompletionPct } from '@/lib/dream-checklist'
+import { mergeChecklistProgress, overallCompletionPct, getSectionCoverage } from '@/lib/dream-checklist'
 import { APPLICATION_INFO } from '@/lib/application-info'
-import { COMMON_APP_SECTIONS } from '@/lib/common-app-sections'
+import { COMMON_APP_SECTIONS, PER_UNIVERSITY_TASK_DETAILS } from '@/lib/common-app-sections'
 import { LoadingDots } from '@/components/loading-dots'
 import type { StandardizedTests } from '@/lib/standardized-tests'
 
@@ -25,6 +25,8 @@ type WorkspaceProfile = {
   academicDetail: unknown
   standardizedTests: StandardizedTests
   extracurriculars: string[]
+  curriculum: string
+  apCourses: string[]
 }
 
 // Simple circular completion ring — SVG stroke-dashoffset trick, no chart
@@ -74,7 +76,7 @@ export function DreamCountryWorkspace({
   profile: WorkspaceProfile | null
 }) {
   const router = useRouter()
-  const [tab, setTab] = useState<'profile' | 'search'>('profile')
+  const [tab, setTab] = useState<'profile' | 'search' | 'universities'>('profile')
   const [countryProfile, setCountryProfile] = useState(initialCountryProfile)
   const [universityTracks, setUniversityTracks] = useState(initialUniversityTracks)
   const [suggestedActivities, setSuggestedActivities] = useState(initialSuggestedActivities)
@@ -84,6 +86,15 @@ export function DreamCountryWorkspace({
   const [activityPendingId, setActivityPendingId] = useState<number | 'custom' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [expandedSection, setExpandedSection] = useState<string | null>(null)
+  const [expandedStep, setExpandedStep] = useState<number | null>(null)
+  const [expandedUniversity, setExpandedUniversity] = useState<number | null>(null)
+  const [expandedTask, setExpandedTask] = useState<string | null>(null)
+  // Checklist toggles are drafted locally and only persisted on "Save
+  // changes" — no more save-on-every-click (see saveDreamChecklist in
+  // app/actions/dream.ts).
+  const [checklistDraft, setChecklistDraft] = useState(initialCountryProfile.checklist)
+  const [checklistSaving, setChecklistSaving] = useState(false)
+  const checklistDirty = JSON.stringify(checklistDraft) !== JSON.stringify(countryProfile.checklist)
 
   const countryInfo = APPLICATION_INFO[country]
   const hasAnalysis = !!(countryProfile.analysisStrengths?.length || countryProfile.analysisGaps?.length)
@@ -97,7 +108,7 @@ export function DreamCountryWorkspace({
 
   const checklistItems =
     checklistDefs.length && profile
-      ? mergeChecklistProgress(checklistDefs, countryProfile.checklist, {
+      ? mergeChecklistProgress(checklistDefs, checklistDraft, {
           standardizedTests: profile.standardizedTests,
           extracurriculars: profile.extracurriculars,
         })
@@ -157,9 +168,17 @@ export function DreamCountryWorkspace({
     setSuggestedActivities((prev) => prev.map((a) => (a.id === id ? { ...a, status: 'completed' } : a)))
   }
 
-  async function handleToggleChecklist(item: string, done: boolean) {
-    setCountryProfile((c) => ({ ...c, checklist: { ...c.checklist, [item]: done ? 100 : 0 } }))
-    await toggleDreamChecklistItem(country, item, done)
+  function handleToggleChecklist(item: string, done: boolean) {
+    setChecklistDraft((c) => ({ ...c, [item]: done ? 100 : 0 }))
+  }
+
+  async function handleSaveChecklist() {
+    setChecklistSaving(true)
+    setError(null)
+    const res = await saveDreamChecklist(country, checklistDraft)
+    setChecklistSaving(false)
+    if (!res.success) return setError(res.message)
+    setCountryProfile((c) => ({ ...c, checklist: checklistDraft }))
   }
 
   async function handleToggleUniversityTask(universityId: number, task: string, done: boolean) {
@@ -187,6 +206,12 @@ export function DreamCountryWorkspace({
             className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl transition-colors ${tab === 'search' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
           >
             <Search className="w-3.5 h-3.5" /> Search
+          </button>
+          <button
+            onClick={() => setTab('universities')}
+            className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl transition-colors ${tab === 'universities' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            <GraduationCap className="w-3.5 h-3.5" /> My Universities
           </button>
         </div>
       </div>
@@ -258,13 +283,19 @@ export function DreamCountryWorkspace({
                   <ul className="space-y-2">
                     {countryProfile.roadmapSteps.map((step, i) => {
                       const already = suggestedActivities.some((a) => a.text === step.title)
+                      const stepExpanded = expandedStep === i
                       return (
                         <li key={i} className="p-3 rounded-xl border border-border bg-secondary">
                           <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
+                            <button
+                              type="button"
+                              onClick={() => setExpandedStep(stepExpanded ? null : i)}
+                              aria-expanded={stepExpanded}
+                              className="min-w-0 flex-1 text-left flex items-center gap-1.5"
+                            >
+                              <ChevronDown className={`w-3.5 h-3.5 shrink-0 text-muted-foreground/60 transition-transform ${stepExpanded ? 'rotate-180' : ''}`} />
                               <p className="text-xs font-semibold text-foreground">{step.title}</p>
-                              <p className="text-[11px] text-muted-foreground mt-0.5 text-pretty">{step.detail}</p>
-                            </div>
+                            </button>
                             <button
                               type="button"
                               disabled={already || activityPendingId === i}
@@ -274,6 +305,19 @@ export function DreamCountryWorkspace({
                               <PlusCircle className="w-3.5 h-3.5" /> {already ? 'Added' : 'Add to my profile'}
                             </button>
                           </div>
+                          {stepExpanded && (
+                            <div className="mt-2 ml-5 space-y-2">
+                              <p className="text-[11px] text-muted-foreground text-pretty">{step.detail}</p>
+                              {step.howTo && step.howTo.length > 0 && (
+                                <div className="p-2.5 bg-card border border-border rounded-lg">
+                                  <p className="text-[10px] font-semibold text-primary uppercase tracking-wider mb-1">How to actually do this</p>
+                                  <ol className="text-[11px] text-muted-foreground space-y-1 list-decimal list-inside">
+                                    {step.howTo.map((h, j) => <li key={j}>{h}</li>)}
+                                  </ol>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </li>
                       )
                     })}
@@ -358,6 +402,7 @@ export function DreamCountryWorkspace({
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {checklistItems.map(({ requirement, progress, autoDetected }) => {
                   const sectionInfo = COMMON_APP_SECTIONS.find((s) => s.label === requirement)
+                  const coverage = profile ? getSectionCoverage(requirement, { standardizedTests: profile.standardizedTests, extracurriculars: profile.extracurriculars, curriculum: profile.curriculum, apCourses: profile.apCourses }) : null
                   const expanded = expandedSection === requirement
                   return (
                     <li key={requirement} className="p-2.5 rounded-xl border border-border bg-secondary">
@@ -386,7 +431,13 @@ export function DreamCountryWorkspace({
                       </div>
                       {sectionInfo && <p className="text-[10px] text-muted-foreground/70 mt-1 ml-5.5 text-pretty">{sectionInfo.description}</p>}
                       {expanded && sectionInfo && (
-                        <div className="mt-2 ml-5.5 p-2.5 bg-card border border-border rounded-lg space-y-1.5">
+                        <div className="mt-2 ml-5.5 p-2.5 bg-card border border-border rounded-lg space-y-2">
+                          {coverage && (
+                            <div className="space-y-1.5 pb-2 border-b border-border/60">
+                              <p className="text-[10px]"><span className="font-semibold text-chart-2 uppercase tracking-wider">You already have: </span><span className="text-muted-foreground">{coverage.have}</span></p>
+                              <p className="text-[10px]"><span className="font-semibold text-chart-5 uppercase tracking-wider">Still need: </span><span className="text-muted-foreground">{coverage.need}</span></p>
+                            </div>
+                          )}
                           <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">What to put here</p>
                           <ul className="text-[11px] text-muted-foreground space-y-1 list-disc list-inside">
                             {sectionInfo.whatToInclude.map((w, i) => <li key={i}>{w}</li>)}
@@ -406,44 +457,105 @@ export function DreamCountryWorkspace({
             ) : (
               <p className="text-xs text-muted-foreground">No checklist data for this country yet.</p>
             )}
+            {checklistItems.length > 0 && (
+              <div className="mt-4 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleSaveChecklist}
+                  disabled={!checklistDirty || checklistSaving}
+                  className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground font-semibold text-xs px-4 py-2 rounded-xl hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  {checklistSaving ? <LoadingDots /> : 'Save changes'}
+                </button>
+                {checklistDirty && !checklistSaving && <span className="text-[11px] text-muted-foreground">You have unsaved changes</span>}
+              </div>
+            )}
           </section>
-
-          {/* Section 2: schools added from the Search tab, each tracked
-              separately with its own real per-college Common App tasks. */}
-          <section className="bg-card border border-border rounded-3xl p-6">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
-              <GraduationCap className="w-4 h-4 text-chart-4" /> My universities
-            </h2>
-            {universityTracks.length === 0 ? (
-              <p className="text-xs text-muted-foreground">
-                None added yet — use the <button onClick={() => setTab('search')} className="text-primary font-medium underline underline-offset-2">Search</button> tab to analyze a school and add it here.
-              </p>
-            ) : (
-              <div className="space-y-4">
-                {universityTracks.map((track) => {
+        </div>
+      ) : tab === 'search' ? (
+        <DreamUniversitySearch country={country} hasProfile={hasProfile} />
+      ) : (
+        // "My Universities" — its own tab, separate from Profile: only the
+        // schools added from this country's Search tab live here, tracked
+        // with their own per-college tasks, not mixed into the Common App
+        // checklist above.
+        <section className="bg-card border border-border rounded-3xl p-6">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
+            <GraduationCap className="w-4 h-4 text-chart-4" /> My universities
+          </h2>
+          {universityTracks.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              None added yet — use the <button onClick={() => setTab('search')} className="text-primary font-medium underline underline-offset-2">Search</button> tab to analyze a school and add it here.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {universityTracks.map((track) => {
                   const done = track.tasks.filter((t) => (track.taskProgress[t] ?? 0) >= 100).length
                   const pct = track.tasks.length ? Math.round((done / track.tasks.length) * 100) : 0
+                  const uniExpanded = expandedUniversity === track.universityId
                   return (
                     <div key={track.universityId} className="border border-border rounded-2xl p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-sm font-bold">{track.universityName}</p>
-                        <span className="text-xs font-bold text-primary">{pct}% · {done}/{track.tasks.length} tasks</span>
-                      </div>
+                      <button type="button" onClick={() => setExpandedUniversity(uniExpanded ? null : track.universityId)} aria-expanded={uniExpanded} className="w-full flex items-center justify-between mb-2 gap-2 text-left">
+                        <span className="flex items-center gap-1.5 min-w-0">
+                          <ChevronDown className={`w-3.5 h-3.5 shrink-0 text-muted-foreground/60 transition-transform ${uniExpanded ? 'rotate-180' : ''}`} />
+                          <span className="text-sm font-bold truncate">{track.universityName}</span>
+                        </span>
+                        <span className="text-xs font-bold text-primary shrink-0">{pct}% · {done}/{track.tasks.length} tasks</span>
+                      </button>
                       <div className="h-1 w-full bg-secondary rounded-full overflow-hidden mb-3">
                         <div className="h-full bg-chart-4 rounded-full transition-all" style={{ width: `${pct}%` }} />
                       </div>
+                      {uniExpanded && (track.strengths.length > 0 || track.weaknesses.length > 0) && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3 p-3 bg-secondary/60 rounded-xl">
+                          {track.strengths.length > 0 && (
+                            <div>
+                              <p className="text-[10px] font-semibold text-primary uppercase tracking-wider mb-1">Strengths</p>
+                              <ul className="text-[11px] text-muted-foreground space-y-1 list-disc list-inside">
+                                {track.strengths.map((s, i) => <li key={i}>{s}</li>)}
+                              </ul>
+                            </div>
+                          )}
+                          {track.weaknesses.length > 0 && (
+                            <div>
+                              <p className="text-[10px] font-semibold text-chart-2 uppercase tracking-wider mb-1">Weaknesses</p>
+                              <ul className="text-[11px] text-muted-foreground space-y-1 list-disc list-inside">
+                                {track.weaknesses.map((s, i) => <li key={i}>{s}</li>)}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      )}
                       <ul className="space-y-1.5">
                         {track.tasks.map((task) => {
                           const taskDone = (track.taskProgress[task] ?? 0) >= 100
+                          const taskKey = `${track.universityId}:${task}`
+                          const detail = PER_UNIVERSITY_TASK_DETAILS[task]
+                          const taskExpanded = expandedTask === taskKey
                           return (
                             <li key={task}>
-                              <button
-                                onClick={() => handleToggleUniversityTask(track.universityId, task, !taskDone)}
-                                className="w-full flex items-start gap-2 text-left text-xs"
-                              >
-                                <CheckCircle2 className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${taskDone ? 'text-primary' : 'text-muted-foreground/40'}`} />
-                                <span className={taskDone ? 'text-muted-foreground line-through' : 'text-foreground/90'}>{task}</span>
-                              </button>
+                              <div className="flex items-start gap-2">
+                                <button
+                                  onClick={() => handleToggleUniversityTask(track.universityId, task, !taskDone)}
+                                  className="flex-1 min-w-0 flex items-start gap-2 text-left text-xs"
+                                >
+                                  <CheckCircle2 className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${taskDone ? 'text-primary' : 'text-muted-foreground/40'}`} />
+                                  <span className={taskDone ? 'text-muted-foreground line-through' : 'text-foreground/90'}>{task}</span>
+                                </button>
+                                {detail && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setExpandedTask(taskExpanded ? null : taskKey)}
+                                    aria-expanded={taskExpanded}
+                                    aria-label={`More on: ${task}`}
+                                    className="shrink-0 text-muted-foreground/60 hover:text-primary p-0.5"
+                                  >
+                                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${taskExpanded ? 'rotate-180' : ''}`} />
+                                  </button>
+                                )}
+                              </div>
+                              {taskExpanded && detail && (
+                                <p className="text-[11px] text-muted-foreground mt-1.5 ml-5.5 p-2.5 bg-secondary/60 border border-border rounded-lg text-pretty">{detail}</p>
+                              )}
                             </li>
                           )
                         })}
@@ -454,9 +566,6 @@ export function DreamCountryWorkspace({
               </div>
             )}
           </section>
-        </div>
-      ) : (
-        <DreamUniversitySearch country={country} hasProfile={hasProfile} />
       )}
     </main>
   )

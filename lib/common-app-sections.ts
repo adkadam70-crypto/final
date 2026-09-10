@@ -101,3 +101,16 @@ export const PER_UNIVERSITY_TASK_TEMPLATE: string[] = [
   "Confirm this school's testing policy and submit or withhold scores accordingly",
   'Check whether this school requires self-reported Courses & Grades',
 ]
+
+// Deep-dive guidance for the generic template tasks above — real Common App
+// "My Colleges" tab behavior, so this is accurate for every school without
+// needing a per-school AI call. Keyed by the exact task string so the UI can
+// look up a deeper explanation on click; school-SPECIFIC tasks (from the AI
+// analysis) have no entry here since they're already concrete single-line
+// instructions by construction (see the dreamPriorityMode prompt in
+// app/actions/analyze-target-university.ts).
+export const PER_UNIVERSITY_TASK_DETAILS: Record<string, string> = {
+  'Complete FERPA release & assign recommenders for this school': 'On this school\'s "My Colleges" tab, sign the FERPA release waiving your right to see recommendation letters (schools weigh waived letters as more candid), then assign which teachers/counselor write for THIS school specifically — Common App lets you assign different recommenders per school, so don\'t assume your first school\'s assignments carry over.',
+  "Confirm this school's testing policy and submit or withhold scores accordingly": 'Testing policy is set PER SCHOOL, not app-wide — open this school\'s own admissions/testing page (policies range from required to test-optional to test-blind and have been shifting back toward required at some selective schools). If required or you\'re submitting voluntarily, self-report your scores on this school\'s Testing tab now; official reports only matter later if you enroll.',
+  'Check whether this school requires self-reported Courses & Grades': 'Some schools require you to manually enter every course and grade from 9th grade on, on top of your official transcript — this is separate work, not automatic. Check this school\'s own requirements page for "Self-Reported Academic Record" or similar, and budget real time for it if required; it is not optional busywork, some admissions offices review it before the transcript arrives.',
+}

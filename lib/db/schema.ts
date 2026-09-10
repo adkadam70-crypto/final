@@ -265,7 +265,7 @@ export const dreamCountryProfiles = pgTable('dreamCountryProfiles', {
   // applying — separate from analysisStrengths/Gaps above, which grade the
   // profile as it stands today rather than plan what to do next.
   roadmapSummary: text('roadmapSummary'),
-  roadmapSteps: jsonb('roadmapSteps').$type<{ title: string; detail: string }[]>(),
+  roadmapSteps: jsonb('roadmapSteps').$type<{ title: string; detail: string; howTo: string[] }[]>(),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 }, (table) => ({

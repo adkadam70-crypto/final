@@ -409,13 +409,19 @@ const roadmapSchema = z.object({
           .describe(
             'Under 35 words explaining specifically why this fits THIS student (cite their actual hobbies/interests/strengths from onboarding, or a gap in their current profile) and roughly when to do it given their timeline.',
           ),
+        howTo: z
+          .array(z.string())
+          .max(4)
+          .describe(
+            'Up to 4 concrete, sequential sub-steps for actually DOING this — real first moves (who to talk to, what to start building, what to sign up for), not restatements of the title. Shown only when the student clicks in for a deeper breakdown, so this should go beyond detail rather than repeat it.',
+          ),
       }),
     )
     .max(6)
     .describe('Up to 6 concrete, personalized next steps — extracurriculars to start or deepen, grades to keep up, tests to plan for — ordered roughly by what to prioritize first given the time left.'),
 })
 
-export type DreamRoadmapResult = { timeframeSummary: string; steps: { title: string; detail: string }[] }
+export type DreamRoadmapResult = { timeframeSummary: string; steps: { title: string; detail: string; howTo: string[] }[] }
 
 export type GenerateRoadmapOutcome =
   | { needsOnboarding: true }
@@ -480,11 +486,12 @@ WHAT THEY SAID ABOUT THEMSELVES (onboarding):
 - Real-world problems/industries that excite them: ${[...dream.interests, dream.interestsOther].filter(Boolean).join('; ') || 'Not answered'}
 
 EXISTING ACADEMIC PROFILE:
+- Curriculum: ${profile.curriculum}
 - Academics: ${badge}
 - Extracurriculars already doing: ${profile.extracurriculars.length ? profile.extracurriculars.join('; ') : 'None provided'}
 - AP courses taken: ${profile.apCourses.length ? profile.apCourses.join('; ') : 'None reported'}
 
-Give a short timeframe summary (how much runway they actually have), then up to 6 concrete steps — extracurriculars to start or deepen (grounded in their OWN stated hobbies/interests, not generic suggestions), grades/rigor to sustain or improve, tests to plan for — each one specific to this exact student and paced against how much time they have left. If they're close to applying, prioritize depth/finishing strong over starting new things; if they have years left, prioritize building genuine, sustained commitment over resume padding.`
+Give a short timeframe summary (how much runway they actually have), then up to 6 concrete steps — extracurriculars to start or deepen (grounded in their OWN stated hobbies/interests, not generic suggestions), grades/rigor to sustain or improve within their actual curriculum, tests to plan for — each one specific to this exact student and paced against how much time they have left. If they're close to applying, prioritize depth/finishing strong over starting new things; if they have years left, prioritize building genuine, sustained commitment over resume padding. For each step, also give up to 4 concrete "how to" sub-steps — real first moves to actually start doing it, not a restatement of the title.`
 
   try {
     const call = () =>
@@ -493,12 +500,13 @@ Give a short timeframe summary (how much runway they actually have), then up to 
         input: [{ role: 'user', content: prompt }],
         text: { format: zodTextFormat(roadmapSchema, 'dream_roadmap') },
       })
+    const flatten = (r: z.infer<typeof roadmapSchema>) => [r.timeframeSummary, ...r.steps.flatMap((s) => [s.title, s.detail, ...s.howTo])]
     let response = await call()
-    if (response.output_parsed && isGarbledStrings([response.output_parsed.timeframeSummary, ...response.output_parsed.steps.flatMap((s) => [s.title, s.detail])])) {
+    if (response.output_parsed && isGarbledStrings(flatten(response.output_parsed))) {
       response = await call()
     }
     if (!response.output_parsed) throw new Error('OpenAI returned no parseable output for the roadmap request')
-    if (isGarbledStrings([response.output_parsed.timeframeSummary, ...response.output_parsed.steps.flatMap((s) => [s.title, s.detail])])) {
+    if (isGarbledStrings(flatten(response.output_parsed))) {
       throw new Error('OpenAI returned corrupted output after retry')
     }
 
@@ -517,30 +525,31 @@ Give a short timeframe summary (how much runway they actually have), then up to 
   }
 }
 
-// Sets the MANUAL override for one checklist item (0 or 100) — only ever
-// meaningful for items computeAutoChecklistProgress (lib/dream-checklist.ts)
-// can't auto-detect from the master profile; auto-detected items ignore
-// this and are recomputed fresh on every read.
-export async function toggleDreamChecklistItem(country: string, item: string, done: boolean): Promise<{ success: boolean }> {
+// Bulk-persists the MANUAL checklist overrides in one write — the student
+// toggles freely in the UI (local state only, see components/dream-country-
+// workspace.tsx) and this is only called once they press "Save changes",
+// deliberately not auto-saved per click. Only ever meaningful for items
+// computeAutoChecklistProgress (lib/dream-checklist.ts) can't auto-detect
+// from the master profile; auto-detected items ignore this entirely and are
+// recomputed fresh on every read.
+export async function saveDreamChecklist(country: string, checklist: Record<string, number>): Promise<{ success: boolean; message: string }> {
   let userId: string
   try {
     await assertDreamAdmin()
     userId = await getUserId()
   } catch {
-    return { success: false }
+    return { success: false, message: 'Your session has expired — please sign in again.' }
   }
   try {
-    const countryRow = await getDreamCountryProfile(country)
-    const nextChecklist = { ...(countryRow?.checklist ?? {}), [item]: done ? 100 : 0 }
     await db
       .update(dreamCountryProfiles)
-      .set({ checklist: nextChecklist, updatedAt: new Date() })
+      .set({ checklist, updatedAt: new Date() })
       .where(and(eq(dreamCountryProfiles.userId, userId), eq(dreamCountryProfiles.country, country)))
     revalidatePath(`/dream/${country}`)
-    return { success: true }
+    return { success: true, message: 'Saved.' }
   } catch (error) {
-    console.error('toggleDreamChecklistItem error:', error)
-    return { success: false }
+    console.error('saveDreamChecklist error:', error)
+    return { success: false, message: 'Something went wrong saving your checklist. Please try again.' }
   }
 }
 

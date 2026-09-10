@@ -42,8 +42,8 @@ export function DreamUniversitySearch({ country, hasProfile }: { country: string
   const inputWrapperRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    getUniversityNames().then(setCatalogNames).catch(() => {})
-  }, [])
+    getUniversityNames(country).then(setCatalogNames).catch(() => {})
+  }, [country])
 
   useEffect(() => {
     if (error) errorRef.current?.focus()
@@ -76,14 +76,14 @@ export function DreamUniversitySearch({ country, hasProfile }: { country: string
     setError(null)
     setPending(true)
     try {
-      const res = await analyzeTargetUniversity(targetName, undefined, true)
+      const res = await analyzeTargetUniversity(targetName, undefined, true, country)
       if ('needsProfile' in res) {
         setError('Set up your profile first — we need your academics to analyze a specific school.')
         setPending(false)
         return
       }
       if ('notInCatalog' in res) {
-        setError(`"${res.universityName}" isn't in our catalog yet.`)
+        setError(`"${res.universityName}" isn't in our ${country} catalog yet.`)
         setPending(false)
         return
       }
@@ -130,7 +130,7 @@ export function DreamUniversitySearch({ country, hasProfile }: { country: string
   return (
     <section className="bg-card border border-primary/20 rounded-3xl p-6 font-mono">
       <h2 className="text-xs font-bold uppercase tracking-widest text-primary mb-1 flex items-center gap-2"><Search className="w-4 h-4" /> Deep target search</h2>
-      <p className="text-[11px] text-muted-foreground mb-4">Analyze a school, then add it straight to your {country} list to start tracking its application tasks.</p>
+      <p className="text-[11px] text-muted-foreground mb-4">Analyze a {country} school, then add it straight to your list to start tracking its application tasks. Only {country} schools are searchable here.</p>
 
       <div className="flex flex-col sm:flex-row gap-2">
         <div ref={inputWrapperRef} className="relative flex-1 min-w-0">

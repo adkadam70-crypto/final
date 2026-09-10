@@ -51,6 +51,72 @@ export function computeAutoChecklistProgress(requirement: string, profile: Check
   return null
 }
 
+export type SectionCoverageProfile = ChecklistProfile & { curriculum?: string; apCourses?: string[] }
+
+export type SectionCoverage = { have: string; need: string }
+
+// Personalizes each Common App section's expanded detail with what's
+// actually on this student's master profile already vs. what's genuinely
+// still missing — the static whatToInclude bullets (lib/common-app-sections.ts)
+// stay generic reference material, this is the "where do YOU actually
+// stand" layer on top of it. Exact-match on the Common App section labels
+// only (see computeAutoChecklistProgress above for why) — returns null for
+// anything else (the generic per-country requirement strings, which have no
+// equivalent personalized breakdown yet).
+export function getSectionCoverage(requirement: string, profile: SectionCoverageProfile): SectionCoverage | null {
+  const r = requirement.toLowerCase()
+  const t = profile.standardizedTests
+
+  if (r === 'testing') {
+    const parts: string[] = []
+    if (t.satMath !== undefined && t.satReadingWriting !== undefined) parts.push(`SAT ${t.satMath + t.satReadingWriting}`)
+    if (t.act !== undefined) parts.push(`ACT ${t.act}`)
+    if (t.englishTestType !== undefined && t.englishTestScore !== undefined) parts.push(`${t.englishTestType} ${t.englishTestScore}`)
+    return {
+      have: parts.length ? parts.join(', ') : 'No test scores on file yet.',
+      need: parts.length ? "Nothing more needed here — just confirm each school's own testing policy when you add it." : 'Add an SAT/ACT score, or an English proficiency score if applying as an international student, on your profile.',
+    }
+  }
+
+  if (r === 'activities') {
+    const n = profile.extracurriculars.length
+    return {
+      have: n ? profile.extracurriculars.join('; ') : 'None added yet.',
+      need: n >= 10 ? 'You\'ve filled all 10 slots — just double-check they\'re ranked with your most meaningful commitment first.' : `You have ${n}/10 slots filled. Common App allows up to 10, ranked by importance — add more real commitments if you have them, don't pad with one-offs.`,
+    }
+  }
+
+  if (r === 'education') {
+    return {
+      have: profile.curriculum ? `${profile.curriculum} curriculum, grades on file.${profile.apCourses?.length ? ` ${profile.apCourses.length} AP course(s) reported.` : ''}` : 'Grades on file.',
+      need: 'Nothing more needed here — pulled automatically from your saved profile.',
+    }
+  }
+
+  if (r === 'profile') {
+    return {
+      have: 'Not tracked in this app.',
+      need: 'Fill in your legal name, address, demographics, and fee-waiver eligibility directly on the Common App.',
+    }
+  }
+
+  if (r === 'family') {
+    return {
+      have: 'Not tracked in this app.',
+      need: 'Fill in parent/guardian education, occupation, and sibling info directly on the Common App.',
+    }
+  }
+
+  if (r === 'writing') {
+    return {
+      have: 'Not tracked in this app.',
+      need: 'Draft your Personal Statement (250-650 words) responding to one of the 7 fixed prompts — this is the one section no profile field can fill in for you.',
+    }
+  }
+
+  return null
+}
+
 export type ChecklistItemProgress = {
   requirement: string
   progress: number // 0-100, whichever of auto-detected or manual applies

@@ -186,7 +186,17 @@ export type TargetAnalysisOutcome =
 // action-step prompt, so a dream-mode call always hits the AI fresh instead
 // of risking a cache hit that was computed under the other framing (or
 // vice versa) from the shared universityAnalyses cache.
-export async function analyzeTargetUniversity(universityName: string, dreamContext?: string, dreamPriorityMode?: boolean): Promise<TargetAnalysisOutcome> {
+// restrictToCountry: Build Your Dream's Search tab is scoped to one country
+// at a time — passing this keeps the catalog match (and the "not in
+// catalog" message) confined to that country's schools, so e.g. a US
+// workspace search for a UK-only school correctly reports "not in catalog"
+// instead of matching it and adding a UK school to a US country's list.
+export async function analyzeTargetUniversity(
+  universityName: string,
+  dreamContext?: string,
+  dreamPriorityMode?: boolean,
+  restrictToCountry?: string,
+): Promise<TargetAnalysisOutcome> {
   let userId: string
   let clientIp: string
   try {
@@ -237,7 +247,8 @@ export async function analyzeTargetUniversity(universityName: string, dreamConte
   }
 
   try {
-    const catalog = await db.select().from(universities)
+    const fullCatalog = await db.select().from(universities)
+    const catalog = restrictToCountry ? fullCatalog.filter((u) => u.country === restrictToCountry) : fullCatalog
     const lower = trimmed.toLowerCase()
     const aliasTarget = UNIVERSITY_ALIASES[lower]
     const matched =
@@ -526,7 +537,9 @@ Provide an honest tier + probability, a summary that names the concrete number/f
 // only, alphabetical, so the client can filter-as-you-type against the real
 // catalog instead of the user having to type a full name blind and find out
 // afterward whether it's in our catalog.
-export async function getUniversityNames(): Promise<string[]> {
-  const rows = await db.select({ name: universities.name }).from(universities)
+export async function getUniversityNames(country?: string): Promise<string[]> {
+  const rows = country
+    ? await db.select({ name: universities.name }).from(universities).where(eq(universities.country, country))
+    : await db.select({ name: universities.name }).from(universities)
   return rows.map((r) => r.name).sort((a, b) => a.localeCompare(b))
 }
