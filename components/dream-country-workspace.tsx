@@ -280,12 +280,12 @@ export function DreamCountryWorkspace({
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-1">{countryInfo?.name ?? country}</h1>
           <p className="text-sm text-muted-foreground">Target field: {confirmedField}</p>
-          <p className="text-[11px] text-muted-foreground/70 mt-0.5">{overallPct}% of your overall application work is done</p>
+          <p className="text-sm text-muted-foreground/70 mt-0.5">{overallPct}% of your overall application work is done</p>
         </div>
       </div>
 
       {tab === 'profile' ? (
-        <div className="space-y-6">
+        <div className="space-y-8">
           <section className="bg-card border border-border rounded-3xl p-6">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-primary" /> Profile analysis
@@ -294,7 +294,7 @@ export function DreamCountryWorkspace({
               <div className="space-y-3">
                 {countryProfile.analysisStrengths && countryProfile.analysisStrengths.length > 0 && (
                   <div>
-                    <div className="text-[11px] font-semibold text-primary uppercase tracking-wider mb-1.5">Strengths</div>
+                    <div className="text-sm font-semibold text-primary uppercase tracking-wider mb-1.5">Strengths</div>
                     <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
                       {countryProfile.analysisStrengths.map((s, i) => <li key={i}>{s}</li>)}
                     </ul>
@@ -302,13 +302,13 @@ export function DreamCountryWorkspace({
                 )}
                 {countryProfile.analysisGaps && countryProfile.analysisGaps.length > 0 && (
                   <div>
-                    <div className="text-[11px] font-semibold text-chart-2 uppercase tracking-wider mb-1.5 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Gaps</div>
+                    <div className="text-sm font-semibold text-chart-2 uppercase tracking-wider mb-1.5 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Gaps</div>
                     <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
                       {countryProfile.analysisGaps.map((s, i) => <li key={i}>{s}</li>)}
                     </ul>
                   </div>
                 )}
-                <button onClick={handleAnalyze} disabled={analysisPending} className="text-[11px] text-primary font-medium mt-2 flex items-center gap-1 hover:brightness-125 disabled:opacity-50">
+                <button onClick={handleAnalyze} disabled={analysisPending} className="text-sm text-primary font-medium mt-2 flex items-center gap-1 hover:brightness-125 disabled:opacity-50">
                   {analysisPending ? <LoadingDots /> : <><RotateCcw className="w-3 h-3" /> Re-analyze</>}
                 </button>
               </div>
@@ -324,7 +324,7 @@ export function DreamCountryWorkspace({
                 </button>
               </div>
             )}
-            {error && <p className="text-[11px] text-destructive mt-3">{error}</p>}
+            {error && <p className="text-sm text-destructive mt-3">{error}</p>}
           </section>
 
           {/* "Build your own profile" — a forward-looking, time-aware plan
@@ -337,7 +337,7 @@ export function DreamCountryWorkspace({
                 <Lightbulb className="w-4 h-4 text-chart-5" /> Build your own profile
               </h2>
               {countryProfile.roadmapSteps && countryProfile.roadmapSteps.length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-5">
                   {countryProfile.roadmapSummary && <p className="text-xs text-muted-foreground leading-relaxed text-pretty">{countryProfile.roadmapSummary}</p>}
                   <ul className="space-y-2">
                     {countryProfile.roadmapSteps.map((step, i) => {
@@ -359,18 +359,18 @@ export function DreamCountryWorkspace({
                               type="button"
                               disabled={already || activityPendingId === i}
                               onClick={() => handleAddSuggestedActivity(step.title, i)}
-                              className="shrink-0 flex items-center gap-1 text-[11px] font-medium text-primary hover:brightness-125 disabled:opacity-50 disabled:text-muted-foreground"
+                              className="shrink-0 flex items-center gap-1 text-sm font-medium text-primary hover:brightness-125 disabled:opacity-50 disabled:text-muted-foreground"
                             >
                               <PlusCircle className="w-3.5 h-3.5" /> {already ? 'Added' : 'Add to my profile'}
                             </button>
                           </div>
                           {stepExpanded && (
                             <div className="mt-2 ml-5 space-y-2">
-                              <p className="text-[11px] text-muted-foreground text-pretty">{step.detail}</p>
+                              <p className="text-sm text-muted-foreground text-pretty">{step.detail}</p>
                               {step.howTo && step.howTo.length > 0 && (
                                 <div className="p-2.5 bg-card border border-border rounded-lg">
-                                  <p className="text-[10px] font-semibold text-primary uppercase tracking-wider mb-1">How to actually do this</p>
-                                  <ol className="text-[11px] text-muted-foreground space-y-1 list-decimal list-inside">
+                                  <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">How to actually do this</p>
+                                  <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
                                     {step.howTo.map((h, j) => <li key={j}>{h}</li>)}
                                   </ol>
                                 </div>
@@ -381,7 +381,7 @@ export function DreamCountryWorkspace({
                       )
                     })}
                   </ul>
-                  <button onClick={handleGenerateRoadmap} disabled={roadmapPending} className="text-[11px] text-primary font-medium flex items-center gap-1 hover:brightness-125 disabled:opacity-50">
+                  <button onClick={handleGenerateRoadmap} disabled={roadmapPending} className="text-sm text-primary font-medium flex items-center gap-1 hover:brightness-125 disabled:opacity-50">
                     {roadmapPending ? <LoadingDots /> : <><RotateCcw className="w-3 h-3" /> Regenerate</>}
                   </button>
                 </div>
@@ -400,19 +400,19 @@ export function DreamCountryWorkspace({
 
               {suggestedActivities.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-border">
-                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Your shortlisted activities</p>
+                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">Your shortlisted activities</p>
                   <ul className="space-y-1.5">
                     {suggestedActivities.map((a) => (
                       <li key={a.id} className="flex items-center justify-between gap-2 text-xs">
                         <span className={a.status === 'completed' ? 'text-muted-foreground line-through' : 'text-foreground/90'}>{a.text}</span>
                         {a.status === 'completed' ? (
-                          <span className="shrink-0 text-[10px] font-semibold text-chart-2 uppercase flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Completed</span>
+                          <span className="shrink-0 text-xs font-semibold text-chart-2 uppercase flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Completed</span>
                         ) : (
                           <button
                             type="button"
                             disabled={activityPendingId === a.id}
                             onClick={() => handleMarkActivityDone(a.id)}
-                            className="shrink-0 text-[10px] font-semibold text-primary uppercase hover:brightness-125 disabled:opacity-50"
+                            className="shrink-0 text-xs font-semibold text-primary uppercase hover:brightness-125 disabled:opacity-50"
                           >
                             Mark completed
                           </button>
@@ -455,7 +455,7 @@ export function DreamCountryWorkspace({
               <span className="text-xs font-bold text-primary">{commonAppCompletionPct}%</span>
             </div>
             {country === 'US' && (
-              <a href="https://www.commonapp.org" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-primary font-medium hover:brightness-125 mb-3">
+              <a href="https://www.commonapp.org" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-primary font-medium hover:brightness-125 mb-3">
                 <ExternalLink className="w-3 h-3" /> Open the Common App
               </a>
             )}
@@ -463,7 +463,7 @@ export function DreamCountryWorkspace({
               <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${commonAppCompletionPct}%` }} />
             </div>
             {checklistItems.length > 0 ? (
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {checklistItems.map(({ requirement, progress, autoDetected }) => {
                   const sectionInfo = COMMON_APP_SECTIONS.find((s) => s.label === requirement)
                   const coverage = profile ? getSectionCoverage(requirement, { standardizedTests: profile.standardizedTests, extracurriculars: profile.extracurriculars, curriculum: profile.curriculum, apCourses: profile.apCourses }) : null
@@ -479,7 +479,7 @@ export function DreamCountryWorkspace({
                         >
                           <CheckCircle2 className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${progress >= 100 ? 'text-primary' : 'text-muted-foreground/40'}`} />
                           <span className={progress >= 100 ? 'text-muted-foreground line-through' : 'text-foreground/90'}>{requirement}</span>
-                          {autoDetected && <span className="shrink-0 text-[9px] text-muted-foreground/60 uppercase">auto</span>}
+                          {autoDetected && <span className="shrink-0 text-sm text-muted-foreground/60 uppercase">auto</span>}
                         </button>
                         {sectionInfo && (
                           <button
@@ -493,25 +493,25 @@ export function DreamCountryWorkspace({
                           </button>
                         )}
                       </div>
-                      {sectionInfo && <p className="text-[10px] text-muted-foreground/70 mt-1 ml-5.5 text-pretty">{sectionInfo.description}</p>}
+                      {sectionInfo && <p className="text-xs text-muted-foreground/70 mt-1 ml-5.5 text-pretty">{sectionInfo.description}</p>}
                       {expanded && sectionInfo && (
                         <div className="mt-2 ml-5.5 p-2.5 bg-card border border-border rounded-lg space-y-2">
                           {requirement === 'Activities' && (
                             <div className="pb-2 border-b border-border/60 space-y-2">
-                              <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">Your 10 Common App slots</p>
+                              <p className="text-xs font-semibold text-primary uppercase tracking-wider">Your 10 Common App slots</p>
                               {(countryProfile.activitiesPlan?.length ?? 0) > 0 ? (
                                 <ol className="space-y-1.5">
                                   {countryProfile.activitiesPlan!.map((slot, i) => {
                                     const isEditing = editingSlot === i
                                     return (
-                                      <li key={i} className="text-[11px] bg-secondary/60 border border-border rounded-lg p-2">
+                                      <li key={i} className="text-sm bg-secondary/60 border border-border rounded-lg p-2">
                                         <div className="flex items-start justify-between gap-2">
                                           <span className="font-semibold text-foreground">{i + 1}. {slot.category}{slot.position && <span className="text-muted-foreground font-normal"> — {slot.position}</span>}</span>
                                           <div className="flex items-center gap-2 shrink-0">
                                             {!isEditing && (
-                                              <button type="button" onClick={() => { setEditingSlot(i); setEditingSlotText(slot.description) }} className="text-primary hover:brightness-125 text-[10px] font-semibold uppercase">Edit</button>
+                                              <button type="button" onClick={() => { setEditingSlot(i); setEditingSlotText(slot.description) }} className="text-primary hover:brightness-125 text-xs font-semibold uppercase">Edit</button>
                                             )}
-                                            <button type="button" onClick={() => handleDeleteActivitySlot(i)} className="text-destructive hover:brightness-125 text-[10px] font-semibold uppercase">Remove</button>
+                                            <button type="button" onClick={() => handleDeleteActivitySlot(i)} className="text-destructive hover:brightness-125 text-xs font-semibold uppercase">Remove</button>
                                           </div>
                                         </div>
                                         {isEditing ? (
@@ -521,13 +521,13 @@ export function DreamCountryWorkspace({
                                               onChange={(e) => setEditingSlotText(e.target.value)}
                                               maxLength={170}
                                               rows={2}
-                                              className="w-full bg-card border border-border rounded-lg p-2 text-[11px] text-foreground focus:outline-none focus:border-primary resize-none"
+                                              className="w-full bg-card border border-border rounded-lg p-2 text-sm text-foreground focus:outline-none focus:border-primary resize-none"
                                             />
                                             <div className="flex items-center justify-between">
-                                              <span className="text-[9px] text-muted-foreground/70">{editingSlotText.length}/150 recommended — Common App's real field caps around here</span>
+                                              <span className="text-sm text-muted-foreground/70">{editingSlotText.length}/150 recommended — Common App's real field caps around here</span>
                                               <div className="flex gap-2">
-                                                <button type="button" onClick={() => setEditingSlot(null)} className="text-[10px] text-muted-foreground hover:text-foreground">Cancel</button>
-                                                <button type="button" disabled={manualActivityPending} onClick={() => handleSaveEditedSlot(i)} className="text-[10px] font-semibold text-primary hover:brightness-125 disabled:opacity-50">Save</button>
+                                                <button type="button" onClick={() => setEditingSlot(null)} className="text-xs text-muted-foreground hover:text-foreground">Cancel</button>
+                                                <button type="button" disabled={manualActivityPending} onClick={() => handleSaveEditedSlot(i)} className="text-xs font-semibold text-primary hover:brightness-125 disabled:opacity-50">Save</button>
                                               </div>
                                             </div>
                                           </div>
@@ -539,13 +539,13 @@ export function DreamCountryWorkspace({
                                   })}
                                 </ol>
                               ) : (
-                                <p className="text-[11px] text-muted-foreground">Format your real extracurriculars (and any shortlisted activities) into real Common App entries.</p>
+                                <p className="text-sm text-muted-foreground">Format your real extracurriculars (and any shortlisted activities) into real Common App entries.</p>
                               )}
                               <button
                                 type="button"
                                 onClick={handleGenerateActivitiesPlan}
                                 disabled={activitiesPending}
-                                className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-primary hover:brightness-125 disabled:opacity-50"
+                                className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:brightness-125 disabled:opacity-50"
                               >
                                 {activitiesPending ? <LoadingDots /> : <><Sparkles className="w-3.5 h-3.5" /> {(countryProfile.activitiesPlan?.length ?? 0) > 0 ? 'Re-format from my profile' : 'Format for Common App'}</>}
                               </button>
@@ -557,13 +557,13 @@ export function DreamCountryWorkspace({
                                     onChange={(e) => setManualActivity(e.target.value)}
                                     maxLength={170}
                                     placeholder={`Slot ${(countryProfile.activitiesPlan?.length ?? 0) + 1} — type your own, however much detail you need`}
-                                    className="flex-1 min-w-0 bg-secondary border border-border rounded-lg p-2 text-[11px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary"
+                                    className="flex-1 min-w-0 bg-secondary border border-border rounded-lg p-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary"
                                   />
                                   <button
                                     type="button"
                                     disabled={!manualActivity.trim() || manualActivityPending}
                                     onClick={handleAddManualActivitySlot}
-                                    className="shrink-0 text-[11px] font-semibold text-primary px-3 py-2 rounded-lg border border-primary/30 hover:bg-primary/10 disabled:opacity-50"
+                                    className="shrink-0 text-sm font-semibold text-primary px-3 py-2 rounded-lg border border-primary/30 hover:bg-primary/10 disabled:opacity-50"
                                   >
                                     {manualActivityPending ? <LoadingDots /> : 'Add'}
                                   </button>
@@ -573,30 +573,30 @@ export function DreamCountryWorkspace({
                           )}
                           {requirement === 'Writing' && (
                             <div className="pb-2 border-b border-border/60 space-y-1.5">
-                              <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">Pick one of the 7 real prompts</p>
-                              <ol className="text-[11px] text-muted-foreground space-y-1.5 list-decimal list-inside">
+                              <p className="text-xs font-semibold text-primary uppercase tracking-wider">Pick one of the 7 real prompts</p>
+                              <ol className="text-sm text-muted-foreground space-y-1.5 list-decimal list-inside">
                                 {COMMON_APP_ESSAY_PROMPTS.map((p, i) => <li key={i}>{p}</li>)}
                               </ol>
                             </div>
                           )}
                           {coverage && (
                             <div className="space-y-1.5 pb-2 border-b border-border/60">
-                              <p className="text-[10px]"><span className="font-semibold text-chart-2 uppercase tracking-wider">You already have: </span><span className="text-muted-foreground">{coverage.have}</span></p>
-                              <p className="text-[10px]"><span className="font-semibold text-chart-5 uppercase tracking-wider">Still need: </span><span className="text-muted-foreground">{coverage.need}</span></p>
+                              <p className="text-xs"><span className="font-semibold text-chart-2 uppercase tracking-wider">You already have: </span><span className="text-muted-foreground">{coverage.have}</span></p>
+                              <p className="text-xs"><span className="font-semibold text-chart-5 uppercase tracking-wider">Still need: </span><span className="text-muted-foreground">{coverage.need}</span></p>
                             </div>
                           )}
-                          <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">What to put here</p>
-                          <ul className="text-[11px] text-muted-foreground space-y-1 list-disc list-inside">
+                          <p className="text-xs font-semibold text-primary uppercase tracking-wider">What to put here</p>
+                          <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
                             {sectionInfo.whatToInclude.map((w, i) => <li key={i}>{w}</li>)}
                           </ul>
                           {sectionInfo.example && (
-                            <p className="text-[10px] text-muted-foreground/80 italic pt-1 border-t border-border/60 mt-1.5">{sectionInfo.example}</p>
+                            <p className="text-xs text-muted-foreground/80 italic pt-1 border-t border-border/60 mt-1.5">{sectionInfo.example}</p>
                           )}
                           {sectionInfo.essayExampleLinks && sectionInfo.essayExampleLinks.length > 0 && (
                             <div className="pt-1.5 border-t border-border/60 space-y-1">
-                              <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">Real essay examples</p>
+                              <p className="text-xs font-semibold text-primary uppercase tracking-wider">Real essay examples</p>
                               {sectionInfo.essayExampleLinks.map((l) => (
-                                <a key={l.url} href={l.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[11px] text-primary hover:brightness-125">
+                                <a key={l.url} href={l.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-sm text-primary hover:brightness-125">
                                   <ExternalLink className="w-3 h-3 shrink-0" /> {l.label}
                                 </a>
                               ))}
@@ -624,7 +624,7 @@ export function DreamCountryWorkspace({
                 >
                   {checklistSaving ? <LoadingDots /> : 'Save changes'}
                 </button>
-                {checklistDirty && !checklistSaving && <span className="text-[11px] text-muted-foreground">You have unsaved changes</span>}
+                {checklistDirty && !checklistSaving && <span className="text-sm text-muted-foreground">You have unsaved changes</span>}
               </div>
             )}
           </section>
@@ -645,7 +645,7 @@ export function DreamCountryWorkspace({
               None added yet — use the <button onClick={() => setTab('search')} className="text-primary font-medium underline underline-offset-2">Search</button> tab to analyze a school and add it here.
             </p>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-5">
               {universityTracks.map((track) => {
                   const done = track.tasks.filter((t) => (track.taskProgress[t] ?? 0) >= 100).length
                   const pct = track.tasks.length ? Math.round((done / track.tasks.length) * 100) : 0
@@ -680,9 +680,9 @@ export function DreamCountryWorkspace({
                             </span>
                             <span className="flex items-center gap-2 mt-1 flex-wrap">
                               {track.matchTier && track.acceptanceProbability != null && (
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border ${tierBadgeClass(track.matchTier)}`}>{track.matchTier} · {track.acceptanceProbability}% chance</span>
+                                <span className={`text-xs font-bold px-2 py-0.5 rounded-lg border ${tierBadgeClass(track.matchTier)}`}>{track.matchTier} · {track.acceptanceProbability}% chance</span>
                               )}
-                              <span className="text-[11px] font-bold text-primary">{pct}% · {done}/{track.tasks.length} tasks</span>
+                              <span className="text-sm font-bold text-primary">{pct}% · {done}/{track.tasks.length} tasks</span>
                             </span>
                           </button>
                           <div className="flex items-center gap-1 shrink-0">
@@ -714,16 +714,16 @@ export function DreamCountryWorkspace({
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3 p-3 bg-secondary/60 rounded-xl">
                             {track.strengths.length > 0 && (
                               <div>
-                                <p className="text-[10px] font-semibold text-primary uppercase tracking-wider mb-1">Strengths</p>
-                                <ul className="text-[11px] text-muted-foreground space-y-1 list-disc list-inside">
+                                <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">Strengths</p>
+                                <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
                                   {track.strengths.map((s, i) => <li key={i}>{s}</li>)}
                                 </ul>
                               </div>
                             )}
                             {track.weaknesses.length > 0 && (
                               <div>
-                                <p className="text-[10px] font-semibold text-chart-2 uppercase tracking-wider mb-1">Weaknesses</p>
-                                <ul className="text-[11px] text-muted-foreground space-y-1 list-disc list-inside">
+                                <p className="text-xs font-semibold text-chart-2 uppercase tracking-wider mb-1">Weaknesses</p>
+                                <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
                                   {track.weaknesses.map((s, i) => <li key={i}>{s}</li>)}
                                 </ul>
                               </div>
@@ -744,7 +744,7 @@ export function DreamCountryWorkspace({
                                   <span className={taskDone ? 'text-muted-foreground line-through' : 'text-foreground/90'}>{task}</span>
                                 </button>
                                 {detail && !taskDone && (
-                                  <p className="text-[10px] text-muted-foreground/80 mt-0.5 ml-5.5 text-pretty">{detail}</p>
+                                  <p className="text-xs text-muted-foreground/80 mt-0.5 ml-5.5 text-pretty">{detail}</p>
                                 )}
                               </li>
                             )
