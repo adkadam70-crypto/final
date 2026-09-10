@@ -185,15 +185,19 @@ const Velaris = ({
     const ro = new ResizeObserver(resize);
     ro.observe(container);
 
+    // bg/colors are constant for the component's lifetime (effect re-runs
+    // on prop change anyway) — computed once here instead of reparsing hex
+    // strings and reallocating a Float32Array on every single frame.
+    const bgRgb = hexToRgb(bg);
+    const colorsFlat = new Float32Array(colors.slice(0, 4).flatMap(hexToRgb));
+
     let raf: number;
     const render = (t: number) => {
       gl.uniform2f(locs.res, canvas.width, canvas.height);
       gl.uniform1f(locs.time, t * 0.001 * speed);
       gl.uniform1f(locs.grain, grain);
-      gl.uniform3f(locs.bg, ...hexToRgb(bg));
-
-      const flat = new Float32Array(colors.slice(0, 4).flatMap(hexToRgb));
-      gl.uniform3fv(locs.colors, flat);
+      gl.uniform3f(locs.bg, ...bgRgb);
+      gl.uniform3fv(locs.colors, colorsFlat);
 
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       raf = requestAnimationFrame(render);

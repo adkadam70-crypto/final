@@ -72,80 +72,100 @@ export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
     gsap.ticker.add(lenisTicker)
     gsap.ticker.lagSmoothing(0)
 
+    // Everything below is deferred one frame: SplitText's DOM splitting plus
+    // ScrollTrigger.create() with pin:true on a min-h-[160vh] section forces
+    // GSAP to synchronously measure the whole document's layout to compute
+    // pin start/end offsets. Running that inline in the mount effect was
+    // real main-thread blocking work landing right on top of the page's
+    // first paint — during that window the WebGL background visibly froze
+    // and scroll input went nowhere until it finished, then everything
+    // "caught up" at once. Letting the browser paint first (rAF) and doing
+    // this setup a frame later removes that block from the critical path;
+    // the extra frame of delay before the reveal-on-scroll effect is armed
+    // is imperceptible.
     let split: SplitText | null = null
-    let words: Element[] = []
+    let revealTl: gsap.core.Timeline | null = null
+    let mm: gsap.MatchMedia | null = null
+    let cancelled = false
 
-    if (paraRef.current) {
-      try {
-        split = new SplitText(paraRef.current, {
-          type: 'words',
-          wordsClass: 'reveal-word inline-block origin-left mr-[0.25em] will-change-transform',
-        })
-        words = split.words
-      } catch {
-        words = Array.from(paraRef.current.querySelectorAll('.reveal-word'))
+    const setupId = requestAnimationFrame(() => {
+      if (cancelled) return
+
+      let words: Element[] = []
+      if (paraRef.current) {
+        try {
+          split = new SplitText(paraRef.current, {
+            type: 'words',
+            wordsClass: 'reveal-word inline-block origin-left mr-[0.25em] will-change-transform',
+          })
+          words = split.words
+        } catch {
+          words = Array.from(paraRef.current.querySelectorAll('.reveal-word'))
+        }
       }
-    }
 
-    if (words.length > 0) {
-      gsap.set(words, { opacity: 0, rotate: 8, yPercent: 30 })
-    }
-
-    const revealTl = gsap.timeline({
-      scrollTrigger: {
-        trigger: benefitRef.current,
-        start: 'top 70%',
-        end: 'top -10%',
-        scrub: 1.5,
-      },
-    })
-
-    if (words.length > 0) {
-      revealTl.to(words, {
-        stagger: 0.2,
-        opacity: 1,
-        rotate: 0,
-        yPercent: 0,
-        ease: 'power1.inOut',
-      })
-    }
-
-    tagRefs.current.forEach((tagEl) => {
-      if (tagEl) {
-        revealTl.to(
-          tagEl,
-          { duration: 1, opacity: 1, clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)', ease: 'circ.out' },
-          '>-0.4',
-        )
+      if (words.length > 0) {
+        gsap.set(words, { opacity: 0, rotate: 8, yPercent: 30 })
       }
-    })
 
-    const mm = gsap.matchMedia()
-
-    const pinReveal = (startCircle: string, endSpacer: number, scrub: number) => {
-      gsap.set(revealBoxRef.current, { clipPath: startCircle })
-      const tl = gsap.timeline({
+      revealTl = gsap.timeline({
         scrollTrigger: {
-          trigger: pinWrapperRef.current,
-          start: 'top top',
-          end: `+=${endSpacer}`,
-          scrub,
-          pin: true,
-          pinSpacing: true,
-          anticipatePin: 1,
+          trigger: benefitRef.current,
+          start: 'top 70%',
+          end: 'top -10%',
+          scrub: 1.5,
         },
       })
-      tl.fromTo(revealBoxRef.current, { clipPath: startCircle }, { clipPath: 'circle(150% at 50% 50%)', ease: 'none' })
-    }
 
-    mm.add('(max-width: 639.9px)', () => pinReveal('circle(18% at 50% 50%)', 1500, 1.2))
-    mm.add('(min-width: 640px) and (max-width: 1023.9px)', () => pinReveal('circle(12% at 50% 50%)', 2000, 1.3))
-    mm.add('(min-width: 1024px)', () => pinReveal('circle(8% at 50% 50%)', 2500, 1.5))
+      if (words.length > 0) {
+        revealTl.to(words, {
+          stagger: 0.2,
+          opacity: 1,
+          rotate: 0,
+          yPercent: 0,
+          ease: 'power1.inOut',
+        })
+      }
+
+      tagRefs.current.forEach((tagEl) => {
+        if (tagEl) {
+          revealTl!.to(
+            tagEl,
+            { duration: 1, opacity: 1, clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)', ease: 'circ.out' },
+            '>-0.4',
+          )
+        }
+      })
+
+      mm = gsap.matchMedia()
+
+      const pinReveal = (startCircle: string, endSpacer: number, scrub: number) => {
+        gsap.set(revealBoxRef.current, { clipPath: startCircle })
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: pinWrapperRef.current,
+            start: 'top top',
+            end: `+=${endSpacer}`,
+            scrub,
+            pin: true,
+            pinSpacing: true,
+            anticipatePin: 1,
+          },
+        })
+        tl.fromTo(revealBoxRef.current, { clipPath: startCircle }, { clipPath: 'circle(150% at 50% 50%)', ease: 'none' })
+      }
+
+      mm.add('(max-width: 639.9px)', () => pinReveal('circle(18% at 50% 50%)', 1500, 1.2))
+      mm.add('(min-width: 640px) and (max-width: 1023.9px)', () => pinReveal('circle(12% at 50% 50%)', 2000, 1.3))
+      mm.add('(min-width: 1024px)', () => pinReveal('circle(8% at 50% 50%)', 2500, 1.5))
+    })
 
     return () => {
+      cancelled = true
+      cancelAnimationFrame(setupId)
       split?.revert()
-      revealTl.kill()
-      mm.revert()
+      revealTl?.kill()
+      mm?.revert()
       ScrollTrigger.getAll().forEach((t) => t.kill())
       gsap.ticker.remove(lenisTicker)
       lenis.destroy()
