@@ -658,9 +658,13 @@ export function DreamCountryWorkspace({
                           its right rather than a small square icon up top. */}
                       <div className="w-28 sm:w-36 shrink-0 self-stretch">
                         {track.universityImageUrl ? (
-                          <div className="w-full h-full bg-white flex items-center justify-center p-3">
-                            <img src={track.universityImageUrl} alt={`${track.universityName} logo`} loading="lazy" className="max-w-full max-h-full object-contain" />
-                          </div>
+                          track.universityImageUrl.startsWith('/university-logos/') ? (
+                            <div className="w-full h-full bg-white flex items-center justify-center p-3">
+                              <img src={track.universityImageUrl} alt={`${track.universityName} logo`} loading="lazy" className="max-w-full max-h-full object-contain" />
+                            </div>
+                          ) : (
+                            <img src={track.universityImageUrl} alt={`${track.universityName} campus`} loading="lazy" className="w-full h-full object-cover" />
+                          )
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-accent to-secondary flex items-center justify-center" aria-hidden="true">
                             <GraduationCap className="w-8 h-8 text-primary/50" />

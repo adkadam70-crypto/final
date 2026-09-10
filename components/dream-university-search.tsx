@@ -60,9 +60,14 @@ export function DreamUniversitySearch({ country, hasProfile }: { country: string
   }, [])
 
   const query = name.trim().toLowerCase()
+  const catalogNameSet = new Set(catalogNames)
   const suggestions = query
     ? [
-        ...Object.entries(UNIVERSITY_ALIASES).filter(([alias]) => alias.startsWith(query)).map(([, realName]) => realName),
+        // Aliases filtered to this country's own catalog names — otherwise an
+        // abbreviation for a non-US school could surface here even though
+        // this whole tab is scoped to `country` (see restrictToCountry on
+        // analyzeTargetUniversity below).
+        ...Object.entries(UNIVERSITY_ALIASES).filter(([alias, realName]) => alias.startsWith(query) && catalogNameSet.has(realName)).map(([, realName]) => realName),
         ...catalogNames.filter((n) => n.toLowerCase().startsWith(query)),
       ]
         .filter((n, i, arr) => arr.indexOf(n) === i)
