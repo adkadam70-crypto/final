@@ -55,11 +55,11 @@ export function NavBar({ items, className, compact }: NavBarProps) {
             onClick={() => setOptimisticUrl(item.url)}
             className={cn(
               'relative flex items-center font-medium rounded-full transition-colors whitespace-nowrap',
-              compact ? 'gap-1.5 text-sm px-2.5 py-1.5' : 'gap-1.5 text-sm px-3 py-2',
+              compact ? 'gap-1 text-sm px-2 py-1' : 'gap-1.5 text-sm px-3 py-2',
               isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
             )}
           >
-            <item.icon className="w-4 h-4 shrink-0" />
+            <item.icon className={compact ? 'w-3.5 h-3.5 shrink-0' : 'w-4 h-4 shrink-0'} />
             {item.name}
             {isActive && (
               <motion.div

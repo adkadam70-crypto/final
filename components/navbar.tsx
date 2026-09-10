@@ -43,7 +43,7 @@ export function Navbar({ userName, userEmail }: { userName: string; userEmail: s
           last ~25% once the menu made the header much taller (Account
           settings / Sign out, at the bottom of the list). */}
       <nav
-        className="max-w-7xl mx-auto grid grid-cols-[1fr_auto_1fr] items-center gap-x-6 px-6 h-16"
+        className={cn('max-w-7xl mx-auto items-center px-6 h-16', isAdmin ? 'flex justify-between' : 'grid grid-cols-[1fr_auto_1fr]')}
         style={{
           maskImage: 'linear-gradient(to bottom, black 75%, transparent 100%)',
           WebkitMaskImage: 'linear-gradient(to bottom, black 75%, transparent 100%)',
@@ -54,10 +54,12 @@ export function Navbar({ userName, userEmail }: { userName: string; userEmail: s
           <span className="text-lg font-bold tracking-tight">Shortlisted</span>
         </Link>
 
-        <div className="hidden lg:block justify-self-center min-w-0">
-          {/* Compact sizing for admin only — the extra "Build Your Dream"
-              link is what makes this bar wide enough to crowd the logo on
-              the left at typical desktop widths. */}
+        <div className={cn('hidden lg:block min-w-0', !isAdmin && 'justify-self-center')}>
+          {/* Admin: parent is a flex row with justify-between, so the nav
+              sits exactly centered between the logo and the right-side
+              icons, with equal gaps on both sides — the extra "Build Your
+              Dream" link is what makes this bar wide enough to need the
+              compact sizing in the first place. */}
           <NavBar items={NAV_LINKS.map((l) => ({ name: l.label, url: l.href, icon: l.icon }))} compact={isAdmin} />
         </div>
 
