@@ -488,10 +488,13 @@ WHAT THEY SAID ABOUT THEMSELVES (onboarding):
 EXISTING ACADEMIC PROFILE:
 - Curriculum: ${profile.curriculum}
 - Academics: ${badge}
+- Standardized tests already taken: ${formatStandardizedTests(profile.standardizedTests)}
 - Extracurriculars already doing: ${profile.extracurriculars.length ? profile.extracurriculars.join('; ') : 'None provided'}
 - AP courses taken: ${profile.apCourses.length ? profile.apCourses.join('; ') : 'None reported'}
 
-Give a short timeframe summary (how much runway they actually have), then up to 6 concrete steps — extracurriculars to start or deepen (grounded in their OWN stated hobbies/interests, not generic suggestions), grades/rigor to sustain or improve within their actual curriculum, tests to plan for — each one specific to this exact student and paced against how much time they have left. If they're close to applying, prioritize depth/finishing strong over starting new things; if they have years left, prioritize building genuine, sustained commitment over resume padding. For each step, also give up to 4 concrete "how to" sub-steps — real first moves to actually start doing it, not a restatement of the title.`
+CRITICAL — testing: check "Standardized tests already taken" above before suggesting ANYTHING about the SAT/ACT/English proficiency tests. If a test is listed there as already taken, NEVER suggest taking it (or "an" attempt at it) as a step — at most suggest a retake ONLY if the existing score is genuinely weak for this student's target field/country, and say so explicitly citing the actual score. If no test is listed there at all, it's genuinely fine to suggest planning for one.
+
+Give a short timeframe summary (how much runway they actually have), then up to 6 concrete steps — extracurriculars to start or deepen (grounded in their OWN stated hobbies/interests, not generic suggestions), grades/rigor to sustain or improve within their actual curriculum, tests to plan for ONLY if not already taken (per the CRITICAL note above) — each one specific to this exact student and paced against how much time they have left. If they're close to applying, prioritize depth/finishing strong over starting new things; if they have years left, prioritize building genuine, sustained commitment over resume padding. For each step, also give up to 4 concrete "how to" sub-steps — real first moves to actually start doing it, not a restatement of the title.`
 
   try {
     const call = () =>
@@ -778,6 +781,26 @@ export async function markSuggestedActivityDone(id: number): Promise<{ success: 
     return { success: true, message: 'Marked complete and added to your profile.' }
   } catch (error) {
     console.error('markSuggestedActivityDone error:', error)
+    return { success: false, message: 'Something went wrong. Please try again.' }
+  }
+}
+
+export async function deleteDreamUniversityTrack(country: string, universityId: number): Promise<{ success: boolean; message: string }> {
+  let userId: string
+  try {
+    await assertDreamAdmin()
+    userId = await getUserId()
+  } catch {
+    return { success: false, message: 'Your session has expired — please sign in again.' }
+  }
+  try {
+    await db
+      .delete(dreamUniversityTracks)
+      .where(and(eq(dreamUniversityTracks.userId, userId), eq(dreamUniversityTracks.country, country), eq(dreamUniversityTracks.universityId, universityId)))
+    revalidatePath(`/dream/${country}`)
+    return { success: true, message: 'Removed.' }
+  } catch (error) {
+    console.error('deleteDreamUniversityTrack error:', error)
     return { success: false, message: 'Something went wrong. Please try again.' }
   }
 }

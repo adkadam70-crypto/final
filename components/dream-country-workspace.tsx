@@ -2,13 +2,14 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, User, Search, TrendingUp, AlertTriangle, RotateCcw, Sparkles, CheckCircle2, GraduationCap, ChevronDown, Lightbulb, PlusCircle, ExternalLink } from 'lucide-react'
+import { ArrowLeft, User, Search, TrendingUp, AlertTriangle, RotateCcw, Sparkles, CheckCircle2, GraduationCap, ChevronDown, Lightbulb, PlusCircle, ExternalLink, Trash2 } from 'lucide-react'
 import { tierBadgeClass } from '@/lib/match-tier'
 import {
   analyzeDreamProfile,
   generateDreamRoadmap,
   saveDreamChecklist,
   toggleDreamUniversityTask,
+  deleteDreamUniversityTrack,
   addSuggestedActivity,
   markSuggestedActivityDone,
   generateActivitiesPlan,
@@ -20,7 +21,7 @@ import {
 import { DreamUniversitySearch } from '@/components/dream-university-search'
 import { mergeChecklistProgress, overallCompletionPct, getSectionCoverage } from '@/lib/dream-checklist'
 import { APPLICATION_INFO } from '@/lib/application-info'
-import { COMMON_APP_SECTIONS, PER_UNIVERSITY_TASK_DETAILS } from '@/lib/common-app-sections'
+import { COMMON_APP_SECTIONS, COMMON_APP_ESSAY_PROMPTS, PER_UNIVERSITY_TASK_DETAILS } from '@/lib/common-app-sections'
 import { LoadingDots } from '@/components/loading-dots'
 import type { StandardizedTests } from '@/lib/standardized-tests'
 
@@ -91,7 +92,6 @@ export function DreamCountryWorkspace({
   const [expandedSection, setExpandedSection] = useState<string | null>(null)
   const [expandedStep, setExpandedStep] = useState<number | null>(null)
   const [expandedUniversity, setExpandedUniversity] = useState<number | null>(null)
-  const [expandedTask, setExpandedTask] = useState<string | null>(null)
   // Checklist toggles are drafted locally and only persisted on "Save
   // changes" — no more save-on-every-click (see saveDreamChecklist in
   // app/actions/dream.ts).
@@ -101,6 +101,8 @@ export function DreamCountryWorkspace({
   const [activitiesPending, setActivitiesPending] = useState(false)
   const [manualActivity, setManualActivity] = useState('')
   const [manualActivityPending, setManualActivityPending] = useState(false)
+  const [editingSlot, setEditingSlot] = useState<number | null>(null)
+  const [editingSlotText, setEditingSlotText] = useState('')
 
   const countryInfo = APPLICATION_INFO[country]
   const hasAnalysis = !!(countryProfile.analysisStrengths?.length || countryProfile.analysisGaps?.length)
@@ -198,6 +200,28 @@ export function DreamCountryWorkspace({
     setManualActivity('')
   }
 
+  async function handleSaveEditedSlot(index: number) {
+    const plan = countryProfile.activitiesPlan ?? []
+    const nextPlan = plan.map((s, i) => (i === index ? { ...s, description: editingSlotText.trim() } : s))
+    setManualActivityPending(true)
+    setError(null)
+    const res = await saveActivitiesPlan(country, nextPlan)
+    setManualActivityPending(false)
+    if (!res.success) return setError(res.message)
+    setCountryProfile((c) => ({ ...c, activitiesPlan: nextPlan }))
+    setEditingSlot(null)
+  }
+
+  async function handleDeleteActivitySlot(index: number) {
+    const plan = countryProfile.activitiesPlan ?? []
+    const nextPlan = plan.filter((_, i) => i !== index)
+    setError(null)
+    const res = await saveActivitiesPlan(country, nextPlan)
+    if (!res.success) return setError(res.message)
+    setCountryProfile((c) => ({ ...c, activitiesPlan: nextPlan }))
+    if (editingSlot === index) setEditingSlot(null)
+  }
+
   function handleToggleChecklist(item: string, done: boolean) {
     setChecklistDraft((c) => ({ ...c, [item]: done ? 100 : 0 }))
   }
@@ -209,6 +233,11 @@ export function DreamCountryWorkspace({
     setChecklistSaving(false)
     if (!res.success) return setError(res.message)
     setCountryProfile((c) => ({ ...c, checklist: checklistDraft }))
+  }
+
+  async function handleDeleteUniversity(universityId: number) {
+    setUniversityTracks((tracks) => tracks.filter((t) => t.universityId !== universityId))
+    await deleteDreamUniversityTrack(country, universityId)
   }
 
   async function handleToggleUniversityTask(universityId: number, task: string, done: boolean) {
@@ -467,6 +496,89 @@ export function DreamCountryWorkspace({
                       {sectionInfo && <p className="text-[10px] text-muted-foreground/70 mt-1 ml-5.5 text-pretty">{sectionInfo.description}</p>}
                       {expanded && sectionInfo && (
                         <div className="mt-2 ml-5.5 p-2.5 bg-card border border-border rounded-lg space-y-2">
+                          {requirement === 'Activities' && (
+                            <div className="pb-2 border-b border-border/60 space-y-2">
+                              <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">Your 10 Common App slots</p>
+                              {(countryProfile.activitiesPlan?.length ?? 0) > 0 ? (
+                                <ol className="space-y-1.5">
+                                  {countryProfile.activitiesPlan!.map((slot, i) => {
+                                    const isEditing = editingSlot === i
+                                    return (
+                                      <li key={i} className="text-[11px] bg-secondary/60 border border-border rounded-lg p-2">
+                                        <div className="flex items-start justify-between gap-2">
+                                          <span className="font-semibold text-foreground">{i + 1}. {slot.category}{slot.position && <span className="text-muted-foreground font-normal"> — {slot.position}</span>}</span>
+                                          <div className="flex items-center gap-2 shrink-0">
+                                            {!isEditing && (
+                                              <button type="button" onClick={() => { setEditingSlot(i); setEditingSlotText(slot.description) }} className="text-primary hover:brightness-125 text-[10px] font-semibold uppercase">Edit</button>
+                                            )}
+                                            <button type="button" onClick={() => handleDeleteActivitySlot(i)} className="text-destructive hover:brightness-125 text-[10px] font-semibold uppercase">Remove</button>
+                                          </div>
+                                        </div>
+                                        {isEditing ? (
+                                          <div className="mt-1.5 space-y-1">
+                                            <textarea
+                                              value={editingSlotText}
+                                              onChange={(e) => setEditingSlotText(e.target.value)}
+                                              maxLength={170}
+                                              rows={2}
+                                              className="w-full bg-card border border-border rounded-lg p-2 text-[11px] text-foreground focus:outline-none focus:border-primary resize-none"
+                                            />
+                                            <div className="flex items-center justify-between">
+                                              <span className="text-[9px] text-muted-foreground/70">{editingSlotText.length}/150 recommended — Common App's real field caps around here</span>
+                                              <div className="flex gap-2">
+                                                <button type="button" onClick={() => setEditingSlot(null)} className="text-[10px] text-muted-foreground hover:text-foreground">Cancel</button>
+                                                <button type="button" disabled={manualActivityPending} onClick={() => handleSaveEditedSlot(i)} className="text-[10px] font-semibold text-primary hover:brightness-125 disabled:opacity-50">Save</button>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        ) : (
+                                          <p className="text-muted-foreground mt-0.5">{slot.description}</p>
+                                        )}
+                                      </li>
+                                    )
+                                  })}
+                                </ol>
+                              ) : (
+                                <p className="text-[11px] text-muted-foreground">Format your real extracurriculars (and any shortlisted activities) into real Common App entries.</p>
+                              )}
+                              <button
+                                type="button"
+                                onClick={handleGenerateActivitiesPlan}
+                                disabled={activitiesPending}
+                                className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-primary hover:brightness-125 disabled:opacity-50"
+                              >
+                                {activitiesPending ? <LoadingDots /> : <><Sparkles className="w-3.5 h-3.5" /> {(countryProfile.activitiesPlan?.length ?? 0) > 0 ? 'Re-format from my profile' : 'Format for Common App'}</>}
+                              </button>
+                              {(countryProfile.activitiesPlan?.length ?? 0) < 10 && (
+                                <div className="flex gap-2 pt-1">
+                                  <input
+                                    type="text"
+                                    value={manualActivity}
+                                    onChange={(e) => setManualActivity(e.target.value)}
+                                    maxLength={170}
+                                    placeholder={`Slot ${(countryProfile.activitiesPlan?.length ?? 0) + 1} — type your own, however much detail you need`}
+                                    className="flex-1 min-w-0 bg-secondary border border-border rounded-lg p-2 text-[11px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary"
+                                  />
+                                  <button
+                                    type="button"
+                                    disabled={!manualActivity.trim() || manualActivityPending}
+                                    onClick={handleAddManualActivitySlot}
+                                    className="shrink-0 text-[11px] font-semibold text-primary px-3 py-2 rounded-lg border border-primary/30 hover:bg-primary/10 disabled:opacity-50"
+                                  >
+                                    {manualActivityPending ? <LoadingDots /> : 'Add'}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {requirement === 'Writing' && (
+                            <div className="pb-2 border-b border-border/60 space-y-1.5">
+                              <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">Pick one of the 7 real prompts</p>
+                              <ol className="text-[11px] text-muted-foreground space-y-1.5 list-decimal list-inside">
+                                {COMMON_APP_ESSAY_PROMPTS.map((p, i) => <li key={i}>{p}</li>)}
+                              </ol>
+                            </div>
+                          )}
                           {coverage && (
                             <div className="space-y-1.5 pb-2 border-b border-border/60">
                               <p className="text-[10px]"><span className="font-semibold text-chart-2 uppercase tracking-wider">You already have: </span><span className="text-muted-foreground">{coverage.have}</span></p>
@@ -488,52 +600,6 @@ export function DreamCountryWorkspace({
                                   <ExternalLink className="w-3 h-3 shrink-0" /> {l.label}
                                 </a>
                               ))}
-                            </div>
-                          )}
-                          {requirement === 'Activities' && (
-                            <div className="pt-1.5 border-t border-border/60 space-y-2">
-                              <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">Your 10 Common App slots</p>
-                              {(countryProfile.activitiesPlan?.length ?? 0) > 0 ? (
-                                <ol className="space-y-1.5">
-                                  {countryProfile.activitiesPlan!.map((slot, i) => (
-                                    <li key={i} className="text-[11px] bg-secondary/60 border border-border rounded-lg p-2">
-                                      <span className="font-semibold text-foreground">{i + 1}. {slot.category}</span>
-                                      {slot.position && <span className="text-muted-foreground"> — {slot.position}</span>}
-                                      <p className="text-muted-foreground mt-0.5">{slot.description}</p>
-                                    </li>
-                                  ))}
-                                </ol>
-                              ) : (
-                                <p className="text-[11px] text-muted-foreground">Format your real extracurriculars (and any shortlisted activities) into real Common App entries.</p>
-                              )}
-                              <button
-                                type="button"
-                                onClick={handleGenerateActivitiesPlan}
-                                disabled={activitiesPending}
-                                className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-primary hover:brightness-125 disabled:opacity-50"
-                              >
-                                {activitiesPending ? <LoadingDots /> : <><Sparkles className="w-3.5 h-3.5" /> {(countryProfile.activitiesPlan?.length ?? 0) > 0 ? 'Re-format' : 'Format for Common App'}</>}
-                              </button>
-                              {(countryProfile.activitiesPlan?.length ?? 0) < 10 && (
-                                <div className="flex gap-2 pt-1">
-                                  <input
-                                    type="text"
-                                    value={manualActivity}
-                                    onChange={(e) => setManualActivity(e.target.value)}
-                                    maxLength={170}
-                                    placeholder={`Slot ${(countryProfile.activitiesPlan?.length ?? 0) + 1} — type your own`}
-                                    className="flex-1 min-w-0 bg-secondary border border-border rounded-lg p-2 text-[11px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary"
-                                  />
-                                  <button
-                                    type="button"
-                                    disabled={!manualActivity.trim() || manualActivityPending}
-                                    onClick={handleAddManualActivitySlot}
-                                    className="shrink-0 text-[11px] font-semibold text-primary px-3 py-2 rounded-lg border border-primary/30 hover:bg-primary/10 disabled:opacity-50"
-                                  >
-                                    {manualActivityPending ? <LoadingDots /> : 'Add'}
-                                  </button>
-                                </div>
-                              )}
                             </div>
                           )}
                         </div>
@@ -585,102 +651,102 @@ export function DreamCountryWorkspace({
                   const pct = track.tasks.length ? Math.round((done / track.tasks.length) * 100) : 0
                   const uniExpanded = expandedUniversity === track.universityId
                   return (
-                    <div key={track.universityId} className="border border-border rounded-2xl p-4">
-                      <div className="flex items-start gap-3 mb-2">
-                        {/* Left-side thumbnail — same catalog imageUrl the main match
-                            cards use (see components/university-card.tsx), snapshotted
-                            at add-time so this doesn't need a join back to `universities`. */}
+                    <div key={track.universityId} className="border border-border rounded-2xl overflow-hidden flex">
+                      {/* Left column — a real rectangular photo/logo filling the
+                          whole height of the card (same catalog imageUrl the main
+                          match cards use, snapshotted at add-time), tasks sit to
+                          its right rather than a small square icon up top. */}
+                      <div className="w-28 sm:w-36 shrink-0 self-stretch">
                         {track.universityImageUrl ? (
-                          <div className="w-11 h-11 rounded-lg bg-white border border-border shrink-0 flex items-center justify-center overflow-hidden">
+                          <div className="w-full h-full bg-white flex items-center justify-center p-3">
                             <img src={track.universityImageUrl} alt={`${track.universityName} logo`} loading="lazy" className="max-w-full max-h-full object-contain" />
                           </div>
                         ) : (
-                          <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-accent to-secondary shrink-0 flex items-center justify-center" aria-hidden="true">
-                            <GraduationCap className="w-5 h-5 text-primary/50" />
+                          <div className="w-full h-full bg-gradient-to-br from-accent to-secondary flex items-center justify-center" aria-hidden="true">
+                            <GraduationCap className="w-8 h-8 text-primary/50" />
                           </div>
                         )}
-                        <button type="button" onClick={() => setExpandedUniversity(uniExpanded ? null : track.universityId)} aria-expanded={uniExpanded} className="flex-1 min-w-0 text-left">
-                          <span className="flex items-center gap-1.5 min-w-0">
-                            <ChevronDown className={`w-3.5 h-3.5 shrink-0 text-muted-foreground/60 transition-transform ${uniExpanded ? 'rotate-180' : ''}`} />
-                            <span className="text-sm font-bold truncate">{track.universityName}</span>
-                          </span>
-                          <span className="flex items-center gap-2 mt-1 flex-wrap">
-                            {track.matchTier && track.acceptanceProbability != null && (
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border ${tierBadgeClass(track.matchTier)}`}>{track.matchTier} · {track.acceptanceProbability}% chance</span>
+                      </div>
+                      <div className="flex-1 min-w-0 p-4">
+                        <div className="flex items-start gap-3 mb-2">
+                          <button type="button" onClick={() => setExpandedUniversity(uniExpanded ? null : track.universityId)} aria-expanded={uniExpanded} className="flex-1 min-w-0 text-left">
+                            <span className="flex items-center gap-1.5 min-w-0">
+                              <ChevronDown className={`w-3.5 h-3.5 shrink-0 text-muted-foreground/60 transition-transform ${uniExpanded ? 'rotate-180' : ''}`} />
+                              <span className="text-sm font-bold truncate">{track.universityName}</span>
+                            </span>
+                            <span className="flex items-center gap-2 mt-1 flex-wrap">
+                              {track.matchTier && track.acceptanceProbability != null && (
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border ${tierBadgeClass(track.matchTier)}`}>{track.matchTier} · {track.acceptanceProbability}% chance</span>
+                              )}
+                              <span className="text-[11px] font-bold text-primary">{pct}% · {done}/{track.tasks.length} tasks</span>
+                            </span>
+                          </button>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {track.universityLink && (
+                              <a
+                                href={track.universityLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label={`Visit ${track.universityName}'s website`}
+                                className="text-muted-foreground/60 hover:text-primary p-1"
+                              >
+                                <ExternalLink className="w-4 h-4" />
+                              </a>
                             )}
-                            <span className="text-[11px] font-bold text-primary">{pct}% · {done}/{track.tasks.length} tasks</span>
-                          </span>
-                        </button>
-                        {track.universityLink && (
-                          <a
-                            href={track.universityLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            aria-label={`Visit ${track.universityName}'s website`}
-                            className="shrink-0 text-muted-foreground/60 hover:text-primary p-1"
-                          >
-                            <ExternalLink className="w-4 h-4" />
-                          </a>
-                        )}
-                      </div>
-                      <div className="h-1 w-full bg-secondary rounded-full overflow-hidden mb-3">
-                        <div className="h-full bg-chart-4 rounded-full transition-all" style={{ width: `${pct}%` }} />
-                      </div>
-                      {uniExpanded && (track.strengths.length > 0 || track.weaknesses.length > 0) && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3 p-3 bg-secondary/60 rounded-xl">
-                          {track.strengths.length > 0 && (
-                            <div>
-                              <p className="text-[10px] font-semibold text-primary uppercase tracking-wider mb-1">Strengths</p>
-                              <ul className="text-[11px] text-muted-foreground space-y-1 list-disc list-inside">
-                                {track.strengths.map((s, i) => <li key={i}>{s}</li>)}
-                              </ul>
-                            </div>
-                          )}
-                          {track.weaknesses.length > 0 && (
-                            <div>
-                              <p className="text-[10px] font-semibold text-chart-2 uppercase tracking-wider mb-1">Weaknesses</p>
-                              <ul className="text-[11px] text-muted-foreground space-y-1 list-disc list-inside">
-                                {track.weaknesses.map((s, i) => <li key={i}>{s}</li>)}
-                              </ul>
-                            </div>
-                          )}
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteUniversity(track.universityId)}
+                              aria-label={`Remove ${track.universityName} from your list`}
+                              className="text-muted-foreground/60 hover:text-destructive p-1"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
-                      )}
-                      <ul className="space-y-1.5">
-                        {track.tasks.map((task) => {
-                          const taskDone = (track.taskProgress[task] ?? 0) >= 100
-                          const taskKey = `${track.universityId}:${task}`
-                          const detail = PER_UNIVERSITY_TASK_DETAILS[task]
-                          const taskExpanded = expandedTask === taskKey
-                          return (
-                            <li key={task}>
-                              <div className="flex items-start gap-2">
+                        <div className="h-1 w-full bg-secondary rounded-full overflow-hidden mb-3">
+                          <div className="h-full bg-chart-4 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                        </div>
+                        {uniExpanded && (track.strengths.length > 0 || track.weaknesses.length > 0) && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3 p-3 bg-secondary/60 rounded-xl">
+                            {track.strengths.length > 0 && (
+                              <div>
+                                <p className="text-[10px] font-semibold text-primary uppercase tracking-wider mb-1">Strengths</p>
+                                <ul className="text-[11px] text-muted-foreground space-y-1 list-disc list-inside">
+                                  {track.strengths.map((s, i) => <li key={i}>{s}</li>)}
+                                </ul>
+                              </div>
+                            )}
+                            {track.weaknesses.length > 0 && (
+                              <div>
+                                <p className="text-[10px] font-semibold text-chart-2 uppercase tracking-wider mb-1">Weaknesses</p>
+                                <ul className="text-[11px] text-muted-foreground space-y-1 list-disc list-inside">
+                                  {track.weaknesses.map((s, i) => <li key={i}>{s}</li>)}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        <ul className="space-y-2">
+                          {track.tasks.map((task) => {
+                            const taskDone = (track.taskProgress[task] ?? 0) >= 100
+                            const detail = PER_UNIVERSITY_TASK_DETAILS[task]
+                            return (
+                              <li key={task}>
                                 <button
                                   onClick={() => handleToggleUniversityTask(track.universityId, task, !taskDone)}
-                                  className="flex-1 min-w-0 flex items-start gap-2 text-left text-xs"
+                                  className="w-full flex items-start gap-2 text-left text-xs"
                                 >
                                   <CheckCircle2 className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${taskDone ? 'text-primary' : 'text-muted-foreground/40'}`} />
                                   <span className={taskDone ? 'text-muted-foreground line-through' : 'text-foreground/90'}>{task}</span>
                                 </button>
-                                {detail && (
-                                  <button
-                                    type="button"
-                                    onClick={() => setExpandedTask(taskExpanded ? null : taskKey)}
-                                    aria-expanded={taskExpanded}
-                                    aria-label={`More on: ${task}`}
-                                    className="shrink-0 text-muted-foreground/60 hover:text-primary p-0.5"
-                                  >
-                                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${taskExpanded ? 'rotate-180' : ''}`} />
-                                  </button>
+                                {detail && !taskDone && (
+                                  <p className="text-[10px] text-muted-foreground/80 mt-0.5 ml-5.5 text-pretty">{detail}</p>
                                 )}
-                              </div>
-                              {taskExpanded && detail && (
-                                <p className="text-[11px] text-muted-foreground mt-1.5 ml-5.5 p-2.5 bg-secondary/60 border border-border rounded-lg text-pretty">{detail}</p>
-                              )}
-                            </li>
-                          )
-                        })}
-                      </ul>
+                              </li>
+                            )
+                          })}
+                        </ul>
+                      </div>
                     </div>
                   )
                 })}
