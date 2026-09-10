@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { HeroScrollVideoReveal, type TagItem } from '@/components/ui/hero-scroll-video-pin-reveal'
 import { LiquidButton } from '@/components/ui/liquid-glass-button'
 import Velaris from '@/components/ui/velaris'
+import RotatingEarth from '@/components/ui/wireframe-dotted-globe'
 import { marigold } from '@/lib/fonts'
 import { AppLogo } from '@/components/app-logo'
 
@@ -74,6 +75,22 @@ export function Landing() {
           DOM order (this first, real content after) stacks correctly
           without fighting that. */}
       <Velaris height="100vh" className="fixed inset-0" />
+      {/* Fixed, not scrolled-with-content, so sign in/up stay reachable from
+          anywhere on the page without scrolling back to the bottom CTAs. */}
+      <div className="fixed top-4 sm:top-6 right-4 sm:right-6 z-50 flex items-center gap-2 sm:gap-3">
+        <Link
+          href="/sign-in"
+          className="text-sm font-semibold text-foreground/90 hover:text-primary transition-colors px-3 py-2"
+        >
+          Sign In
+        </Link>
+        <Link
+          href="/sign-up"
+          className="inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-semibold px-4 py-2 shadow-lg hover:-translate-y-0.5 transition-all"
+        >
+          Sign Up
+        </Link>
+      </div>
       <HeroScrollVideoReveal
         topBrand={
           <div className="flex items-center gap-2.5">
@@ -95,6 +112,7 @@ export function Landing() {
             Across eight countries.
           </span>
         }
+        aboveTags={<RotatingEarth width={480} height={480} className="mb-10 sm:mb-14" />}
         tags={FEATURE_TAGS}
         subText="Every recommendation is grounded in real selectivity data for real universities — not vibes, and not guesswork."
         centerpieceNames={CENTERPIECE_UNIVERSITIES}

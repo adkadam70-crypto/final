@@ -19,6 +19,8 @@ export interface HeroScrollRevealProps {
   topBrand?: React.ReactNode
   topText?: React.ReactNode
   headingText?: React.ReactNode
+  /** Rendered directly above the tags row (e.g. the countries/universities pills). */
+  aboveTags?: React.ReactNode
   tags?: TagItem[]
   subText?: string
   /** Real names rendered as a dense text field inside the pinned reveal circle. */
@@ -42,6 +44,7 @@ export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
   topBrand,
   topText,
   headingText,
+  aboveTags,
   tags = [],
   subText,
   centerpieceNames = [],
@@ -164,22 +167,24 @@ export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
       <section ref={benefitRef} className="relative w-full min-h-[140vh] md:min-h-[160vh] pb-16 md:pb-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16 md:py-24 flex flex-col items-center text-center relative z-10">
           {headingText && (
-            <div className="w-full mb-8 sm:mb-12 md:mb-14">
-              <p ref={paraRef} className="text-[clamp(1.75rem,4.2vw,4.25rem)] font-extrabold tracking-tight text-balance leading-tight overflow-visible">
+            <div className="w-full mb-4 sm:mb-5 md:mb-6">
+              <p ref={paraRef} className="text-[clamp(1.6rem,3.4vw,3rem)] font-extrabold tracking-tight text-balance leading-tight overflow-visible">
                 {headingText}
               </p>
             </div>
           )}
 
+          {aboveTags}
+
           {tags.length > 0 && (
-            <div className="flex flex-wrap justify-center gap-2.5 sm:gap-4 max-w-4xl mx-auto my-4 sm:my-6 mb-8 sm:mb-14">
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-3 max-w-4xl mx-auto my-3 sm:my-4 mb-3 sm:mb-5">
               {tags.map((tag, idx) => (
                 <div
                   key={tag.id ?? `tag-${idx}`}
                   ref={(el) => {
                     tagRefs.current[idx] = el
                   }}
-                  className="px-5 sm:px-8 py-2.5 sm:py-4 rounded-full text-[clamp(0.8rem,1.6vw,1.35rem)] font-semibold tracking-tight opacity-0 shadow-2xl will-change-[clip-path,opacity]"
+                  className="px-4 sm:px-6 py-2 sm:py-3 rounded-full text-[clamp(0.7rem,1.3vw,1.1rem)] font-semibold tracking-tight opacity-0 shadow-2xl will-change-[clip-path,opacity]"
                   style={{ background: tag.background, color: tag.color ?? '#ffffff', clipPath: 'polygon(0% 0% ,0% 0%, 0% 100%, 0% 100%)' }}
                 >
                   {tag.text}

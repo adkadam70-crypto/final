@@ -509,19 +509,24 @@ export async function runMatch(): Promise<
       fieldPool = preferIntendedField(catalog, profile.intendedField)
     }
 
-    // Random banding already gives run-to-run variety by chance, but two
+    // Random banding already gives run-to-run variety by chance, but
     // back-to-back "re-run match" clicks can still land on an overlapping
-    // set. Exclude whatever this same user's most recent run showed them, so
-    // a deliberate "show me something different" click reliably delivers
-    // one — but only when there's still a healthy pool left afterward, so a
-    // small country catalog doesn't get starved down to nothing.
-    const [previousRun] = await db
+    // set. Exclude whatever this same user's last several runs already
+    // showed them (not just the most recent one), so clicking "run again" a
+    // few times in a row — the exact workflow the UI nudges toward for
+    // covering more of the catalog — reliably surfaces schools they haven't
+    // seen yet instead of cycling back to the same ones. Capped at the last
+    // 5 runs (up to 100 excluded ids) so this stays a bounded query and a
+    // "fresh start" naturally resets after enough re-runs — only when
+    // there's still a healthy pool left afterward, so a small country
+    // catalog doesn't get starved down to nothing.
+    const previousRuns = await db
       .select({ results: matches.results })
       .from(matches)
       .where(eq(matches.userId, userId))
       .orderBy(desc(matches.createdAt))
-      .limit(1)
-    const previouslyShownIds = new Set((previousRun?.results ?? []).map((r) => r.universityId))
+      .limit(5)
+    const previouslyShownIds = new Set(previousRuns.flatMap((run) => run.results.map((r) => r.universityId)))
     const freshPool = fieldPool.filter((u) => !previouslyShownIds.has(String(u.id)))
     const samplingPool = freshPool.length >= MAX_CATALOG_FOR_AI ? freshPool : fieldPool
 
@@ -539,28 +544,42 @@ export async function runMatch(): Promise<
       extracurriculars: profile.extracurriculars,
     }
 
-    const { object } = await generateOpenAIMatch({
-      studentProfile,
-      catalog: catalogForAI.map((u) => ({
-        universityId: u.id,
-        name: u.name,
-        country: u.country,
-        baselineSelectivity: u.baselineSelectivity,
-        sectors: u.sectors,
-        climate: u.climate,
-        academicFields: u.academicFields,
-        requirements: u.requirements,
-        programRank: programRankByUniversityId.get(u.id) ?? null,
-        overallRank: u.rankValue != null && u.rankSource ? { rankValue: u.rankValue, rankSource: u.rankSource } : null,
-        acceptanceRate: resolveAcceptanceRate(u),
-        earlyAdmission: u.earlyAdmissionSource
-          ? { ed: u.earlyDecisionRate, ea: u.earlyActionRate, rd: u.regularDecisionRate, source: u.earlyAdmissionSource }
-          : null,
-        testScoreFit: testScoreRangeComparison(profile.standardizedTests, u),
-      })),
-      targetCountries: profile.targetCountries,
-      contextByCountry,
-    })
+    const aiCatalog = catalogForAI.map((u) => ({
+      universityId: u.id,
+      name: u.name,
+      country: u.country,
+      baselineSelectivity: u.baselineSelectivity,
+      sectors: u.sectors,
+      climate: u.climate,
+      academicFields: u.academicFields,
+      requirements: u.requirements,
+      programRank: programRankByUniversityId.get(u.id) ?? null,
+      overallRank: u.rankValue != null && u.rankSource ? { rankValue: u.rankValue, rankSource: u.rankSource } : null,
+      acceptanceRate: resolveAcceptanceRate(u),
+      earlyAdmission: u.earlyAdmissionSource
+        ? { ed: u.earlyDecisionRate, ea: u.earlyActionRate, rd: u.regularDecisionRate, source: u.earlyAdmissionSource }
+        : null,
+      testScoreFit: testScoreRangeComparison(profile.standardizedTests, u),
+    }))
+
+    // Two parallel half-size calls instead of one call for all
+    // MAX_CATALOG_FOR_AI schools. Measured against gpt-5.6-luna: a single
+    // 20-school call runs ~34-37s; two parallel 10-school calls finish in
+    // ~22s (bounded by the slower half), a ~35% real wall-clock win, for a
+    // few tenths of a cent in extra tokens (each half repeats the shared
+    // system instructions). This reverses the earlier single-call decision,
+    // which was measured against gpt-5.6-terra and showed no split benefit
+    // there — the win is specific to Luna's lower per-call overhead.
+    const half = Math.ceil(aiCatalog.length / 2)
+    const [firstHalf, secondHalf] = await Promise.all([
+      generateOpenAIMatch({ studentProfile, catalog: aiCatalog.slice(0, half), targetCountries: profile.targetCountries, contextByCountry }),
+      generateOpenAIMatch({ studentProfile, catalog: aiCatalog.slice(half), targetCountries: profile.targetCountries, contextByCountry }),
+    ])
+    // Both halves generate a full "summary" per the shared schema (it only
+    // makes sense as one whole-list overview) — keep the first half's, since
+    // showing both would just repeat the same encouraging-overview framing
+    // twice for no added information.
+    const object = { summary: firstHalf.object.summary, results: [...firstHalf.object.results, ...secondHalf.object.results] }
 
     // Merge AI output back with DB records (source of truth for display fields).
     const byId = new Map(catalog.map((u) => [String(u.id), u]))

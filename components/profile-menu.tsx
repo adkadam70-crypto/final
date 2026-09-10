@@ -43,7 +43,7 @@ export function ProfileMenu({ userName, userEmail }: { userName: string; userEma
 
   async function handleSignOut() {
     await authClient.signOut()
-    window.location.href = '/sign-in'
+    window.location.href = '/'
   }
 
   const initials = userName.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()

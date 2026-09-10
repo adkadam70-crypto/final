@@ -26,7 +26,7 @@ export function Navbar({ userName, userEmail }: { userName: string; userEmail: s
 
   async function handleSignOut() {
     await authClient.signOut()
-    window.location.href = '/sign-in'
+    window.location.href = '/'
   }
 
   return (
