@@ -2,13 +2,15 @@
 
 import { useState, useTransition, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { GraduationCap, Globe, Flame, Compass, Loader2, CheckCircle2, Award, ChevronDown, History, ArrowRight, Plus, X } from 'lucide-react'
+import { GraduationCap, Globe, Flame, Compass, Loader2, CheckCircle2, Award, ChevronDown, History, ArrowRight, Plus, X, BookOpen, Info } from 'lucide-react'
 import { saveProfile, type SaveProfileInput } from '@/app/actions/profile'
+import { markSuggestedActivityDone, type SuggestedActivityRow } from '@/app/actions/dream'
+import { AP_COURSE_CATEGORIES, AP_COURSES } from '@/lib/ap-courses'
 import { LiquidButton } from '@/components/ui/liquid-glass-button'
 import { gradeBadge } from '@/lib/grade'
 import { AcademicDetailInput } from '@/components/academic-detail-input'
 import { defaultAcademicDetail, ACADEMIC_FIELDS, type AcademicDetail } from '@/lib/academic-detail'
-import { satComposite, type StandardizedTests } from '@/lib/standardized-tests'
+import { satComposite, ENGLISH_TEST_TYPES, ENGLISH_TEST_RANGES, type StandardizedTests, type EnglishTestType } from '@/lib/standardized-tests'
 import {
   GRADE_RELEVANCE,
   defaultNinthTenthCurriculum,
@@ -46,6 +48,7 @@ type ProfileRow = {
   standardizedTests: StandardizedTests
   priorGrades: PriorGrades | null
   extracurriculars: string[]
+  apCourses: string[]
   createdAt: Date
 }
 
@@ -61,6 +64,7 @@ type LatestProfile = {
   standardizedTests: StandardizedTests
   priorGrades: PriorGrades | null
   extracurriculars: string[]
+  apCourses: string[]
 } | null
 
 // Small, focused sub-component for the 9th/10th block: one curriculum
@@ -184,7 +188,25 @@ function ExamplesHint({ examples }: { examples: string[] }) {
   )
 }
 
-export function ProfileForm({ initialProfiles, latestProfile }: { initialProfiles: ProfileRow[]; latestProfile: LatestProfile }) {
+export function ProfileForm({
+  initialProfiles,
+  latestProfile,
+  suggestedActivities,
+}: {
+  initialProfiles: ProfileRow[]
+  latestProfile: LatestProfile
+  suggestedActivities: SuggestedActivityRow[] | null
+}) {
+  const [activities, setActivities] = useState(suggestedActivities ?? [])
+  const [activityPendingId, setActivityPendingId] = useState<number | null>(null)
+
+  async function handleMarkActivityDone(id: number) {
+    setActivityPendingId(id)
+    const res = await markSuggestedActivityDone(id)
+    setActivityPendingId(null)
+    if (res.success) setActivities((prev) => prev.map((a) => (a.id === id ? { ...a, status: 'completed' } : a)))
+  }
+
   const [pending, startTransition] = useTransition()
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -210,6 +232,39 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
   const [ec1, setEc1] = useState(latestProfile?.extracurriculars?.[0] ?? '')
   const [ec2, setEc2] = useState(latestProfile?.extracurriculars?.[1] ?? '')
   const [ec3, setEc3] = useState(latestProfile?.extracurriculars?.[2] ?? '')
+  const [apCourses, setApCourses] = useState<string[]>(latestProfile?.apCourses ?? [])
+  const [apCourseInput, setApCourseInput] = useState('')
+  const [showApSuggestions, setShowApSuggestions] = useState(false)
+  const apInputWrapperRef = useRef<HTMLDivElement>(null)
+  const [showApInfo, setShowApInfo] = useState(false)
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (apInputWrapperRef.current && !apInputWrapperRef.current.contains(e.target as Node)) {
+        setShowApSuggestions(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const apQuery = apCourseInput.trim().toLowerCase()
+  const apSuggestions = apQuery
+    ? AP_COURSES.filter((c) => c.toLowerCase().includes(apQuery) && !apCourses.includes(c)).slice(0, 8)
+    : []
+
+  function addApCourse(course: string) {
+    const trimmed = course.trim()
+    if (!trimmed || apCourses.includes(trimmed)) return
+    setApCourses((prev) => [...prev, trimmed])
+    setApCourseInput('')
+    setShowApSuggestions(false)
+  }
+
+  function removeApCourse(course: string) {
+    setApCourses((prev) => prev.filter((c) => c !== course))
+  }
+
   const [standardizedTests, setStandardizedTests] = useState<StandardizedTests>(latestProfile?.standardizedTests ?? {})
   const [ninthTenth, setNinthTenth] = useState<NinthTenthGrades>(
     latestProfile?.priorGrades?.ninthTenth ?? {
@@ -250,6 +305,7 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
     setEc1(p.extracurriculars?.[0] ?? '')
     setEc2(p.extracurriculars?.[1] ?? '')
     setEc3(p.extracurriculars?.[2] ?? '')
+    setApCourses(p.apCourses ?? [])
     setStandardizedTests(p.standardizedTests ?? {})
     setNinthTenth(p.priorGrades?.ninthTenth ?? { curriculum: defaultNinthTenthCurriculum(p.curriculum as Curriculum), grade9: {}, grade10: {} })
     setEleventh(p.priorGrades?.eleventh ?? null)
@@ -271,6 +327,7 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
       preferredRank,
       intendedField,
       extracurriculars: [ec1, ec2, ec3].map((s) => s.trim()).filter(Boolean),
+      apCourses,
     }
     startTransition(async () => {
       try {
@@ -413,11 +470,45 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
           </div>
         </section>
 
-        {(targetCountries.includes('US') || targetCountries.includes('IN')) && (
-          <section className="bg-card border border-border rounded-3xl p-6">
+        <section className="bg-card border border-border rounded-3xl p-6">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-2"><Award className="w-4 h-4 text-chart-4" /> Standardized tests</h2>
-            <p className="text-[11px] text-muted-foreground/70 mb-4">Shown because of your selected countries — these apply regardless of curriculum. All optional.</p>
+            <p className="text-[11px] text-muted-foreground/70 mb-4">These apply regardless of curriculum or target country. All optional.</p>
             <div className="space-y-4">
+              <div>
+                <div className="text-[11px] text-muted-foreground mb-1.5">English proficiency test — if you've taken one</div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[10px] text-muted-foreground/70 block mb-1">Test</label>
+                    <select
+                      value={standardizedTests.englishTestType ?? ''}
+                      onChange={(e) => {
+                        const type = (e.target.value || undefined) as EnglishTestType | undefined
+                        setStandardizedTests((t) => ({ ...t, englishTestType: type, englishTestScore: type ? t.englishTestScore : undefined }))
+                      }}
+                      className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary"
+                    >
+                      <option value="">Select test</option>
+                      {ENGLISH_TEST_TYPES.map((type) => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground/70 block mb-1">Score</label>
+                    <input
+                      type="number"
+                      disabled={!standardizedTests.englishTestType}
+                      min={standardizedTests.englishTestType ? ENGLISH_TEST_RANGES[standardizedTests.englishTestType].min : undefined}
+                      max={standardizedTests.englishTestType ? ENGLISH_TEST_RANGES[standardizedTests.englishTestType].max : undefined}
+                      step={standardizedTests.englishTestType ? ENGLISH_TEST_RANGES[standardizedTests.englishTestType].step : undefined}
+                      placeholder={standardizedTests.englishTestType ? `${ENGLISH_TEST_RANGES[standardizedTests.englishTestType].min}–${ENGLISH_TEST_RANGES[standardizedTests.englishTestType].max}` : 'Pick a test first'}
+                      value={standardizedTests.englishTestScore ?? ''}
+                      onChange={(e) => setStandardizedTests((t) => ({ ...t, englishTestScore: e.target.value ? Number(e.target.value) : undefined }))}
+                      className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary disabled:opacity-50"
+                    />
+                  </div>
+                </div>
+              </div>
               {targetCountries.includes('US') && (
                 <div>
                   <div className="text-[11px] text-muted-foreground mb-1.5">SAT / ACT (United States)</div>
@@ -466,8 +557,7 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
                 </div>
               )}
             </div>
-          </section>
-        )}
+        </section>
 
         {!onlyAustralia && (
           <section className="bg-card border border-border rounded-3xl p-6">
@@ -500,6 +590,130 @@ export function ProfileForm({ initialProfiles, latestProfile }: { initialProfile
             </div>
           </section>
         )}
+
+        {suggestedActivities !== null && activities.length > 0 && (
+          <section className="bg-card border border-border rounded-3xl p-6">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-2">
+              <Flame className="w-4 h-4 text-chart-5" /> Suggested activities
+            </h2>
+            <p className="text-[11px] text-muted-foreground mb-3">From your Build Your Dream roadmap — mark one completed to fold it into your extracurriculars above.</p>
+            <ul className="space-y-1.5">
+              {activities.map((a) => (
+                <li key={a.id} className="flex items-center justify-between gap-2 text-xs bg-secondary border border-border rounded-xl px-3 py-2">
+                  <span className={a.status === 'completed' ? 'text-muted-foreground line-through' : 'text-foreground/90'}>{a.text}</span>
+                  {a.status === 'completed' ? (
+                    <span className="shrink-0 text-[10px] font-semibold text-chart-2 uppercase flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Completed</span>
+                  ) : (
+                    <span className="shrink-0 flex items-center gap-2">
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase">Shortlisted</span>
+                      <button
+                        type="button"
+                        disabled={activityPendingId === a.id}
+                        onClick={() => handleMarkActivityDone(a.id)}
+                        className="text-[10px] font-semibold text-primary uppercase hover:brightness-125 disabled:opacity-50"
+                      >
+                        Mark completed
+                      </button>
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        <section className="bg-card border border-border rounded-3xl p-6">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-2">
+            <BookOpen className="w-4 h-4 text-chart-2" /> AP courses taken
+            <button
+              type="button"
+              onClick={() => setShowApInfo((v) => !v)}
+              aria-expanded={showApInfo}
+              aria-label="What is AP?"
+              className="text-muted-foreground/60 hover:text-primary normal-case tracking-normal font-normal"
+            >
+              <Info className="w-3.5 h-3.5" />
+            </button>
+          </h2>
+          {showApInfo && (
+            <p className="text-[11px] text-muted-foreground/80 bg-secondary/60 border border-border rounded-xl p-2.5 mb-3 text-pretty">
+              AP (Advanced Placement) is a US College Board program of college-level courses taught in high school, each ending in a standardized exam scored 1-5. Students on any curriculum worldwide can take AP exams alongside their main diploma — many international applicants use them to show extra academic depth for competitive/US-facing applications.
+            </p>
+          )}
+          <p className="text-[11px] text-muted-foreground mb-3">Optional — add any real AP courses you've taken, alongside your main curriculum.</p>
+
+          {apCourses.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {apCourses.map((c) => (
+                <span key={c} className="flex items-center gap-1.5 text-[11px] bg-secondary border border-border text-foreground/90 px-2.5 py-1 rounded-lg">
+                  {c}
+                  <button type="button" onClick={() => removeApCourse(c)} aria-label={`Remove ${c}`} className="text-muted-foreground hover:text-destructive">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+
+          <div ref={apInputWrapperRef} className="relative">
+            <input
+              type="text"
+              placeholder="Type to search AP courses…"
+              value={apCourseInput}
+              onChange={(e) => { setApCourseInput(e.target.value); setShowApSuggestions(true) }}
+              onFocus={() => setShowApSuggestions(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && apSuggestions.length > 0) { e.preventDefault(); addApCourse(apSuggestions[0]) }
+                if (e.key === 'Escape') setShowApSuggestions(false)
+              }}
+              autoComplete="off"
+              className="w-full bg-secondary border border-border rounded-xl p-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-chart-2"
+            />
+            {showApSuggestions && apSuggestions.length > 0 && (
+              <ul className="absolute z-20 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-xl shadow-lg max-h-56 overflow-y-auto py-1">
+                {apSuggestions.map((s) => (
+                  <li key={s}>
+                    <button type="button" onClick={() => addApCourse(s)} className="w-full text-left px-3 py-2 text-xs text-foreground hover:bg-muted transition-colors">
+                      {s}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <details className="group mt-3">
+            <summary className="cursor-pointer list-none text-[11px] text-primary font-medium flex items-center gap-1 w-fit">
+              Browse all AP courses <ChevronDown className="w-3 h-3 transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="mt-2 space-y-3 max-h-64 overflow-y-auto pr-1">
+              {AP_COURSE_CATEGORIES.map((cat) => (
+                <div key={cat.category}>
+                  <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">{cat.category}</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {cat.courses.map((course) => {
+                      const added = apCourses.includes(course)
+                      return (
+                        <button
+                          key={course}
+                          type="button"
+                          disabled={added}
+                          onClick={() => addApCourse(course)}
+                          className={`text-[11px] px-2.5 py-1 rounded-lg border transition-colors ${
+                            added ? 'bg-primary/10 border-primary/30 text-primary cursor-default' : 'bg-secondary border-border text-foreground/90 hover:border-chart-2'
+                          }`}
+                        >
+                          {course}
+                          {added ? ' ✓' : ''}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </details>
+        </section>
 
         <section className="bg-card border border-border rounded-3xl p-6">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2"><Compass className="w-4 h-4 text-chart-4" /> Climate, sector & ranking</h2>

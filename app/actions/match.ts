@@ -25,6 +25,7 @@ import { SELECTIVITY_CALIBRATION } from '@/lib/selectivity-calibration'
 import { assertMatchRateLimit } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/request-fingerprint'
 import { isGarbledStrings } from '@/lib/ai-response-guard'
+import { ENGLISH_TEST_GUIDANCE } from '@/lib/english-test-guidance'
 
 // Caps how many universities go to the model per run. A single call for all
 // 20 measured at ~45-65s live — real variance run to run, not a bug. This
@@ -32,12 +33,17 @@ import { isGarbledStrings } from '@/lib/ai-response-guard'
 // smaller calls beat one big one, but live A/B testing (2 timed runs at
 // 46s/65s vs. a single call at 51s) showed no reliable win, just the same
 // noisy range — while the single call is strictly cheaper (no duplicated
-// system prompt/instructions across two requests) and simpler. 20 trades
-// some breadth for real detail per school; sampling across selectivity bands
-// (rather than truncating) keeps a representative spread from Safety through
-// Ultra Reach regardless of size, and the UI already nudges re-running 2-3
-// times to cover more of the catalog rather than shrinking this per run.
-const MAX_CATALOG_FOR_AI = 20
+// system prompt/instructions across two requests) and simpler. Total wall
+// time is driven by how much the model has to generate (a rationale + 2
+// tips per school), not call count, so the only real lever is fewer
+// schools per run — trading breadth for speed. Trying 14 (down from 20) as
+// a live test toward a ~20s target; sampling across selectivity bands
+// (rather than truncating) still keeps a representative spread from Safety
+// through Ultra Reach regardless of size, and the UI already nudges
+// re-running 2-3 times to cover more of the catalog. 14 confirmed live to
+// meaningfully cut run time; bumping to 15 for a touch more breadth per
+// run since it's a small enough step not to meaningfully affect that gain.
+const MAX_CATALOG_FOR_AI = 15
 
 function shuffle<T>(items: T[]): T[] {
   const copy = [...items]
@@ -189,6 +195,7 @@ async function generateOpenAIMatch({
     preferredRank: string
     intendedField: string
     extracurriculars: string[]
+    apCourses: string[]
   }
   catalog: Array<{
     universityId: string | number
@@ -249,6 +256,7 @@ STUDENT PROFILE:
 - Preferred university ranking: ${studentProfile.preferredRank} (soft preference — weigh it alongside fit, don't treat it as a hard filter)
 - Intended field of study: ${studentProfile.intendedField}
 - Extracurriculars: ${studentProfile.extracurriculars.length ? studentProfile.extracurriculars.join('; ') : 'None provided'}
+- AP courses taken: ${studentProfile.apCourses.length ? studentProfile.apCourses.join('; ') : 'None reported'}
 
 TIER DEFINITIONS:
 - Safety: student clearly exceeds the bar (prob ~75-95%).
@@ -311,6 +319,8 @@ testScoreFit, when it contains a real comparison (not "Not on file" or "not dire
 The student's "preferred university ranking" in their profile (e.g. "Top 50") is a real threshold to check against overallRanking's rank if present (not the program rank, for the same reason as above — the preference is about the university). If a school's verified overall rank falls outside the student's stated preference, say so plainly in the rationale (e.g. "ranked #78 overall, outside your Top 50 preference") — don't silently ignore the mismatch, but also don't use it to zero out an otherwise-good match, since it's explicitly a soft preference. When no overall rank exists for a school, there's nothing concrete to compare against the preference — don't guess whether it would qualify.
 
 Cross-reference admissionRequirements against the student's actual profile above (standardized tests, curriculum/grades, extracurriculars) for every school. If a school lists a specific required credential, test, or exam that isn't reflected anywhere in the student's profile (e.g. a school-specific entrance exam, a portfolio, an interview, a specific test the student hasn't reported a score for), that is exactly the kind of concrete, specific improvementTip to surface — name the missing requirement directly and say plainly that it's likely holding down this student's odds at this specific school precisely because it's a stated requirement they haven't demonstrated. Don't invent requirements that aren't listed, and don't flag a requirement the student's profile already satisfies.
+
+${ENGLISH_TEST_GUIDANCE} Given rationale/improvementTips are terse here (unlike the single-school deep-dive), only spend that limited space on this when it's a genuinely meaningful factor for a given school (comfortably strong, or a real gap worth flagging) — don't force a mention into every school's rationale when it isn't the most relevant thing to say, and remember this varies per school BY COUNTRY, not just by score.
 
 Do the same cross-reference for programSpecificAdditionalRequirements, when it's a real list rather than "None on file...": these are requirements for the student's own intended field/program specifically — on top of, not instead of, admissionRequirements above (e.g. a supplemental essay, a portfolio, or a specific score a particular school of engineering or business requires beyond what the university asks of everyone). If one of these isn't reflected in the student's profile, flag it the same way — name it directly, and note it's specific to this student's intended program at this school, not a school-wide requirement. Like programRankingForIntendedField, this is fit/preparedness context only — never use it to move acceptanceProbability itself.
 
@@ -542,6 +552,7 @@ export async function runMatch(): Promise<
       preferredRank: profile.preferredRank,
       intendedField: profile.intendedField,
       extracurriculars: profile.extracurriculars,
+      apCourses: profile.apCourses,
     }
 
     const aiCatalog = catalogForAI.map((u) => ({

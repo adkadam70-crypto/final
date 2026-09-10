@@ -9,7 +9,7 @@ import type { AcademicDetail } from '@/lib/academic-detail'
 import type { MatchResult } from '@/lib/db/schema'
 import { ProbabilityGraph } from '@/components/probability-graph'
 import { UniversityCard } from '@/components/university-card'
-import { TargetUniversityAnalysis } from '@/components/target-university-analysis'
+import { TargetUniversityAnalysis, type TargetUniversityAnalysisHandle } from '@/components/target-university-analysis'
 import { LoadingDots } from '@/components/loading-dots'
 import { RevealGroup } from '@/components/reveal-group'
 import { LiquidButton } from '@/components/ui/liquid-glass-button'
@@ -49,6 +49,7 @@ type ProfileRow = {
   preferredRank: string
   intendedField: string
   extracurriculars: string[]
+  apCourses: string[]
 } | null
 
 export function MatchesView({ profile }: { profile: ProfileRow }) {
@@ -57,6 +58,15 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
   const [isRunning, setIsRunning] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const errorRef = useRef<HTMLParagraphElement>(null)
+  const targetAnalysisRef = useRef<TargetUniversityAnalysisHandle>(null)
+
+  // "Get a deeper analysis" on a match card runs the same target-university
+  // analysis above instead of making the student re-type the name, then
+  // scrolls it into view since it lives above the match grid.
+  function handleDeepAnalysis(universityName: string) {
+    targetAnalysisRef.current?.analyzeFor(universityName)
+    document.getElementById('target-university-analysis')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
   // String ids throughout — MatchResult.universityId is a string and
   // getSavedSchoolIds() now returns strings, so `.has()` actually matches.
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
@@ -154,7 +164,7 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
         <p className="text-sm text-muted-foreground">Powered by your saved profile.</p>
       </div>
 
-      <TargetUniversityAnalysis hasProfile={!!profile?.academicDetail} />
+      <TargetUniversityAnalysis ref={targetAnalysisRef} hasProfile={!!profile?.academicDetail} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6">
         <section className="bg-card border border-border rounded-3xl p-6">
@@ -178,6 +188,13 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
                 <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
                   {profile.extracurriculars.map((ec, i) => <li key={i}>{ec}</li>)}
                 </ul>
+              )}
+              {profile.apCourses.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {profile.apCourses.map((c) => (
+                    <span key={c} className="text-[10px] bg-secondary border border-border text-foreground/80 px-2 py-0.5 rounded-md">{c}</span>
+                  ))}
+                </div>
               )}
               <a href="/profile" className="text-xs text-primary font-medium flex items-center gap-1 hover:brightness-125">Edit profile <ArrowRight className="w-3 h-3" /></a>
             </div>
@@ -223,14 +240,21 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
           <section className="bg-card border border-border rounded-3xl p-12 text-center">
             <ProgressiveFluxLoader
               phases={MATCH_PHASES}
-              // Measured live with performance.now(): ~46s on a warm dev
-              // server, ~65s on a cold one (2 parallel AI batches over ~10
-              // schools each — see MAX_CATALOG_FOR_AI/PARALLEL_BATCHES in
-              // match.ts). Sized near the warm number so the sweep usually
-              // completes in one pass; `loop` is the safety net for slower
-              // runs.
-              duration={48}
-              loop={!finishing}
+              // A single AI call assesses MAX_CATALOG_FOR_AI schools at once
+              // (see match.ts) — no parallel batching, that was tried and
+              // reverted (see the comment there). Dropping from 20 to
+              // 14-15 schools confirmed live to meaningfully cut run time.
+              // loop is deliberately false: with it on, a run that outlasts
+              // `duration` made the bar visibly restart from 0 and sweep
+              // again, reading as "it loaded twice" — confusing even though
+              // the real reveal was always correctly gated on the actual
+              // API response (see the `finishing` effect below), never on
+              // the bar's own animation. Now it plays through once and
+              // holds at full while still waiting, and only actually
+              // reveals results once `finishing` flips `value` to 100 for
+              // real.
+              duration={36}
+              loop={false}
               value={finishing ? 100 : undefined}
             />
           </section>
@@ -248,7 +272,7 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
               <RevealGroup className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start" replay={results} stagger={0.08}>
                 {results.map((r) => (
                   <div key={r.universityId} id={`university-${r.universityId}`} className="relative scroll-mt-24 match-card-target rounded-3xl">
-                    <UniversityCard uni={r} />
+                    <UniversityCard uni={r} onDeepAnalysis={handleDeepAnalysis} />
                     <button onClick={() => toggleSave(r)} className="absolute top-4 right-4 p-2 rounded-xl bg-secondary border border-border hover:border-primary/30 transition-colors" aria-label={savedIds.has(r.universityId) ? 'Unsave school' : 'Save school'}>
                       {savedIds.has(r.universityId) ? <BookmarkCheck className="w-4 h-4 text-primary" /> : <Bookmark className="w-4 h-4 text-muted-foreground" />}
                     </button>

@@ -23,12 +23,22 @@ const strengthSchema = z.object({
     .describe('Realistic profile strength percentage. 100 is intentionally unreachable.'),
   headline: z.string().describe('Under 8 words summarizing the assessment, e.g. "Strong academics, thin on extracurriculars".'),
   hint: z.string().describe('Under 20 words: one specific, actionable thing that would raise the score most.'),
+  strengths: z
+    .array(z.string())
+    .max(3)
+    .describe('Up to 3 specific, concrete reasons the score is as high as it is — each under 12 words. Specific, not generic praise.'),
+  weaknesses: z
+    .array(z.string())
+    .max(3)
+    .describe('Up to 3 specific, concrete reasons the score isn\'t higher — each under 12 words. Specific gaps, not generic encouragement.'),
 })
 
 export type ProfileStrengthResult = {
   score: number
   headline: string
   hint: string
+  strengths: string[]
+  weaknesses: string[]
 }
 
 /**
@@ -97,8 +107,11 @@ STUDENT PROFILE:
 - Target countries: ${profile.targetCountries.join(', ')}
 - Intended field: ${profile.intendedField}
 - Extracurriculars: ${profile.extracurriculars.length ? profile.extracurriculars.join('; ') : 'None provided'}
+- AP courses taken: ${profile.apCourses.length ? profile.apCourses.join('; ') : 'None reported'}
 
-Score realistically. A 100 should be practically unreachable — reserved for a flawless, internationally-decorated profile with nothing left to add. Most genuinely strong applicants land in the 55-85 range. A profile with no extracurriculars listed must be capped well below that regardless of how strong the academics are, since real holistic admissions weigh both roughly equally. Be specific in the hint about what's actually missing, not generic encouragement.`
+Score realistically. A 100 should be practically unreachable — reserved for a flawless, internationally-decorated profile with nothing left to add. Most genuinely strong applicants land in the 55-85 range. A profile with no extracurriculars listed must be capped well below that regardless of how strong the academics are, since real holistic admissions weigh both roughly equally. Be specific in the hint about what's actually missing, not generic encouragement.
+
+Also give the concrete reasons behind the score: up to 3 specific strengths (what's actually pulling the score up — a strong GPA band, a real standardized test score, a genuine extracurricular depth signal) and up to 3 specific weaknesses (what's actually holding it back — missing test scores, thin or generic extracurriculars, no leadership/impact shown, a curriculum-context gap). These should let the student see exactly why they got this number, not just that they did — reference the actual profile details above, never generic filler like "could be stronger."`
 
   try {
     const call = () =>
@@ -111,13 +124,15 @@ Score realistically. A 100 should be practically unreachable — reserved for a 
     // Rare structured-output corruption (internal channel tokens leaking
     // into a field) slips past schema validation — retry once before giving
     // up.
-    if (response.output_parsed && isGarbledStrings([response.output_parsed.headline, response.output_parsed.hint])) {
+    const garbled = (parsed: z.infer<typeof strengthSchema>) =>
+      isGarbledStrings([parsed.headline, parsed.hint, ...parsed.strengths, ...parsed.weaknesses])
+    if (response.output_parsed && garbled(response.output_parsed)) {
       response = await call()
     }
     if (!response.output_parsed) {
       throw new Error('OpenAI returned no parseable output for the profile strength request')
     }
-    if (isGarbledStrings([response.output_parsed.headline, response.output_parsed.hint])) {
+    if (garbled(response.output_parsed)) {
       throw new Error('OpenAI returned corrupted output for the profile strength request after retry')
     }
     await db.insert(aiRateLimitLog).values({ userId, action: 'profileStrength', ipAddress: clientIp })

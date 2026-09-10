@@ -20,6 +20,7 @@ export type SaveProfileInput = {
   preferredRank: string
   intendedField: string
   extracurriculars: string[]
+  apCourses: string[]
 }
 
 /**
@@ -36,6 +37,9 @@ export type SaveProfileInput = {
 const MAX_FIELD_LENGTH = 500
 const MAX_EXTRACURRICULARS = 20
 const MAX_SUBJECTS = 10
+// Generous headroom above the real AP catalog size (42 courses as of this
+// session, see lib/ap-courses.ts) — this caps abuse, not genuine use.
+const MAX_AP_COURSES = 50
 
 function validateFreeTextLengths(input: SaveProfileInput): string | null {
   if (input.curriculum.length > MAX_FIELD_LENGTH) return 'Curriculum value is too long.'
@@ -46,6 +50,9 @@ function validateFreeTextLengths(input: SaveProfileInput): string | null {
 
   if (input.extracurriculars.length > MAX_EXTRACURRICULARS) return `Enter at most ${MAX_EXTRACURRICULARS} extracurricular entries.`
   if (input.extracurriculars.some((e) => e.length > MAX_FIELD_LENGTH)) return 'One of your extracurricular entries is too long.'
+
+  if (input.apCourses.length > MAX_AP_COURSES) return `Enter at most ${MAX_AP_COURSES} AP courses.`
+  if (input.apCourses.some((c) => c.length > MAX_FIELD_LENGTH)) return 'One of your AP course entries is too long.'
 
   if ('subjects' in input.academicDetail) {
     if (input.academicDetail.subjects.length > MAX_SUBJECTS) return `Enter at most ${MAX_SUBJECTS} subjects.`
@@ -112,6 +119,7 @@ export async function saveProfile(input: SaveProfileInput): Promise<{ success: b
         preferredRank: input.preferredRank,
         intendedField: input.intendedField,
         extracurriculars: input.extracurriculars,
+        apCourses: input.apCourses,
       })
       .returning()
 
@@ -127,6 +135,40 @@ export async function saveProfile(input: SaveProfileInput): Promise<{ success: b
     console.error('Profile save error:', error)
     return { success: false, message: 'Something went wrong saving your profile. Please try again in a moment.' }
   }
+}
+
+// Folds one more extracurricular into the master profile without touching
+// anything else on it — used when a Build Your Dream roadmap suggestion is
+// marked "completed" (see markSuggestedActivityDone in app/actions/dream.ts).
+// Profiles are insert-only/versioned (see saveProfile above), so this reads
+// the latest row and inserts a new one with the same fields plus the
+// addition, same pattern as every other profile save.
+export async function appendExtracurricularToProfile(text: string): Promise<{ success: boolean; message: string }> {
+  const userId = await getUserId()
+  const latest = await getLatestProfile()
+  if (!latest) return { success: false, message: 'Set up your main profile first.' }
+  if (latest.extracurriculars.includes(text)) return { success: true, message: 'Already on your profile.' }
+
+  await db.insert(profiles).values({
+    userId,
+    targetCountries: latest.targetCountries,
+    curriculum: latest.curriculum,
+    gradeValue: latest.gradeValue,
+    academicDetail: latest.academicDetail,
+    standardizedTests: latest.standardizedTests,
+    priorGrades: latest.priorGrades,
+    preferredClimate: latest.preferredClimate,
+    preferredSector: latest.preferredSector,
+    preferredRank: latest.preferredRank,
+    intendedField: latest.intendedField,
+    extracurriculars: [...latest.extracurriculars, text],
+    apCourses: latest.apCourses,
+  })
+
+  revalidatePath('/profile')
+  revalidatePath('/dashboard')
+  revalidatePath('/matches')
+  return { success: true, message: 'Added to your profile.' }
 }
 
 export type ProfileRow = Awaited<ReturnType<typeof getLatestProfile>>

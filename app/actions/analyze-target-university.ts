@@ -14,6 +14,7 @@ import { SELECTIVITY_CALIBRATION } from '@/lib/selectivity-calibration'
 import { assertAnalysisRateLimit } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/request-fingerprint'
 import { UNIVERSITY_ALIASES } from '@/lib/university-aliases'
+import { ENGLISH_TEST_GUIDANCE } from '@/lib/english-test-guidance'
 import { isGarbledStrings } from '@/lib/ai-response-guard'
 import { z } from 'zod'
 import OpenAI from 'openai'
@@ -58,6 +59,7 @@ function buildResultFromRow(
     : null
   return {
     resolvedUniversityName: matched.name,
+    universityId: matched.id,
     matchTier: row.matchTier as MatchResult['matchTier'],
     acceptanceProbability: row.acceptanceProbability ?? 0,
     admissionChanceSummary: row.admissionChanceSummary,
@@ -91,14 +93,37 @@ const catalogAnalysisSchema = z.object({
     .describe(
       'Only set when a real earlyActionRate is on file for this school — this student\'s estimated chance if applying non-binding Early Action. Null if no real EA rate on file; never invent one.',
     ),
-  admissionChanceSummary: z.string().describe('Under 25 words summarizing the overall admission picture at this specific school.'),
-  strengths: z.array(z.string()).max(3).describe('Up to 3 specific strengths in this profile relative to this school, each under 12 words. Specific, not generic.'),
-  weaknesses: z.array(z.string()).max(3).describe('Up to 3 specific weaknesses or gaps relative to this school, each under 12 words. Specific, not generic.'),
-  actionSteps: z.array(z.string()).max(3).describe('Up to 3 concrete actions to become more competitive for this exact school, each under 15 words.'),
+  admissionChanceSummary: z
+    .string()
+    .describe(
+      'Under 40 words explaining WHY acceptanceProbability is what it is — name the actual number/signal it\'s grounded in (e.g. "grounded in the real 12% regular-decision rate" or "based on baseline selectivity, since no published rate exists") and how this student\'s profile stacks up against it. Not just a mood summary — the student should see exactly what number or fact produced this percentage.',
+    ),
+  strengths: z
+    .array(z.string())
+    .max(4)
+    .describe(
+      'Up to 4 specific strengths in this profile relative to this school, each under 16 words. Draw from across the full profile, not just one dimension — academics/GPA band, standardized tests (SAT/ACT and/or English proficiency test), AP courses, prior-year grades, extracurriculars/honors, program fit — cite the actual detail behind each one, never generic praise, and never repeat the same underlying fact twice in different words.',
+    ),
+  weaknesses: z
+    .array(z.string())
+    .max(4)
+    .describe(
+      'Up to 4 specific weaknesses or gaps relative to this school, each under 16 words. Draw from across the full profile the same way strengths does — a missing or borderline test score, an unmet requirement, thin extracurriculars, no AP courses where peers typically have some, a weak prior-grade trend — cite the actual detail behind each one, never generic caution, never repeat the same gap twice.',
+    ),
+  actionSteps: z
+    .array(z.string())
+    .max(4)
+    .describe(
+      'Up to 4 concrete, specific actions to become more competitive for this exact school, each under 18 words — name the specific test, score, AP course, activity, or requirement to target, not generic advice like "get better grades." Each should map to a specific weakness above where possible.',
+    ),
 })
 
 export type TargetAnalysisResult = {
   resolvedUniversityName: string
+  // The catalog's real numeric id for this school — lets a caller (e.g. the
+  // Build Your Dream "add to list" flow) persist a stable reference instead
+  // of matching on name text again later.
+  universityId: number
   matchTier: MatchResult['matchTier']
   acceptanceProbability: number
   admissionChanceSummary: string
@@ -121,7 +146,8 @@ STUDENT PROFILE:
 - Preferred industry hub: ${profile.preferredSector}
 - Preferred university ranking: ${profile.preferredRank} (soft preference — weigh it alongside fit, don't treat it as a hard filter)
 - Intended field of study: ${profile.intendedField}
-- Extracurriculars: ${profile.extracurriculars.length ? profile.extracurriculars.join('; ') : 'None provided'}`
+- Extracurriculars: ${profile.extracurriculars.length ? profile.extracurriculars.join('; ') : 'None provided'}
+- AP courses taken: ${profile.apCourses.length ? profile.apCourses.join('; ') : 'None reported'}`
 
 /**
  * Rigorous single-university deep-dive: strengths, weaknesses, and concrete
@@ -148,7 +174,19 @@ export type TargetAnalysisOutcome =
   // cause is console.error'd server-side.
   | { error: true; message: string }
 
-export async function analyzeTargetUniversity(universityName: string): Promise<TargetAnalysisOutcome> {
+// dreamContext is optional extra grounding passed in from a Build Your
+// Dream country workspace (see components/dream-country-workspace.tsx) — a
+// short summary of that country-specific analysis already on file, so this
+// deep-dive reasons from it instead of starting cold. Ignored entirely for
+// every other caller (Target University Analysis on the main matches page).
+// dreamPriorityMode: the Build Your Dream "Search" tab wants actionSteps
+// framed as a per-college task list, led by supplemental-essay requirements
+// specifically (see components/dream-university-search.tsx) — a materially
+// different instruction from the generic Target University Analysis's
+// action-step prompt, so a dream-mode call always hits the AI fresh instead
+// of risking a cache hit that was computed under the other framing (or
+// vice versa) from the shared universityAnalyses cache.
+export async function analyzeTargetUniversity(universityName: string, dreamContext?: string, dreamPriorityMode?: boolean): Promise<TargetAnalysisOutcome> {
   let userId: string
   let clientIp: string
   try {
@@ -217,20 +255,22 @@ export async function analyzeTargetUniversity(universityName: string): Promise<T
 
     const acc = resolveAcceptanceRate(matched)
 
-    const cached = (
-      await db
-        .select()
-        .from(universityAnalyses)
-        .where(
-          and(
-            eq(universityAnalyses.userId, userId),
-            eq(universityAnalyses.universityId, matched.id),
-            eq(universityAnalyses.profileId, profile.id),
-          ),
-        )
-        .orderBy(desc(universityAnalyses.createdAt))
-        .limit(1)
-    )[0]
+    const cached = dreamPriorityMode
+      ? undefined
+      : (
+          await db
+            .select()
+            .from(universityAnalyses)
+            .where(
+              and(
+                eq(universityAnalyses.userId, userId),
+                eq(universityAnalyses.universityId, matched.id),
+                eq(universityAnalyses.profileId, profile.id),
+              ),
+            )
+            .orderBy(desc(universityAnalyses.createdAt))
+            .limit(1)
+        )[0]
 
     if (cached) {
       return buildResultFromRow(matched, acc, cached)
@@ -322,10 +362,17 @@ ${groundingBlock}
 
 ${SELECTIVITY_CALIBRATION}
 ${profileBlock}
-
+${dreamContext ? `\nADDITIONAL CONTEXT FROM THE STUDENT'S SAVED COUNTRY-SPECIFIC PROFILE ANALYSIS (use this to ground your points more specifically, don't just repeat it back):\n${dreamContext}\n` : ''}
 ${requirementNote}
+${
+  dreamPriorityMode
+    ? `\nIMPORTANT — actionSteps ordering for this request: this is feeding a per-college task checklist, not general advice. actionSteps[0] MUST specifically address whether this school requires supplemental essays beyond the Common App main essay — state plainly whether it does, and if so what they're generally known for (e.g. a "why this school" essay, a program-specific essay), grounded only in what you're actually confident is real; if genuinely uncertain of the specific prompt, say a supplemental exists and to check the school's own site rather than inventing a prompt. The remaining actionSteps (up to 3 more) must be concrete, specific tasks tied directly to an actual gap in THIS student's profile relative to THIS school (a specific missing score, requirement, or activity type) — never generic advice like "improve your essays" or "get better grades."\n`
+    : ''
+}
 
-Provide an honest tier + probability, and short, specific, scannable bullets for strengths, weaknesses/gaps, and action steps — brevity over completeness.`
+${ENGLISH_TEST_GUIDANCE}
+
+Provide an honest tier + probability, a summary that names the concrete number/fact acceptanceProbability is grounded in (not just a mood statement), and short, specific, scannable bullets for strengths, weaknesses/gaps, and action steps. Spread these bullets across the different dimensions of the student profile above (academics/grade trend, standardized tests including any English proficiency test, AP courses, extracurriculars, program fit) rather than clustering several bullets around the same one or two facts — every bullet must cite an actual detail from this student's profile or this school's data, brevity over completeness but never so terse it becomes generic filler.`
 
       const call = () =>
         client.responses.parse({
@@ -391,58 +438,67 @@ Provide an honest tier + probability, and short, specific, scannable bullets for
       ? { note: matched.admissionsContextNote, source: matched.admissionsContextNoteSource ?? 'Curated' }
       : null
 
-    // onConflictDoNothing + re-read closes the multi-tab race: if another
-    // request for this exact (account, school, profile) already won and
-    // persisted its row between our cache check above and this insert, the
-    // unique index (lib/db/schema.ts) makes this insert a no-op instead of
-    // creating a second, different-numbered row — and we then hand back
-    // that winner's stored result instead of the one we just computed, so
-    // every tab converges on the same answer no matter which one "wins".
-    const inserted = await db
-      .insert(universityAnalyses)
-      .values({
-        userId,
-        universityName: matched.name,
-        universityId: matched.id,
-        usedCatalogGrounding: 1,
-        profileId: profile.id,
-        acceptanceProbability,
-        matchTier,
-        earlyDecisionProbability,
-        earlyActionProbability,
-        admissionChanceSummary,
-        strengths,
-        weaknesses,
-        actionSteps,
-        ipAddress: clientIp,
-      })
-      .onConflictDoNothing({
-        target: [universityAnalyses.userId, universityAnalyses.universityId, universityAnalyses.profileId],
-      })
-      .returning()
+    // A dreamPriorityMode result is computed under a different actionSteps
+    // framing than the generic cache (see the comment on the function
+    // signature) — never write it into the shared universityAnalyses cache,
+    // and never read the "winner" of a race from it either, or a later
+    // plain Target University Analysis request could silently inherit this
+    // essay-first framing (or vice versa).
+    if (!dreamPriorityMode) {
+      // onConflictDoNothing + re-read closes the multi-tab race: if another
+      // request for this exact (account, school, profile) already won and
+      // persisted its row between our cache check above and this insert, the
+      // unique index (lib/db/schema.ts) makes this insert a no-op instead of
+      // creating a second, different-numbered row — and we then hand back
+      // that winner's stored result instead of the one we just computed, so
+      // every tab converges on the same answer no matter which one "wins".
+      const inserted = await db
+        .insert(universityAnalyses)
+        .values({
+          userId,
+          universityName: matched.name,
+          universityId: matched.id,
+          usedCatalogGrounding: 1,
+          profileId: profile.id,
+          acceptanceProbability,
+          matchTier,
+          earlyDecisionProbability,
+          earlyActionProbability,
+          admissionChanceSummary,
+          strengths,
+          weaknesses,
+          actionSteps,
+          ipAddress: clientIp,
+        })
+        .onConflictDoNothing({
+          target: [universityAnalyses.userId, universityAnalyses.universityId, universityAnalyses.profileId],
+        })
+        .returning()
 
-    if (inserted.length === 0) {
-      const winner = (
-        await db
-          .select()
-          .from(universityAnalyses)
-          .where(
-            and(
-              eq(universityAnalyses.userId, userId),
-              eq(universityAnalyses.universityId, matched.id),
-              eq(universityAnalyses.profileId, profile.id),
-            ),
-          )
-          .limit(1)
-      )[0]
-      if (winner) return buildResultFromRow(matched, acc, winner)
-      // Extremely unlikely (the winning row would have to be deleted in the
-      // instant between the conflict and this re-read) — fall through and
-      // serve this request's own freshly computed result rather than error.
+      if (inserted.length === 0) {
+        const winner = (
+          await db
+            .select()
+            .from(universityAnalyses)
+            .where(
+              and(
+                eq(universityAnalyses.userId, userId),
+                eq(universityAnalyses.universityId, matched.id),
+                eq(universityAnalyses.profileId, profile.id),
+              ),
+            )
+            .limit(1)
+        )[0]
+        if (winner) return buildResultFromRow(matched, acc, winner)
+        // Extremely unlikely (the winning row would have to be deleted in the
+        // instant between the conflict and this re-read) — fall through and
+        // serve this request's own freshly computed result rather than error.
+      }
     }
 
     return {
       resolvedUniversityName: matched.name,
+      universityId: matched.id,
       matchTier,
       acceptanceProbability,
       admissionChanceSummary,

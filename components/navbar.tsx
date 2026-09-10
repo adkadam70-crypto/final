@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { LayoutDashboard, User, Search, Bookmark, LogOut, Menu, X, BookOpenCheck, Settings, ShieldCheck } from 'lucide-react'
+import { LayoutDashboard, User, Search, Bookmark, LogOut, Menu, X, BookOpenCheck, Settings, ShieldCheck, Sparkles } from 'lucide-react'
 import { authClient } from '@/lib/auth-client'
 import { cn } from '@/lib/utils'
 import { ProfileMenu } from '@/components/profile-menu'
@@ -11,7 +11,7 @@ import { AppLogo } from '@/components/app-logo'
 import { NavBar } from '@/components/ui/tubelight-navbar'
 import { ADMIN_EMAIL } from '@/lib/admin'
 
-const NAV_LINKS = [
+const BASE_NAV_LINKS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/profile', label: 'Profile', icon: User },
   { href: '/matches', label: 'Find Matches', icon: Search },
@@ -19,10 +19,16 @@ const NAV_LINKS = [
   { href: '/application-info', label: 'Application Info', icon: BookOpenCheck },
 ]
 
+// Admin-only while "Build Your Dream" is still being tested (see
+// app/dream/layout.tsx) — remove this split once it ships generally and
+// just fold it back into BASE_NAV_LINKS.
+const DREAM_NAV_LINK = { href: '/dream', label: 'Build Your Dream', icon: Sparkles }
+
 export function Navbar({ userName, userEmail }: { userName: string; userEmail: string }) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
   const isAdmin = userEmail === ADMIN_EMAIL
+  const NAV_LINKS = isAdmin ? [BASE_NAV_LINKS[0], BASE_NAV_LINKS[1], DREAM_NAV_LINK, ...BASE_NAV_LINKS.slice(2)] : BASE_NAV_LINKS
 
   async function handleSignOut() {
     await authClient.signOut()

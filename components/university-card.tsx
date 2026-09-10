@@ -1,14 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { MapPin, Sun, ArrowRight, Lightbulb, ChevronDown, Sparkles, GraduationCap, Globe, Award } from 'lucide-react'
+import { MapPin, Sun, ArrowRight, Lightbulb, ChevronDown, Sparkles, GraduationCap, Globe, Award, Search } from 'lucide-react'
 import type { MatchResult } from '@/lib/db/schema'
 import { tierBadgeClass } from '@/lib/match-tier'
 import { GlowCard } from '@/components/ui/spotlight-card'
 import { EarlyAdmissionPanel } from '@/components/early-admission-panel'
 import { AcceptanceRateLine } from '@/components/acceptance-rate-line'
 
-export function UniversityCard({ uni }: { uni: MatchResult }) {
+export function UniversityCard({ uni, onDeepAnalysis }: { uni: MatchResult; onDeepAnalysis?: (universityName: string) => void }) {
   const [tipsOpen, setTipsOpen] = useState(false)
   const tips = uni.improvementTips ?? []
 
@@ -140,6 +140,16 @@ export function UniversityCard({ uni }: { uni: MatchResult }) {
               </ul>
             )}
           </div>
+        )}
+
+        {onDeepAnalysis && (
+          <button
+            type="button"
+            onClick={() => onDeepAnalysis(uni.name)}
+            className="w-full flex items-center justify-center gap-1.5 bg-accent/60 hover:bg-accent border border-primary/25 text-primary font-semibold text-[11px] py-2.5 rounded-xl transition-colors mb-4"
+          >
+            <Search className="w-3.5 h-3.5" /> Get a deeper analysis of {uni.name}
+          </button>
         )}
 
         <div className="pt-4 border-t border-border flex flex-wrap justify-between items-center gap-2 text-xs">

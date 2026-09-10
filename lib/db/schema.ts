@@ -142,6 +142,12 @@ export const profiles = pgTable('profiles', {
   standardizedTests: jsonb('standardizedTests').$type<StandardizedTests>().notNull().default({}), // orthogonal to curriculum — SAT/ACT, JEE/NEET etc.
   priorGrades: jsonb('priorGrades').$type<PriorGrades>(), // nullable — 9th-11th context, curriculum-aware; see lib/prior-grades.ts
   extracurriculars: jsonb('extracurriculars').$type<string[]>().notNull().default([]),
+  // Real AP (Advanced Placement) courses taken, independent of curriculum —
+  // a student on any curriculum (CBSE, A-Levels, IB, etc.) may also take AP
+  // exams alongside it. Picked from the College Board's real course catalog
+  // (see lib/ap-courses.ts), not free text, so this is always a genuine,
+  // real course name the AI can weigh directly.
+  apCourses: jsonb('apCourses').$type<string[]>().notNull().default([]),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
 
@@ -194,6 +200,122 @@ export const signupFingerprints = pgTable('signupFingerprints', {
   userId: uuid('userId').notNull(),
   ipAddress: text('ipAddress').notNull(),
   deviceHash: text('deviceHash').notNull(),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+})
+
+// "Build Your Dream" — a guided onboarding layered on top of the master
+// profile above, not a replacement for it (see app/actions/dream.ts). One
+// row per user: the onboarding answers and field recommendation are
+// student-level, done once — the countries a student is actively building
+// toward live in dreamCountryProfiles below (one row per user+country, so a
+// student can build several countries off this same onboarding/field).
+export const dreamProfiles = pgTable('dreamProfiles', {
+  id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
+  userId: uuid('userId').notNull().unique(),
+  // Onboarding answers.
+  strengths: jsonb('strengths').$type<string[]>().notNull().default([]), // Q1: subjects they excel in/enjoy
+  hobbies: text('hobbies').notNull().default(''), // Q2: free-text passions/hobbies
+  interests: jsonb('interests').$type<string[]>().notNull().default([]), // Q3: real-world problem/industry tags
+  interestsOther: text('interestsOther').notNull().default(''), // Q3: open-text addition
+  // AI field-recommendation output — recommendedField is one of
+  // ACADEMIC_FIELDS, proposed from the onboarding answers + master profile;
+  // confirmedField is what the student actually locked in (their own choice
+  // if they overrode the recommendation). Everything past onboarding reads
+  // confirmedField, never recommendedField directly.
+  recommendedField: text('recommendedField'),
+  recommendedFieldRationale: text('recommendedFieldRationale'),
+  confirmedField: text('confirmedField'),
+  // Timeline context for the "Build your own profile" roadmap — lets the AI
+  // reason about how much runway is actually left (e.g. "10th grade,
+  // applying Fall 2028" vs. "12th grade, applying this fall") instead of
+  // giving the same generic advice regardless of where the student is.
+  currentGrade: text('currentGrade'), // e.g. '9th', '10th', '11th', '12th'
+  applicationYear: integer('applicationYear'), // the fall they intend to start college, e.g. 2028
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+})
+
+// One row per (user, country) the student has added to their Build Your
+// Dream dashboard. Each gets its own AI profile analysis and its own
+// application checklist against that country's real requirements (see
+// lib/application-info.ts) — deliberately separate rows, not a single
+// jsonb blob keyed by country, so querying "all countries for this user"
+// and per-row timestamps stay simple.
+export const dreamCountryProfiles = pgTable('dreamCountryProfiles', {
+  id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
+  userId: uuid('userId').notNull(),
+  country: text('country').notNull(),
+  // AI profile-analysis output for this student's confirmed field in this
+  // specific country — re-generated on demand, never silently stale-merged
+  // with another country's result since each country has its own row.
+  analysisStrengths: jsonb('analysisStrengths').$type<string[]>(),
+  analysisGaps: jsonb('analysisGaps').$type<string[]>(),
+  // Per-item checklist progress, keyed by the requirement string itself
+  // (from lib/application-info.ts) -> a 0-100 completion percentage. Items
+  // with a real matching field on the master profile (test scores,
+  // transcript, extracurriculars) are auto-computed fresh on every read
+  // (see computeAutoChecklistProgress in app/actions/dream.ts) and never
+  // stored here; this column only stores the MANUAL override for items with
+  // no detectable profile signal (essays, recommendation letters, etc.) —
+  // student-toggled, 0 or 100.
+  checklist: jsonb('checklist').$type<Record<string, number>>().notNull().default({}),
+  // AI-generated "Build your own profile" roadmap for this country: a plain
+  // summary of how much time is left (grade + intended application year,
+  // see dreamProfiles above) and a phased list of what to work on before
+  // applying — separate from analysisStrengths/Gaps above, which grade the
+  // profile as it stands today rather than plan what to do next.
+  roadmapSummary: text('roadmapSummary'),
+  roadmapSteps: jsonb('roadmapSteps').$type<{ title: string; detail: string }[]>(),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+}, (table) => ({
+  userCountryUnique: uniqueIndex('dreamCountryProfiles_user_country_idx').on(table.userId, table.country),
+}))
+
+// One row per (user, country, university) added to a Build Your Dream
+// country's "My Universities" list — created by the "Add to list" action on
+// a deep-dive analysis (see components/dream-country-workspace.tsx). Each
+// school gets its own real per-college Common App tasks (see
+// lib/common-app-sections.ts's PER_UNIVERSITY_TASK_TEMPLATE) plus the
+// specific gaps the AI analysis found for that exact school, tracked
+// separately from the country-wide Common App checklist above.
+export const dreamUniversityTracks = pgTable('dreamUniversityTracks', {
+  id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
+  userId: uuid('userId').notNull(),
+  country: text('country').notNull(),
+  universityId: integer('universityId').notNull(),
+  universityName: text('universityName').notNull(),
+  // Snapshot of the analysis that was showing when this school was added —
+  // kept alongside the school so its card can show the "why" without
+  // re-running the AI call every time the list renders.
+  strengths: jsonb('strengths').$type<string[]>().notNull().default([]),
+  weaknesses: jsonb('weaknesses').$type<string[]>().notNull().default([]),
+  // The real per-college tasks for this school: PER_UNIVERSITY_TASK_TEMPLATE
+  // plus whatever school-specific gaps the analysis surfaced (a required
+  // portfolio, a missing score, a specific supplemental essay) — all
+  // manually toggled, since none of these have a master-profile field to
+  // auto-detect from.
+  tasks: jsonb('tasks').$type<string[]>().notNull().default([]),
+  taskProgress: jsonb('taskProgress').$type<Record<string, number>>().notNull().default({}),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+}, (table) => ({
+  userCountryUniversityUnique: uniqueIndex('dreamUniversityTracks_user_country_university_idx').on(table.userId, table.country, table.universityId),
+}))
+
+// AI-recommended (or self-added) extracurricular ideas surfaced by the
+// "Build your own profile" roadmap. Tracked separately from the master
+// profile's own `extracurriculars` so a suggestion can sit as "shortlisted"
+// before the student has actually done it — only marking one "completed"
+// folds its text into the real master-profile extracurriculars array (see
+// appendExtracurricularToProfile in app/actions/profile.ts), so AI
+// match/analysis prompts everywhere else only ever see things the student
+// has actually confirmed doing.
+export const profileSuggestedActivities = pgTable('profileSuggestedActivities', {
+  id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
+  userId: uuid('userId').notNull(),
+  text: text('text').notNull(),
+  status: text('status').notNull().default('shortlisted'), // 'shortlisted' | 'completed'
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
 
