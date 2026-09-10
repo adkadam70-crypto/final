@@ -168,10 +168,11 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
       if (!container || !canvas) return
       // Square, sized mostly off viewport width (not container.clientWidth,
       // which would otherwise still be capped by max-w-5xl's ancestor). The
-      // 480px ceiling this used to have looked fine on a narrow test
-      // viewport but was way too conservative on an actual wide desktop
-      // monitor — bumped so it keeps growing on real screens instead of
-      // capping out early.
+      // 620 ceiling here is a safety cap only — landing.tsx's `width` prop
+      // (520) is the real limit in practice, sized down a bit from 620 to
+      // help the whole heading+globe+pills stack fit in one screen without
+      // scrolling now that there's a real gap between the heading and the
+      // globe.
       const side = Math.min(window.innerWidth * 0.55, 620, width)
       containerWidth = side
       containerHeight = side
