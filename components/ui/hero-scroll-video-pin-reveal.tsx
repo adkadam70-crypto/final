@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { SplitText } from 'gsap/SplitText'
+import Lenis from 'lenis'
 
 gsap.registerPlugin(ScrollTrigger, SplitText)
 
@@ -59,19 +60,17 @@ export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
   const tagRefs = useRef<(HTMLDivElement | null)[]>([])
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let lenis: any = null
-    let lenisTicker: ((time: number) => void) | null = null
-
-    import('lenis')
-      .then(({ default: Lenis }) => {
-        lenis = new Lenis({ smoothWheel: true })
-        lenis.on('scroll', ScrollTrigger.update)
-        lenisTicker = (time: number) => lenis!.raf(time * 1000)
-        gsap.ticker.add(lenisTicker)
-        gsap.ticker.lagSmoothing(0)
-      })
-      .catch(() => {})
+    // Static import (not the dynamic import('lenis') this used to be) so
+    // Lenis is ready the instant this effect runs — the dynamic import's
+    // network-fetch-then-init gap was exactly the "lag before I can scroll"
+    // window: native scroll worked immediately on page load, then Lenis
+    // took over mid-interaction once its chunk finally loaded, which felt
+    // like the page ignoring the first scroll attempts.
+    const lenis = new Lenis({ smoothWheel: true })
+    lenis.on('scroll', ScrollTrigger.update)
+    const lenisTicker = (time: number) => lenis.raf(time * 1000)
+    gsap.ticker.add(lenisTicker)
+    gsap.ticker.lagSmoothing(0)
 
     let split: SplitText | null = null
     let words: Element[] = []
@@ -148,10 +147,8 @@ export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
       revealTl.kill()
       mm.revert()
       ScrollTrigger.getAll().forEach((t) => t.kill())
-      if (lenis && lenisTicker) {
-        gsap.ticker.remove(lenisTicker)
-        lenis.destroy()
-      }
+      gsap.ticker.remove(lenisTicker)
+      lenis.destroy()
     }
   }, [])
 
