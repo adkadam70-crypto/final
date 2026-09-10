@@ -16,6 +16,10 @@ interface NavItem {
 interface NavBarProps {
   items: NavItem[]
   className?: string
+  // Tighter padding/icon/text sizing — used when the admin-only extra link
+  // (Build Your Dream) makes the full-size bar wide enough to crowd the
+  // logo on smaller desktop widths (see components/navbar.tsx).
+  compact?: boolean
 }
 
 // Adapted from the tubelight-navbar pattern: driven by the actual route
@@ -30,7 +34,7 @@ interface NavBarProps {
 // optimistic local override moves the lamp the instant a tab is clicked;
 // once the real navigation lands, pathname catches up and the effect clears
 // the override so back/forward and direct loads still reflect the true route.
-export function NavBar({ items, className }: NavBarProps) {
+export function NavBar({ items, className, compact }: NavBarProps) {
   const pathname = usePathname()
   const [optimisticUrl, setOptimisticUrl] = useState<string | null>(null)
 
@@ -41,7 +45,7 @@ export function NavBar({ items, className }: NavBarProps) {
   const activeUrl = optimisticUrl ?? pathname
 
   return (
-    <div className={cn('flex items-center gap-1 bg-muted/40 border border-border rounded-full p-1', className)}>
+    <div className={cn('flex items-center bg-muted/40 border border-border rounded-full p-1', compact ? 'gap-0.5' : 'gap-1', className)}>
       {items.map((item) => {
         const isActive = activeUrl === item.url
         return (
@@ -50,11 +54,12 @@ export function NavBar({ items, className }: NavBarProps) {
             href={item.url}
             onClick={() => setOptimisticUrl(item.url)}
             className={cn(
-              'relative flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-full transition-colors whitespace-nowrap',
+              'relative flex items-center font-medium rounded-full transition-colors whitespace-nowrap',
+              compact ? 'gap-1 text-xs px-2 py-1.5' : 'gap-1.5 text-sm px-3 py-2',
               isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
             )}
           >
-            <item.icon className="w-4 h-4 shrink-0" />
+            <item.icon className={compact ? 'w-3.5 h-3.5 shrink-0' : 'w-4 h-4 shrink-0'} />
             {item.name}
             {isActive && (
               <motion.div
