@@ -43,7 +43,7 @@ export function Navbar({ userName, userEmail }: { userName: string; userEmail: s
           last ~25% once the menu made the header much taller (Account
           settings / Sign out, at the bottom of the list). */}
       <nav
-        className="max-w-7xl mx-auto grid grid-cols-[1fr_auto_1fr] items-center gap-x-6 px-6 h-16"
+        className={cn('max-w-7xl mx-auto grid grid-cols-[1fr_auto_1fr] items-center px-6 h-16', isAdmin && 'gap-x-10')}
         style={{
           maskImage: 'linear-gradient(to bottom, black 75%, transparent 100%)',
           WebkitMaskImage: 'linear-gradient(to bottom, black 75%, transparent 100%)',
