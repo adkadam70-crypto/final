@@ -70,7 +70,16 @@ export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
     lenis.on('scroll', ScrollTrigger.update)
     const lenisTicker = (time: number) => lenis.raf(time * 1000)
     gsap.ticker.add(lenisTicker)
-    gsap.ticker.lagSmoothing(0)
+    // Deliberately NOT calling gsap.ticker.lagSmoothing(0) — that call
+    // disables GSAP's protection against exactly the symptom reported:
+    // when the ticker falls behind (e.g. while the page is still
+    // hydrating/loading chunks), lag smoothing normally spreads the
+    // catch-up out smoothly. Disabling it makes GSAP apply all the missed
+    // time in one jump the instant it gets a free frame instead — the
+    // background appears frozen, then suddenly "catches up" all at once,
+    // and scroll feels unresponsive until that jump happens. Leaving this
+    // at GSAP's default (enabled) lets it smooth over any startup jank
+    // instead of visibly lurching through it.
 
     // Everything below is deferred one frame: SplitText's DOM splitting plus
     // ScrollTrigger.create() with pin:true on a min-h-[160vh] section forces
