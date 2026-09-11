@@ -51,13 +51,21 @@ export function Landing() {
           // every later section (including the globe reveal's cards),
           // which is exactly what it shouldn't do.
           isReturningUser ? (
-            <div className="flex items-center gap-2 sm:gap-3">
-              <LiquidButton variant="glass" size="sm" onClick={() => router.push('/sign-in')}>
+            <div className="flex items-center gap-5 sm:gap-6">
+              <button
+                type="button"
+                onClick={() => router.push('/sign-in')}
+                className="text-sm font-semibold text-foreground/90 hover:text-foreground transition-colors"
+              >
                 Sign In
-              </LiquidButton>
-              <LiquidButton variant="glass" size="sm" onClick={() => router.push('/sign-up')}>
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push('/sign-up')}
+                className="text-sm font-semibold text-foreground/90 hover:text-foreground transition-colors"
+              >
                 Sign Up
-              </LiquidButton>
+              </button>
             </div>
           ) : undefined
         }
