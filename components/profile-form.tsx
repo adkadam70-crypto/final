@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useRef, useEffect } from 'react'
+import { useState, useTransition, useRef, useEffect, type Dispatch, type SetStateAction } from 'react'
 import Link from 'next/link'
 import { GraduationCap, Globe, Flame, Compass, Loader2, CheckCircle2, Award, ChevronDown, History, ArrowRight, Plus, X, BookOpen, Info } from 'lucide-react'
 import { saveProfile, type SaveProfileInput } from '@/app/actions/profile'
@@ -175,6 +175,154 @@ const PROJECT_EXAMPLES = [
   'A sustained hobby that shows genuine, long-term interest rather than a single entry',
 ]
 
+// Each of the three groups below used to be a single free-text field. Now
+// every group holds a repeatable list of activities, each with its own
+// type and description — closer to how Common App's real Activities list
+// works, and it lets a student log more than one honor/leadership
+// role/project without cramming them into one 200-char field.
+type ActivityEntry = { type: string; description: string }
+const emptyEntry = (): ActivityEntry => ({ type: '', description: '' })
+
+const HONORS_TYPES = ['Award or honor', 'Olympiad / competition', 'Scholarship', 'Certification', 'Published research or paper', 'Other']
+const SERVICE_TYPES = ['Leadership role', 'Volunteering / community service', 'Work experience / internship', 'Fundraiser or event organized', 'Other']
+const PROJECT_TYPES = ['Sport / athletics', 'Music, art, or performance', 'Personal project (app, writing, business)', 'Portfolio / exhibition / publication', 'Hobby or self-taught skill', 'Other']
+
+// Existing saved profiles have a flat string[] with no type info (the old
+// three-field form). Slots 0/1/2 map to the three groups in order, same as
+// before; anything beyond index 2 used to be silently dropped on every
+// resave (the old form only ever read/wrote 3 slots) — now it survives as
+// extra entries on the third group instead of vanishing.
+function entriesFromLegacy(extracurriculars: string[] | undefined, groupIndex: 0 | 1 | 2): ActivityEntry[] {
+  const list = extracurriculars ?? []
+  const first: ActivityEntry = { type: '', description: list[groupIndex] ?? '' }
+  if (groupIndex !== 2) return [first]
+  const extras = list.slice(3).filter(Boolean).map((description) => ({ type: '', description }))
+  return [first, ...extras]
+}
+
+function formatEntry(entry: ActivityEntry): string {
+  const description = entry.description.trim()
+  if (!description) return ''
+  return entry.type ? `${entry.type}: ${description}` : description
+}
+
+function wordCount(text: string): number {
+  const trimmed = text.trim()
+  return trimmed ? trimmed.split(/\s+/).length : 0
+}
+
+// A 50-word cap only makes sense counted in words, not characters — plain
+// maxLength on the textarea can't express that. Truncates rather than
+// blocking further typing mid-word, so it never feels like the field just
+// stopped responding.
+function capWords(text: string, max: number): string {
+  const words = text.split(/\s+/)
+  if (words.length <= max) return text
+  return words.slice(0, max).join(' ')
+}
+
+function ActivityGroupFields({
+  label,
+  types,
+  examples,
+  entries,
+  onChange,
+  onAdd,
+  onRemove,
+}: {
+  label: string
+  types: string[]
+  examples: string[]
+  entries: ActivityEntry[]
+  onChange: (idx: number, patch: Partial<ActivityEntry>) => void
+  onAdd: () => void
+  onRemove: (idx: number) => void
+}) {
+  return (
+    <div>
+      <label className="text-sm font-semibold text-foreground/90 block mb-2">{label}</label>
+      <div className="space-y-2.5">
+        {entries.map((entry, idx) => (
+          <div key={idx} className="bg-secondary/60 border border-border rounded-xl p-3 space-y-2">
+            <div className="flex items-center gap-2">
+              {/* Deliberately styled unlike the plain grey <select>s used
+                  elsewhere in this form (e.g. the grade/curriculum picker)
+                  — a rounded pill with an accent border/fill so this reads
+                  as "pick a category for this entry," not just another
+                  generic dropdown. */}
+              <select
+                value={entry.type}
+                onChange={(e) => onChange(idx, { type: e.target.value })}
+                className="shrink-0 max-w-[65%] bg-chart-2/10 border-2 border-chart-2/40 text-chart-2 rounded-full px-3 py-1.5 text-[11px] font-semibold focus:outline-none focus:border-chart-2"
+              >
+                <option value="">Type of activity…</option>
+                {types.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+              {entries.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => onRemove(idx)}
+                  aria-label="Remove this activity"
+                  className="ml-auto text-muted-foreground hover:text-destructive p-1"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            <textarea
+              rows={2}
+              placeholder="Describe this activity — what you did, for how long, and any impact"
+              value={entry.description}
+              onChange={(e) => onChange(idx, { description: capWords(e.target.value, 50) })}
+              className="w-full bg-secondary border border-border rounded-xl p-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-chart-2 resize-none"
+            />
+            <div className="text-[10px] text-muted-foreground/70 text-right">{wordCount(entry.description)}/50 words</div>
+          </div>
+        ))}
+      </div>
+      <div className="flex items-start justify-between gap-2 mt-1.5">
+        <ExamplesHint examples={examples} />
+        <button type="button" onClick={onAdd} className="shrink-0 text-[11px] font-semibold text-chart-2 hover:brightness-125 flex items-center gap-1">
+          <Plus className="w-3 h-3" /> Add another
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function ProfileCompletionRing({ percent }: { percent: number }) {
+  const size = 56
+  const stroke = 5
+  const radius = (size - stroke) / 2
+  const circumference = 2 * Math.PI * radius
+  const offset = circumference * (1 - percent / 100)
+  return (
+    <div className="shrink-0 flex flex-col items-center gap-1" title={`Profile ${percent}% complete`}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={radius} stroke="var(--border)" strokeWidth={stroke} fill="none" />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="var(--primary)"
+          strokeWidth={stroke}
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          className="transition-[stroke-dashoffset] duration-500"
+        />
+        <text x={size / 2} y={size / 2} dy="0.35em" textAnchor="middle" className="rotate-90 origin-center fill-foreground text-[13px] font-bold">
+          {percent}%
+        </text>
+      </svg>
+      <span className="text-[10px] text-muted-foreground font-medium">Profile complete</span>
+    </div>
+  )
+}
+
 function ExamplesHint({ examples }: { examples: string[] }) {
   return (
     <details className="group mt-1.5">
@@ -229,9 +377,14 @@ export function ProfileForm({
   const [preferredSector, setPreferredSector] = useState(latestProfile?.preferredSector ?? 'Tech Hub')
   const [preferredRank, setPreferredRank] = useState(latestProfile?.preferredRank ?? 'No preference')
   const [intendedField, setIntendedField] = useState(latestProfile?.intendedField ?? 'No preference')
-  const [ec1, setEc1] = useState(latestProfile?.extracurriculars?.[0] ?? '')
-  const [ec2, setEc2] = useState(latestProfile?.extracurriculars?.[1] ?? '')
-  const [ec3, setEc3] = useState(latestProfile?.extracurriculars?.[2] ?? '')
+  const [ec1, setEc1] = useState<ActivityEntry[]>(entriesFromLegacy(latestProfile?.extracurriculars, 0))
+  const [ec2, setEc2] = useState<ActivityEntry[]>(entriesFromLegacy(latestProfile?.extracurriculars, 1))
+  const [ec3, setEc3] = useState<ActivityEntry[]>(entriesFromLegacy(latestProfile?.extracurriculars, 2))
+  const activityHandlers = (setter: Dispatch<SetStateAction<ActivityEntry[]>>) => ({
+    onChange: (idx: number, patch: Partial<ActivityEntry>) => setter((entries) => entries.map((e, i) => (i === idx ? { ...e, ...patch } : e))),
+    onAdd: () => setter((entries) => [...entries, emptyEntry()]),
+    onRemove: (idx: number) => setter((entries) => entries.filter((_, i) => i !== idx)),
+  })
   const [apCourses, setApCourses] = useState<string[]>(latestProfile?.apCourses ?? [])
   const [apCourseInput, setApCourseInput] = useState('')
   const [showApSuggestions, setShowApSuggestions] = useState(false)
@@ -302,9 +455,9 @@ export function ProfileForm({
     setPreferredSector(p.preferredSector)
     setPreferredRank(p.preferredRank)
     setIntendedField(p.intendedField)
-    setEc1(p.extracurriculars?.[0] ?? '')
-    setEc2(p.extracurriculars?.[1] ?? '')
-    setEc3(p.extracurriculars?.[2] ?? '')
+    setEc1(entriesFromLegacy(p.extracurriculars, 0))
+    setEc2(entriesFromLegacy(p.extracurriculars, 1))
+    setEc3(entriesFromLegacy(p.extracurriculars, 2))
     setApCourses(p.apCourses ?? [])
     setStandardizedTests(p.standardizedTests ?? {})
     setNinthTenth(p.priorGrades?.ninthTenth ?? { curriculum: defaultNinthTenthCurriculum(p.curriculum as Curriculum), grade9: {}, grade10: {} })
@@ -326,7 +479,7 @@ export function ProfileForm({
       preferredSector,
       preferredRank,
       intendedField,
-      extracurriculars: [ec1, ec2, ec3].map((s) => s.trim()).filter(Boolean),
+      extracurriculars: [...ec1, ...ec2, ...ec3].map(formatEntry).filter(Boolean),
       apCourses,
     }
     startTransition(async () => {
@@ -361,18 +514,35 @@ export function ProfileForm({
 
   const onlyAustralia = targetCountries.length === 1 && targetCountries[0] === 'AU'
 
+  // A simple checklist across the sections below, not a weighted score —
+  // good enough to show real progress without pretending to judge quality.
+  const hasPriorGradeYear = (y: { percentage?: number; gpa?: number; ibAverage?: number; igcse?: unknown }) =>
+    y.percentage != null || y.gpa != null || y.ibAverage != null || y.igcse != null
+  const completionChecklist = [
+    targetCountries.length > 0,
+    Boolean(standardizedTests.satMath || standardizedTests.satReadingWriting || standardizedTests.act || standardizedTests.jeePercentile || standardizedTests.neetScore || standardizedTests.englishTestScore),
+    [...ec1, ...ec2, ...ec3].some((e) => e.description.trim().length > 0),
+    apCourses.length > 0,
+    hasPriorGradeYear(ninthTenth.grade9) || hasPriorGradeYear(ninthTenth.grade10) || eleventh !== null,
+    intendedField !== 'No preference',
+  ]
+  const completionPercent = Math.round((completionChecklist.filter(Boolean).length / completionChecklist.length) * 100)
+
   return (
     <main className="max-w-3xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-1">Your Profile</h1>
-        <p className="text-sm text-muted-foreground">Tell us about your academics and preferences. This powers your match results and university recommendations.</p>
+      <div className="mb-8 flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-1">Your Profile</h1>
+          <p className="text-sm text-muted-foreground">Tell us about your academics and preferences. This powers your match results and university recommendations.</p>
+        </div>
+        <ProfileCompletionRing percent={completionPercent} />
       </div>
 
-      <div className="space-y-5">
+      <div className="space-y-12">
         <HowWeAnalyze />
 
         <section className="bg-card border border-border rounded-3xl p-6">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-2"><Globe className="w-4 h-4 text-primary" /> Target countries</h2>
+          <h2 className="text-xl font-extrabold tracking-tight text-primary mb-1 flex items-center gap-2"><Globe className="w-5 h-5 text-primary" /> Target countries</h2>
           <p className="text-[11px] text-muted-foreground/70 mb-5">Select one or more — matches run across every country you pick.</p>
           {/* One continuous box — the map sits "behind" (a slightly deeper
               shade, no border of its own) and blends directly into the
@@ -400,7 +570,7 @@ export function ProfileForm({
         </section>
 
         <section className="bg-card border border-border rounded-3xl p-6">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2"><GraduationCap className="w-4 h-4 text-primary" /> Academics</h2>
+          <h2 className="text-xl font-extrabold tracking-tight text-primary mb-4 flex items-center gap-2"><GraduationCap className="w-5 h-5 text-primary" /> Academics</h2>
           <div className="space-y-4">
             <div>
               <label htmlFor="curriculum" className="text-xs text-muted-foreground block mb-2">Curriculum / board</label>
@@ -471,7 +641,7 @@ export function ProfileForm({
         </section>
 
         <section className="bg-card border border-border rounded-3xl p-6">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-2"><Award className="w-4 h-4 text-chart-4" /> Standardized tests</h2>
+            <h2 className="text-xl font-extrabold tracking-tight text-primary mb-1 flex items-center gap-2"><Award className="w-5 h-5 text-chart-4" /> Standardized tests</h2>
             <p className="text-[11px] text-muted-foreground/70 mb-4">These apply regardless of curriculum or target country. All optional.</p>
             <div className="space-y-4">
               <div>
@@ -561,40 +731,37 @@ export function ProfileForm({
 
         {!onlyAustralia && (
           <section className="bg-card border border-border rounded-3xl p-6">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2"><Flame className="w-4 h-4 text-chart-2" /> Extracurricular flexes</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="text-[11px] text-muted-foreground block mb-1.5">Honors & national-level achievements</label>
-                <input type="text" maxLength={200} placeholder="e.g. National Physics Olympiad medalist" value={ec1} onChange={(e) => setEc1(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-chart-2" />
-                <div className="flex items-start justify-between gap-2">
-                  <ExamplesHint examples={HONORS_EXAMPLES} />
-                  <div className="text-[10px] text-muted-foreground/70 shrink-0 mt-1.5">{ec1.length}/200</div>
-                </div>
-              </div>
-              <div>
-                <label className="text-[11px] text-muted-foreground block mb-1.5">Leadership, service & work experience</label>
-                <input type="text" maxLength={200} placeholder="e.g. 2 years volunteering with a local literacy NGO" value={ec2} onChange={(e) => setEc2(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-chart-2" />
-                <div className="flex items-start justify-between gap-2">
-                  <ExamplesHint examples={SERVICE_EXAMPLES} />
-                  <div className="text-[10px] text-muted-foreground/70 shrink-0 mt-1.5">{ec2.length}/200</div>
-                </div>
-              </div>
-              <div>
-                <label className="text-[11px] text-muted-foreground block mb-1.5">Creative pursuits, sports & personal projects</label>
-                <input type="text" maxLength={200} placeholder="e.g. 3 years on the school badminton team; built and published a personal app" value={ec3} onChange={(e) => setEc3(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-chart-2" />
-                <div className="flex items-start justify-between gap-2">
-                  <ExamplesHint examples={PROJECT_EXAMPLES} />
-                  <div className="text-[10px] text-muted-foreground/70 shrink-0 mt-1.5">{ec3.length}/200</div>
-                </div>
-              </div>
+            <h2 className="text-xl font-extrabold tracking-tight text-primary mb-4 flex items-center gap-2"><Flame className="w-5 h-5 text-chart-2" /> Extracurricular flexes</h2>
+            <div className="space-y-6">
+              <ActivityGroupFields
+                label="Honors & national-level achievements"
+                types={HONORS_TYPES}
+                examples={HONORS_EXAMPLES}
+                entries={ec1}
+                {...activityHandlers(setEc1)}
+              />
+              <ActivityGroupFields
+                label="Leadership, service & work experience"
+                types={SERVICE_TYPES}
+                examples={SERVICE_EXAMPLES}
+                entries={ec2}
+                {...activityHandlers(setEc2)}
+              />
+              <ActivityGroupFields
+                label="Creative pursuits, sports & personal projects"
+                types={PROJECT_TYPES}
+                examples={PROJECT_EXAMPLES}
+                entries={ec3}
+                {...activityHandlers(setEc3)}
+              />
             </div>
           </section>
         )}
 
         {suggestedActivities !== null && activities.length > 0 && (
           <section className="bg-card border border-border rounded-3xl p-6">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-2">
-              <Flame className="w-4 h-4 text-chart-5" /> Suggested activities
+            <h2 className="text-xl font-extrabold tracking-tight text-primary mb-1 flex items-center gap-2">
+              <Flame className="w-5 h-5 text-chart-5" /> Suggested activities
             </h2>
             <p className="text-[11px] text-muted-foreground mb-3">From your Build Your Dream roadmap — mark one completed to fold it into your extracurriculars above.</p>
             <ul className="space-y-1.5">
@@ -623,8 +790,8 @@ export function ProfileForm({
         )}
 
         <section className="bg-card border border-border rounded-3xl p-6">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-2">
-            <BookOpen className="w-4 h-4 text-chart-2" /> AP courses taken
+          <h2 className="text-xl font-extrabold tracking-tight text-primary mb-1 flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-chart-2" /> AP courses taken
             <button
               type="button"
               onClick={() => setShowApInfo((v) => !v)}
@@ -716,7 +883,7 @@ export function ProfileForm({
         </section>
 
         <section className="bg-card border border-border rounded-3xl p-6">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2"><Compass className="w-4 h-4 text-chart-4" /> Climate, sector & ranking</h2>
+          <h2 className="text-xl font-extrabold tracking-tight text-primary mb-4 flex items-center gap-2"><Compass className="w-5 h-5 text-chart-4" /> Climate, sector & ranking</h2>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label htmlFor="climate" className="text-[11px] text-muted-foreground block mb-1">Preferred climate</label>
