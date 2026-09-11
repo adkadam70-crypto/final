@@ -10,6 +10,7 @@ import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { dreamProfiles, dreamCountryProfiles, dreamUniversityTracks, profileSuggestedActivities, aiRateLimitLog } from '@/lib/db/schema'
 import { PER_UNIVERSITY_TASK_TEMPLATE } from '@/lib/common-app-sections'
+import { INDIA_PER_UNIVERSITY_TASK_TEMPLATE } from '@/lib/india-application-sections'
 import { getUserId } from '@/lib/get-user-id'
 import { getClientIp } from '@/lib/request-fingerprint'
 import { getLatestProfile, appendExtracurricularToProfile } from '@/app/actions/profile'
@@ -592,7 +593,11 @@ export async function addUniversityToDreamList(
     return { success: false, message: 'Your session has expired — please sign in again.' }
   }
   try {
-    const tasks = [...PER_UNIVERSITY_TASK_TEMPLATE, ...schoolSpecificTasks].filter((t, i, arr) => arr.indexOf(t) === i)
+    // India has no shared application, so the US Common-App-specific
+    // baseline (FERPA release, self-reported courses & grades) is
+    // meaningless there — swap in the India-specific baseline instead.
+    const baselineTasks = country === 'IN' ? INDIA_PER_UNIVERSITY_TASK_TEMPLATE : PER_UNIVERSITY_TASK_TEMPLATE
+    const tasks = [...baselineTasks, ...schoolSpecificTasks].filter((t, i, arr) => arr.indexOf(t) === i)
     await db
       .insert(dreamUniversityTracks)
       .values({ userId, country, universityId, universityName, strengths, weaknesses, tasks, acceptanceProbability, matchTier, universityImageUrl: imageUrl, universityLink: link })

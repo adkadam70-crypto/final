@@ -22,6 +22,7 @@ import { DreamUniversitySearch } from '@/components/dream-university-search'
 import { mergeChecklistProgress, overallCompletionPct, getSectionCoverage } from '@/lib/dream-checklist'
 import { APPLICATION_INFO } from '@/lib/application-info'
 import { COMMON_APP_SECTIONS, COMMON_APP_ESSAY_PROMPTS, PER_UNIVERSITY_TASK_DETAILS } from '@/lib/common-app-sections'
+import { getIndiaApplicationSections, type IndiaApplicationSection, INDIA_PER_UNIVERSITY_TASK_DETAILS } from '@/lib/india-application-sections'
 import { LoadingDots } from '@/components/loading-dots'
 import type { StandardizedTests } from '@/lib/standardized-tests'
 
@@ -109,10 +110,15 @@ export function DreamCountryWorkspace({
   const hasProfile = !!profile?.academicDetail
 
   // US gets the real, researched Common App section list (see
-  // lib/common-app-sections.ts) instead of the generic per-country
-  // requirements text every other country still uses — that generic list
-  // stays the fallback until the same research pass is done for them too.
-  const checklistDefs = country === 'US' ? COMMON_APP_SECTIONS.map((s) => s.label) : (countryInfo?.requirements ?? [])
+  // lib/common-app-sections.ts); India gets its own researched, program-
+  // aware section list (lib/india-application-sections.ts) — which exact
+  // exams/requirements apply depends heavily on the student's target field
+  // (engineering vs. medicine vs. law vs. a general CUET-gated seat), so
+  // this varies per user rather than being one fixed list the way the US
+  // one is. Every other country still falls back to the generic flat
+  // requirements text until the same research pass is done for them too.
+  const indiaSections = country === 'IN' ? getIndiaApplicationSections(confirmedField, profile?.curriculum) : null
+  const checklistDefs = country === 'US' ? COMMON_APP_SECTIONS.map((s) => s.label) : indiaSections ? indiaSections.map((s) => s.label) : (countryInfo?.requirements ?? [])
 
   const checklistItems =
     checklistDefs.length && profile
@@ -450,7 +456,7 @@ export function DreamCountryWorkspace({
           <section className="bg-card border border-border rounded-3xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-chart-2" /> {country === 'US' ? 'Common App checklist' : 'Application checklist'}
+                <CheckCircle2 className="w-4 h-4 text-chart-2" /> {country === 'US' ? 'Common App checklist' : country === 'IN' ? 'India application checklist' : 'Application checklist'}
               </h2>
               <span className="text-xs font-bold text-primary">{commonAppCompletionPct}%</span>
             </div>
@@ -465,7 +471,14 @@ export function DreamCountryWorkspace({
             {checklistItems.length > 0 ? (
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {checklistItems.map(({ requirement, progress, autoDetected }) => {
-                  const sectionInfo = COMMON_APP_SECTIONS.find((s) => s.label === requirement)
+                  const sectionInfo = COMMON_APP_SECTIONS.find((s) => s.label === requirement) ?? indiaSections?.find((s) => s.label === requirement)
+                  // The two section models carry slightly different extra
+                  // fields (US has an `example` + essay archive links,
+                  // India has a `furtherReading` list of official exam
+                  // sites) — normalized here so the render below doesn't
+                  // need to branch by which model produced this section.
+                  const sectionExample = sectionInfo && 'example' in sectionInfo ? sectionInfo.example : undefined
+                  const sectionLinks = sectionInfo ? ('essayExampleLinks' in sectionInfo ? sectionInfo.essayExampleLinks : (sectionInfo as IndiaApplicationSection).furtherReading) : undefined
                   const coverage = profile ? getSectionCoverage(requirement, { standardizedTests: profile.standardizedTests, extracurriculars: profile.extracurriculars, curriculum: profile.curriculum, apCourses: profile.apCourses }) : null
                   const expanded = expandedSection === requirement
                   return (
@@ -589,13 +602,13 @@ export function DreamCountryWorkspace({
                           <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
                             {sectionInfo.whatToInclude.map((w, i) => <li key={i}>{w}</li>)}
                           </ul>
-                          {sectionInfo.example && (
-                            <p className="text-xs text-muted-foreground/80 italic pt-1 border-t border-border/60 mt-1.5">{sectionInfo.example}</p>
+                          {sectionExample && (
+                            <p className="text-xs text-muted-foreground/80 italic pt-1 border-t border-border/60 mt-1.5">{sectionExample}</p>
                           )}
-                          {sectionInfo.essayExampleLinks && sectionInfo.essayExampleLinks.length > 0 && (
+                          {sectionLinks && sectionLinks.length > 0 && (
                             <div className="pt-1.5 border-t border-border/60 space-y-1">
-                              <p className="text-xs font-semibold text-primary uppercase tracking-wider">Real essay examples</p>
-                              {sectionInfo.essayExampleLinks.map((l) => (
+                              <p className="text-xs font-semibold text-primary uppercase tracking-wider">{country === 'US' ? 'Real essay examples' : 'Official sources'}</p>
+                              {sectionLinks.map((l) => (
                                 <a key={l.url} href={l.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-sm text-primary hover:brightness-125">
                                   <ExternalLink className="w-3 h-3 shrink-0" /> {l.label}
                                 </a>
@@ -733,7 +746,7 @@ export function DreamCountryWorkspace({
                         <ul className="space-y-2">
                           {track.tasks.map((task) => {
                             const taskDone = (track.taskProgress[task] ?? 0) >= 100
-                            const detail = PER_UNIVERSITY_TASK_DETAILS[task]
+                            const detail = PER_UNIVERSITY_TASK_DETAILS[task] ?? INDIA_PER_UNIVERSITY_TASK_DETAILS[task]
                             return (
                               <li key={task}>
                                 <button

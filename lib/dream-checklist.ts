@@ -35,7 +35,11 @@ export function computeAutoChecklistProgress(requirement: string, profile: Check
   if (r === 'education') return 100 // reaching this feature already requires a filled-in academic profile
   if (r === 'profile' || r === 'family' || r === 'writing') return null // no matching master-profile field — manual
 
-  if (r.includes('jee')) return t.jeePercentile !== undefined ? 100 : 0
+  // "jee main"/"jee advanced" specifically, not a bare "jee" substring —
+  // NCHM JEE (hotel management) is a completely unrelated exam that also
+  // contains the letters "jee" and must NOT be treated as satisfied by an
+  // engineering jeePercentile field.
+  if (r.includes('jee main') || r.includes('jee advanced')) return t.jeePercentile !== undefined ? 100 : 0
   if (r.includes('neet')) return t.neetScore !== undefined ? 100 : 0
   if (r.includes('cuet')) return null // no dedicated CUET field on the profile yet
   if (r.includes('sat') || r.includes('act')) return hasSat || hasAct ? 100 : 0
