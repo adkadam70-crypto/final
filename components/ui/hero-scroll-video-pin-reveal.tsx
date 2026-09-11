@@ -4,7 +4,6 @@ import React, { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { SplitText } from 'gsap/SplitText'
-import Lenis from 'lenis'
 
 gsap.registerPlugin(ScrollTrigger, SplitText)
 
@@ -32,14 +31,6 @@ export interface HeroScrollRevealProps {
   /** Rendered after the bottom text — e.g. sign in / sign up CTAs. */
   children?: React.ReactNode
   className?: string
-  /**
-   * Gates when Lenis (smooth scroll) is allowed to start. Defaults to true
-   * (start immediately) for any other caller of this component — the
-   * landing page passes its own "has the WebGL background actually drawn a
-   * frame yet" signal instead. See the long comment on the Lenis effect
-   * below for why this exists.
-   */
-  readyToScroll?: boolean
 }
 
 export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
@@ -54,69 +45,35 @@ export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
   bottomText,
   children,
   className = '',
-  readyToScroll = true,
 }) => {
   const benefitRef = useRef<HTMLDivElement>(null)
   const paraRef = useRef<HTMLParagraphElement>(null)
   const tagRefs = useRef<(HTMLDivElement | null)[]>([])
 
-  // Lenis's `smoothWheel: true` works by calling preventDefault() on every
-  // wheel/touch event and driving the actual scroll position itself via its
-  // own rAF-ticked animation — the instant `new Lenis()` exists, NATIVE
-  // scroll stops working entirely and Lenis's own animation is the only
-  // thing that can move the page from then on, AND — this is the part an
-  // earlier attempt here missed — Lenis's programmatic scrolling isn't
-  // blocked by CSS `overflow: hidden` the way native scroll is, so once
-  // Lenis exists it can't be locked out by a simple CSS guard either. A
-  // requestIdleCallback-deferred start (this component's previous
-  // approach) reduced how often this got hit but was still a timing bet:
-  // on a slow enough device, some OTHER mount effect on this page (the
-  // WebGL shader background, the globe's data fetch + d3 projection setup)
-  // could still be running when the browser reports "idle" by its own
-  // heuristic, or when the user starts scrolling — Lenis would already be
-  // capturing input but unable to keep up, so scrolling did nothing until
-  // the thread freed up, then everything queued caught up in one jump.
-  // ("frozen, then suddenly three pages down" — reported as still
-  // happening with that approach.)
-  //
-  // Tying this directly to readyToScroll instead removes the guesswork:
-  // Lenis simply does not get constructed — does not exist, cannot
-  // intercept a single event — until the caller confirms real readiness.
-  // Combined with landing.tsx's overflow:hidden lock (effective here
-  // specifically because there's no Lenis yet to bypass it), there is no
-  // window where scroll is captured-but-stuck: it's either genuine native
-  // scroll (blocked pre-ready, working post-ready) or, once ready, Lenis.
+  // No Lenis (smooth-scroll library) here anymore — it worked by calling
+  // preventDefault() on every wheel/touch event and driving scroll itself
+  // via its own rAF-ticked animation, which meant if the main thread was
+  // ever busy with anything else on this page (the old WebGL background,
+  // the globe's data fetch, this component's own setup below) right when
+  // Lenis had already captured input but couldn't yet respond, scrolling
+  // did nothing until the thread freed up, then jumped to catch up all at
+  // once. Multiple attempts to precisely time around that (deferring
+  // Lenis's start, gating it behind an explicit readiness signal) reduced
+  // it but never fully eliminated it on real devices. Removing Lenis
+  // removes the mechanism, not just the timing: plain native browser
+  // scroll is compositor-driven, always responsive regardless of JS load,
+  // and ScrollTrigger below works against it natively without needing
+  // Lenis at all — the trade is losing Lenis's custom eased-momentum feel
+  // in exchange for scrolling that simply cannot freeze or jump.
   useEffect(() => {
-    if (!readyToScroll) return
-    const lenis = new Lenis({ smoothWheel: true })
-    lenis.on('scroll', ScrollTrigger.update)
-    const lenisTicker = (time: number) => lenis.raf(time * 1000)
-    gsap.ticker.add(lenisTicker)
-    return () => {
-      gsap.ticker.remove(lenisTicker)
-      lenis.destroy()
-    }
-  }, [readyToScroll])
-
-  useEffect(() => {
-    // Deliberately NOT calling gsap.ticker.lagSmoothing(0) — that call
-    // disables GSAP's protection against a ticker that falls behind (e.g.
-    // while the page is still hydrating/loading chunks): lag smoothing
-    // normally spreads a catch-up out smoothly instead of applying all the
-    // missed time in one jump. Left at GSAP's default (enabled) as a
-    // second line of defense on top of the idle-deferred Lenis start above.
-
-    // Everything below is deferred one frame: SplitText's DOM splitting plus
-    // ScrollTrigger.create() with pin:true on a min-h-[160vh] section forces
-    // GSAP to synchronously measure the whole document's layout to compute
-    // pin start/end offsets. Running that inline in the mount effect was
-    // real main-thread blocking work landing right on top of the page's
-    // first paint — during that window the WebGL background visibly froze
-    // and scroll input went nowhere until it finished, then everything
-    // "caught up" at once. Letting the browser paint first (rAF) and doing
-    // this setup a frame later removes that block from the critical path;
-    // the extra frame of delay before the reveal-on-scroll effect is armed
-    // is imperceptible.
+    // Everything below is deferred one frame: SplitText's DOM splitting
+    // plus ScrollTrigger.create() forces GSAP to synchronously measure
+    // layout to compute its start/end offsets. Running that inline in the
+    // mount effect was real main-thread blocking work landing right on top
+    // of the page's first paint. Letting the browser paint first (rAF) and
+    // doing this setup a frame later removes that block from the critical
+    // path; the extra frame of delay before the reveal-on-scroll effect is
+    // armed is imperceptible.
     let split: SplitText | null = null
     let revealTl: gsap.core.Timeline | null = null
     let cancelled = false
