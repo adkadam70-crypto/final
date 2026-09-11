@@ -11,19 +11,22 @@ import { marigold } from '@/lib/fonts'
 import { AppLogo } from '@/components/app-logo'
 import { useIsReturningUser } from '@/lib/returning-user'
 
-// Real-device reports of the landing page freezing on load, with scroll
-// input either going nowhere or getting queued and dumped all at once,
-// persisted across multiple targeted fixes (deferring Lenis, removing
-// Lenis and the WebGL background entirely, shrinking the JS bundle) — none
-// of which resolved it, which means the earlier theories about exactly
-// which library was at fault were wrong, or at least incomplete. Rather
-// than keep guessing at a specific mechanism, this blocks ALL input —
-// scroll AND clicks — outright until `window.load` fires (every resource:
-// scripts, fonts, images) plus a settle buffer for React/GSAP to finish
-// hydrating and wiring up ScrollTrigger, then unblocks unconditionally.
-// This is a blunt, brute-force gate rather than a precise one, deliberately
-// — a guaranteed-correct wait beats another clever-but-wrong timing theory.
-const LOAD_SETTLE_MS = 500
+// A previous version of this gate waited for `window.load` — every
+// resource on the page, including fonts and images — before letting the
+// user interact at all. That's network-bound, not CPU-bound: on a slow
+// connection it can legitimately take several seconds, and for that whole
+// window input was blocked by design. That wasn't a bug in the gate, it
+// was the gate being far more conservative than the actual problem needed.
+//
+// The actual problem it was guarding against was Lenis's scroll capture —
+// removed entirely in an earlier change (see hero-scroll-video-pin-reveal.tsx).
+// Native scroll doesn't need this gate at all: it's compositor-driven and
+// stays responsive regardless of how busy the JS thread is, with no
+// library able to "capture but not respond" to it. What's still worth a
+// brief guard is stray CLICKS landing on something before React has
+// finished hydrating and attached real handlers — a much shorter, CPU-bound
+// wait (two animation frames: one for React to commit, one for the browser
+// to actually paint it), not a network-bound one.
 
 const FEATURE_TAGS: TagItem[] = [
   { text: 'US · UK · AU · SG · HK · India · Germany · France', background: 'var(--primary)', color: 'var(--primary-foreground)' },
@@ -43,65 +46,42 @@ export function Landing() {
   const overlayRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    let settleTimer: number
-    const armSettleTimer = () => {
-      settleTimer = window.setTimeout(() => setReady(true), LOAD_SETTLE_MS)
-    }
-    // document.readyState is already 'complete' if `load` fired before this
-    // effect ran (e.g. a fast cached reload) — the event won't fire again,
-    // so this has to be checked explicitly rather than only listening.
-    if (document.readyState === 'complete') {
-      armSettleTimer()
-      return () => window.clearTimeout(settleTimer)
-    }
-    window.addEventListener('load', armSettleTimer)
+    let raf1 = 0
+    let raf2 = 0
+    raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => setReady(true))
+    })
     return () => {
-      window.removeEventListener('load', armSettleTimer)
-      window.clearTimeout(settleTimer)
+      cancelAnimationFrame(raf1)
+      cancelAnimationFrame(raf2)
     }
   }, [])
 
   useEffect(() => {
     if (ready) return
-    const html = document.documentElement
-    const prevOverflow = html.style.overflow
-    html.style.overflow = 'hidden'
-    return () => {
-      html.style.overflow = prevOverflow
-    }
-  }, [ready])
-
-  useEffect(() => {
-    if (ready) return
     const el = overlayRef.current
     if (!el) return
-    // Real (non-React-synthetic) listeners, not JSX onWheel/onTouchMove —
-    // React attaches those as passive by default for wheel/touch, which
-    // silently makes preventDefault() a no-op. {passive:false} here is
-    // what actually lets this block the gesture rather than just observe
-    // it. overflow:hidden above covers most browsers on its own, but touch
-    // scroll handling is inconsistent enough across mobile browsers that
-    // this is real, not just redundant belt-and-suspenders.
+    // Clicks only — native scroll doesn't need blocking (see the comment
+    // above), so no overflow:hidden and no wheel/touchmove listeners here
+    // anymore. The overlay still blocks clicks purely by being the topmost
+    // element in the DOM hit-test for the ~2 frames it exists.
     const block = (e: Event) => {
       e.preventDefault()
       e.stopPropagation()
     }
-    el.addEventListener('wheel', block, { passive: false })
-    el.addEventListener('touchmove', block, { passive: false })
+    el.addEventListener('click', block, { capture: true })
     return () => {
-      el.removeEventListener('wheel', block)
-      el.removeEventListener('touchmove', block)
+      el.removeEventListener('click', block, { capture: true })
     }
   }, [ready])
 
   return (
     <main className="min-h-svh text-foreground">
-      {/* Blocks scroll (wheel/touch, see the effect above) and blocks every
-          click from reaching anything underneath purely by sitting on top
-          of it in the DOM — no click handler needed for that part, a
-          covering element already intercepts the hit-test. Transparent:
-          the page (including the moving background) is still visible
-          loading underneath, this only stops interaction with it. */}
+      {/* Exists for two animation frames only, purely to stop a stray click
+          landing on something before hydration has attached real handlers
+          — see the comment above. Transparent: the page (including the
+          moving background) is already visible underneath immediately,
+          this only briefly stops interaction with it. */}
       {!ready && <div ref={overlayRef} className="fixed inset-0 z-[9999]" aria-hidden="true" />}
       {/* Fixed (not scrolled-with-content) so one shader instance covers the
           entire page — every section below is transparent so this shows

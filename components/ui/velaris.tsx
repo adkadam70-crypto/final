@@ -168,8 +168,17 @@ const Velaris = ({
       bg: gl.getUniformLocation(program, "u_bg"),
     };
 
+    // Real-device reports of scrolling feeling laggy for the WHOLE page,
+    // not just at load — this is a full-viewport shader running every
+    // frame for as long as the page is open, and fragment-shader cost
+    // scales with pixel count. A capped-at-2 devicePixelRatio meant a
+    // 2x-density phone screen was rendering 4x the pixels of a 1x screen
+    // for content that's a soft blurred noise gradient — sharpness that
+    // buys nothing here, since there's no fine detail to resolve. Capping
+    // lower cuts real per-frame GPU work specifically on the higher-DPI
+    // phones most likely to be running a discrete/lower-power GPU too.
     const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio, 2);
+      const dpr = Math.min(window.devicePixelRatio, 1);
       canvas.width = container.clientWidth * dpr;
       canvas.height = container.clientHeight * dpr;
       gl.viewport(0, 0, canvas.width, canvas.height);
@@ -191,8 +200,21 @@ const Velaris = ({
     const bgRgb = hexToRgb(bg);
     const colorsFlat = new Float32Array(colors.slice(0, 4).flatMap(hexToRgb));
 
+    // Throttled to ~30fps instead of every rAF tick (typically 60-120fps on
+    // modern displays) — this is a slow ambient noise drift, not something
+    // that benefits from matching the display's full refresh rate, and
+    // halving (or more) the draw-call frequency directly halves this
+    // component's ongoing main-thread + GPU cost for as long as the page
+    // stays open, competing less with scroll compositing the whole time
+    // rather than only around initial load.
+    const FRAME_INTERVAL_MS = 1000 / 30;
     let raf: number;
+    let lastDrawTime = 0;
     const render = (t: number) => {
+      raf = requestAnimationFrame(render);
+      if (t - lastDrawTime < FRAME_INTERVAL_MS) return;
+      lastDrawTime = t;
+
       gl.uniform2f(locs.res, canvas.width, canvas.height);
       gl.uniform1f(locs.time, t * 0.001 * speed);
       gl.uniform1f(locs.grain, grain);
@@ -200,7 +222,6 @@ const Velaris = ({
       gl.uniform3fv(locs.colors, colorsFlat);
 
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-      raf = requestAnimationFrame(render);
     };
 
     raf = requestAnimationFrame(render);
