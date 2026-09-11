@@ -36,17 +36,37 @@ interface RotatingEarthProps {
   width?: number
   height?: number
   className?: string
+  // External [lng, lat]-derived rotation (see the render()-side `center`
+  // convention: rotation = [-lng, -lat]) that overrides auto-rotate and
+  // drag while set — the phase-2 scroll reveal drives this frame-by-frame
+  // to settle the globe on a specific region instead of spinning freely.
+  controlledRotation?: [number, number] | null
+  // Multiplies the whole globe's opacity — used to fade it out at the end
+  // of the phase-2 reveal, handing off visually to the stat cards.
+  opacity?: number
+  // Disables drag-to-rotate and hover labels — set false while a
+  // controlledRotation is driving the globe so a stray drag can't fight it.
+  interactive?: boolean
 }
 
 // Toggle to bring the country-to-country dotted lines back — off for now
 // while trying the see-through halftone look on its own.
 const SHOW_CONNECTOR_LINES = false
 
-export default function RotatingEarth({ width = 800, height = 600, className = '' }: RotatingEarthProps) {
+export default function RotatingEarth({ width = 800, height = 600, className = '', controlledRotation = null, opacity = 1, interactive = true }: RotatingEarthProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  // Persists across the main effect's lifetime (which only re-runs on
+  // width/height change) so the separate controlledRotation effect below
+  // can reach into the same live projection/rotation/render the main
+  // effect owns, without lifting the whole canvas setup out of that effect.
+  const rotationRef = useRef<[number, number]>([0, 0])
+  const projectionRef = useRef<d3.GeoProjection | null>(null)
+  const renderRef = useRef<(() => void) | null>(null)
+  const controlledRotationRef = useRef(controlledRotation)
+  controlledRotationRef.current = controlledRotation
 
   useEffect(() => {
     const container = containerRef.current
@@ -81,11 +101,12 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
 
     const projection = d3.geoOrthographic().clipAngle(90)
     const path = d3.geoPath().projection(projection).context(context)
+    projectionRef.current = projection
 
     let landFeatures: d3.ExtendedFeatureCollection | null = null
     let landDots: [number, number][] = []
     let countryFeatures: d3.ExtendedFeatureCollection | null = null
-    const rotation: [number, number] = [0, 0]
+    const rotation = rotationRef.current
     let hoveredCountry: string | null = null
     let hoverScreenPos: [number, number] | null = null
 
@@ -393,6 +414,7 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
         context.textAlign = 'left'
       }
     }
+    renderRef.current = render
 
     async function loadWorldData() {
       try {
@@ -500,7 +522,7 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
     let autoRotate = false
     const rotationSpeed = 0.42
     const rotationTimer = d3.timer(() => {
-      if (!autoRotate) return
+      if (!autoRotate || controlledRotationRef.current) return
       rotation[0] += rotationSpeed
       projection.rotate(rotation)
       render()
@@ -601,10 +623,16 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
       render()
     }
 
-    canvas.addEventListener('mousedown', handleMouseDown)
-    canvas.addEventListener('mousemove', handleHoverMove)
-    canvas.addEventListener('mouseleave', handleHoverLeave)
-    canvas.addEventListener('touchstart', handleTouchStart, { passive: true })
+    // interactive is meant to be fixed per globe instance (the hero globe
+    // is always interactive, the phase-2 reveal globe never is) — it's in
+    // this effect's deps below purely so a change re-runs setup cleanly,
+    // not because toggling it mid-lifecycle is an expected use case.
+    if (interactive) {
+      canvas.addEventListener('mousedown', handleMouseDown)
+      canvas.addEventListener('mousemove', handleHoverMove)
+      canvas.addEventListener('mouseleave', handleHoverLeave)
+      canvas.addEventListener('touchstart', handleTouchStart, { passive: true })
+    }
     window.addEventListener('resize', resize)
     // Deliberately no ResizeObserver here: this container sits inside the
     // hero's GSAP/ScrollTrigger-pinned section, which toggles the pinned
@@ -627,7 +655,19 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
       window.removeEventListener('resize', resize)
       void dragging
     }
-  }, [width, height])
+  }, [width, height, interactive])
+
+  // Drives the globe directly to an external rotation whenever it changes
+  // (every frame, if the caller updates it every frame) — bypasses
+  // auto-rotate/drag entirely while set. Reaches into the main effect's
+  // live projection/render via refs rather than owning its own copy.
+  useEffect(() => {
+    if (!controlledRotation) return
+    rotationRef.current[0] = controlledRotation[0]
+    rotationRef.current[1] = controlledRotation[1]
+    projectionRef.current?.rotate(rotationRef.current)
+    renderRef.current?.()
+  }, [controlledRotation])
 
   if (error) {
     return (
@@ -649,8 +689,8 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
     // fighting the max-w-5xl ancestor's width cap). No rounded
     // corners/overflow-hidden either: the globe is already a circle, a
     // rounded-rect crop on top of it only clips the poles.
-    <div ref={containerRef} className={`relative mx-auto bg-transparent ${className}`}>
-      <canvas ref={canvasRef} className="cursor-grab active:cursor-grabbing bg-transparent" />
+    <div ref={containerRef} className={`relative mx-auto bg-transparent ${className}`} style={{ opacity }}>
+      <canvas ref={canvasRef} className={`bg-transparent ${interactive ? 'cursor-grab active:cursor-grabbing' : ''}`} />
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">Loading globe…</div>
       )}
@@ -658,8 +698,9 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
           No pill background/border: that previously sat flush against the
           circle's own bottom edge and read as a square frame around the
           whole globe. Zoom is fixed (no controls), so this is just the one
-          remaining interaction. */}
-      <div className="mt-3 text-center text-[11px] text-muted-foreground/60">Drag to rotate</div>
+          remaining interaction — hidden entirely on the non-interactive
+          phase-2 reveal globe, since there's nothing to drag there. */}
+      {interactive && <div className="mt-3 text-center text-[11px] text-muted-foreground/60">Drag to rotate</div>}
     </div>
   )
 }

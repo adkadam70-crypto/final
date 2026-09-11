@@ -3,9 +3,9 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { HeroScrollVideoReveal, type TagItem } from '@/components/ui/hero-scroll-video-pin-reveal'
+import { GlobeFocusReveal } from '@/components/globe-focus-reveal'
 import { LiquidButton } from '@/components/ui/liquid-glass-button'
 import Velaris from '@/components/ui/velaris'
-import RotatingEarth from '@/components/ui/wireframe-dotted-globe'
 import { marigold } from '@/lib/fonts'
 import { AppLogo } from '@/components/app-logo'
 
@@ -14,52 +14,6 @@ const FEATURE_TAGS: TagItem[] = [
   { text: '970+ real universities', background: 'var(--chart-5)', color: '#ffffff' },
   { text: 'Tiered acceptance odds', background: 'var(--chart-2)', color: '#1a1a1a' },
   { text: 'Bias-checked analysis', background: 'var(--chart-3)', color: '#ffffff' },
-]
-
-// Real names pulled from this app's own university catalog — spans all eight
-// supported countries. Kept as a static list (not a DB fetch) since this is
-// a purely decorative background field, not data the user can act on.
-const CENTERPIECE_UNIVERSITIES = [
-  'Stanford University',
-  'MIT',
-  'University of Oxford',
-  'National University of Singapore',
-  'University of Hong Kong',
-  'Indian Institute of Technology Delhi',
-  'Harvard University',
-  'University of Cambridge',
-  'University of Melbourne',
-  'Nanyang Technological University',
-  'Imperial College London',
-  'Technical University of Munich',
-  'Princeton University',
-  'University College London',
-  'Australian National University',
-  'Hong Kong University of Science and Technology',
-  'Yale University',
-  'University of Edinburgh',
-  'University of Sydney',
-  'Indian Institute of Technology Bombay',
-  'Columbia University',
-  'London School of Economics',
-  'University of New South Wales',
-  'Chinese University of Hong Kong',
-  'University of Delhi',
-  'Cornell University',
-  'University of Manchester',
-  'Monash University',
-  'Sciences Po',
-  'University of California, Berkeley',
-  'Duke University',
-  'University of Chicago',
-  'Sorbonne University',
-  'Johns Hopkins University',
-  'University of Pennsylvania',
-  'Ludwig Maximilian University of Munich',
-  'Northwestern University',
-  'Heidelberg University',
-  'École Polytechnique',
-  'Humboldt University of Berlin',
 ]
 
 export function Landing() {
@@ -75,34 +29,34 @@ export function Landing() {
           DOM order (this first, real content after) stacks correctly
           without fighting that. */}
       <Velaris height="100vh" className="fixed inset-0" />
-      {/* Fixed, not scrolled-with-content, so sign in/up stay reachable from
-          anywhere on the page without scrolling back to the bottom CTAs.
-          Wrapped in its own blurred backdrop pill — plain text with no
-          background here used to visibly overlap/clash with whatever
-          heading text scrolled underneath it, especially on mobile where
-          the heading wraps to 4 lines and reaches right up to this corner. */}
-      <div className="fixed top-4 sm:top-6 right-4 sm:right-6 z-50 flex items-center gap-2 sm:gap-3 bg-background/70 backdrop-blur-md border border-border rounded-full pl-3 pr-1.5 py-1.5 sm:pl-4 sm:pr-2 sm:py-2">
-        <Link
-          href="/sign-in"
-          className="text-sm font-semibold text-foreground/90 hover:text-primary transition-colors px-2 py-1.5"
-        >
-          Sign In
-        </Link>
-        <Link
-          href="/sign-up"
-          className="inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-semibold px-4 py-1.5 sm:py-2 shadow-lg hover:-translate-y-0.5 transition-all"
-        >
-          Sign Up
-        </Link>
-      </div>
       <HeroScrollVideoReveal
         topBrand={
           <div className="flex items-center gap-2.5">
             <AppLogo className="h-8 w-auto sm:h-9" />
             {/* Wordmark hidden below sm — at mobile widths this, plus the
-                fixed Sign In/Sign Up pill on the right, don't both fit
-                without overlapping. Icon alone is enough for the corner. */}
+                Sign In/Sign Up pill on the right, don't both fit without
+                overlapping. Icon alone is enough for the corner. */}
             <span className="hidden sm:inline text-2xl font-bold tracking-tight">Shortlisted</span>
+          </div>
+        }
+        topRight={
+          // Lives only on this first screen and scrolls away with it —
+          // it used to be page-level `fixed`, which kept it pinned over
+          // every later section (including the globe reveal's cards),
+          // which is exactly what it shouldn't do.
+          <div className="flex items-center gap-2 sm:gap-3 bg-background/70 backdrop-blur-md border border-border rounded-full pl-3 pr-1.5 py-1.5 sm:pl-4 sm:pr-2 sm:py-2">
+            <Link
+              href="/sign-in"
+              className="text-sm font-semibold text-foreground/90 hover:text-primary transition-colors px-2 py-1.5"
+            >
+              Sign In
+            </Link>
+            <Link
+              href="/sign-up"
+              className="inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-semibold px-4 py-1.5 sm:py-2 shadow-lg hover:-translate-y-0.5 transition-all"
+            >
+              Sign Up
+            </Link>
           </div>
         }
         topText={
@@ -119,10 +73,9 @@ export function Landing() {
             Across eight countries.
           </span>
         }
-        aboveTags={<RotatingEarth width={520} height={520} className="mb-6 sm:mb-8" />}
         tags={FEATURE_TAGS}
         subText="Every recommendation is grounded in real selectivity data for real universities — not vibes, and not guesswork."
-        centerpieceNames={CENTERPIECE_UNIVERSITIES}
+        afterBenefit={<GlobeFocusReveal />}
         bottomText={
           <span className={marigold.className}>
             Stop guessing.
