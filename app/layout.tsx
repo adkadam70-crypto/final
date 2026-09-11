@@ -1,7 +1,6 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
-import { AuthSessionTracker } from '@/components/auth-session-tracker'
 import './globals.css'
 
 const geistSans = Geist({
@@ -54,7 +53,6 @@ export default function RootLayout({
       className={`dark bg-background ${geistSans.variable} ${geistMono.variable}`}
     >
       <body className="font-sans antialiased">
-        <AuthSessionTracker />
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

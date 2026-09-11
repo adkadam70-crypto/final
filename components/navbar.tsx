@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { LayoutDashboard, User, Search, Bookmark, LogOut, Menu, X, BookOpenCheck, Settings, ShieldCheck, Sparkles } from 'lucide-react'
 import { authClient } from '@/lib/auth-client'
+import { useMarkReturningUser } from '@/lib/returning-user'
 import { cn } from '@/lib/utils'
 import { ProfileMenu } from '@/components/profile-menu'
 import { AppLogo } from '@/components/app-logo'
@@ -27,6 +28,11 @@ const DREAM_NAV_LINK = { href: '/dream', label: 'Build Your Dream', icon: Sparkl
 export function Navbar({ userName, userEmail }: { userName: string; userEmail: string }) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
+  // Rendering here at all already proves a real, server-confirmed session
+  // (see the getSession()/redirect in every layout that mounts Navbar) —
+  // marks this browser as "has signed in before" for the landing page's
+  // returning-user Sign In/Sign Up pill.
+  useMarkReturningUser()
   const isAdmin = userEmail === ADMIN_EMAIL
   const NAV_LINKS = isAdmin ? [BASE_NAV_LINKS[0], BASE_NAV_LINKS[1], DREAM_NAV_LINK, ...BASE_NAV_LINKS.slice(2)] : BASE_NAV_LINKS
 
