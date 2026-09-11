@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import RotatingEarth from '@/components/ui/wireframe-dotted-globe'
 import { marigold } from '@/lib/fonts'
 
@@ -99,9 +99,16 @@ function clamp01(v: number) {
 const GLOBE_SIZE = 540
 const LOCKED_SCALE = 0.92
 // wireframe-dotted-globe's own resize() draws the sphere at
-// `radius = side/2.08` — mirrored here so the leader lines' hub point lands
-// exactly on the globe's real rendered edge instead of a guessed offset.
-const GLOBE_RADIUS_PX = (GLOBE_SIZE / 2.08) * LOCKED_SCALE
+// `radius = side/2.08`, where `side = min(innerWidth * 0.55, 620, width)` —
+// on any viewport narrower than ~980px that min() kicks in and the globe
+// renders smaller than GLOBE_SIZE, so the radius has to be recomputed from
+// the live viewport width (not assumed fixed) or the leader lines' hub
+// point lands past the globe's real edge, leaving a visible gap.
+function edgeReachPercentAt(viewportWidth: number) {
+  const side = Math.min(viewportWidth * 0.55, 620, GLOBE_SIZE)
+  const radiusPx = (side / 2.08) * LOCKED_SCALE
+  return (radiusPx / viewportWidth) * 100
+}
 const CARD_WIDTH_PX = 176 // matches the card's own w-40/sm:w-44 below
 
 const leftCards = CARDS.filter((c) => c.side === 'left')
@@ -137,7 +144,18 @@ export function GlobeFocusReveal() {
   const labelRef = useRef<HTMLDivElement>(null)
   const lineRefs = useRef<Record<string, SVGGElement | null>>({})
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({})
-  const edgeReachRef = useRef((GLOBE_RADIUS_PX / 1280) * 100)
+  // This has to be state, not a ref: it feeds the SVG polyline points
+  // computed at render time below, and a ref mutation alone (the original
+  // bug here) never triggers that re-render — onResize() would update the
+  // ref correctly, but the lines stayed frozen at their initial value on
+  // every viewport that wasn't exactly 1280px wide, which is what produced
+  // the visible gap between the lines and the globe. Resize is rare enough
+  // that re-rendering here doesn't reintroduce the scroll-jank this section
+  // otherwise avoids by writing scroll-driven styles straight to refs.
+  // 1280px is just an SSR-safe placeholder — corrected for the real
+  // viewport by onResize() below before the first paint that shows the
+  // lines.
+  const [edgeReach, setEdgeReach] = useState(edgeReachPercentAt(1280))
 
   useEffect(() => {
     let raf = 0
@@ -170,7 +188,7 @@ export function GlobeFocusReveal() {
       raf = requestAnimationFrame(apply)
     }
     const onResize = () => {
-      if (window.innerWidth > 0) edgeReachRef.current = (GLOBE_RADIUS_PX / window.innerWidth) * 100
+      if (window.innerWidth > 0) setEdgeReach(edgeReachPercentAt(window.innerWidth))
       onScroll()
     }
     onResize()
@@ -185,12 +203,6 @@ export function GlobeFocusReveal() {
 
   const originX = 50
   const originY = 40
-  // Horizontal distance (viewBox %) from center to the globe's own edge —
-  // both lines on a side start from this exact same point. Read from a ref
-  // (kept current on resize) rather than state, since it only ever feeds
-  // an SVG attribute computed at render time, not something that needs to
-  // re-render the component on its own.
-  const edgeReach = edgeReachRef.current
   const cardOffset = 3 // % gap from the screen edge to the card's outer edge
   const cardWidthPct = (CARD_WIDTH_PX / 1280) * 100
   // Dot sits right at the card's inner edge (the edge facing the globe) —
@@ -198,8 +210,33 @@ export function GlobeFocusReveal() {
   const cardInnerEdge = cardOffset + cardWidthPct
 
   return (
-    <div ref={wrapperRef} className="relative h-[460vh]">
-      <div className="sticky top-0 h-screen overflow-hidden flex items-start justify-center">
+    <div ref={wrapperRef} className="relative h-auto sm:h-[460vh]">
+      {/* Mobile (<sm): the desktop layout below packs the globe plus two
+          176px card columns into the viewport width — on a ~375px phone
+          that's wider than the screen itself, so cards had no room and
+          stacked on top of each other. Below sm we drop the scroll-jacked
+          hub-and-spoke layout entirely and render the same six cards as a
+          plain, non-absolute 2-column grid under a smaller static globe —
+          normal document flow, so nothing fights for space. */}
+      <div className="sm:hidden px-4 py-16 flex flex-col items-center gap-8">
+        <RotatingEarth width={240} height={240} interactive={false} />
+        <div className={`text-base font-bold tracking-tight text-foreground ${marigold.className}`}>Our Network</div>
+        <div className="grid grid-cols-2 gap-3 w-full">
+          {CARDS.map((card) => (
+            <div key={card.id} className="rounded-lg overflow-hidden border border-white/10 bg-neutral-900 shadow-xl">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={card.image} alt={card.label} className="w-full h-16 object-cover" loading="lazy" />
+              <div className="px-2.5 py-2">
+                <div className="text-xs font-bold text-white">{card.label}</div>
+                <div className="text-[11px] font-semibold text-primary">{card.stat}</div>
+                <p className="mt-0.5 text-[10px] leading-snug text-white/60 line-clamp-2">{card.blurb}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="hidden sm:flex sticky top-0 h-screen overflow-hidden items-start justify-center">
         <svg className="absolute inset-0 w-full h-full pointer-events-none z-0" viewBox="0 0 100 100" preserveAspectRatio="none">
           {(['left', 'right'] as const).map((side) => {
             const dir = side === 'right' ? 1 : -1

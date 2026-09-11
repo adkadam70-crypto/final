@@ -8,6 +8,7 @@ import { LiquidButton } from '@/components/ui/liquid-glass-button'
 import Velaris from '@/components/ui/velaris'
 import { marigold } from '@/lib/fonts'
 import { AppLogo } from '@/components/app-logo'
+import { useIsReturningUser } from '@/lib/returning-user'
 
 const FEATURE_TAGS: TagItem[] = [
   { text: 'US · UK · AU · SG · HK · India · Germany · France', background: 'var(--primary)', color: 'var(--primary-foreground)' },
@@ -18,6 +19,11 @@ const FEATURE_TAGS: TagItem[] = [
 
 export function Landing() {
   const router = useRouter()
+  // First-time visitors never see the top-right Sign In/Sign Up pill — it's
+  // only for returning users who have an account and are currently signed
+  // out (see lib/returning-user.ts). New visitors still get Sign In/Get
+  // Started further down, once they've scrolled to the bottom CTA.
+  const isReturningUser = useIsReturningUser()
   return (
     <main className="min-h-svh text-foreground">
       {/* Fixed (not scrolled-with-content) so one shader instance covers the
@@ -44,20 +50,16 @@ export function Landing() {
           // it used to be page-level `fixed`, which kept it pinned over
           // every later section (including the globe reveal's cards),
           // which is exactly what it shouldn't do.
-          <div className="flex items-center gap-2 sm:gap-3 bg-background/70 backdrop-blur-md border border-border rounded-full pl-3 pr-1.5 py-1.5 sm:pl-4 sm:pr-2 sm:py-2">
-            <Link
-              href="/sign-in"
-              className="text-sm font-semibold text-foreground/90 hover:text-primary transition-colors px-2 py-1.5"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/sign-up"
-              className="inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-semibold px-4 py-1.5 sm:py-2 shadow-lg hover:-translate-y-0.5 transition-all"
-            >
-              Sign Up
-            </Link>
-          </div>
+          isReturningUser ? (
+            <div className="flex items-center gap-2 sm:gap-3">
+              <LiquidButton variant="glass" size="sm" onClick={() => router.push('/sign-in')}>
+                Sign In
+              </LiquidButton>
+              <LiquidButton variant="glass" size="sm" onClick={() => router.push('/sign-up')}>
+                Sign Up
+              </LiquidButton>
+            </div>
+          ) : undefined
         }
         topText={
           <span className={marigold.className}>

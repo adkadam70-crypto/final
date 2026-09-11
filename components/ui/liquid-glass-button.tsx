@@ -28,6 +28,11 @@ const liquidButtonVariants = cva(
         // streaky smear across the button face instead of a clean edge.
         default:
           'bg-[linear-gradient(180deg,#202020_0%,#000000_100%)] hover:scale-[1.03] duration-300 transition text-foreground hover:shadow-[0_0_0_2px_var(--primary)]',
+        // Plain frosted glass — no solid black fill, no primary-color glow
+        // ring. Just a faint white tint over whatever's behind it (so the
+        // liquid-distortion filter reads as glass, not as a dark pill) that
+        // brightens slightly on hover.
+        glass: 'bg-white/10 hover:bg-white/15 hover:scale-[1.03] duration-300 transition text-foreground border border-white/15',
       },
       size: {
         default: 'h-11 px-10 has-[>svg]:px-4',
