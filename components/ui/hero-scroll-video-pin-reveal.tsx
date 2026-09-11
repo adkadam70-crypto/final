@@ -32,6 +32,14 @@ export interface HeroScrollRevealProps {
   /** Rendered after the bottom text — e.g. sign in / sign up CTAs. */
   children?: React.ReactNode
   className?: string
+  /**
+   * Gates when Lenis (smooth scroll) is allowed to start. Defaults to true
+   * (start immediately) for any other caller of this component — the
+   * landing page passes its own "has the WebGL background actually drawn a
+   * frame yet" signal instead. See the long comment on the Lenis effect
+   * below for why this exists.
+   */
+  readyToScroll?: boolean
 }
 
 export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
@@ -46,55 +54,51 @@ export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
   bottomText,
   children,
   className = '',
+  readyToScroll = true,
 }) => {
   const benefitRef = useRef<HTMLDivElement>(null)
   const paraRef = useRef<HTMLParagraphElement>(null)
   const tagRefs = useRef<(HTMLDivElement | null)[]>([])
 
+  // Lenis's `smoothWheel: true` works by calling preventDefault() on every
+  // wheel/touch event and driving the actual scroll position itself via its
+  // own rAF-ticked animation — the instant `new Lenis()` exists, NATIVE
+  // scroll stops working entirely and Lenis's own animation is the only
+  // thing that can move the page from then on, AND — this is the part an
+  // earlier attempt here missed — Lenis's programmatic scrolling isn't
+  // blocked by CSS `overflow: hidden` the way native scroll is, so once
+  // Lenis exists it can't be locked out by a simple CSS guard either. A
+  // requestIdleCallback-deferred start (this component's previous
+  // approach) reduced how often this got hit but was still a timing bet:
+  // on a slow enough device, some OTHER mount effect on this page (the
+  // WebGL shader background, the globe's data fetch + d3 projection setup)
+  // could still be running when the browser reports "idle" by its own
+  // heuristic, or when the user starts scrolling — Lenis would already be
+  // capturing input but unable to keep up, so scrolling did nothing until
+  // the thread freed up, then everything queued caught up in one jump.
+  // ("frozen, then suddenly three pages down" — reported as still
+  // happening with that approach.)
+  //
+  // Tying this directly to readyToScroll instead removes the guesswork:
+  // Lenis simply does not get constructed — does not exist, cannot
+  // intercept a single event — until the caller confirms real readiness.
+  // Combined with landing.tsx's overflow:hidden lock (effective here
+  // specifically because there's no Lenis yet to bypass it), there is no
+  // window where scroll is captured-but-stuck: it's either genuine native
+  // scroll (blocked pre-ready, working post-ready) or, once ready, Lenis.
   useEffect(() => {
-    // Lenis's `smoothWheel: true` works by calling preventDefault() on
-    // wheel/touch input and driving the actual scroll position itself via
-    // its own rAF-ticked animation — so the instant `new Lenis()` exists,
-    // NATIVE scroll stops working entirely and Lenis's own animation is the
-    // only thing that can move the page. That's fine once the page is
-    // actually idle, but this component mounts alongside several other
-    // heavy first-paint effects on the landing page (the WebGL shader
-    // background, the globe's data fetch + d3 projection setup, this
-    // component's own SplitText/ScrollTrigger work below) — if the main
-    // thread is still busy with any of that when the user starts
-    // scrolling, Lenis has already blocked native scroll but can't run its
-    // own rAF-driven animation to replace it either, so scrolling does
-    // NOTHING until the thread frees up — then Lenis's animation (or GSAP's
-    // lag-smoothing catch-up) jumps to reflect everything that was queued,
-    // which reads as "frozen, then suddenly three pages down." This was
-    // reported as still happening even with lagSmoothing left enabled and
-    // the SplitText/ScrollTrigger work deferred a frame (see below) — those
-    // only address ScrollTrigger's own resync, not Lenis's wheel capture
-    // happening before the thread is actually free.
-    //
-    // requestIdleCallback (falling back to a short timeout on Safari, which
-    // has no requestIdleCallback) delays constructing Lenis — and therefore
-    // delays it ever intercepting a single wheel event — until the browser
-    // reports it's genuinely idle, not just "one frame later." Native
-    // scroll works completely normally the whole time up to that point, so
-    // there is no freeze-then-jump window at all: the user either gets
-    // normal native scroll, or (once idle) Lenis's smooth scroll, never a
-    // gap where neither is running.
-    let lenis: Lenis | null = null
-    let lenisTicker: ((time: number) => void) | null = null
-    let lenisCancelled = false
-
-    const startLenis = () => {
-      if (lenisCancelled) return
-      lenis = new Lenis({ smoothWheel: true })
-      lenis.on('scroll', ScrollTrigger.update)
-      lenisTicker = (time: number) => lenis!.raf(time * 1000)
-      gsap.ticker.add(lenisTicker)
+    if (!readyToScroll) return
+    const lenis = new Lenis({ smoothWheel: true })
+    lenis.on('scroll', ScrollTrigger.update)
+    const lenisTicker = (time: number) => lenis.raf(time * 1000)
+    gsap.ticker.add(lenisTicker)
+    return () => {
+      gsap.ticker.remove(lenisTicker)
+      lenis.destroy()
     }
+  }, [readyToScroll])
 
-    const ric: typeof requestIdleCallback | undefined = typeof window !== 'undefined' ? window.requestIdleCallback : undefined
-    const idleId = ric ? ric(startLenis, { timeout: 1500 }) : window.setTimeout(startLenis, 200)
-
+  useEffect(() => {
     // Deliberately NOT calling gsap.ticker.lagSmoothing(0) — that call
     // disables GSAP's protection against a ticker that falls behind (e.g.
     // while the page is still hydrating/loading chunks): lag smoothing
@@ -170,15 +174,10 @@ export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
 
     return () => {
       cancelled = true
-      lenisCancelled = true
-      if (ric && typeof window.cancelIdleCallback === 'function') window.cancelIdleCallback(idleId as number)
-      else window.clearTimeout(idleId as number)
       cancelAnimationFrame(setupId)
       split?.revert()
       revealTl?.kill()
       ScrollTrigger.getAll().forEach((t) => t.kill())
-      if (lenisTicker) gsap.ticker.remove(lenisTicker)
-      lenis?.destroy()
     }
   }, [])
 

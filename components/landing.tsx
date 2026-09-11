@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { HeroScrollVideoReveal, type TagItem } from '@/components/ui/hero-scroll-video-pin-reveal'
@@ -9,6 +10,24 @@ import Velaris from '@/components/ui/velaris'
 import { marigold } from '@/lib/fonts'
 import { AppLogo } from '@/components/app-logo'
 import { useIsReturningUser } from '@/lib/returning-user'
+
+// Real-device reports: the page loads, the WebGL background sits frozen for
+// a beat, and scrolling during that window either does nothing or suddenly
+// jumps several screens down once things catch up. Earlier fixes (deferring
+// Lenis's construction behind requestIdleCallback, shrinking the JS bundle)
+// reduced how *likely* that window is to get hit, but they were still bets
+// against a timing race — on a slow enough device/network, some other
+// mount effect (the globe's data fetch, GSAP/SplitText setup) can still be
+// running when the user starts scrolling. Instead of continuing to guess
+// at budgets, this locks scrolling outright (via overflow:hidden on <html>)
+// until Velaris's onReady fires — the one concrete signal that the
+// background has actually drawn a real frame, which is also the visual cue
+// a user is watching for. SAFETY_TIMEOUT_MS unlocks scrolling regardless
+// after a beat, in case onReady is somehow never called (e.g. an
+// unanticipated WebGL failure mode Velaris's own onReady fallbacks don't
+// cover) — never trading a rare freeze-then-jump for an even worse
+// permanently-unscrollable page.
+const SAFETY_TIMEOUT_MS = 2500
 
 const FEATURE_TAGS: TagItem[] = [
   { text: 'US · UK · AU · SG · HK · India · Germany · France', background: 'var(--primary)', color: 'var(--primary-foreground)' },
@@ -24,6 +43,20 @@ export function Landing() {
   // out (see lib/returning-user.ts). New visitors still get Sign In/Get
   // Started further down, once they've scrolled to the bottom CTA.
   const isReturningUser = useIsReturningUser()
+  const [bgReady, setBgReady] = useState(false)
+
+  useEffect(() => {
+    if (bgReady) return
+    const html = document.documentElement
+    const prevOverflow = html.style.overflow
+    html.style.overflow = 'hidden'
+    const safety = window.setTimeout(() => setBgReady(true), SAFETY_TIMEOUT_MS)
+    return () => {
+      html.style.overflow = prevOverflow
+      window.clearTimeout(safety)
+    }
+  }, [bgReady])
+
   return (
     <main className="min-h-svh text-foreground">
       {/* Fixed (not scrolled-with-content) so one shader instance covers the
@@ -34,8 +67,9 @@ export function Landing() {
           renders behind that root paint instead of in front of it. Plain
           DOM order (this first, real content after) stacks correctly
           without fighting that. */}
-      <Velaris height="100vh" className="fixed inset-0" />
+      <Velaris height="100vh" className="fixed inset-0" onReady={() => setBgReady(true)} />
       <HeroScrollVideoReveal
+        readyToScroll={bgReady}
         topBrand={
           <div className="flex items-center gap-2.5">
             <AppLogo className="h-8 w-auto sm:h-9" />
