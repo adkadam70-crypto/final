@@ -1,7 +1,18 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import * as d3 from 'd3'
+// Named imports from the specific d3 submodules actually used, instead of
+// `import * as d3 from 'd3'` — the full `d3` meta-package bundles dozens of
+// unrelated submodules (d3-scale, d3-shape, d3-force, d3-drag, d3-zoom,
+// d3-selection, and more), none of which this component touches, and a
+// namespace import like the old one pulls all of it into this page's JS
+// bundle since bundlers can't reliably tree-shake through `d3.foo` property
+// access. This is the landing page's globe — real weight added to the exact
+// bundle that has to be parsed and executed before the page becomes
+// interactive.
+import { geoArea, geoCentroid, geoContains, geoDistance, geoGraticule, geoInterpolate, geoOrthographic, geoPath } from 'd3-geo'
+import type { ExtendedFeatureCollection, GeoProjection } from 'd3-geo'
+import { timer } from 'd3-timer'
 
 interface CountryMarker {
   name: string
@@ -63,7 +74,7 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
   // can reach into the same live projection/rotation/render the main
   // effect owns, without lifting the whole canvas setup out of that effect.
   const rotationRef = useRef<[number, number]>([0, 0])
-  const projectionRef = useRef<d3.GeoProjection | null>(null)
+  const projectionRef = useRef<GeoProjection | null>(null)
   const renderRef = useRef<(() => void) | null>(null)
   const controlledRotationRef = useRef(controlledRotation)
   controlledRotationRef.current = controlledRotation
@@ -99,13 +110,13 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
     let containerHeight = 0
     let radius = 0
 
-    const projection = d3.geoOrthographic().clipAngle(90)
-    const path = d3.geoPath().projection(projection).context(context)
+    const projection = geoOrthographic().clipAngle(90)
+    const path = geoPath().projection(projection).context(context)
     projectionRef.current = projection
 
-    let landFeatures: d3.ExtendedFeatureCollection | null = null
+    let landFeatures: ExtendedFeatureCollection | null = null
     let landDots: [number, number][] = []
-    let countryFeatures: d3.ExtendedFeatureCollection | null = null
+    let countryFeatures: ExtendedFeatureCollection | null = null
     const rotation = rotationRef.current
     let hoveredCountry: string | null = null
     let hoverScreenPos: [number, number] | null = null
@@ -118,7 +129,7 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
       // for points outside the circle, just not a meaningful one).
       if (Math.hypot(mx - containerWidth / 2, my - containerHeight / 2) > radius) return null
       for (const feature of countryFeatures.features) {
-        if (d3.geoContains(feature, lngLat)) {
+        if (geoContains(feature, lngLat)) {
           const geoName = feature.properties?.name as string | undefined
           if (!geoName) continue
           return GEO_NAME_TO_DISPLAY_NAME[geoName] ?? geoName
@@ -139,7 +150,7 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
     // orthographic projection's clipping to hide the part that dips behind
     // the globe instead of drawing straight through it.
     function greatCircleLine(a: [number, number], b: [number, number]) {
-      const interpolate = d3.geoInterpolate(a, b)
+      const interpolate = geoInterpolate(a, b)
       const steps = 48
       const coordinates = Array.from({ length: steps + 1 }, (_, i) => interpolate(i / steps))
       return { type: 'LineString' as const, coordinates }
@@ -165,7 +176,7 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
       for (const name of remaining) {
         const a = countryPoints.get(current)!
         const b = countryPoints.get(name)!
-        const dist = d3.geoDistance(a, b)
+        const dist = geoDistance(a, b)
         if (dist < nearestDist) {
           nearestDist = dist
           nearest = name
@@ -252,7 +263,7 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
         context.clip('evenodd')
 
         context.beginPath()
-        path(d3.geoGraticule()())
+        path(geoGraticule()())
         context.strokeStyle = colors.land
         context.globalAlpha = 0.35
         context.lineWidth = 1 * scaleFactor
@@ -297,7 +308,7 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
         context.fillStyle = colors.land
         context.globalAlpha = 0.55
         landDots.forEach(([lng, lat]) => {
-          if (d3.geoDistance([lng, lat], dotCenter) >= Math.PI / 2) return
+          if (geoDistance([lng, lat], dotCenter) >= Math.PI / 2) return
           const projected = projection([lng, lat])
           if (!projected) return
           context.beginPath()
@@ -434,7 +445,7 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
         // instead of the full ~4.7MB 50m world dataset.
         const countryResponse = await fetch('/ne-50m-our-countries.json')
         if (countryResponse.ok) {
-          const raw: d3.ExtendedFeatureCollection = await countryResponse.json()
+          const raw: ExtendedFeatureCollection = await countryResponse.json()
           // UK, Hong Kong, and Singapore are all MultiPolygons with small
           // outlying islets included — at globe scale those rendered as
           // stray unconnected green flecks with no visible link to the
@@ -448,7 +459,7 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
               let largest = polygons[0]
               let largestArea = 0
               for (const polygon of polygons) {
-                const area = d3.geoArea({ type: 'Polygon', coordinates: polygon })
+                const area = geoArea({ type: 'Polygon', coordinates: polygon })
                 if (area > largestArea) {
                   largestArea = area
                   largest = polygon
@@ -466,7 +477,7 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
             if (!geoName) return
             const displayName = GEO_NAME_TO_DISPLAY_NAME[geoName] ?? geoName
             if (!countryPoints.has(displayName)) return
-            countryPoints.set(displayName, d3.geoCentroid(feature))
+            countryPoints.set(displayName, geoCentroid(feature))
           })
           rebuildConnectionLines()
 
@@ -481,8 +492,8 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
             for (let lng = -180; lng <= 180; lng += step) {
               for (let lat = -85; lat <= 85; lat += step) {
                 const point: [number, number] = [lng, lat]
-                if (!d3.geoContains(landFeatures, point)) continue
-                const inHighlighted = countryFeatures!.features.some((f) => d3.geoContains(f, point))
+                if (!geoContains(landFeatures, point)) continue
+                const inHighlighted = countryFeatures!.features.some((f) => geoContains(f, point))
                 if (!inHighlighted) dots.push(point)
               }
             }
@@ -501,7 +512,7 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
             const displayName = geoName ? (GEO_NAME_TO_DISPLAY_NAME[geoName] ?? geoName) : undefined
             const factor = displayName ? INFLATE[displayName] : undefined
             if (!factor || feature.geometry?.type !== 'Polygon') return feature
-            const [cx, cy] = d3.geoCentroid(feature)
+            const [cx, cy] = geoCentroid(feature)
             const coordinates = feature.geometry.coordinates.map((ring) =>
               ring.map((position) => [cx + (position[0] - cx) * factor, cy + (position[1] - cy) * factor]),
             )
@@ -521,7 +532,7 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
     // as the user scrolls it into view instead of spinning the whole time.
     let autoRotate = false
     const rotationSpeed = 0.42
-    const rotationTimer = d3.timer(() => {
+    const rotationTimer = timer(() => {
       if (!autoRotate || controlledRotationRef.current) return
       rotation[0] += rotationSpeed
       projection.rotate(rotation)
