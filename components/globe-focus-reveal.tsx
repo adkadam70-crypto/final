@@ -159,7 +159,20 @@ export function GlobeFocusReveal() {
 
   useEffect(() => {
     let raf = 0
+    // Without this, the scroll handler below ran on EVERY scroll event for
+    // the whole page lifetime — a forced layout read (getBoundingClientRect)
+    // plus 8 style writes, on every single scroll frame, even while the
+    // user is still scrolling through the hero section far above this one,
+    // where progress is always 0 and none of it has any visible effect yet.
+    // That's real per-frame cost stacked on top of Lenis/GSAP's own scroll
+    // work happening at the same time in the hero section — exactly the
+    // kind of thing that shows up as "scrolling feels laggy" before this
+    // section is even reached. Gate the expensive work to only run once
+    // this section is actually near the viewport, same pattern already
+    // used for the globe's own auto-rotation (wireframe-dotted-globe.tsx).
+    let inRange = false
     const apply = () => {
+      if (!inRange) return
       const el = wrapperRef.current
       if (!el) return
       const rect = el.getBoundingClientRect()
@@ -184,6 +197,7 @@ export function GlobeFocusReveal() {
       }
     }
     const onScroll = () => {
+      if (!inRange) return
       cancelAnimationFrame(raf)
       raf = requestAnimationFrame(apply)
     }
@@ -194,9 +208,23 @@ export function GlobeFocusReveal() {
     onResize()
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', onResize)
+    // rootMargin extends the trigger zone by one viewport-height above and
+    // below the real viewport, so this arms itself just before the section
+    // actually scrolls into view (no visible pop/lag on arrival) and stays
+    // armed slightly after leaving, instead of flipping on the instant it
+    // touches the viewport edge.
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        inRange = entry.isIntersecting
+        if (inRange) onScroll() // catch up immediately once back in range
+      },
+      { rootMargin: '100% 0px 100% 0px' },
+    )
+    if (wrapperRef.current) observer.observe(wrapperRef.current)
     return () => {
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onResize)
+      observer.disconnect()
       cancelAnimationFrame(raf)
     }
   }, [])
