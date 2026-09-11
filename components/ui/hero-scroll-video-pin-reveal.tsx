@@ -52,26 +52,55 @@ export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
   const tagRefs = useRef<(HTMLDivElement | null)[]>([])
 
   useEffect(() => {
-    // Static import (not the dynamic import('lenis') this used to be) so
-    // Lenis is ready the instant this effect runs — the dynamic import's
-    // network-fetch-then-init gap was exactly the "lag before I can scroll"
-    // window: native scroll worked immediately on page load, then Lenis
-    // took over mid-interaction once its chunk finally loaded, which felt
-    // like the page ignoring the first scroll attempts.
-    const lenis = new Lenis({ smoothWheel: true })
-    lenis.on('scroll', ScrollTrigger.update)
-    const lenisTicker = (time: number) => lenis.raf(time * 1000)
-    gsap.ticker.add(lenisTicker)
+    // Lenis's `smoothWheel: true` works by calling preventDefault() on
+    // wheel/touch input and driving the actual scroll position itself via
+    // its own rAF-ticked animation — so the instant `new Lenis()` exists,
+    // NATIVE scroll stops working entirely and Lenis's own animation is the
+    // only thing that can move the page. That's fine once the page is
+    // actually idle, but this component mounts alongside several other
+    // heavy first-paint effects on the landing page (the WebGL shader
+    // background, the globe's data fetch + d3 projection setup, this
+    // component's own SplitText/ScrollTrigger work below) — if the main
+    // thread is still busy with any of that when the user starts
+    // scrolling, Lenis has already blocked native scroll but can't run its
+    // own rAF-driven animation to replace it either, so scrolling does
+    // NOTHING until the thread frees up — then Lenis's animation (or GSAP's
+    // lag-smoothing catch-up) jumps to reflect everything that was queued,
+    // which reads as "frozen, then suddenly three pages down." This was
+    // reported as still happening even with lagSmoothing left enabled and
+    // the SplitText/ScrollTrigger work deferred a frame (see below) — those
+    // only address ScrollTrigger's own resync, not Lenis's wheel capture
+    // happening before the thread is actually free.
+    //
+    // requestIdleCallback (falling back to a short timeout on Safari, which
+    // has no requestIdleCallback) delays constructing Lenis — and therefore
+    // delays it ever intercepting a single wheel event — until the browser
+    // reports it's genuinely idle, not just "one frame later." Native
+    // scroll works completely normally the whole time up to that point, so
+    // there is no freeze-then-jump window at all: the user either gets
+    // normal native scroll, or (once idle) Lenis's smooth scroll, never a
+    // gap where neither is running.
+    let lenis: Lenis | null = null
+    let lenisTicker: ((time: number) => void) | null = null
+    let lenisCancelled = false
+
+    const startLenis = () => {
+      if (lenisCancelled) return
+      lenis = new Lenis({ smoothWheel: true })
+      lenis.on('scroll', ScrollTrigger.update)
+      lenisTicker = (time: number) => lenis!.raf(time * 1000)
+      gsap.ticker.add(lenisTicker)
+    }
+
+    const ric: typeof requestIdleCallback | undefined = typeof window !== 'undefined' ? window.requestIdleCallback : undefined
+    const idleId = ric ? ric(startLenis, { timeout: 1500 }) : window.setTimeout(startLenis, 200)
+
     // Deliberately NOT calling gsap.ticker.lagSmoothing(0) — that call
-    // disables GSAP's protection against exactly the symptom reported:
-    // when the ticker falls behind (e.g. while the page is still
-    // hydrating/loading chunks), lag smoothing normally spreads the
-    // catch-up out smoothly. Disabling it makes GSAP apply all the missed
-    // time in one jump the instant it gets a free frame instead — the
-    // background appears frozen, then suddenly "catches up" all at once,
-    // and scroll feels unresponsive until that jump happens. Leaving this
-    // at GSAP's default (enabled) lets it smooth over any startup jank
-    // instead of visibly lurching through it.
+    // disables GSAP's protection against a ticker that falls behind (e.g.
+    // while the page is still hydrating/loading chunks): lag smoothing
+    // normally spreads a catch-up out smoothly instead of applying all the
+    // missed time in one jump. Left at GSAP's default (enabled) as a
+    // second line of defense on top of the idle-deferred Lenis start above.
 
     // Everything below is deferred one frame: SplitText's DOM splitting plus
     // ScrollTrigger.create() with pin:true on a min-h-[160vh] section forces
@@ -141,12 +170,15 @@ export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
 
     return () => {
       cancelled = true
+      lenisCancelled = true
+      if (ric && typeof window.cancelIdleCallback === 'function') window.cancelIdleCallback(idleId as number)
+      else window.clearTimeout(idleId as number)
       cancelAnimationFrame(setupId)
       split?.revert()
       revealTl?.kill()
       ScrollTrigger.getAll().forEach((t) => t.kill())
-      gsap.ticker.remove(lenisTicker)
-      lenis.destroy()
+      if (lenisTicker) gsap.ticker.remove(lenisTicker)
+      lenis?.destroy()
     }
   }, [])
 
