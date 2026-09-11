@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { HeroScrollVideoReveal, type TagItem } from '@/components/ui/hero-scroll-video-pin-reveal'
@@ -9,6 +10,20 @@ import Velaris from '@/components/ui/velaris'
 import { marigold } from '@/lib/fonts'
 import { AppLogo } from '@/components/app-logo'
 import { useIsReturningUser } from '@/lib/returning-user'
+
+// Real-device reports of the landing page freezing on load, with scroll
+// input either going nowhere or getting queued and dumped all at once,
+// persisted across multiple targeted fixes (deferring Lenis, removing
+// Lenis and the WebGL background entirely, shrinking the JS bundle) — none
+// of which resolved it, which means the earlier theories about exactly
+// which library was at fault were wrong, or at least incomplete. Rather
+// than keep guessing at a specific mechanism, this blocks ALL input —
+// scroll AND clicks — outright until `window.load` fires (every resource:
+// scripts, fonts, images) plus a settle buffer for React/GSAP to finish
+// hydrating and wiring up ScrollTrigger, then unblocks unconditionally.
+// This is a blunt, brute-force gate rather than a precise one, deliberately
+// — a guaranteed-correct wait beats another clever-but-wrong timing theory.
+const LOAD_SETTLE_MS = 500
 
 const FEATURE_TAGS: TagItem[] = [
   { text: 'US · UK · AU · SG · HK · India · Germany · France', background: 'var(--primary)', color: 'var(--primary-foreground)' },
@@ -24,9 +39,70 @@ export function Landing() {
   // out (see lib/returning-user.ts). New visitors still get Sign In/Get
   // Started further down, once they've scrolled to the bottom CTA.
   const isReturningUser = useIsReturningUser()
+  const [ready, setReady] = useState(false)
+  const overlayRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    let settleTimer: number
+    const armSettleTimer = () => {
+      settleTimer = window.setTimeout(() => setReady(true), LOAD_SETTLE_MS)
+    }
+    // document.readyState is already 'complete' if `load` fired before this
+    // effect ran (e.g. a fast cached reload) — the event won't fire again,
+    // so this has to be checked explicitly rather than only listening.
+    if (document.readyState === 'complete') {
+      armSettleTimer()
+      return () => window.clearTimeout(settleTimer)
+    }
+    window.addEventListener('load', armSettleTimer)
+    return () => {
+      window.removeEventListener('load', armSettleTimer)
+      window.clearTimeout(settleTimer)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (ready) return
+    const html = document.documentElement
+    const prevOverflow = html.style.overflow
+    html.style.overflow = 'hidden'
+    return () => {
+      html.style.overflow = prevOverflow
+    }
+  }, [ready])
+
+  useEffect(() => {
+    if (ready) return
+    const el = overlayRef.current
+    if (!el) return
+    // Real (non-React-synthetic) listeners, not JSX onWheel/onTouchMove —
+    // React attaches those as passive by default for wheel/touch, which
+    // silently makes preventDefault() a no-op. {passive:false} here is
+    // what actually lets this block the gesture rather than just observe
+    // it. overflow:hidden above covers most browsers on its own, but touch
+    // scroll handling is inconsistent enough across mobile browsers that
+    // this is real, not just redundant belt-and-suspenders.
+    const block = (e: Event) => {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    el.addEventListener('wheel', block, { passive: false })
+    el.addEventListener('touchmove', block, { passive: false })
+    return () => {
+      el.removeEventListener('wheel', block)
+      el.removeEventListener('touchmove', block)
+    }
+  }, [ready])
 
   return (
     <main className="min-h-svh text-foreground">
+      {/* Blocks scroll (wheel/touch, see the effect above) and blocks every
+          click from reaching anything underneath purely by sitting on top
+          of it in the DOM — no click handler needed for that part, a
+          covering element already intercepts the hit-test. Transparent:
+          the page (including the moving background) is still visible
+          loading underneath, this only stops interaction with it. */}
+      {!ready && <div ref={overlayRef} className="fixed inset-0 z-[9999]" aria-hidden="true" />}
       {/* Fixed (not scrolled-with-content) so one shader instance covers the
           entire page — every section below is transparent so this shows
           through everywhere, not just inside the pinned reveal circle.
