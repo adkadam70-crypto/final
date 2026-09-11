@@ -300,24 +300,31 @@ function ProfileCompletionRing({ percent }: { percent: number }) {
   const offset = circumference * (1 - percent / 100)
   return (
     <div className="shrink-0 flex flex-col items-center gap-1" title={`Profile ${percent}% complete`}>
-      <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={radius} stroke="var(--border)" strokeWidth={stroke} fill="none" />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke="var(--primary)"
-          strokeWidth={stroke}
-          fill="none"
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          className="transition-[stroke-dashoffset] duration-500"
-        />
-        <text x={size / 2} y={size / 2} dy="0.35em" textAnchor="middle" className="rotate-90 origin-center fill-foreground text-[13px] font-bold">
-          {percent}%
-        </text>
-      </svg>
+      <div className="relative" style={{ width: size, height: size }}>
+        <svg width={size} height={size} className="-rotate-90">
+          <circle cx={size / 2} cy={size / 2} r={radius} stroke="var(--border)" strokeWidth={stroke} fill="none" />
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke="var(--primary)"
+            strokeWidth={stroke}
+            fill="none"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            className="transition-[stroke-dashoffset] duration-500"
+          />
+        </svg>
+        {/* A counter-rotated <text> inside the -rotate-90 <svg> used to carry
+            the number, but SVG `transform-origin: center` resolves against
+            the viewport, not the element's own box, unless `transform-box:
+            fill-box` is set — support for that split differently across
+            browsers, so the digits didn't reliably land back in the same
+            spot everywhere. A plain HTML overlay, positioned independently
+            of the SVG's rotation, doesn't have that ambiguity. */}
+        <div className="absolute inset-0 flex items-center justify-center text-[13px] font-bold text-foreground">{percent}%</div>
+      </div>
       <span className="text-[10px] text-muted-foreground font-medium">Profile complete</span>
     </div>
   )
