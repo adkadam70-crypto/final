@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { HeroScrollVideoReveal, type TagItem } from '@/components/ui/hero-scroll-video-pin-reveal'
@@ -9,24 +8,6 @@ import { LiquidButton } from '@/components/ui/liquid-glass-button'
 import Velaris from '@/components/ui/velaris'
 import { marigold } from '@/lib/fonts'
 import { AppLogo } from '@/components/app-logo'
-import { useIsReturningUser } from '@/lib/returning-user'
-
-// A previous version of this gate waited for `window.load` — every
-// resource on the page, including fonts and images — before letting the
-// user interact at all. That's network-bound, not CPU-bound: on a slow
-// connection it can legitimately take several seconds, and for that whole
-// window input was blocked by design. That wasn't a bug in the gate, it
-// was the gate being far more conservative than the actual problem needed.
-//
-// The actual problem it was guarding against was Lenis's scroll capture —
-// removed entirely in an earlier change (see hero-scroll-video-pin-reveal.tsx).
-// Native scroll doesn't need this gate at all: it's compositor-driven and
-// stays responsive regardless of how busy the JS thread is, with no
-// library able to "capture but not respond" to it. What's still worth a
-// brief guard is stray CLICKS landing on something before React has
-// finished hydrating and attached real handlers — a much shorter, CPU-bound
-// wait (two animation frames: one for React to commit, one for the browser
-// to actually paint it), not a network-bound one.
 
 const FEATURE_TAGS: TagItem[] = [
   { text: 'US · UK · AU · SG · HK · India · Germany · France', background: 'var(--primary)', color: 'var(--primary-foreground)' },
@@ -37,52 +18,8 @@ const FEATURE_TAGS: TagItem[] = [
 
 export function Landing() {
   const router = useRouter()
-  // First-time visitors never see the top-right Sign In/Sign Up pill — it's
-  // only for returning users who have an account and are currently signed
-  // out (see lib/returning-user.ts). New visitors still get Sign In/Get
-  // Started further down, once they've scrolled to the bottom CTA.
-  const isReturningUser = useIsReturningUser()
-  const [ready, setReady] = useState(false)
-  const overlayRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    let raf1 = 0
-    let raf2 = 0
-    raf1 = requestAnimationFrame(() => {
-      raf2 = requestAnimationFrame(() => setReady(true))
-    })
-    return () => {
-      cancelAnimationFrame(raf1)
-      cancelAnimationFrame(raf2)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (ready) return
-    const el = overlayRef.current
-    if (!el) return
-    // Clicks only — native scroll doesn't need blocking (see the comment
-    // above), so no overflow:hidden and no wheel/touchmove listeners here
-    // anymore. The overlay still blocks clicks purely by being the topmost
-    // element in the DOM hit-test for the ~2 frames it exists.
-    const block = (e: Event) => {
-      e.preventDefault()
-      e.stopPropagation()
-    }
-    el.addEventListener('click', block, { capture: true })
-    return () => {
-      el.removeEventListener('click', block, { capture: true })
-    }
-  }, [ready])
-
   return (
     <main className="min-h-svh text-foreground">
-      {/* Exists for two animation frames only, purely to stop a stray click
-          landing on something before hydration has attached real handlers
-          — see the comment above. Transparent: the page (including the
-          moving background) is already visible underneath immediately,
-          this only briefly stops interaction with it. */}
-      {!ready && <div ref={overlayRef} className="fixed inset-0 z-[9999]" aria-hidden="true" />}
       {/* Fixed (not scrolled-with-content) so one shader instance covers the
           entire page — every section below is transparent so this shows
           through everywhere, not just inside the pinned reveal circle.
@@ -107,24 +44,20 @@ export function Landing() {
           // it used to be page-level `fixed`, which kept it pinned over
           // every later section (including the globe reveal's cards),
           // which is exactly what it shouldn't do.
-          isReturningUser ? (
-            <div className="flex items-center gap-5 sm:gap-6">
-              <button
-                type="button"
-                onClick={() => router.push('/sign-in')}
-                className="text-sm font-semibold text-foreground/90 hover:text-foreground transition-colors"
-              >
-                Sign In
-              </button>
-              <button
-                type="button"
-                onClick={() => router.push('/sign-up')}
-                className="text-sm font-semibold text-foreground/90 hover:text-foreground transition-colors"
-              >
-                Sign Up
-              </button>
-            </div>
-          ) : undefined
+          <div className="flex items-center gap-2 sm:gap-3 bg-background/70 backdrop-blur-md border border-border rounded-full pl-3 pr-1.5 py-1.5 sm:pl-4 sm:pr-2 sm:py-2">
+            <Link
+              href="/sign-in"
+              className="text-sm font-semibold text-foreground/90 hover:text-primary transition-colors px-2 py-1.5"
+            >
+              Sign In
+            </Link>
+            <Link
+              href="/sign-up"
+              className="inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-semibold px-4 py-1.5 sm:py-2 shadow-lg hover:-translate-y-0.5 transition-all"
+            >
+              Sign Up
+            </Link>
+          </div>
         }
         topText={
           <span className={marigold.className}>
