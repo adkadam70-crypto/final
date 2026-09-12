@@ -22,7 +22,7 @@ import { DreamUniversitySearch } from '@/components/dream-university-search'
 import { mergeChecklistProgress, overallCompletionPct, getSectionCoverage } from '@/lib/dream-checklist'
 import { APPLICATION_INFO } from '@/lib/application-info'
 import { COMMON_APP_SECTIONS, COMMON_APP_ESSAY_PROMPTS, PER_UNIVERSITY_TASK_DETAILS } from '@/lib/common-app-sections'
-import { getIndiaApplicationSections, type IndiaApplicationSection, INDIA_PER_UNIVERSITY_TASK_DETAILS } from '@/lib/india-application-sections'
+import { getIndiaApplicationSections, type IndiaApplicationSection, INDIA_PER_UNIVERSITY_TASK_DETAILS, INDIA_PER_UNIVERSITY_TASK_SHORT_LABELS } from '@/lib/india-application-sections'
 import { LoadingDots } from '@/components/loading-dots'
 import type { StandardizedTests } from '@/lib/standardized-tests'
 
@@ -93,6 +93,14 @@ export function DreamCountryWorkspace({
   const [expandedSection, setExpandedSection] = useState<string | null>(null)
   const [expandedStep, setExpandedStep] = useState<number | null>(null)
   const [expandedUniversity, setExpandedUniversity] = useState<number | null>(null)
+  // Keyed by `${universityId}::${task}` — the per-university checklist's
+  // long generic tasks (mainly India's) were shown as the main checklist
+  // LINE plus a detail paragraph below, both often multiple sentences —
+  // reads as a wall of text at a glance. The short label (falls back to the
+  // full task text where no short label exists, e.g. US's already-short
+  // tasks or AI-generated per-university tasks) is now the main line;
+  // everything else collapses behind this.
+  const [expandedTask, setExpandedTask] = useState<string | null>(null)
   // Checklist toggles are drafted locally and only persisted on "Save
   // changes" — no more save-on-every-click (see saveDreamChecklist in
   // app/actions/dream.ts).
@@ -760,17 +768,41 @@ export function DreamCountryWorkspace({
                           {track.tasks.map((task) => {
                             const taskDone = (track.taskProgress[task] ?? 0) >= 100
                             const detail = PER_UNIVERSITY_TASK_DETAILS[task] ?? INDIA_PER_UNIVERSITY_TASK_DETAILS[task]
+                            const shortLabel = INDIA_PER_UNIVERSITY_TASK_SHORT_LABELS[task]
+                            const taskKey = `${track.universityId}::${task}`
+                            const isExpanded = expandedTask === taskKey
+                            // Only tasks with a short label actually have a longer
+                            // full sentence worth hiding behind a toggle — US's
+                            // already-short generic tasks and AI-generated
+                            // per-university tasks have nothing extra to collapse.
+                            const hasMore = Boolean(shortLabel) || Boolean(detail)
                             return (
                               <li key={task}>
-                                <button
-                                  onClick={() => handleToggleUniversityTask(track.universityId, task, !taskDone)}
-                                  className="w-full flex items-start gap-2 text-left text-xs"
-                                >
-                                  <CheckCircle2 className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${taskDone ? 'text-primary' : 'text-muted-foreground/40'}`} />
-                                  <span className={taskDone ? 'text-muted-foreground line-through' : 'text-foreground/90'}>{task}</span>
-                                </button>
-                                {detail && !taskDone && (
-                                  <p className="text-xs text-muted-foreground/80 mt-0.5 ml-5.5 text-pretty">{detail}</p>
+                                <div className="flex items-start gap-2">
+                                  <button
+                                    onClick={() => handleToggleUniversityTask(track.universityId, task, !taskDone)}
+                                    className="flex-1 min-w-0 flex items-start gap-2 text-left text-sm"
+                                  >
+                                    <CheckCircle2 className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${taskDone ? 'text-primary' : 'text-muted-foreground/40'}`} />
+                                    <span className={taskDone ? 'text-muted-foreground line-through' : 'text-foreground/90'}>{shortLabel ?? task}</span>
+                                  </button>
+                                  {hasMore && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setExpandedTask(isExpanded ? null : taskKey)}
+                                      aria-expanded={isExpanded}
+                                      aria-label="Show more detail"
+                                      className="shrink-0 text-muted-foreground/60 hover:text-primary p-0.5"
+                                    >
+                                      <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                                    </button>
+                                  )}
+                                </div>
+                                {isExpanded && (
+                                  <div className="mt-1 ml-5.5 space-y-1">
+                                    {shortLabel && <p className="text-sm text-foreground/80 text-pretty">{task}</p>}
+                                    {detail && <p className="text-xs text-muted-foreground/80 text-pretty">{detail}</p>}
+                                  </div>
                                 )}
                               </li>
                             )
