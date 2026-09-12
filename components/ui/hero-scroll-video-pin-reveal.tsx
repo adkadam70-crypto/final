@@ -4,7 +4,6 @@ import React, { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { SplitText } from 'gsap/SplitText'
-import Lenis from 'lenis'
 
 gsap.registerPlugin(ScrollTrigger, SplitText)
 
@@ -32,14 +31,6 @@ export interface HeroScrollRevealProps {
   /** Rendered after the bottom text — e.g. sign in / sign up CTAs. */
   children?: React.ReactNode
   className?: string
-  /**
-   * Gates when Lenis (smooth scroll) is allowed to exist. Defaults to true
-   * (start immediately). The landing page passes its own "background has
-   * rendered + settle buffer" readiness signal instead — see the comment
-   * on the Lenis effect below for exactly why this has to gate Lenis's
-   * *construction*, not just its input.
-   */
-  readyToScroll?: boolean
 }
 
 export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
@@ -54,59 +45,34 @@ export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
   bottomText,
   children,
   className = '',
-  readyToScroll = true,
 }) => {
   const benefitRef = useRef<HTMLDivElement>(null)
   const paraRef = useRef<HTMLParagraphElement>(null)
   const tagRefs = useRef<(HTMLDivElement | null)[]>([])
 
-  // Lenis attaches its own wheel/touch listener in the CAPTURE phase on
-  // window — capture runs top-down (window first, target element last), so
-  // it fires before any listener on a page-level overlay <div> ever gets a
-  // chance to preventDefault/stopPropagation. A caller trying to "lock"
-  // scroll by blocking input on an overlay after Lenis already exists is
-  // racing a listener that always wins that race — confirmed live: a quick
-  // scroll during the lock still leaked through to Lenis, which had
-  // already read the delta and updated its own scroll target before the
-  // overlay's handler could run. overflow:hidden alone doesn't save this
-  // either, since Lenis drives scroll programmatically (scrollTo-style),
-  // which ignores that CSS property entirely.
-  //
-  // The only robust fix is to not let there be a Lenis listener to race in
-  // the first place: Lenis is not constructed at all until readyToScroll
-  // is true. Nothing else on this page intercepts scroll, so up until
-  // then, scroll is genuine native browser scroll — which the caller's
-  // overflow:hidden + wheel/touchmove overlay blocks correctly, because
-  // there's no competing capture-phase listener to lose the race to.
+  // No Lenis (smooth-scroll library) here — it attached its own wheel/
+  // touch listener in the event CAPTURE phase on window, which meant
+  // anything trying to gate/block scroll (an overlay, overflow:hidden)
+  // was racing a listener that structurally always wins that race: Lenis
+  // reads and acts on input before a page-level block ever gets a chance
+  // to run, and its scroll is driven programmatically, which ignores
+  // overflow:hidden entirely. That's what caused the freeze/jump and the
+  // scroll-lock leak reported across this whole investigation. Removing
+  // Lenis removes the mechanism, not just a workaround for it: plain
+  // native scroll is compositor-driven and cannot be "captured but unable
+  // to respond." The one real effect Lenis was providing — the second
+  // section (heading/tags) feeling like it holds instead of flying past —
+  // is recreated below with a genuine ScrollTrigger `pin` instead, which
+  // needs no smooth-scroll library at all.
   useEffect(() => {
-    if (!readyToScroll) return
-    const lenis = new Lenis({ smoothWheel: true })
-    lenis.on('scroll', ScrollTrigger.update)
-    const lenisTicker = (time: number) => lenis.raf(time * 1000)
-    gsap.ticker.add(lenisTicker)
-    // Deliberately NOT calling gsap.ticker.lagSmoothing(0) — that call
-    // disables GSAP's protection against a ticker that falls behind (e.g.
-    // while the page is still hydrating): lag smoothing normally spreads a
-    // catch-up out smoothly instead of applying all the missed time in one
-    // jump. Left at GSAP's default (enabled) as a second line of defense.
-    return () => {
-      gsap.ticker.remove(lenisTicker)
-      lenis.destroy()
-    }
-  }, [readyToScroll])
-
-  useEffect(() => {
-    // Everything below is deferred one frame: SplitText's DOM splitting plus
-    // ScrollTrigger.create() with pin:true on a min-h-[160vh] section forces
-    // GSAP to synchronously measure the whole document's layout to compute
-    // pin start/end offsets. Running that inline in the mount effect was
-    // real main-thread blocking work landing right on top of the page's
-    // first paint — during that window the WebGL background visibly froze
-    // and scroll input went nowhere until it finished, then everything
-    // "caught up" at once. Letting the browser paint first (rAF) and doing
-    // this setup a frame later removes that block from the critical path;
-    // the extra frame of delay before the reveal-on-scroll effect is armed
-    // is imperceptible.
+    // Everything below is deferred one frame: SplitText's DOM splitting
+    // plus ScrollTrigger.create() forces GSAP to synchronously measure
+    // layout to compute its start/end/pin offsets. Running that inline in
+    // the mount effect was real main-thread blocking work landing right on
+    // top of the page's first paint. Letting the browser paint first (rAF)
+    // and doing this setup a frame later removes that block from the
+    // critical path; the extra frame of delay before the reveal-on-scroll
+    // effect is armed is imperceptible.
     let split: SplitText | null = null
     let revealTl: gsap.core.Timeline | null = null
     let cancelled = false
@@ -134,9 +100,18 @@ export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
       revealTl = gsap.timeline({
         scrollTrigger: {
           trigger: benefitRef.current,
-          start: 'top 70%',
-          end: 'top -10%',
+          // Pinned for its own full height (top touches viewport top ->
+          // bottom touches viewport top) so this section holds — heading
+          // and tags visible together — for its whole scroll distance
+          // regardless of scroll speed, instead of a fast scroll blowing
+          // past it in an instant. This is the resistance Lenis used to
+          // provide as a side effect of damping raw scroll input; pinning
+          // gets the same felt effect from pure native scroll, no
+          // smooth-scroll library needed.
+          start: 'top top',
+          end: 'bottom top',
           scrub: 1.5,
+          pin: true,
         },
       })
 

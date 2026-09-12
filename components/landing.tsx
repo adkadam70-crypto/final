@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { HeroScrollVideoReveal, type TagItem } from '@/components/ui/hero-scroll-video-pin-reveal'
@@ -10,13 +9,6 @@ import Velaris from '@/components/ui/velaris'
 import { marigold } from '@/lib/fonts'
 import { AppLogo } from '@/components/app-logo'
 import { useIsReturningUser } from '@/lib/returning-user'
-
-// Scroll stays locked until Velaris's onReady fires (the background has
-// actually drawn its first real frame — not just "the effect ran"), plus
-// this extra settle buffer on top, so the user sees the page and the
-// background rendering for a beat before scrolling is enabled, rather than
-// the instant the first pixel appears.
-const READY_SETTLE_MS = 1500
 
 const FEATURE_TAGS: TagItem[] = [
   { text: 'US · UK · AU · SG · HK · India · Germany · France', background: 'var(--primary)', color: 'var(--primary-foreground)' },
@@ -32,50 +24,9 @@ export function Landing() {
   // out (see lib/returning-user.ts). New visitors still get Sign In/Get
   // Started further down, once they've scrolled to the bottom CTA.
   const isReturningUser = useIsReturningUser()
-  const [ready, setReady] = useState(false)
-  const overlayRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (ready) return
-    const html = document.documentElement
-    const prevOverflow = html.style.overflow
-    html.style.overflow = 'hidden'
-    return () => {
-      html.style.overflow = prevOverflow
-    }
-  }, [ready])
-
-  useEffect(() => {
-    if (ready) return
-    const el = overlayRef.current
-    if (!el) return
-    // Real (non-React-synthetic) listeners, not JSX onWheel/onTouchMove —
-    // React attaches those as passive by default for wheel/touch, which
-    // silently makes preventDefault() a no-op. {passive:false} here is
-    // what actually blocks the gesture. overflow:hidden above covers most
-    // browsers on its own; this covers touch scroll's more inconsistent
-    // cross-browser behavior. Clicks are blocked too, purely by this
-    // element sitting on top of everything in the DOM hit-test — no
-    // separate click handler needed for that part.
-    const block = (e: Event) => {
-      e.preventDefault()
-      e.stopPropagation()
-    }
-    el.addEventListener('wheel', block, { passive: false })
-    el.addEventListener('touchmove', block, { passive: false })
-    return () => {
-      el.removeEventListener('wheel', block)
-      el.removeEventListener('touchmove', block)
-    }
-  }, [ready])
 
   return (
     <main className="min-h-svh text-foreground">
-      {/* Blocks scroll and clicks until the background has actually
-          rendered (plus a short settle buffer) — see the effects above and
-          Velaris's onReady below. Transparent: the page, including the
-          background, is already visible underneath while this exists. */}
-      {!ready && <div ref={overlayRef} className="fixed inset-0 z-[9999]" aria-hidden="true" />}
       {/* Fixed (not scrolled-with-content) so one shader instance covers the
           entire page — every section below is transparent so this shows
           through everywhere, not just inside the pinned reveal circle.
@@ -84,15 +35,8 @@ export function Landing() {
           renders behind that root paint instead of in front of it. Plain
           DOM order (this first, real content after) stacks correctly
           without fighting that. */}
-      <Velaris
-        height="100vh"
-        className="fixed inset-0"
-        onReady={() => {
-          window.setTimeout(() => setReady(true), READY_SETTLE_MS)
-        }}
-      />
+      <Velaris height="100vh" className="fixed inset-0" />
       <HeroScrollVideoReveal
-        readyToScroll={ready}
         topBrand={
           <div className="flex items-center gap-2.5">
             <AppLogo className="h-8 w-auto sm:h-9" />

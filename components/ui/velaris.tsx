@@ -92,12 +92,6 @@ export interface VelarisProps {
   height?: string;
   className?: string;
   children?: React.ReactNode;
-  // Fires once, right after the first real frame is actually drawn to the
-  // canvas — not merely once the effect ran or the GL context was created,
-  // both of which can happen while the canvas is still visually blank. See
-  // landing.tsx: this is the concrete "the background has started
-  // rendering" signal the scroll lock waits on.
-  onReady?: () => void;
 }
 
 // Shortlisted's own teal/black theme only (app/globals.css --primary and
@@ -117,7 +111,6 @@ const Velaris = ({
   height = "100vh",
   className,
   children,
-  onReady,
 }: VelarisProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -134,14 +127,10 @@ const Velaris = ({
   useEffect(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
-    // Either bails immediately (no canvas/container yet, or the browser
-    // has no WebGL) — either way, still fire onReady so a caller gating
-    // scroll on it doesn't lock up the page forever waiting on an
-    // animation that's never coming.
-    if (!canvas || !container) return void onReady?.();
+    if (!canvas || !container) return;
 
     const gl = canvas.getContext("webgl");
-    if (!gl) return void onReady?.();
+    if (!gl) return;
 
     const createShader = (type: number, src: string) => {
       const s = gl.createShader(type)!;
@@ -203,7 +192,6 @@ const Velaris = ({
     const colorsFlat = new Float32Array(colors.slice(0, 4).flatMap(hexToRgb));
 
     let raf: number;
-    let firstFrameSeen = false;
     const render = (t: number) => {
       gl.uniform2f(locs.res, canvas.width, canvas.height);
       gl.uniform1f(locs.time, t * 0.001 * speed);
@@ -212,10 +200,6 @@ const Velaris = ({
       gl.uniform3fv(locs.colors, colorsFlat);
 
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-      if (!firstFrameSeen) {
-        firstFrameSeen = true;
-        onReady?.();
-      }
       raf = requestAnimationFrame(render);
     };
 
