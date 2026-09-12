@@ -265,7 +265,7 @@ export const dreamCountryProfiles = pgTable('dreamCountryProfiles', {
   // applying — separate from analysisStrengths/Gaps above, which grade the
   // profile as it stands today rather than plan what to do next.
   roadmapSummary: text('roadmapSummary'),
-  roadmapSteps: jsonb('roadmapSteps').$type<{ title: string; detail: string; howTo: string[] }[]>(),
+  roadmapSteps: jsonb('roadmapSteps').$type<{ title: string; detail: string; howTo: string[]; targetUniversity: string | null }[]>(),
   // Up to 10 Common App "Activities" slots, formatted from the student's
   // existing extracurriculars first (real commitments, most important
   // first) then padded out with shortlisted-but-not-yet-completed roadmap

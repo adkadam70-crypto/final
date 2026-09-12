@@ -336,119 +336,132 @@ export function DreamCountryWorkspace({
           {/* "Build your own profile" — a forward-looking, time-aware plan
               (what to DO next, paced against how much runway is left), sits
               above the application checklist since it's meant to inform what
-              a student is building before they get to the paperwork below. */}
-          {country === 'US' && (
-            <section className="bg-card border border-border rounded-3xl p-6">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
-                <Lightbulb className="w-4 h-4 text-chart-5" /> Build your own profile
-              </h2>
-              {countryProfile.roadmapSteps && countryProfile.roadmapSteps.length > 0 ? (
-                <div className="space-y-5">
-                  {countryProfile.roadmapSummary && <p className="text-xs text-muted-foreground leading-relaxed text-pretty">{countryProfile.roadmapSummary}</p>}
-                  <ul className="space-y-2">
-                    {countryProfile.roadmapSteps.map((step, i) => {
-                      const already = suggestedActivities.some((a) => a.text === step.title)
-                      const stepExpanded = expandedStep === i
-                      return (
-                        <li key={i} className="p-3 rounded-xl border border-border bg-secondary">
-                          <div className="flex items-start justify-between gap-3">
-                            <button
-                              type="button"
-                              onClick={() => setExpandedStep(stepExpanded ? null : i)}
-                              aria-expanded={stepExpanded}
-                              className="min-w-0 flex-1 text-left flex items-center gap-1.5"
-                            >
-                              <ChevronDown className={`w-3.5 h-3.5 shrink-0 text-muted-foreground/60 transition-transform ${stepExpanded ? 'rotate-180' : ''}`} />
-                              <p className="text-xs font-semibold text-foreground">{i + 1}. {step.title}</p>
-                            </button>
-                            <button
-                              type="button"
-                              disabled={already || activityPendingId === i}
-                              onClick={() => handleAddSuggestedActivity(step.title, i)}
-                              className="shrink-0 flex items-center gap-1 text-sm font-medium text-primary hover:brightness-125 disabled:opacity-50 disabled:text-muted-foreground"
-                            >
-                              <PlusCircle className="w-3.5 h-3.5" /> {already ? 'Added' : 'Add to my profile'}
-                            </button>
-                          </div>
-                          {stepExpanded && (
-                            <div className="mt-2 ml-5 space-y-2">
-                              <p className="text-sm text-muted-foreground text-pretty">{step.detail}</p>
-                              {step.howTo && step.howTo.length > 0 && (
-                                <div className="p-2.5 bg-card border border-border rounded-lg">
-                                  <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">How to actually do this</p>
-                                  <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                                    {step.howTo.map((h, j) => <li key={j}>{h}</li>)}
-                                  </ol>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </li>
-                      )
-                    })}
-                  </ul>
-                  <button onClick={handleGenerateRoadmap} disabled={roadmapPending} className="text-sm text-primary font-medium flex items-center gap-1 hover:brightness-125 disabled:opacity-50">
-                    {roadmapPending ? <LoadingDots /> : <><RotateCcw className="w-3 h-3" /> Regenerate</>}
-                  </button>
-                </div>
-              ) : (
-                <div className="text-center py-4">
-                  <p className="text-xs text-muted-foreground mb-3">Get a personalized, time-paced plan for what to build before you apply — based on where you stand and how much time you have left.</p>
-                  <button
-                    onClick={handleGenerateRoadmap}
-                    disabled={roadmapPending || !hasProfile}
-                    className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold text-xs px-4 py-2.5 rounded-xl hover:brightness-110 disabled:opacity-50 transition-all"
-                  >
-                    {roadmapPending ? <LoadingDots /> : <><Sparkles className="w-3.5 h-3.5" /> Build my plan</>}
-                  </button>
-                </div>
-              )}
-
-              {suggestedActivities.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-border">
-                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">Your shortlisted activities</p>
-                  <ul className="space-y-1.5">
-                    {suggestedActivities.map((a) => (
-                      <li key={a.id} className="flex items-center justify-between gap-2 text-xs">
-                        <span className={a.status === 'completed' ? 'text-muted-foreground line-through' : 'text-foreground/90'}>{a.text}</span>
-                        {a.status === 'completed' ? (
-                          <span className="shrink-0 text-xs font-semibold text-chart-2 uppercase flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Completed</span>
-                        ) : (
+              a student is building before they get to the paperwork below.
+              Available for every country, not just US — the generator
+              (generateDreamRoadmap in app/actions/dream.ts) is already
+              country-agnostic and grounds itself in whichever universities
+              the student has actually shortlisted for this country. */}
+          <section className="bg-card border border-border rounded-3xl p-6">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
+              <Lightbulb className="w-4 h-4 text-chart-5" /> Build your own profile
+            </h2>
+            {countryProfile.roadmapSteps && countryProfile.roadmapSteps.length > 0 ? (
+              <div className="space-y-5">
+                {countryProfile.roadmapSummary && <p className="text-xs text-muted-foreground leading-relaxed text-pretty">{countryProfile.roadmapSummary}</p>}
+                {universityTracks.length > 0 && (
+                  <p className="text-sm text-muted-foreground/70 flex items-start gap-1.5">
+                    <GraduationCap className="w-3.5 h-3.5 shrink-0 mt-0.5 text-primary/70" />
+                    Steps tagged with a university are specific to that school because you've added it to your list — the rest build your profile generally. Either way, don't forget to also work through your application checklist below.
+                  </p>
+                )}
+                <ul className="space-y-2">
+                  {countryProfile.roadmapSteps.map((step, i) => {
+                    const already = suggestedActivities.some((a) => a.text === step.title)
+                    const stepExpanded = expandedStep === i
+                    return (
+                      <li key={i} className="p-3 rounded-xl border border-border bg-secondary">
+                        <div className="flex items-start justify-between gap-3">
                           <button
                             type="button"
-                            disabled={activityPendingId === a.id}
-                            onClick={() => handleMarkActivityDone(a.id)}
-                            className="shrink-0 text-xs font-semibold text-primary uppercase hover:brightness-125 disabled:opacity-50"
+                            onClick={() => setExpandedStep(stepExpanded ? null : i)}
+                            aria-expanded={stepExpanded}
+                            className="min-w-0 flex-1 text-left flex items-center gap-1.5"
                           >
-                            Mark completed
+                            <ChevronDown className={`w-3.5 h-3.5 shrink-0 text-muted-foreground/60 transition-transform ${stepExpanded ? 'rotate-180' : ''}`} />
+                            <p className="text-xs font-semibold text-foreground">{i + 1}. {step.title}</p>
                           </button>
+                          <button
+                            type="button"
+                            disabled={already || activityPendingId === i}
+                            onClick={() => handleAddSuggestedActivity(step.title, i)}
+                            className="shrink-0 flex items-center gap-1 text-sm font-medium text-primary hover:brightness-125 disabled:opacity-50 disabled:text-muted-foreground"
+                          >
+                            <PlusCircle className="w-3.5 h-3.5" /> {already ? 'Added' : 'Add to my profile'}
+                          </button>
+                        </div>
+                        {step.targetUniversity && (
+                          <span className="mt-1.5 ml-5 inline-flex items-center gap-1 text-sm font-semibold text-primary bg-primary/10 border border-primary/20 rounded-full px-2 py-0.5">
+                            <GraduationCap className="w-3 h-3" /> Boosts your chances at {step.targetUniversity}
+                          </span>
+                        )}
+                        {stepExpanded && (
+                          <div className="mt-2 ml-5 space-y-2">
+                            <p className="text-sm text-muted-foreground text-pretty">{step.detail}</p>
+                            {step.howTo && step.howTo.length > 0 && (
+                              <div className="p-2.5 bg-card border border-border rounded-lg">
+                                <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">How to actually do this</p>
+                                <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                                  {step.howTo.map((h, j) => <li key={j}>{h}</li>)}
+                                </ol>
+                              </div>
+                            )}
+                          </div>
                         )}
                       </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              <div className="mt-4 flex gap-2">
-                <input
-                  type="text"
-                  value={customActivity}
-                  onChange={(e) => setCustomActivity(e.target.value)}
-                  maxLength={200}
-                  placeholder="Add your own activity"
-                  className="flex-1 min-w-0 bg-secondary border border-border rounded-lg p-2 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary"
-                />
-                <button
-                  type="button"
-                  disabled={!customActivity.trim() || activityPendingId === 'custom'}
-                  onClick={() => handleAddSuggestedActivity(customActivity.trim(), 'custom')}
-                  className="shrink-0 text-xs font-semibold text-primary px-3 py-2 rounded-lg border border-primary/30 hover:bg-primary/10 disabled:opacity-50"
-                >
-                  {activityPendingId === 'custom' ? <LoadingDots /> : 'Add'}
+                    )
+                  })}
+                </ul>
+                <button onClick={handleGenerateRoadmap} disabled={roadmapPending} className="text-sm text-primary font-medium flex items-center gap-1 hover:brightness-125 disabled:opacity-50">
+                  {roadmapPending ? <LoadingDots /> : <><RotateCcw className="w-3 h-3" /> Regenerate</>}
                 </button>
               </div>
-            </section>
-          )}
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-xs text-muted-foreground mb-3">Get a personalized, time-paced plan for what to build before you apply — based on where you stand and how much time you have left.</p>
+                <button
+                  onClick={handleGenerateRoadmap}
+                  disabled={roadmapPending || !hasProfile}
+                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold text-xs px-4 py-2.5 rounded-xl hover:brightness-110 disabled:opacity-50 transition-all"
+                >
+                  {roadmapPending ? <LoadingDots /> : <><Sparkles className="w-3.5 h-3.5" /> Build my plan</>}
+                </button>
+              </div>
+            )}
+
+            {suggestedActivities.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-border">
+                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">Your shortlisted activities</p>
+                <ul className="space-y-1.5">
+                  {suggestedActivities.map((a) => (
+                    <li key={a.id} className="flex items-center justify-between gap-2 text-xs">
+                      <span className={a.status === 'completed' ? 'text-muted-foreground line-through' : 'text-foreground/90'}>{a.text}</span>
+                      {a.status === 'completed' ? (
+                        <span className="shrink-0 text-xs font-semibold text-chart-2 uppercase flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Completed</span>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={activityPendingId === a.id}
+                          onClick={() => handleMarkActivityDone(a.id)}
+                          className="shrink-0 text-xs font-semibold text-primary uppercase hover:brightness-125 disabled:opacity-50"
+                        >
+                          Mark completed
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="mt-4 flex gap-2">
+              <input
+                type="text"
+                value={customActivity}
+                onChange={(e) => setCustomActivity(e.target.value)}
+                maxLength={200}
+                placeholder="Add your own activity"
+                className="flex-1 min-w-0 bg-secondary border border-border rounded-lg p-2 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary"
+              />
+              <button
+                type="button"
+                disabled={!customActivity.trim() || activityPendingId === 'custom'}
+                onClick={() => handleAddSuggestedActivity(customActivity.trim(), 'custom')}
+                className="shrink-0 text-xs font-semibold text-primary px-3 py-2 rounded-lg border border-primary/30 hover:bg-primary/10 disabled:opacity-50"
+              >
+                {activityPendingId === 'custom' ? <LoadingDots /> : 'Add'}
+              </button>
+            </div>
+          </section>
 
           {/* Section 1: the country-wide application checklist (Common App's
               real sections for US; the generic per-country list for

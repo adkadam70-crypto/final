@@ -416,13 +416,19 @@ const roadmapSchema = z.object({
           .describe(
             'Up to 4 concrete, sequential sub-steps for actually DOING this — real first moves (who to talk to, what to start building, what to sign up for), not restatements of the title. Shown only when the student clicks in for a deeper breakdown, so this should go beyond detail rather than repeat it.',
           ),
+        targetUniversity: z
+          .string()
+          .nullable()
+          .describe(
+            'The EXACT name of one university from "SPECIFIC UNIVERSITIES THIS STUDENT IS TARGETING" (copied exactly as given), ONLY if this step is genuinely and specifically tied to that one school\'s known admissions emphasis — not just something that would also help there. null for every step that is general advice for this student\'s field/country as a whole (this should be most steps, even when universities are listed — only flag a step here if it is really about one particular school specifically).',
+          ),
       }),
     )
     .max(6)
     .describe('Up to 6 concrete, personalized next steps — extracurriculars to start or deepen, grades to keep up, tests to plan for — ordered roughly by what to prioritize first given the time left.'),
 })
 
-export type DreamRoadmapResult = { timeframeSummary: string; steps: { title: string; detail: string; howTo: string[] }[] }
+export type DreamRoadmapResult = { timeframeSummary: string; steps: { title: string; detail: string; howTo: string[]; targetUniversity: string | null }[] }
 
 export type GenerateRoadmapOutcome =
   | { needsOnboarding: true }
@@ -471,6 +477,12 @@ export async function generateDreamRoadmap(country: string): Promise<GenerateRoa
   const badge = gradeBadge(profile.academicDetail)
   const client = new OpenAI({ apiKey })
   const countryInfo = APPLICATION_INFO[country]
+  // Grounds the plan in the student's OWN shortlisted universities for this
+  // country (if they've added any yet) rather than only the country-wide
+  // target field — "build a plan for my field" and "build a plan for MIT +
+  // IIT Bombay specifically" read very differently to a student, and the
+  // university list is exactly what's already sitting on this same page.
+  const universityTracks = await getDreamUniversityTracks(country)
 
   const prompt = `You are an expert college admissions counselor building a personalized, time-aware action plan. This is NOT a grading exercise — don't just list gaps. Instead, given how much time this student actually has left before applying, tell them specifically what to do next, paced to their real timeline.
 
@@ -480,6 +492,15 @@ STUDENT TIMELINE: currently in ${dream.currentGrade ?? 'an unspecified'} grade, 
 TARGET FIELD: ${dream.confirmedField}
 TARGET COUNTRY: ${countryInfo?.name ?? country}
 ${countryInfo ? `HOW EXTRACURRICULARS ARE WEIGHED HERE: ${countryInfo.extracurriculars}` : ''}
+${
+  universityTracks.length > 0
+    ? `SPECIFIC UNIVERSITIES THIS STUDENT IS TARGETING: ${universityTracks.map((t) => t.universityName).join('; ')} — ground your steps in what actually gets a student INTO these specific schools for ${dream.confirmedField} (their real admissions emphasis, competitiveness, and what they look for), not just generic advice for the country as a whole.${
+        universityTracks.some((t) => t.weaknesses.length > 0)
+          ? ` This student's noted weak points against these schools: ${universityTracks.flatMap((t) => t.weaknesses).join('; ')} — prioritize addressing these where relevant.`
+          : ''
+      }`
+    : `SPECIFIC UNIVERSITIES: none shortlisted yet — give general guidance for a strong ${dream.confirmedField} applicant in ${countryInfo?.name ?? country}.`
+}
 
 WHAT THEY SAID ABOUT THEMSELVES (onboarding):
 - Subjects they excel in / enjoy: ${dream.strengths.length ? dream.strengths.join('; ') : 'Not answered'}
@@ -495,7 +516,9 @@ EXISTING ACADEMIC PROFILE:
 
 CRITICAL — testing: check "Standardized tests already taken" above before suggesting ANYTHING about the SAT/ACT/English proficiency tests. If a test is listed there as already taken, NEVER suggest taking it (or "an" attempt at it) as a step — at most suggest a retake ONLY if the existing score is genuinely weak for this student's target field/country, and say so explicitly citing the actual score. If no test is listed there at all, it's genuinely fine to suggest planning for one.
 
-Give a short timeframe summary (how much runway they actually have), then up to 6 concrete steps — extracurriculars to start or deepen (grounded in their OWN stated hobbies/interests, not generic suggestions), grades/rigor to sustain or improve within their actual curriculum, tests to plan for ONLY if not already taken (per the CRITICAL note above) — each one specific to this exact student and paced against how much time they have left. If they're close to applying, prioritize depth/finishing strong over starting new things; if they have years left, prioritize building genuine, sustained commitment over resume padding. For each step, also give up to 4 concrete "how to" sub-steps — real first moves to actually start doing it, not a restatement of the title.`
+Give a short timeframe summary (how much runway they actually have), then up to 6 concrete steps — extracurriculars to start or deepen (grounded in their OWN stated hobbies/interests, not generic suggestions), grades/rigor to sustain or improve within their actual curriculum, tests to plan for ONLY if not already taken (per the CRITICAL note above) — each one specific to this exact student and paced against how much time they have left. If they're close to applying, prioritize depth/finishing strong over starting new things; if they have years left, prioritize building genuine, sustained commitment over resume padding. For each step, also give up to 4 concrete "how to" sub-steps — real first moves to actually start doing it, not a restatement of the title.
+
+TARGETUNIVERSITY TAGGING — most steps should be general (targetUniversity: null): things that help this student's ${dream.confirmedField} profile broadly, for ${countryInfo?.name ?? country} as a whole, regardless of which specific school reads the application. Only set targetUniversity (to the exact name from the list above) on a step when it is genuinely and specifically about standing out to that one particular school — e.g. a known research area/program that school is distinctively known for, a specific fit that school's admissions office is known to weigh, not just "this would look good anywhere including there." Don't force university-specific steps if none genuinely apply — general profile-building steps are expected and fine even when universities are listed.`
 
   try {
     const call = () =>
