@@ -9,10 +9,11 @@ import type { AcademicDetail } from '@/lib/academic-detail'
 // pts" figure. Every other curriculum's 11th grade is the same kind of
 // result as 12th, so gradeBadge() is accurate for them as-is.
 function formatEleventhGrade(detail: AcademicDetail): string {
-  if (detail.curriculum === 'A_LEVELS') {
+  if (detail.curriculum === 'A_LEVELS' || detail.curriculum === 'INTL_A_LEVELS') {
     const subjects = Array.isArray(detail.subjects) ? detail.subjects : []
     const grades = subjects.map((s) => (s.grade === 'A*' ? 'A' : s.grade)).join('')
-    return `${subjects.length} AS-Levels: ${grades}`
+    const label = detail.curriculum === 'INTL_A_LEVELS' ? 'International AS-Levels' : 'AS-Levels'
+    return `${subjects.length} ${label}: ${grades}`
   }
   return gradeBadge(detail)
 }
@@ -47,7 +48,7 @@ export type IGCSEGradeCounts = {
 
 export type NinthTenthYear = {
   igcse?: IGCSEGradeCounts
-  percentage?: number // CBSE / ICSE
+  percentage?: number // CBSE / ICSE / State Board
   gpa?: number // US, 0.0-4.0
   ibAverage?: number // IB Middle Years Programme, 1-7
   note?: string
@@ -76,11 +77,16 @@ export const EMPTY_PRIOR_GRADES: PriorGrades = {
 export function defaultNinthTenthCurriculum(mainCurriculum: string): NinthTenthCurriculum {
   switch (mainCurriculum) {
     case 'A_LEVELS':
+    case 'INTL_A_LEVELS':
       return 'IGCSE'
     case 'IB_DIPLOMA':
       return 'IB_MYP'
     case 'US_GPA_PCT':
       return 'US_GPA'
+    // CBSE, ICSE, and STATE_BOARD all fall through here — 9th/10th only
+    // ever collects a raw percentage regardless of which Indian board it
+    // is (see NinthTenthYear.percentage), so one shared "percentage board"
+    // option is accurate for all three, not just a CBSE/ICSE approximation.
     default:
       return 'CBSE_ICSE'
   }

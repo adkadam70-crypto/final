@@ -17,10 +17,21 @@ export function gradeBadge(detail: AcademicDetail): string {
       const pct = detail.subjects.length >= 5 ? cbsePercentage(detail.subjects) : 0
       return `CBSE — best 5 of ${detail.subjects.length} subjects: ${pct}%`
     }
+    case 'ICSE': {
+      const pct = detail.subjects.length >= 5 ? cbsePercentage(detail.subjects) : 0
+      return `ICSE — best 5 of ${detail.subjects.length} subjects: ${pct}%`
+    }
+    case 'STATE_BOARD':
+      return `State Board — ${detail.percentage}%`
     case 'A_LEVELS': {
       const points = ucasPoints(detail.subjects)
       const grades = detail.subjects.map((s) => s.grade).join('')
       return `${detail.subjects.length} A-Levels: ${grades} (${points} UCAS pts)`
+    }
+    case 'INTL_A_LEVELS': {
+      const points = ucasPoints(detail.subjects)
+      const grades = detail.subjects.map((s) => s.grade).join('')
+      return `${detail.subjects.length} International A-Levels: ${grades} (${points} UCAS pts)`
     }
     case 'US_GPA_PCT':
       return `GPA ${detail.unweightedGPA.toFixed(2)}`

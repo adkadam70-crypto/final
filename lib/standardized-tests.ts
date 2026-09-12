@@ -35,7 +35,27 @@ export type StandardizedTests = {
   satReadingWriting?: number // 200-800
   act?: number // 1-36
   jeePercentile?: number // 0-100 — JEE Main is reported as a percentile, not a raw score
+  // JEE Advanced is a SEPARATE exam from JEE Main (only the top-qualifying
+  // percentile of JEE Main sitters are even eligible to take it), reported
+  // as an All India Rank rather than a percentile — real 2026 cohort was
+  // ~180k sitters, ~57k qualifiers, ~17.7k IIT seats via JoSAA, so a rank
+  // this large (5-digit+) is completely normal, not a bad sign by itself.
+  jeeAdvancedRank?: number
   neetScore?: number // 0-720 — NEET is reported as a raw marks score, not a percentile
+  // CLAT admission runs on All India Rank, not raw score — researched 2026
+  // cutoffs put rank <150 at the top 3 NLUs, <400-500 at the top 5, up to
+  // ~3,000-5,000 still landing a seat at a newer/mid-tier NLU. A raw score
+  // out of 120 exists too, but rank is what university cutoffs actually
+  // publish, so that's the field collected here.
+  clatRank?: number
+  // CUET UG gates admission to Delhi University, BHU, JNU, and many other
+  // central/state universities — across EVERY field, not just one, unlike
+  // JEE/NEET/CLAT. Score format is genuinely messy (each subject paper maxes
+  // at 250 raw marks, NTA-normalized, summed across however many subjects a
+  // student sits — top courses at JNU/DU/BHU cited around 650+), too varied
+  // to reconstruct exactly, so this collects the one number that actually
+  // matters: the student's total CUET score off their own scorecard.
+  cuetScore?: number
   englishTestType?: EnglishTestType
   englishTestScore?: number // range depends on englishTestType — see ENGLISH_TEST_RANGES
 }
@@ -53,7 +73,10 @@ export function formatStandardizedTests(t: StandardizedTests): string {
   if (composite !== null) parts.push(`SAT ${composite}/1600 (Math ${t.satMath}, Reading & Writing ${t.satReadingWriting})`)
   if (t.act !== undefined) parts.push(`ACT ${t.act}/36`)
   if (t.jeePercentile !== undefined) parts.push(`JEE Main ${t.jeePercentile}th percentile`)
+  if (t.jeeAdvancedRank !== undefined) parts.push(`JEE Advanced AIR ${t.jeeAdvancedRank}`)
   if (t.neetScore !== undefined) parts.push(`NEET ${t.neetScore}/720`)
+  if (t.clatRank !== undefined) parts.push(`CLAT AIR ${t.clatRank}`)
+  if (t.cuetScore !== undefined) parts.push(`CUET ${t.cuetScore}`)
   if (t.englishTestType !== undefined && t.englishTestScore !== undefined) {
     parts.push(`${t.englishTestType} ${t.englishTestScore}/${ENGLISH_TEST_RANGES[t.englishTestType].max}`)
   }
@@ -150,7 +173,10 @@ export function validateStandardizedTests(t: StandardizedTests): string | null {
   if (t.satReadingWriting !== undefined && (t.satReadingWriting < 200 || t.satReadingWriting > 800)) return 'SAT Reading & Writing must be between 200 and 800.'
   if (t.act !== undefined && (t.act < 1 || t.act > 36)) return 'ACT must be between 1 and 36.'
   if (t.jeePercentile !== undefined && (t.jeePercentile < 0 || t.jeePercentile > 100)) return 'JEE percentile must be between 0 and 100.'
+  if (t.jeeAdvancedRank !== undefined && t.jeeAdvancedRank < 1) return 'JEE Advanced rank must be 1 or greater.'
   if (t.neetScore !== undefined && (t.neetScore < 0 || t.neetScore > 720)) return 'NEET score must be between 0 and 720.'
+  if (t.clatRank !== undefined && t.clatRank < 1) return 'CLAT rank must be 1 or greater.'
+  if (t.cuetScore !== undefined && t.cuetScore < 0) return 'CUET score must be 0 or greater.'
   if (t.englishTestScore !== undefined) {
     if (t.englishTestType === undefined) return 'Select which English test that score is from.'
     const range = ENGLISH_TEST_RANGES[t.englishTestType]

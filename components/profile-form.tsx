@@ -19,21 +19,43 @@ import {
   type NinthTenthYear,
   type NinthTenthCurriculum,
 } from '@/lib/prior-grades'
+import { priorGradesRelevance, apCoursesRelevance, extracurricularsRelevance, indiaExamFieldNote, COUNTRY_NAMES, type RelevanceBreakdown } from '@/lib/section-relevance'
 import { HowWeAnalyze } from '@/components/how-we-analyze'
 import { WorldMap } from '@/components/ui/map'
 import { COUNTRY_COORDINATES } from '@/lib/country-coordinates'
 
-type Curriculum = 'CBSE' | 'IB_DIPLOMA' | 'A_LEVELS' | 'US_GPA_PCT'
+type Curriculum = 'CBSE' | 'ICSE' | 'STATE_BOARD' | 'IB_DIPLOMA' | 'A_LEVELS' | 'INTL_A_LEVELS' | 'US_GPA_PCT'
 
 const CURRICULUM_LABELS: Record<Curriculum, string> = {
-  CBSE: 'CBSE / ISC (India)',
+  CBSE: 'CBSE (India)',
+  ICSE: 'ICSE / ISC (India)',
+  STATE_BOARD: 'State Board (India)',
   IB_DIPLOMA: 'IB Diploma',
-  A_LEVELS: 'A-Levels',
+  A_LEVELS: 'A-Levels (UK)',
+  INTL_A_LEVELS: 'International A-Levels (Edexcel / Cambridge)',
   US_GPA_PCT: 'US (GPA)',
 }
 
 // SAT section scores are only ever reported in multiples of 10, from 200-800.
 const SAT_SECTION_SCORES = Array.from({ length: 61 }, (_, i) => 200 + i * 10)
+
+// Plain-text relevance breakdown for an optional section — which of the
+// student's OWN selected countries make it worth filling in, which don't.
+// Deliberately text, not a dot: a dot alone can't say WHICH countries, and
+// that's the actual useful information here.
+function RelevanceLine({ breakdown }: { breakdown: RelevanceBreakdown }) {
+  return (
+    <p className="text-xs text-muted-foreground/80 mb-2 leading-relaxed">
+      {breakdown.relevantCountries.length > 0 && (
+        <span className="text-primary font-semibold">Relevant for {breakdown.relevantCountries.map((c) => COUNTRY_NAMES[c] ?? c).join(', ')}.</span>
+      )}
+      {breakdown.relevantCountries.length > 0 && breakdown.notRelevantCountries.length > 0 && ' '}
+      {breakdown.notRelevantCountries.length > 0 && (
+        <span>Not much for {breakdown.notRelevantCountries.map((c) => COUNTRY_NAMES[c] ?? c).join(', ')}.</span>
+      )}
+    </p>
+  )
+}
 
 type ProfileRow = {
   id: number
@@ -130,7 +152,7 @@ function NinthTenthInput({ value, onChange }: { value: NinthTenthGrades; onChang
           onChange={(e) => onChange({ ...value, curriculum: e.target.value as NinthTenthCurriculum })}
           className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none focus:border-primary"
         >
-          <option value="CBSE_ICSE">CBSE / ICSE / other percentage board</option>
+          <option value="CBSE_ICSE">CBSE / ICSE / State Board / other percentage board</option>
           <option value="IB_MYP">IB (Middle Years Programme)</option>
           <option value="IGCSE">IGCSE</option>
           <option value="US_GPA">US (GPA)</option>
@@ -519,15 +541,13 @@ export function ProfileForm({
     { code: 'US', label: 'USA' },
   ]
 
-  const onlyAustralia = targetCountries.length === 1 && targetCountries[0] === 'AU'
-
   // A simple checklist across the sections below, not a weighted score —
   // good enough to show real progress without pretending to judge quality.
   const hasPriorGradeYear = (y: { percentage?: number; gpa?: number; ibAverage?: number; igcse?: unknown }) =>
     y.percentage != null || y.gpa != null || y.ibAverage != null || y.igcse != null
   const completionChecklist = [
     targetCountries.length > 0,
-    Boolean(standardizedTests.satMath || standardizedTests.satReadingWriting || standardizedTests.act || standardizedTests.jeePercentile || standardizedTests.neetScore || standardizedTests.englishTestScore),
+    Boolean(standardizedTests.satMath || standardizedTests.satReadingWriting || standardizedTests.act || standardizedTests.jeePercentile || standardizedTests.jeeAdvancedRank || standardizedTests.neetScore || standardizedTests.clatRank || standardizedTests.cuetScore || standardizedTests.englishTestScore),
     [...ec1, ...ec2, ...ec3].some((e) => e.description.trim().length > 0),
     apCourses.length > 0,
     hasPriorGradeYear(ninthTenth.grade9) || hasPriorGradeYear(ninthTenth.grade10) || eleventh !== null,
@@ -582,10 +602,13 @@ export function ProfileForm({
             <div>
               <label htmlFor="curriculum" className="text-xs text-muted-foreground block mb-2">Curriculum / board</label>
               <select id="curriculum" value={curriculum} onChange={(e) => handleCurriculumChange(e.target.value as Curriculum)} className="w-full bg-secondary border border-border rounded-xl p-3 text-xs text-foreground focus:outline-none focus:border-primary">
-                <option value="A_LEVELS">A-Levels</option>
-                <option value="CBSE">CBSE / ISC (India)</option>
-                <option value="IB_DIPLOMA">IB Diploma</option>
-                <option value="US_GPA_PCT">US (GPA)</option>
+                <option value="CBSE">{CURRICULUM_LABELS.CBSE}</option>
+                <option value="ICSE">{CURRICULUM_LABELS.ICSE}</option>
+                <option value="STATE_BOARD">{CURRICULUM_LABELS.STATE_BOARD}</option>
+                <option value="A_LEVELS">{CURRICULUM_LABELS.A_LEVELS}</option>
+                <option value="INTL_A_LEVELS">{CURRICULUM_LABELS.INTL_A_LEVELS}</option>
+                <option value="IB_DIPLOMA">{CURRICULUM_LABELS.IB_DIPLOMA}</option>
+                <option value="US_GPA_PCT">{CURRICULUM_LABELS.US_GPA_PCT}</option>
               </select>
             </div>
 
@@ -600,24 +623,30 @@ export function ProfileForm({
             </div>
 
             <div className="pt-2 border-t border-border">
-              <div className="flex items-center gap-2 mb-1">
-                <History className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Earlier grades (9th–11th)</span>
-                <span className="text-[10px] text-muted-foreground/60 font-normal normal-case">— optional, helps sharpen the AI's analysis</span>
+              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                <History className="w-4 h-4 text-primary" />
+                <span className="text-sm font-bold text-primary bg-accent/50 px-2 py-0.5 rounded-lg">Earlier grades (9th–11th)</span>
+                <span className="text-xs text-muted-foreground/70 font-normal">— optional, helps sharpen the AI's analysis</span>
               </div>
+              {targetCountries.length > 0 && <RelevanceLine breakdown={priorGradesRelevance(targetCountries)} />}
+              <p className="text-xs text-muted-foreground/70 mb-2">Grade 12 above is what actually powers your matches — everything below is extra context that the AI still reads, so fill in whichever years are worth including.</p>
               {targetCountries.length > 0 && (
-                <ul className="text-[11px] text-muted-foreground/80 mb-3 space-y-1">
-                  {targetCountries.map((c) => GRADE_RELEVANCE[c] && (
-                    <li key={c}><strong className="text-foreground/80">{c}:</strong> {GRADE_RELEVANCE[c]}</li>
-                  ))}
-                </ul>
+                <details className="group mb-3">
+                  <summary className="cursor-pointer list-none text-xs text-primary font-medium flex items-center gap-1 w-fit">
+                    How each of your countries views this <ChevronDown className="w-3 h-3 transition-transform group-open:rotate-180" />
+                  </summary>
+                  <ul className="text-xs text-muted-foreground/80 mt-2 space-y-1">
+                    {targetCountries.map((c) => GRADE_RELEVANCE[c] && (
+                      <li key={c}><strong className="text-foreground/80">{c}:</strong> {GRADE_RELEVANCE[c]}</li>
+                    ))}
+                  </ul>
+                </details>
               )}
-              <p className="text-[11px] text-muted-foreground/70 mb-3">Grade 12 above is what actually powers your matches — everything below is extra context that the AI still reads, so fill in whichever years are worth including.</p>
 
               <div className="space-y-4">
                 <div className="bg-secondary/40 border border-border rounded-2xl p-3">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[11px] font-semibold text-foreground/80">11th grade{curriculum === 'A_LEVELS' && ' (AS-Level)'}</span>
+                    <span className="text-[11px] font-semibold text-foreground/80">11th grade{(curriculum === 'A_LEVELS' || curriculum === 'INTL_A_LEVELS') && ' (AS-Level)'}</span>
                     {eleventh && (
                       <button type="button" onClick={() => setEleventh(null)} className="text-[10px] text-muted-foreground hover:text-destructive flex items-center gap-0.5">
                         <X className="w-3 h-3" /> Remove
@@ -626,7 +655,7 @@ export function ProfileForm({
                   </div>
                   {eleventh ? (
                     <div className="scale-[0.92] origin-top -mx-2 -mb-2">
-                      <AcademicDetailInput detail={eleventh} onChange={setEleventh} variant={curriculum === 'A_LEVELS' ? 'as' : 'full'} />
+                      <AcademicDetailInput detail={eleventh} onChange={setEleventh} variant={curriculum === 'A_LEVELS' || curriculum === 'INTL_A_LEVELS' ? 'as' : 'full'} />
                     </div>
                   ) : (
                     <div>
@@ -649,13 +678,13 @@ export function ProfileForm({
 
         <section className="bg-card border border-border rounded-3xl p-6">
             <h2 className="text-xl font-extrabold tracking-tight text-primary mb-1 flex items-center gap-2"><Award className="w-5 h-5 text-chart-4" /> Standardized tests</h2>
-            <p className="text-[11px] text-muted-foreground/70 mb-4">These apply regardless of curriculum or target country. All optional.</p>
-            <div className="space-y-4">
+            <p className="text-xs text-muted-foreground/70 mb-4">These apply regardless of curriculum or target country. All optional.</p>
+            <div className="space-y-5">
               <div>
-                <div className="text-[11px] text-muted-foreground mb-1.5">English proficiency test — if you've taken one</div>
+                <div className="text-sm font-semibold text-foreground/90 mb-1.5">English proficiency test — if you've taken one</div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-[10px] text-muted-foreground/70 block mb-1">Test</label>
+                    <label className="text-xs text-muted-foreground/70 block mb-1">Test</label>
                     <select
                       value={standardizedTests.englishTestType ?? ''}
                       onChange={(e) => {
@@ -671,7 +700,7 @@ export function ProfileForm({
                     </select>
                   </div>
                   <div>
-                    <label className="text-[10px] text-muted-foreground/70 block mb-1">Score</label>
+                    <label className="text-xs text-muted-foreground/70 block mb-1">Score</label>
                     <input
                       type="number"
                       disabled={!standardizedTests.englishTestType}
@@ -688,10 +717,10 @@ export function ProfileForm({
               </div>
               {targetCountries.includes('US') && (
                 <div>
-                  <div className="text-[11px] text-muted-foreground mb-1.5">SAT / ACT (United States)</div>
+                  <div className="text-sm font-semibold text-foreground/90 mb-1.5">SAT / ACT (United States)</div>
                   <div className="grid grid-cols-3 gap-2">
                     <div>
-                      <label className="text-[10px] text-muted-foreground/70 block mb-1">SAT Math</label>
+                      <label className="text-xs text-muted-foreground/70 block mb-1">SAT Math</label>
                       <select value={standardizedTests.satMath ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, satMath: e.target.value ? Number(e.target.value) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary">
                         <option value="">Select score</option>
                         {SAT_SECTION_SCORES.map((score) => (
@@ -700,7 +729,7 @@ export function ProfileForm({
                       </select>
                     </div>
                     <div>
-                      <label className="text-[10px] text-muted-foreground/70 block mb-1">SAT Reading & Writing</label>
+                      <label className="text-xs text-muted-foreground/70 block mb-1">SAT Reading & Writing</label>
                       <select value={standardizedTests.satReadingWriting ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, satReadingWriting: e.target.value ? Number(e.target.value) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary">
                         <option value="">Select score</option>
                         {SAT_SECTION_SCORES.map((score) => (
@@ -709,61 +738,86 @@ export function ProfileForm({
                       </select>
                     </div>
                     <div>
-                      <label className="text-[10px] text-muted-foreground/70 block mb-1">ACT</label>
+                      <label className="text-xs text-muted-foreground/70 block mb-1">ACT</label>
                       <input type="number" min={1} max={36} placeholder="1–36" value={standardizedTests.act ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, act: e.target.value ? Number(e.target.value) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
                     </div>
                   </div>
                   {satComposite(standardizedTests) !== null && (
-                    <p className="text-[11px] text-muted-foreground mt-1.5">SAT composite: <span className="text-primary font-mono font-semibold">{satComposite(standardizedTests)}</span> / 1600</p>
+                    <p className="text-xs text-muted-foreground mt-1.5">SAT composite: <span className="text-primary font-mono font-semibold">{satComposite(standardizedTests)}</span> / 1600</p>
                   )}
                 </div>
               )}
               {targetCountries.includes('IN') && (
-                <div>
-                  <div className="text-[11px] text-muted-foreground mb-1.5">JEE / NEET (India) — if applying to engineering or medical programs</div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-[10px] text-muted-foreground/70 block mb-1">JEE Main percentile</label>
-                      <input type="number" min={0} max={100} step={0.01} placeholder="0–100" value={standardizedTests.jeePercentile ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, jeePercentile: e.target.value ? Number(e.target.value) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                <div className="space-y-4">
+                  <div>
+                    <div className="text-sm font-semibold text-foreground/90 mb-1.5">JEE (India) — engineering</div>
+                    {indiaExamFieldNote('JEE', intendedField) && (
+                      <p className="text-xs text-muted-foreground/70 mb-1.5">{indiaExamFieldNote('JEE', intendedField)}</p>
+                    )}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-xs text-muted-foreground/70 block mb-1">JEE Main percentile</label>
+                        <input type="number" min={0} max={100} step={0.01} placeholder="0–100" value={standardizedTests.jeePercentile ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, jeePercentile: e.target.value ? Number(e.target.value) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                      </div>
+                      <div>
+                        <label className="text-xs text-muted-foreground/70 block mb-1">JEE Advanced rank (if you sat it)</label>
+                        <input type="number" min={1} placeholder="All India Rank" value={standardizedTests.jeeAdvancedRank ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, jeeAdvancedRank: e.target.value ? Number(e.target.value) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-[10px] text-muted-foreground/70 block mb-1">NEET score</label>
-                      <input type="number" min={0} max={720} placeholder="0–720" value={standardizedTests.neetScore ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, neetScore: e.target.value ? Number(e.target.value) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
-                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-foreground/90 mb-1.5">NEET (India) — medicine</div>
+                    {indiaExamFieldNote('NEET', intendedField) && (
+                      <p className="text-xs text-muted-foreground/70 mb-1.5">{indiaExamFieldNote('NEET', intendedField)}</p>
+                    )}
+                    <label className="text-xs text-muted-foreground/70 block mb-1">NEET score</label>
+                    <input type="number" min={0} max={720} placeholder="0–720" value={standardizedTests.neetScore ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, neetScore: e.target.value ? Number(e.target.value) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-foreground/90 mb-1.5">CLAT (India) — law</div>
+                    {indiaExamFieldNote('CLAT', intendedField) && (
+                      <p className="text-xs text-muted-foreground/70 mb-1.5">{indiaExamFieldNote('CLAT', intendedField)}</p>
+                    )}
+                    <label className="text-xs text-muted-foreground/70 block mb-1">CLAT All India Rank</label>
+                    <input type="number" min={1} placeholder="All India Rank" value={standardizedTests.clatRank ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, clatRank: e.target.value ? Number(e.target.value) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-foreground/90 mb-1.5">CUET UG (India) — central/state universities, any field</div>
+                    <label className="text-xs text-muted-foreground/70 block mb-1">CUET total score</label>
+                    <input type="number" min={0} placeholder="From your scorecard" value={standardizedTests.cuetScore ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, cuetScore: e.target.value ? Number(e.target.value) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
                   </div>
                 </div>
               )}
             </div>
         </section>
 
-        {!onlyAustralia && (
-          <section className="bg-card border border-border rounded-3xl p-6">
-            <h2 className="text-xl font-extrabold tracking-tight text-primary mb-4 flex items-center gap-2"><Flame className="w-5 h-5 text-chart-2" /> Extracurricular flexes</h2>
-            <div className="space-y-6">
-              <ActivityGroupFields
-                label="Honors & national-level achievements"
-                types={HONORS_TYPES}
-                examples={HONORS_EXAMPLES}
-                entries={ec1}
-                {...activityHandlers(setEc1)}
-              />
-              <ActivityGroupFields
-                label="Leadership, service & work experience"
-                types={SERVICE_TYPES}
-                examples={SERVICE_EXAMPLES}
-                entries={ec2}
-                {...activityHandlers(setEc2)}
-              />
-              <ActivityGroupFields
-                label="Creative pursuits, sports & personal projects"
-                types={PROJECT_TYPES}
-                examples={PROJECT_EXAMPLES}
-                entries={ec3}
-                {...activityHandlers(setEc3)}
-              />
-            </div>
-          </section>
-        )}
+        <section className="bg-card border border-border rounded-3xl p-6">
+          <h2 className="text-xl font-extrabold tracking-tight text-primary mb-1 flex items-center gap-2"><Flame className="w-5 h-5 text-chart-2" /> Extracurricular flexes</h2>
+          {targetCountries.length > 0 && <RelevanceLine breakdown={extracurricularsRelevance(targetCountries)} />}
+          <div className="space-y-6 mt-3">
+            <ActivityGroupFields
+              label="Honors & national-level achievements"
+              types={HONORS_TYPES}
+              examples={HONORS_EXAMPLES}
+              entries={ec1}
+              {...activityHandlers(setEc1)}
+            />
+            <ActivityGroupFields
+              label="Leadership, service & work experience"
+              types={SERVICE_TYPES}
+              examples={SERVICE_EXAMPLES}
+              entries={ec2}
+              {...activityHandlers(setEc2)}
+            />
+            <ActivityGroupFields
+              label="Creative pursuits, sports & personal projects"
+              types={PROJECT_TYPES}
+              examples={PROJECT_EXAMPLES}
+              entries={ec3}
+              {...activityHandlers(setEc3)}
+            />
+          </div>
+        </section>
 
         {suggestedActivities !== null && activities.length > 0 && (
           <section className="bg-card border border-border rounded-3xl p-6">
@@ -810,11 +864,12 @@ export function ProfileForm({
             </button>
           </h2>
           {showApInfo && (
-            <p className="text-[11px] text-muted-foreground/80 bg-secondary/60 border border-border rounded-xl p-2.5 mb-3 text-pretty">
+            <p className="text-xs text-muted-foreground/80 bg-secondary/60 border border-border rounded-xl p-2.5 mb-3 text-pretty">
               AP (Advanced Placement) is a US College Board program of college-level courses taught in high school, each ending in a standardized exam scored 1-5. Students on any curriculum worldwide can take AP exams alongside their main diploma — many international applicants use them to show extra academic depth for competitive/US-facing applications.
             </p>
           )}
-          <p className="text-[11px] text-muted-foreground mb-3">Optional — add any real AP courses you've taken, alongside your main curriculum.</p>
+          {targetCountries.length > 0 && <RelevanceLine breakdown={apCoursesRelevance(targetCountries)} />}
+          <p className="text-xs text-muted-foreground mb-3">Optional — add any real AP courses you've taken, alongside your main curriculum.</p>
 
           {apCourses.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-3">

@@ -269,6 +269,21 @@ export const INDIA_PER_UNIVERSITY_TASK_TEMPLATE: string[] = [
   'Verify document requirements: migration certificate, category/reservation certificate if applicable, and an AIU equivalency certificate if your board is non-Indian',
 ]
 
+// Short one-line labels for the UI's main checklist line — the template
+// strings above are the real stored identifiers (used as DB keys in
+// dreamUniversityTracks.tasks/taskProgress) so they can't change, but as
+// display text they're full sentences, too long to read as a checklist
+// item at a glance. The UI shows this short label as the main line and
+// moves the full original text + the detail above into an expandable area.
+export const INDIA_PER_UNIVERSITY_TASK_SHORT_LABELS: Record<string, string> = {
+  "Confirm this university's exact entrance route for your program — its own direct application, a state counselling body, or a national one (JoSAA/CSAB, NEET state/AIQ counselling, CLAT centralized, etc.)":
+    "Confirm this university's entrance route",
+  "Check this specific university's cutoff (board percentage, exam rank, or CUET score) for your program and category from its most recent published round — cutoffs vary hugely school to school, even within the same exam":
+    "Check this university's latest cutoff",
+  'Verify document requirements: migration certificate, category/reservation certificate if applicable, and an AIU equivalency certificate if your board is non-Indian':
+    'Verify required documents',
+}
+
 export const INDIA_PER_UNIVERSITY_TASK_DETAILS: Record<string, string> = {
   "Confirm this university's exact entrance route for your program — its own direct application, a state counselling body, or a national one (JoSAA/CSAB, NEET state/AIQ counselling, CLAT centralized, etc.)":
     "India has no single shared application — the same-sounding program can be reached completely differently at two schools (one via centralized counselling on your JEE/NEET/CLAT rank, another via a direct application judged on board marks alone). Check this exact university's admissions page for its own process before assuming it matches the general exam requirements above.",
@@ -278,16 +293,16 @@ export const INDIA_PER_UNIVERSITY_TASK_DETAILS: Record<string, string> = {
     "Migration certificates (from your previous board/institution) and category certificates take real processing time — don't leave them for counselling week. If you're on a non-Indian curriculum, confirm this university accepts your AIU equivalency certificate specifically, since acceptance can vary by institution.",
 }
 
-// curriculum comes from lib/academic-detail.ts's AcademicDetail — only
-// 'CBSE' represents an Indian board today (see that file's own gap: ICSE
-// and state boards don't have a distinct type yet, so a CBSE curriculum
-// value is the only signal available that a student is on an Indian
-// board at all). Anything else (A_LEVELS, US_GPA_PCT, IB_DIPLOMA) means
-// the AIU equivalency section applies.
+// curriculum comes from lib/academic-detail.ts's AcademicDetail — CBSE,
+// ICSE, and STATE_BOARD are all genuine Indian boards, so none of them
+// need an AIU equivalency certificate. Anything else (A_LEVELS,
+// INTL_A_LEVELS, US_GPA_PCT, IB_DIPLOMA) is a non-Indian board, which is
+// exactly when the AIU equivalency section applies.
+const INDIAN_BOARDS = ['CBSE', 'ICSE', 'STATE_BOARD']
 export function getIndiaApplicationSections(confirmedField: string | null | undefined, curriculum: string | null | undefined): IndiaApplicationSection[] {
   const category = classifyIndiaField(confirmedField)
   const sections: IndiaApplicationSection[] = [BOARD_RESULTS, ...SECTIONS_BY_CATEGORY[category]]
-  if (curriculum && curriculum !== 'CBSE') sections.push(AIU_EQUIVALENCY)
+  if (curriculum && !INDIAN_BOARDS.includes(curriculum)) sections.push(AIU_EQUIVALENCY)
   sections.push(CATEGORY_CERTIFICATE)
   if (DIRECT_ADMISSION_CATEGORIES.includes(category)) sections.push(DIRECT_ADMISSION_NOTE)
   return sections

@@ -24,7 +24,27 @@ export type IBSubject = {
 
 export type AcademicDetail =
   | { curriculum: 'CBSE'; subjects: { name: string; marks: number }[] } // marks 0-100 each
+  // ICSE (CISCE council): absolute grading, same 0-100 marks + best-5-of-N
+  // percentage math as CBSE — but its own literal tag since it's a genuinely
+  // different board (no CGPA-to-percentage conversion step CBSE report
+  // cards sometimes need; ICSE/ISC report cards already show percentage).
+  | { curriculum: 'ICSE'; subjects: { name: string; marks: number }[] } // marks 0-100 each
+  // Indian state boards: dozens of distinct boards, each with its own
+  // subject list and internal weighting — too fragmented to model per-
+  // subject with any real accuracy. Modeled like US_GPA_PCT: the student
+  // enters the one number that actually matters for admissions (their
+  // board-issued aggregate percentage) rather than us pretending to
+  // reconstruct a state-specific formula we'd likely get wrong.
+  | { curriculum: 'STATE_BOARD'; percentage: number }
   | { curriculum: 'A_LEVELS'; subjects: { name: string; grade: ALevelGrade }[] }
+  // Pearson Edexcel International A-Levels and Cambridge International
+  // A-Levels: grade-for-grade identical A*-E scale to standard UK A-Levels,
+  // and treated as fully equivalent by universities (including Oxford,
+  // per Pearson/Cambridge's own admissions guidance) — same shape and math
+  // as A_LEVELS, kept as its own literal tag purely so students who sat
+  // Edexcel/Cambridge International boards (common outside the UK) find
+  // and select it, rather than assuming "A-Levels" means UK-only.
+  | { curriculum: 'INTL_A_LEVELS'; subjects: { name: string; grade: ALevelGrade }[] }
   | { curriculum: 'US_GPA_PCT'; unweightedGPA: number }
   | {
       curriculum: 'IB_DIPLOMA'
@@ -76,8 +96,12 @@ export function cbsePercentage(subjects: { marks: number }[]): number {
 export function computeGradeValue(detail: AcademicDetail): number {
   switch (detail.curriculum) {
     case 'CBSE':
+    case 'ICSE':
       return Math.round(cbsePercentage(detail.subjects))
-    case 'A_LEVELS': {
+    case 'STATE_BOARD':
+      return Math.round(detail.percentage)
+    case 'A_LEVELS':
+    case 'INTL_A_LEVELS': {
       const points = ucasPoints(detail.subjects)
       // 3 subjects at A*A*A* = 168 points, treated as the 100% ceiling.
       return Math.min(100, Math.round((points / 168) * 100))
@@ -97,10 +121,15 @@ export function computeGradeValue(detail: AcademicDetail): number {
 export function validateAcademicDetail(detail: AcademicDetail): string | null {
   switch (detail.curriculum) {
     case 'CBSE':
+    case 'ICSE':
       if (detail.subjects.length < 5) return 'Enter at least 5 subjects.'
       if (detail.subjects.some((s) => s.marks < 0 || s.marks > 100)) return 'Marks must be between 0 and 100.'
       return null
+    case 'STATE_BOARD':
+      if (detail.percentage < 0 || detail.percentage > 100) return 'Percentage must be between 0 and 100.'
+      return null
     case 'A_LEVELS':
+    case 'INTL_A_LEVELS':
       if (detail.subjects.length < 3) return 'Enter at least 3 A-Level subjects.'
       if (detail.subjects.some((s) => !['A*', 'A', 'B', 'C', 'D', 'E'].includes(s.grade)))
         return 'A-Level grades must be A*, A, B, C, D or E.'
@@ -131,9 +160,31 @@ export function defaultAcademicDetail(curriculum: AcademicDetail['curriculum']):
           { name: 'Computer Science', marks: 90 },
         ],
       }
+    case 'ICSE':
+      return {
+        curriculum: 'ICSE',
+        subjects: [
+          { name: 'English', marks: 90 },
+          { name: 'Mathematics', marks: 90 },
+          { name: 'Physics', marks: 90 },
+          { name: 'Chemistry', marks: 90 },
+          { name: 'Computer Applications', marks: 90 },
+        ],
+      }
+    case 'STATE_BOARD':
+      return { curriculum: 'STATE_BOARD', percentage: 90 }
     case 'A_LEVELS':
       return {
         curriculum: 'A_LEVELS',
+        subjects: [
+          { name: 'Mathematics', grade: 'A' },
+          { name: 'Physics', grade: 'A' },
+          { name: 'Chemistry', grade: 'A' },
+        ],
+      }
+    case 'INTL_A_LEVELS':
+      return {
+        curriculum: 'INTL_A_LEVELS',
         subjects: [
           { name: 'Mathematics', grade: 'A' },
           { name: 'Physics', grade: 'A' },

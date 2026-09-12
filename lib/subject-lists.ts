@@ -31,6 +31,33 @@ export const CBSE_SUBJECTS = [
   'Sociology',
 ] as const
 
+// ISC (Class 12, CISCE council) — English is the one compulsory subject,
+// with 3-5 electives from Science/Commerce/Humanities streams. Naming
+// mostly overlaps CBSE's, but differs on a few real papers (ICSE splits
+// "Computer Applications" from "Computer Science" as its own separate
+// paper, and doesn't use CBSE's "English Core"/"Hindi Core" split).
+export const ICSE_SUBJECTS = [
+  'Accounts',
+  'Biology',
+  'Biotechnology',
+  'Business Studies',
+  'Chemistry',
+  'Computer Applications',
+  'Computer Science',
+  'Economics',
+  'English',
+  'English Literature',
+  'Geography',
+  'History',
+  'Home Science',
+  'Mathematics',
+  'Physical Education',
+  'Physics',
+  'Political Science',
+  'Psychology',
+  'Sociology',
+] as const
+
 // 'Business' (Cambridge International 9609 / AQA 7132 / Edexcel 9BS0) — not
 // 'Business Studies'. Cambridge retired that name with its old 9707
 // syllabus in 2016; every major UK board now examines this subject as

@@ -21,7 +21,7 @@ const FAQS: { q: string; a: React.ReactNode }[] = [
   },
   {
     q: 'Which curricula do you support?',
-    a: 'CBSE, A-Levels (including a standalone AS-Level mode), the IB Diploma, and US unweighted GPA — each handled with its own real grading logic, not a rough one-size-fits-all conversion.',
+    a: 'CBSE, ICSE, State Board, A-Levels and International A-Levels (Edexcel/Cambridge — both including a standalone AS-Level mode), the IB Diploma, and US unweighted GPA — each handled with its own real grading logic, not a rough one-size-fits-all conversion.',
   },
   {
     q: 'Which countries can I apply to on Shortlisted?',

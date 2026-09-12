@@ -10,7 +10,7 @@ import {
   ucasPoints,
   ibTotal,
 } from '@/lib/academic-detail'
-import { CBSE_SUBJECTS, A_LEVEL_SUBJECTS, ALL_IB_SUBJECTS } from '@/lib/subject-lists'
+import { CBSE_SUBJECTS, ICSE_SUBJECTS, A_LEVEL_SUBJECTS, ALL_IB_SUBJECTS } from '@/lib/subject-lists'
 
 // Deliberately no width utility baked in here — Tailwind's cascade order
 // (not string order) decides which width utility wins when two are present
@@ -44,13 +44,35 @@ export function AcademicDetailInput({
   // by every other curriculum.
   variant?: 'full' | 'as'
 }) {
-  if (detail.curriculum === 'CBSE') return <CBSEInput detail={detail} onChange={onChange} />
+  if (detail.curriculum === 'CBSE') return <CBSEInput detail={detail} onChange={onChange} subjectList={CBSE_SUBJECTS} label="CBSE" />
+  if (detail.curriculum === 'ICSE') return <CBSEInput detail={detail} onChange={onChange} subjectList={ICSE_SUBJECTS} label="ICSE" />
+  if (detail.curriculum === 'STATE_BOARD') return <StateBoardInput detail={detail} onChange={onChange} />
   if (detail.curriculum === 'A_LEVELS') return <ALevelsInput detail={detail} onChange={onChange} variant={variant} />
+  if (detail.curriculum === 'INTL_A_LEVELS') return <ALevelsInput detail={detail} onChange={onChange} variant={variant} />
   if (detail.curriculum === 'US_GPA_PCT') return <USInput detail={detail} onChange={onChange} />
-  return <IBInput detail={detail} onChange={onChange} />
+  if (detail.curriculum === 'IB_DIPLOMA') return <IBInput detail={detail} onChange={onChange} />
+  // Exhaustiveness check: if a new curriculum is ever added to AcademicDetail
+  // without a branch above, this fails loudly at compile time (via the
+  // `never` type) instead of silently falling through to the wrong input
+  // component the way an unconditional final `return <IBInput ... />` used to.
+  const _exhaustive: never = detail
+  throw new Error(`Unhandled curriculum: ${JSON.stringify(_exhaustive)}`)
 }
 
-function CBSEInput({ detail, onChange }: { detail: Extract<AcademicDetail, { curriculum: 'CBSE' }>; onChange: (d: AcademicDetail) => void }) {
+// Reused for both CBSE and ICSE — identical input shape (subject name +
+// marks 0-100) and identical best-5-of-N percentage math; only the subject
+// dropdown options and display label differ between the two real boards.
+function CBSEInput({
+  detail,
+  onChange,
+  subjectList,
+  label,
+}: {
+  detail: Extract<AcademicDetail, { curriculum: 'CBSE' | 'ICSE' }>
+  onChange: (d: AcademicDetail) => void
+  subjectList: readonly string[]
+  label: string
+}) {
   const pct = detail.subjects.length >= 5 ? cbsePercentage(detail.subjects) : null
   return (
     <div className="space-y-2">
@@ -61,7 +83,7 @@ function CBSEInput({ detail, onChange }: { detail: Extract<AcademicDetail, { cur
             onChange({ ...detail, subjects })
           }}>
             <option value="">Select subject</option>
-            {alphabetical(CBSE_SUBJECTS).map((subj) => <option key={subj} value={subj}>{subj}</option>)}
+            {alphabetical(subjectList).map((subj) => <option key={subj} value={subj}>{subj}</option>)}
           </select>
           <input className={`${inputClass} w-20 shrink-0`} type="number" min={0} max={100} placeholder="Marks" value={s.marks} onChange={(e) => {
             const subjects = [...detail.subjects]; subjects[i] = { ...s, marks: Number(e.target.value) }
@@ -75,17 +97,31 @@ function CBSEInput({ detail, onChange }: { detail: Extract<AcademicDetail, { cur
       {detail.subjects.length < 6 && (
         <button type="button" onClick={() => onChange({ ...detail, subjects: [...detail.subjects, { name: '', marks: 90 }] })} className="text-xs text-primary font-medium flex items-center gap-1"><Plus className="w-3.5 h-3.5" /> Add subject (up to 6)</button>
       )}
-      <p className="text-[11px] text-muted-foreground">Best 5 of {detail.subjects.length} subjects, out of 500{pct !== null && <> — <span className="text-primary font-mono font-semibold">{pct}%</span></>}</p>
+      <p className="text-[11px] text-muted-foreground">{label} — best 5 of {detail.subjects.length} subjects, out of 500{pct !== null && <> — <span className="text-primary font-mono font-semibold">{pct}%</span></>}</p>
     </div>
   )
 }
 
+function StateBoardInput({ detail, onChange }: { detail: Extract<AcademicDetail, { curriculum: 'STATE_BOARD' }>; onChange: (d: AcademicDetail) => void }) {
+  return (
+    <div>
+      <label className="text-[11px] text-muted-foreground block mb-1">Board aggregate percentage (0–100)</label>
+      <input className={`${inputClass} w-full`} type="number" min={0} max={100} step={0.01} value={detail.percentage} onChange={(e) => onChange({ ...detail, percentage: Number(e.target.value) })} />
+      <p className="text-[11px] text-muted-foreground/70 mt-2">State boards vary too much subject-to-subject to model individually here — enter the final aggregate percentage from your board&apos;s own marksheet.</p>
+    </div>
+  )
+}
+
+// Reused for both A_LEVELS and INTL_A_LEVELS (Edexcel/Cambridge International)
+// — grade-for-grade identical A*-E scale and UCAS points math; universities
+// treat them as fully equivalent, so only the subject list source and
+// display label (handled by the caller) differ.
 function ALevelsInput({
   detail,
   onChange,
   variant,
 }: {
-  detail: Extract<AcademicDetail, { curriculum: 'A_LEVELS' }>
+  detail: Extract<AcademicDetail, { curriculum: 'A_LEVELS' | 'INTL_A_LEVELS' }>
   onChange: (d: AcademicDetail) => void
   variant: 'full' | 'as'
 }) {

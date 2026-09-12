@@ -21,8 +21,9 @@ export function HowWeAnalyze() {
         <section>
           <h3 className="text-[11px] font-semibold text-foreground uppercase tracking-wider mb-2">How we score your grades internally</h3>
           <ul className="space-y-1.5 list-disc list-inside">
-            <li><strong className="text-foreground">CBSE / ISC:</strong> your best 5 subjects, summed out of 500, as a percentage.</li>
-            <li><strong className="text-foreground">A-Levels:</strong> each grade converts to UCAS Tariff points (A*=56, A=48, B=40, C=32, D=24, E=16), summed across your subjects.</li>
+            <li><strong className="text-foreground">CBSE / ICSE:</strong> your best 5 subjects, summed out of 500, as a percentage. ICSE (CISCE) uses absolute grading — your percentage is used directly, with no CGPA conversion step.</li>
+            <li><strong className="text-foreground">State Board:</strong> we use your board-issued aggregate percentage directly — methodology varies too much state to state to model subject-by-subject.</li>
+            <li><strong className="text-foreground">A-Levels / International A-Levels:</strong> each grade converts to UCAS Tariff points (A*=56, A=48, B=40, C=32, D=24, E=16), summed across your subjects. Pearson Edexcel and Cambridge International A-Levels use the identical grading scale and are treated the same way.</li>
             <li><strong className="text-foreground">IB Diploma:</strong> your 6 subject grades (1–7 each) plus Extended Essay + Theory of Knowledge core points, out of 45 total.</li>
             <li><strong className="text-foreground">US GPA:</strong> used as-is, unweighted 0.0–4.0.</li>
           </ul>
@@ -37,7 +38,7 @@ export function HowWeAnalyze() {
             <li><strong className="text-foreground">United Kingdom:</strong> most universities that accept IB or A-Levels convert to UCAS Tariff points — but the most selective (Oxford, Cambridge, LSE, Imperial) usually set direct grade conditions instead. CBSE has no official UCAS tariff; UK universities typically assess it directly by percentage band.</li>
             <li><strong className="text-foreground">Australia:</strong> admissions bodies (UAC and similar) convert IB, A-Level, and other international results into an ATAR-equivalent &quot;Selection Rank&quot; so they&apos;re comparable to Australian-educated applicants — done by the admissions body itself, not a fixed formula you can compute.</li>
             <li><strong className="text-foreground">Singapore & Hong Kong:</strong> top universities generally assess IB and A-Level results directly against their own published minimum requirements, rather than converting to a separate composite score.</li>
-            <li><strong className="text-foreground">India:</strong> CBSE results are generally used directly as board percentage, though top engineering/medical programs weight entrance exams (JEE, NEET) more heavily than board marks.</li>
+            <li><strong className="text-foreground">India:</strong> CBSE, ICSE, and State Board results are all generally used directly as board percentage, though top engineering/medical programs weight entrance exams (JEE, NEET) more heavily than board marks.</li>
             <li><strong className="text-foreground">Germany:</strong> your final secondary-school GPA is converted to the German 1.0-4.0 scale (1.0 best) by a modified Bavarian formula. For Numerus Clausus subjects that number is compared against a cutoff that moves each semester; other subjects only need the qualification recognized. Indian applicants also need an APS certificate.</li>
             <li><strong className="text-foreground">France:</strong> public-university licence programs mainly need a diploma recognized as Baccalauréat-equivalent. Selective programs (grandes écoles, prépas, IUTs) read your last 2-3 years of transcripts (bulletins) directly, alongside a short motivation letter.</li>
           </ul>
