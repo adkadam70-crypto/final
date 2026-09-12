@@ -24,7 +24,7 @@ import { useIsReturningUser } from '@/lib/returning-user'
 // wasn't before: Lenis (removed) used to fight any input-blocking overlay
 // via its own capture-phase listener; native scroll has no such listener
 // to fight, so a plain overlay + overflow:hidden is enough on its own.
-const READY_SETTLE_MS = 600
+const READY_SETTLE_MS = 150
 
 const FEATURE_TAGS: TagItem[] = [
   { text: 'US · UK · AU · SG · HK · India · Germany · France', background: 'var(--primary)', color: 'var(--primary-foreground)' },
@@ -79,13 +79,25 @@ export function Landing() {
 
   return (
     <main className="min-h-svh text-foreground">
-      {/* Blocks scroll and clicks until the background has actually
-          rendered (plus a short settle buffer for the rest of the page's
-          own scroll-reveal effects to have mounted too) — see the effects
-          above and Velaris's onReady below. Transparent: the page,
-          including the moving background, is already visible loading
-          underneath, this only stops interaction with it. */}
-      {!ready && <div ref={overlayRef} className="fixed inset-0 z-[9999]" aria-hidden="true" />}
+      {/* Opaque until the background has actually rendered (plus a short
+          settle buffer for the rest of the page's own scroll-reveal effects
+          to have mounted too) — see the effects above and Velaris's
+          onReady below. Hides the whole page underneath (not just blocking
+          input) so the very first thing shown is the fully-hydrated,
+          already-animating page, never a static/blank in-between frame. */}
+      {!ready && (
+        <div
+          ref={overlayRef}
+          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center gap-6 bg-[#0b0d11]"
+          aria-hidden="true"
+        >
+          <AppLogo className="h-12 w-auto animate-pulse" />
+          <div
+            className="h-8 w-8 rounded-full border-2 border-primary/25 border-t-primary animate-spin"
+            style={{ animationDuration: '0.8s' }}
+          />
+        </div>
+      )}
       {/* Fixed (not scrolled-with-content) so one shader instance covers the
           entire page — every section below is transparent so this shows
           through everywhere, not just inside the pinned reveal circle.
@@ -151,6 +163,14 @@ export function Landing() {
         }
         tags={FEATURE_TAGS}
         subText="Every recommendation is grounded in real selectivity data for real universities — not vibes, and not guesswork."
+        // Mounted immediately (not gated on `ready`) so its data fetch and
+        // dot-generation work start in parallel with everything else,
+        // exactly like every other section — it has 280vh of scroll runway
+        // before the user reaches it, so it needs a head start, not a
+        // delay. The dot-generation loop itself is chunked across idle
+        // callbacks now (see wireframe-dotted-globe.tsx) so it no longer
+        // blocks the main thread for seconds the way it used to; that was
+        // the real fix, not deferring when this mounts.
         afterBenefit={<GlobeFocusReveal />}
         bottomText={
           <span className={marigold.className}>

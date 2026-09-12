@@ -14,6 +14,12 @@ import { geoArea, geoCentroid, geoContains, geoDistance, geoGraticule, geoInterp
 import type { ExtendedFeatureCollection, GeoProjection } from 'd3-geo'
 import { timer } from 'd3-timer'
 
+// requestIdleCallback isn't in Safari; setTimeout(0) is a fine fallback for
+// what this is used for (yielding a slice of a chunked loop back to the
+// browser, not scheduling truly idle-only work).
+const scheduleIdle: (cb: () => void) => void =
+  typeof requestIdleCallback === 'function' ? (cb) => requestIdleCallback(cb) : (cb) => setTimeout(cb, 0)
+
 interface CountryMarker {
   name: string
   lat: number
@@ -67,7 +73,7 @@ const SHOW_CONNECTOR_LINES = false
 export default function RotatingEarth({ width = 800, height = 600, className = '', controlledRotation = null, opacity = 1, interactive = true }: RotatingEarthProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   // Persists across the main effect's lifetime (which only re-runs on
   // width/height change) so the separate controlledRotation effect below
@@ -486,17 +492,45 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
           // landmass EXCEPT inside one of the 8 real (non-inflated) country
           // shapes. Computed once; 3.5° spacing keeps the per-frame
           // re-projection cost low.
+          //
+          // ~5,000 candidate points, each checked with geoContains against
+          // every land polygon plus (for hits) all 8 country polygons — run
+          // as one plain loop this was a multi-second synchronous block on
+          // the main thread, which starved every other pending timer/effect
+          // (including the landing page's own loading-screen dismissal)
+          // until it finished. Chunked across idle callbacks instead: same
+          // total work, but broken into slices small enough that the
+          // browser can still process other pending work (paint, other
+          // timers) between them.
           if (landFeatures) {
             const step = 3.5
-            const dots: [number, number][] = []
+            const points: [number, number][] = []
             for (let lng = -180; lng <= 180; lng += step) {
               for (let lat = -85; lat <= 85; lat += step) {
-                const point: [number, number] = [lng, lat]
-                if (!geoContains(landFeatures, point)) continue
-                const inHighlighted = countryFeatures!.features.some((f) => geoContains(f, point))
-                if (!inHighlighted) dots.push(point)
+                points.push([lng, lat])
               }
             }
+
+            const dots: [number, number][] = []
+            const CHUNK_SIZE = 150
+            await new Promise<void>((resolve) => {
+              let idx = 0
+              const processChunk = () => {
+                const end = Math.min(idx + CHUNK_SIZE, points.length)
+                for (; idx < end; idx++) {
+                  const point = points[idx]
+                  if (!geoContains(landFeatures!, point)) continue
+                  const inHighlighted = countryFeatures!.features.some((f) => geoContains(f, point))
+                  if (!inHighlighted) dots.push(point)
+                }
+                if (idx < points.length) {
+                  scheduleIdle(processChunk)
+                } else {
+                  resolve()
+                }
+              }
+              processChunk()
+            })
             landDots = dots
           }
 
@@ -702,9 +736,6 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
     // rounded-rect crop on top of it only clips the poles.
     <div ref={containerRef} className={`relative mx-auto bg-transparent ${className}`} style={{ opacity }}>
       <canvas ref={canvasRef} className={`bg-transparent ${interactive ? 'cursor-grab active:cursor-grabbing' : ''}`} />
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">Loading globe…</div>
-      )}
       {/* Below the globe, centered — not overlaid on the circle itself.
           No pill background/border: that previously sat flush against the
           circle's own bottom edge and read as a square frame around the
