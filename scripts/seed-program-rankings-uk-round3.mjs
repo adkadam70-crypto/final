@@ -89,7 +89,7 @@ const CATEGORIES = [
       { name: 'Guildhall School of Music and Drama', rank: 18 },
       { name: 'Royal Conservatoire of Scotland', rank: 24 },
       { name: 'Trinity Laban Conservatoire of Music and Dance', rank: 29 },
-      { name: 'Royal Northern College of Music', rank: 34 },
+      { name: 'Royal Northern College of Music', rank: 35 },
     ],
   },
   {
@@ -135,8 +135,8 @@ const CATEGORIES = [
     source: 'The Complete University Guide 2027 — Business and Management Studies subject table',
     url: 'https://www.thecompleteuniversityguide.co.uk/league-tables/rankings/business-and-management-studies',
     entries: [
-      { name: 'University of East London', rank: 88 },
-      { name: 'University of Gloucestershire', rank: 115 },
+      { name: 'University of East London', rank: 75 },
+      { name: 'University of Gloucestershire', rank: 96 },
     ],
   },
 ]
