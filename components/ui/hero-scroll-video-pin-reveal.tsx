@@ -26,6 +26,7 @@ export interface TagItem {
   text: string
   background: string
   color?: string
+  border?: string
 }
 
 export interface HeroScrollRevealProps {
@@ -34,6 +35,8 @@ export interface HeroScrollRevealProps {
   /** Rendered top-right of the first screen only — e.g. Sign In / Sign Up. Scrolls away with it, unlike a page-level fixed element. */
   topRight?: React.ReactNode
   topText?: React.ReactNode
+  /** Rendered directly below topText, inside the same first screen — e.g. a "Get Started" button, so a visitor never has to scroll to find one. */
+  topCta?: React.ReactNode
   headingText?: React.ReactNode
   /** Rendered directly above the tags row (e.g. the countries/universities pills). */
   aboveTags?: React.ReactNode
@@ -51,6 +54,7 @@ export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
   topBrand,
   topRight,
   topText,
+  topCta,
   headingText,
   aboveTags,
   tags = [],
@@ -130,10 +134,11 @@ export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
   return (
     <div className={`w-full text-foreground ${className}`}>
       {topText && (
-        <section className="relative w-full min-h-screen flex flex-col justify-center items-center text-center px-4 sm:px-8 py-8">
+        <section className="relative w-full min-h-screen flex flex-col justify-start items-center text-center px-4 sm:px-8 pt-14 sm:pt-16 pb-8">
           {topBrand && <div className="absolute top-6 sm:top-10 left-4 sm:left-8">{topBrand}</div>}
           {topRight && <div className="absolute top-6 sm:top-10 right-4 sm:right-8">{topRight}</div>}
-          <div className="text-[clamp(1.8rem,4.5vw,4.5rem)] font-bold tracking-tight text-balance leading-tight">{topText}</div>
+          <div className="text-[clamp(1.2rem,2.7vw,2.75rem)] font-bold tracking-tight text-balance leading-tight">{topText}</div>
+          {topCta && <div className="mt-8">{topCta}</div>}
         </section>
       )}
 
@@ -146,7 +151,7 @@ export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
                 className="w-full mb-10 sm:mb-14 md:mb-16 transition-[opacity,transform] duration-150 ease-out will-change-[opacity,transform]"
                 style={{ opacity: 0 }}
               >
-                <p className="text-[clamp(2rem,4.8vw,4.6rem)] font-extrabold tracking-wide text-balance leading-snug overflow-visible">
+                <p className="text-[clamp(2rem,4vw,3.75rem)] font-extrabold tracking-wide text-balance leading-snug overflow-visible">
                   {headingText}
                 </p>
               </div>
@@ -164,7 +169,7 @@ export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
                   <div
                     key={tag.id ?? `tag-${idx}`}
                     className="px-4 sm:px-6 py-2 sm:py-3 rounded-full text-[clamp(0.7rem,1.3vw,1.1rem)] font-semibold tracking-tight shadow-2xl"
-                    style={{ background: tag.background, color: tag.color ?? '#ffffff' }}
+                    style={{ background: tag.background, color: tag.color ?? '#ffffff', border: tag.border ? `1px solid ${tag.border}` : undefined }}
                   >
                     {tag.text}
                   </div>

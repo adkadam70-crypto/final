@@ -30,6 +30,19 @@ export default function AboutPage() {
           </section>
 
           <section>
+            <h2>Why I built it</h2>
+            <p>
+              I&apos;m an IB student myself, and I lived this exact problem while building my own university list.
+              Every &quot;chances calculator&quot; I tried wanted a US GPA I didn&apos;t have, and every forum thread
+              was someone guessing about someone else&apos;s IB score. I spent months paranoid — not knowing which
+              schools were realistic reaches, which were fair matches, and which I was wasting an application on —
+              because there was no honest, curriculum-aware answer anywhere. That&apos;s a real problem for anyone
+              applying outside the standard US track, and I built Shortlisted because I genuinely wanted to fix it
+              for the next student going through the same thing, not just for myself.
+            </p>
+          </section>
+
+          <section>
             <h2>What we built instead</h2>
             <p>
               Shortlisted was built to actually handle real curricula — CBSE, ICSE, State Board, A-Levels/AS-Levels

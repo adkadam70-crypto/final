@@ -248,7 +248,12 @@ export function GlobeFocusReveal() {
           normal document flow, so nothing fights for space. */}
       <div className="sm:hidden px-4 py-16 flex flex-col items-center gap-8">
         <RotatingEarth width={240} height={240} interactive={false} />
-        <div className={`text-base font-bold tracking-tight text-foreground ${marigold.className}`}>Our Network</div>
+        <div className="flex flex-col items-center">
+          <div className={`text-xl font-bold tracking-tight text-foreground ${marigold.className}`}>Our Network</div>
+          <p className="mt-2.5 text-xs font-semibold text-foreground/80 tracking-wide max-w-xs text-center text-balance">
+            Stanford · Cambridge · Sydney · IIT Delhi · TU Munich · Sciences Po
+          </p>
+        </div>
         <div className="grid grid-cols-2 gap-3 w-full">
           {CARDS.map((card) => (
             <div key={card.id} className="rounded-lg overflow-hidden border border-white/10 bg-neutral-900 shadow-xl">
@@ -297,8 +302,15 @@ export function GlobeFocusReveal() {
 
         <div ref={globeBoxRef} className="relative z-10 flex flex-col items-center will-change-transform" style={{ transform: 'translateY(4vh) scale(1)' }}>
           <RotatingEarth width={GLOBE_SIZE} height={GLOBE_SIZE} interactive={false} />
-          <div ref={labelRef} className={`mt-6 sm:mt-8 text-base sm:text-lg font-bold tracking-tight text-foreground will-change-[opacity] ${marigold.className}`} style={{ opacity: 0 }}>
-            Our Network
+          <div ref={labelRef} className="mt-6 sm:mt-8 flex flex-col items-center will-change-[opacity]" style={{ opacity: 0 }}>
+            <div className={`text-xl sm:text-2xl font-bold tracking-tight text-foreground ${marigold.className}`}>Our Network</div>
+            {/* Real, recognizable universities from the catalog — a
+                distinct set from any other admissions site's own examples,
+                spanning six different countries rather than repeating the
+                same handful of household names every tool leads with. */}
+            <p className="mt-2.5 text-xs sm:text-sm font-semibold text-foreground/80 tracking-wide max-w-sm sm:max-w-md text-center text-balance">
+              Stanford · Cambridge · Sydney · IIT Delhi · TU Munich · Sciences Po
+            </p>
           </div>
         </div>
 
