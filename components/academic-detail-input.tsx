@@ -11,6 +11,7 @@ import {
   ibTotal,
 } from '@/lib/academic-detail'
 import { CBSE_SUBJECTS, ICSE_SUBJECTS, A_LEVEL_SUBJECTS, ALL_IB_SUBJECTS } from '@/lib/subject-lists'
+import { clamp } from '@/lib/utils'
 
 // Deliberately no width utility baked in here — Tailwind's cascade order
 // (not string order) decides which width utility wins when two are present
@@ -86,7 +87,7 @@ function CBSEInput({
             {alphabetical(subjectList).map((subj) => <option key={subj} value={subj}>{subj}</option>)}
           </select>
           <input className={`${inputClass} w-20 shrink-0`} type="number" min={0} max={100} placeholder="Marks" value={s.marks} onChange={(e) => {
-            const subjects = [...detail.subjects]; subjects[i] = { ...s, marks: Number(e.target.value) }
+            const subjects = [...detail.subjects]; subjects[i] = { ...s, marks: clamp(Number(e.target.value), 0, 100) }
             onChange({ ...detail, subjects })
           }} />
           {detail.subjects.length > 5 && (
@@ -106,7 +107,7 @@ function StateBoardInput({ detail, onChange }: { detail: Extract<AcademicDetail,
   return (
     <div>
       <label className="text-[11px] text-muted-foreground block mb-1">Board aggregate percentage (0–100)</label>
-      <input className={`${inputClass} w-full`} type="number" min={0} max={100} step={0.01} value={detail.percentage} onChange={(e) => onChange({ ...detail, percentage: Number(e.target.value) })} />
+      <input className={`${inputClass} w-full`} type="number" min={0} max={100} step={0.01} value={detail.percentage} onChange={(e) => onChange({ ...detail, percentage: clamp(Number(e.target.value), 0, 100) })} />
       <p className="text-[11px] text-muted-foreground/70 mt-2">State boards vary too much subject-to-subject to model individually here — enter the final aggregate percentage from your board&apos;s own marksheet.</p>
     </div>
   )
@@ -169,7 +170,7 @@ function USInput({ detail, onChange }: { detail: Extract<AcademicDetail, { curri
   return (
     <div>
       <label className="text-[11px] text-muted-foreground block mb-1">Unweighted GPA (0.0–4.0)</label>
-      <input className={`${inputClass} w-full`} type="number" min={0} max={4} step={0.01} value={detail.unweightedGPA} onChange={(e) => onChange({ ...detail, unweightedGPA: Number(e.target.value) })} />
+      <input className={`${inputClass} w-full`} type="number" min={0} max={4} step={0.01} value={detail.unweightedGPA} onChange={(e) => onChange({ ...detail, unweightedGPA: clamp(Number(e.target.value), 0, 4) })} />
       <p className="text-[11px] text-muted-foreground/70 mt-2">SAT/ACT (if you&apos;re targeting the US) has its own section below, since it applies regardless of curriculum.</p>
     </div>
   )

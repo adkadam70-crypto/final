@@ -20,6 +20,7 @@ import {
   type NinthTenthCurriculum,
 } from '@/lib/prior-grades'
 import { priorGradesRelevance, apCoursesRelevance, extracurricularsRelevance, indiaExamFieldNote, COUNTRY_NAMES, type RelevanceBreakdown } from '@/lib/section-relevance'
+import { clamp } from '@/lib/utils'
 import { HowWeAnalyze } from '@/components/how-we-analyze'
 import { WorldMap } from '@/components/ui/map'
 import { COUNTRY_COORDINATES } from '@/lib/country-coordinates'
@@ -123,13 +124,13 @@ function NinthTenthInput({ value, onChange }: { value: NinthTenthGrades; onChang
           </div>
         )}
         {curriculum === 'CBSE_ICSE' && (
-          <input type="number" min={0} max={100} placeholder="Overall %" value={y.percentage ?? ''} onChange={(e) => updateYear(year, { percentage: e.target.value ? Number(e.target.value) : undefined })} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+          <input type="number" min={0} max={100} placeholder="Overall %" value={y.percentage ?? ''} onChange={(e) => updateYear(year, { percentage: e.target.value ? clamp(Number(e.target.value), 0, 100) : undefined })} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
         )}
         {curriculum === 'US_GPA' && (
-          <input type="number" min={0} max={4} step={0.01} placeholder="GPA (0.0–4.0)" value={y.gpa ?? ''} onChange={(e) => updateYear(year, { gpa: e.target.value ? Number(e.target.value) : undefined })} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+          <input type="number" min={0} max={4} step={0.01} placeholder="GPA (0.0–4.0)" value={y.gpa ?? ''} onChange={(e) => updateYear(year, { gpa: e.target.value ? clamp(Number(e.target.value), 0, 4) : undefined })} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
         )}
         {curriculum === 'IB_MYP' && (
-          <input type="number" min={1} max={7} step={0.1} placeholder="Average (1–7)" value={y.ibAverage ?? ''} onChange={(e) => updateYear(year, { ibAverage: e.target.value ? Number(e.target.value) : undefined })} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+          <input type="number" min={1} max={7} step={0.1} placeholder="Average (1–7)" value={y.ibAverage ?? ''} onChange={(e) => updateYear(year, { ibAverage: e.target.value ? clamp(Number(e.target.value), 1, 7) : undefined })} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
         )}
         <input
           type="text"
@@ -709,7 +710,11 @@ export function ProfileForm({
                       step={standardizedTests.englishTestType ? ENGLISH_TEST_RANGES[standardizedTests.englishTestType].step : undefined}
                       placeholder={standardizedTests.englishTestType ? `${ENGLISH_TEST_RANGES[standardizedTests.englishTestType].min}–${ENGLISH_TEST_RANGES[standardizedTests.englishTestType].max}` : 'Pick a test first'}
                       value={standardizedTests.englishTestScore ?? ''}
-                      onChange={(e) => setStandardizedTests((t) => ({ ...t, englishTestScore: e.target.value ? Number(e.target.value) : undefined }))}
+                      onChange={(e) => setStandardizedTests((t) => {
+                        if (!e.target.value || !t.englishTestType) return { ...t, englishTestScore: e.target.value ? Number(e.target.value) : undefined }
+                        const range = ENGLISH_TEST_RANGES[t.englishTestType]
+                        return { ...t, englishTestScore: clamp(Number(e.target.value), range.min, range.max) }
+                      })}
                       className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary disabled:opacity-50"
                     />
                   </div>
@@ -739,7 +744,7 @@ export function ProfileForm({
                     </div>
                     <div>
                       <label className="text-xs text-muted-foreground/70 block mb-1">ACT</label>
-                      <input type="number" min={1} max={36} placeholder="1–36" value={standardizedTests.act ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, act: e.target.value ? Number(e.target.value) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                      <input type="number" min={1} max={36} placeholder="1–36" value={standardizedTests.act ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, act: e.target.value ? clamp(Number(e.target.value), 1, 36) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
                     </div>
                   </div>
                   {satComposite(standardizedTests) !== null && (
@@ -757,11 +762,11 @@ export function ProfileForm({
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <label className="text-xs text-muted-foreground/70 block mb-1">JEE Main percentile</label>
-                        <input type="number" min={0} max={100} step={0.01} placeholder="0–100" value={standardizedTests.jeePercentile ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, jeePercentile: e.target.value ? Number(e.target.value) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                        <input type="number" min={0} max={100} step={0.01} placeholder="0–100" value={standardizedTests.jeePercentile ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, jeePercentile: e.target.value ? clamp(Number(e.target.value), 0, 100) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
                       </div>
                       <div>
                         <label className="text-xs text-muted-foreground/70 block mb-1">JEE Advanced rank (if you sat it)</label>
-                        <input type="number" min={1} placeholder="All India Rank" value={standardizedTests.jeeAdvancedRank ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, jeeAdvancedRank: e.target.value ? Number(e.target.value) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                        <input type="number" min={1} placeholder="All India Rank" value={standardizedTests.jeeAdvancedRank ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, jeeAdvancedRank: e.target.value ? clamp(Number(e.target.value), 1, Infinity) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
                       </div>
                     </div>
                   </div>
@@ -771,7 +776,7 @@ export function ProfileForm({
                       <p className="text-xs text-muted-foreground/70 mb-1.5">{indiaExamFieldNote('NEET', intendedField)}</p>
                     )}
                     <label className="text-xs text-muted-foreground/70 block mb-1">NEET score</label>
-                    <input type="number" min={0} max={720} placeholder="0–720" value={standardizedTests.neetScore ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, neetScore: e.target.value ? Number(e.target.value) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                    <input type="number" min={0} max={720} placeholder="0–720" value={standardizedTests.neetScore ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, neetScore: e.target.value ? clamp(Number(e.target.value), 0, 720) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
                   </div>
                   <div>
                     <div className="text-sm font-semibold text-foreground/90 mb-1.5">CLAT (India) — law</div>
@@ -779,12 +784,12 @@ export function ProfileForm({
                       <p className="text-xs text-muted-foreground/70 mb-1.5">{indiaExamFieldNote('CLAT', intendedField)}</p>
                     )}
                     <label className="text-xs text-muted-foreground/70 block mb-1">CLAT All India Rank</label>
-                    <input type="number" min={1} placeholder="All India Rank" value={standardizedTests.clatRank ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, clatRank: e.target.value ? Number(e.target.value) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                    <input type="number" min={1} placeholder="All India Rank" value={standardizedTests.clatRank ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, clatRank: e.target.value ? clamp(Number(e.target.value), 1, Infinity) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
                   </div>
                   <div>
                     <div className="text-sm font-semibold text-foreground/90 mb-1.5">CUET UG (India) — central/state universities, any field</div>
                     <label className="text-xs text-muted-foreground/70 block mb-1">CUET total score</label>
-                    <input type="number" min={0} placeholder="From your scorecard" value={standardizedTests.cuetScore ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, cuetScore: e.target.value ? Number(e.target.value) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                    <input type="number" min={0} placeholder="From your scorecard" value={standardizedTests.cuetScore ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, cuetScore: e.target.value ? clamp(Number(e.target.value), 0, Infinity) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
                   </div>
                 </div>
               )}
