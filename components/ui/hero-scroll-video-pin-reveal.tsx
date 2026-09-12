@@ -2,10 +2,21 @@
 
 import React, { useEffect, useRef } from 'react'
 import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { SplitText } from 'gsap/SplitText'
 
-gsap.registerPlugin(ScrollTrigger, SplitText)
+gsap.registerPlugin(SplitText)
+
+function clamp01(v: number) {
+  return Math.min(1, Math.max(0, v))
+}
+
+// How much extra scroll distance the heading/tags section consumes before
+// releasing into the globe — this is the actual "resistance" knob. Tunable
+// without touching any of the reveal logic below.
+const SECTION_HEIGHT_VH = 220
+// Words finish revealing by this fraction of the section's progress —
+// tags then reveal across the remainder.
+const WORDS_END = 0.45
 
 export interface TagItem {
   id?: string
@@ -46,103 +57,109 @@ export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
   children,
   className = '',
 }) => {
-  const benefitRef = useRef<HTMLDivElement>(null)
+  const wrapperRef = useRef<HTMLDivElement>(null)
   const paraRef = useRef<HTMLParagraphElement>(null)
   const tagRefs = useRef<(HTMLDivElement | null)[]>([])
+  const wordElsRef = useRef<HTMLElement[]>([])
 
-  // No Lenis (smooth-scroll library) here — it attached its own wheel/
-  // touch listener in the event CAPTURE phase on window, which meant
-  // anything trying to gate/block scroll (an overlay, overflow:hidden)
-  // was racing a listener that structurally always wins that race: Lenis
-  // reads and acts on input before a page-level block ever gets a chance
-  // to run, and its scroll is driven programmatically, which ignores
-  // overflow:hidden entirely. That's what caused the freeze/jump and the
-  // scroll-lock leak reported across this whole investigation. Removing
-  // Lenis removes the mechanism, not just a workaround for it: plain
-  // native scroll is compositor-driven and cannot be "captured but unable
-  // to respond." The one real effect Lenis was providing — the second
-  // section (heading/tags) feeling like it holds instead of flying past —
-  // is recreated below with a genuine ScrollTrigger `pin` instead, which
-  // needs no smooth-scroll library at all.
+  // No Lenis, and no GSAP ScrollTrigger/pin either — both were replaced
+  // with the same pattern GlobeFocusReveal already uses successfully: a
+  // tall wrapper with a `sticky` inner section, progress computed straight
+  // from `getBoundingClientRect()` on every real scroll event and written
+  // directly to element styles (no React re-render, no animation-library
+  // timeline in between).
+  //
+  // Two concrete problems with the GSAP approach this replaces:
+  // 1. `scrub: 1.5` deliberately eases the reveal ~1.5s behind the user's
+  //    actual scroll position — reported as feeling like "structured"
+  //    scrolling rather than free scrolling, and `pin: true` compounds it
+  //    by making position:fixed switch via JS instead of the browser's own
+  //    compositor-handled `position: sticky`.
+  // 2. ScrollTrigger.create() measures its start/end pin offsets ONCE, one
+  //    frame after mount (deferred to avoid blocking first paint). If the
+  //    user scrolls during that exact frame, real scroll position has
+  //    already moved by the time GSAP takes its one-time measurement,
+  //    which is what produced the reported "second section doesn't load,
+  //    then the whole thing jumps once it catches up" — a stale
+  //    measurement, not a timing coincidence. `apply()` below has no such
+  //    one-time measurement to go stale: it re-reads live DOM state on
+  //    every single scroll event, so it's correct no matter when the user
+  //    starts scrolling relative to setup.
   useEffect(() => {
-    // Everything below is deferred one frame: SplitText's DOM splitting
-    // plus ScrollTrigger.create() forces GSAP to synchronously measure
-    // layout to compute its start/end/pin offsets. Running that inline in
-    // the mount effect was real main-thread blocking work landing right on
-    // top of the page's first paint. Letting the browser paint first (rAF)
-    // and doing this setup a frame later removes that block from the
-    // critical path; the extra frame of delay before the reveal-on-scroll
-    // effect is armed is imperceptible.
     let split: SplitText | null = null
-    let revealTl: gsap.core.Timeline | null = null
     let cancelled = false
+    let raf = 0
+    let removeScrollListener: (() => void) | null = null
 
+    const apply = () => {
+      const el = wrapperRef.current
+      if (!el) return
+      const rect = el.getBoundingClientRect()
+      const total = rect.height - window.innerHeight
+      const scrolled = -rect.top
+      const progress = total > 0 ? clamp01(scrolled / total) : 0
+
+      const words = wordElsRef.current
+      const n = words.length
+      words.forEach((w, i) => {
+        const start = n > 0 ? (i / n) * WORDS_END * 0.85 : 0
+        const p = clamp01((progress - start) / 0.12)
+        w.style.opacity = String(p)
+        w.style.transform = `translateY(${30 * (1 - p)}%) rotate(${8 * (1 - p)}deg)`
+      })
+
+      const tagEls = tagRefs.current
+      const m = tagEls.length
+      tagEls.forEach((tagEl, i) => {
+        if (!tagEl) return
+        const start = WORDS_END + (m > 0 ? (i / m) * (1 - WORDS_END) * 0.8 : 0)
+        const p = clamp01((progress - start) / 0.18)
+        tagEl.style.opacity = String(p)
+        tagEl.style.clipPath = `polygon(0% 0%, ${p * 100}% 0%, ${p * 100}% 100%, 0% 100%)`
+      })
+    }
+
+    // Deferred one frame purely so SplitText's DOM splitting (real
+    // synchronous work) doesn't land inline on the mount effect, right on
+    // top of the page's first paint — apply() itself doesn't need this
+    // deferral (see the comment above for why it's safe regardless of
+    // when it first runs).
     const setupId = requestAnimationFrame(() => {
       if (cancelled) return
 
-      let words: Element[] = []
+      let words: HTMLElement[] = []
       if (paraRef.current) {
         try {
           split = new SplitText(paraRef.current, {
             type: 'words',
             wordsClass: 'reveal-word inline-block origin-left mr-[0.25em] will-change-transform',
           })
-          words = split.words
+          words = split.words as HTMLElement[]
         } catch {
           words = Array.from(paraRef.current.querySelectorAll('.reveal-word'))
         }
       }
-
-      if (words.length > 0) {
-        gsap.set(words, { opacity: 0, rotate: 8, yPercent: 30 })
-      }
-
-      revealTl = gsap.timeline({
-        scrollTrigger: {
-          trigger: benefitRef.current,
-          // Pinned for its own full height (top touches viewport top ->
-          // bottom touches viewport top) so this section holds — heading
-          // and tags visible together — for its whole scroll distance
-          // regardless of scroll speed, instead of a fast scroll blowing
-          // past it in an instant. This is the resistance Lenis used to
-          // provide as a side effect of damping raw scroll input; pinning
-          // gets the same felt effect from pure native scroll, no
-          // smooth-scroll library needed.
-          start: 'top top',
-          end: 'bottom top',
-          scrub: 1.5,
-          pin: true,
-        },
+      wordElsRef.current = words
+      words.forEach((w) => {
+        w.style.opacity = '0'
+        w.style.transform = 'translateY(30%) rotate(8deg)'
       })
 
-      if (words.length > 0) {
-        revealTl.to(words, {
-          stagger: 0.2,
-          opacity: 1,
-          rotate: 0,
-          yPercent: 0,
-          ease: 'power1.inOut',
-        })
+      const onScroll = () => {
+        cancelAnimationFrame(raf)
+        raf = requestAnimationFrame(apply)
       }
-
-      tagRefs.current.forEach((tagEl) => {
-        if (tagEl) {
-          revealTl!.to(
-            tagEl,
-            { duration: 1, opacity: 1, clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)', ease: 'circ.out' },
-            '>-0.4',
-          )
-        }
-      })
-
+      apply()
+      window.addEventListener('scroll', onScroll, { passive: true })
+      removeScrollListener = () => window.removeEventListener('scroll', onScroll)
     })
 
     return () => {
       cancelled = true
       cancelAnimationFrame(setupId)
+      cancelAnimationFrame(raf)
+      removeScrollListener?.()
       split?.revert()
-      revealTl?.kill()
-      ScrollTrigger.getAll().forEach((t) => t.kill())
     }
   }, [])
 
@@ -156,38 +173,40 @@ export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
         </section>
       )}
 
-      <section ref={benefitRef} className="relative w-full min-h-[140vh] md:min-h-[160vh] pb-16 md:pb-20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 md:py-8 flex flex-col items-center text-center relative z-10">
-          {headingText && (
-            <div className="w-full mb-10 sm:mb-14 md:mb-16">
-              <p ref={paraRef} className="text-[clamp(2rem,4.8vw,4.6rem)] font-extrabold tracking-wide text-balance leading-snug overflow-visible">
-                {headingText}
-              </p>
-            </div>
-          )}
+      <div ref={wrapperRef} className="relative" style={{ height: `${SECTION_HEIGHT_VH}vh` }}>
+        <section className="sticky top-0 w-full h-screen flex items-center justify-center overflow-hidden">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 md:py-8 flex flex-col items-center text-center relative z-10">
+            {headingText && (
+              <div className="w-full mb-10 sm:mb-14 md:mb-16">
+                <p ref={paraRef} className="text-[clamp(2rem,4.8vw,4.6rem)] font-extrabold tracking-wide text-balance leading-snug overflow-visible">
+                  {headingText}
+                </p>
+              </div>
+            )}
 
-          {aboveTags}
+            {aboveTags}
 
-          {tags.length > 0 && (
-            <div className="flex flex-wrap justify-center gap-2 sm:gap-3 max-w-4xl mx-auto my-3 sm:my-4 mb-3 sm:mb-5">
-              {tags.map((tag, idx) => (
-                <div
-                  key={tag.id ?? `tag-${idx}`}
-                  ref={(el) => {
-                    tagRefs.current[idx] = el
-                  }}
-                  className="px-4 sm:px-6 py-2 sm:py-3 rounded-full text-[clamp(0.7rem,1.3vw,1.1rem)] font-semibold tracking-tight opacity-0 shadow-2xl will-change-[clip-path,opacity]"
-                  style={{ background: tag.background, color: tag.color ?? '#ffffff', clipPath: 'polygon(0% 0% ,0% 0%, 0% 100%, 0% 100%)' }}
-                >
-                  {tag.text}
-                </div>
-              ))}
-            </div>
-          )}
+            {tags.length > 0 && (
+              <div className="flex flex-wrap justify-center gap-2 sm:gap-3 max-w-4xl mx-auto my-3 sm:my-4 mb-3 sm:mb-5">
+                {tags.map((tag, idx) => (
+                  <div
+                    key={tag.id ?? `tag-${idx}`}
+                    ref={(el) => {
+                      tagRefs.current[idx] = el
+                    }}
+                    className="px-4 sm:px-6 py-2 sm:py-3 rounded-full text-[clamp(0.7rem,1.3vw,1.1rem)] font-semibold tracking-tight opacity-0 shadow-2xl will-change-[clip-path,opacity]"
+                    style={{ background: tag.background, color: tag.color ?? '#ffffff', clipPath: 'polygon(0% 0% ,0% 0%, 0% 100%, 0% 100%)' }}
+                  >
+                    {tag.text}
+                  </div>
+                ))}
+              </div>
+            )}
 
-          {subText && <p className="text-[clamp(0.95rem,1.5vw,1.35rem)] text-muted-foreground font-normal max-w-xl mt-2 sm:mt-4 px-4 text-pretty">{subText}</p>}
-        </div>
-      </section>
+            {subText && <p className="text-[clamp(0.95rem,1.5vw,1.35rem)] text-muted-foreground font-normal max-w-xl mt-2 sm:mt-4 px-4 text-pretty">{subText}</p>}
+          </div>
+        </section>
+      </div>
 
       {afterBenefit}
 
