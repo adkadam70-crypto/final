@@ -11,12 +11,27 @@ function clamp01(v: number) {
 }
 
 // How much extra scroll distance the heading/tags section consumes before
-// releasing into the globe — this is the actual "resistance" knob. Tunable
-// without touching any of the reveal logic below.
-const SECTION_HEIGHT_VH = 220
-// Words finish revealing by this fraction of the section's progress —
-// tags then reveal across the remainder.
-const WORDS_END = 0.45
+// releasing into the globe — the actual "how much scrolling this takes"
+// knob. Bumped up from 220: at 220, real scroll gestures covered the whole
+// reveal in what read as "too quick" — a bigger number means the same
+// physical scroll input moves through less of the section's progress,
+// which is what actually slows the pacing down (the per-element windows
+// below control how gradual each individual fade is, not the overall
+// speed — that's this number).
+const SECTION_HEIGHT_VH = 320
+// Words (the heading) finish revealing by this fraction of progress.
+const HEADING_REVEAL_END = 0.35
+// Tags don't start until well after the heading is fully done — a real,
+// deliberate gap (from HEADING_REVEAL_END to here) where nothing happens,
+// instead of the previous version where tags started while words were
+// still finishing (WORDS_END doubled as both the heading's end AND the
+// tags' start, so they overlapped).
+const TAGS_REVEAL_START = 0.55
+// How much of the section's progress each individual word/tag takes to
+// fade in — wider than before so each one eases in gradually rather than
+// popping in over a couple of scroll ticks.
+const WORD_FADE_WINDOW = 0.18
+const TAG_FADE_WINDOW = 0.22
 
 export interface TagItem {
   id?: string
@@ -99,21 +114,29 @@ export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
       const scrolled = -rect.top
       const progress = total > 0 ? clamp01(scrolled / total) : 0
 
+      // Word starts spread across [0, HEADING_REVEAL_END - WORD_FADE_WINDOW]
+      // so the LAST word's fade finishes exactly at HEADING_REVEAL_END,
+      // never spilling past the boundary into where the tag gap begins.
       const words = wordElsRef.current
       const n = words.length
+      const wordSpread = Math.max(0, HEADING_REVEAL_END - WORD_FADE_WINDOW)
       words.forEach((w, i) => {
-        const start = n > 0 ? (i / n) * WORDS_END * 0.85 : 0
-        const p = clamp01((progress - start) / 0.12)
+        const start = n > 1 ? (i / (n - 1)) * wordSpread : 0
+        const p = clamp01((progress - start) / WORD_FADE_WINDOW)
         w.style.opacity = String(p)
         w.style.transform = `translateY(${30 * (1 - p)}%) rotate(${8 * (1 - p)}deg)`
       })
 
+      // Same idea for tags, spread across [TAGS_REVEAL_START, 1 - TAG_FADE_WINDOW]
+      // — nothing happens between HEADING_REVEAL_END and TAGS_REVEAL_START,
+      // which is the deliberate pause/gap requested.
       const tagEls = tagRefs.current
       const m = tagEls.length
+      const tagSpread = Math.max(0, 1 - TAG_FADE_WINDOW - TAGS_REVEAL_START)
       tagEls.forEach((tagEl, i) => {
         if (!tagEl) return
-        const start = WORDS_END + (m > 0 ? (i / m) * (1 - WORDS_END) * 0.8 : 0)
-        const p = clamp01((progress - start) / 0.18)
+        const start = TAGS_REVEAL_START + (m > 1 ? (i / (m - 1)) * tagSpread : 0)
+        const p = clamp01((progress - start) / TAG_FADE_WINDOW)
         tagEl.style.opacity = String(p)
         tagEl.style.clipPath = `polygon(0% 0%, ${p * 100}% 0%, ${p * 100}% 100%, 0% 100%)`
       })
