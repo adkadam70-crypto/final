@@ -32,6 +32,14 @@ export interface HeroScrollRevealProps {
   /** Rendered after the bottom text — e.g. sign in / sign up CTAs. */
   children?: React.ReactNode
   className?: string
+  /**
+   * Gates when Lenis (smooth scroll) is allowed to exist. Defaults to true
+   * (start immediately). The landing page passes its own "background has
+   * rendered + settle buffer" readiness signal instead — see the comment
+   * on the Lenis effect below for exactly why this has to gate Lenis's
+   * *construction*, not just its input.
+   */
+  readyToScroll?: boolean
 }
 
 export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
@@ -46,33 +54,48 @@ export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
   bottomText,
   children,
   className = '',
+  readyToScroll = true,
 }) => {
   const benefitRef = useRef<HTMLDivElement>(null)
   const paraRef = useRef<HTMLParagraphElement>(null)
   const tagRefs = useRef<(HTMLDivElement | null)[]>([])
 
+  // Lenis attaches its own wheel/touch listener in the CAPTURE phase on
+  // window — capture runs top-down (window first, target element last), so
+  // it fires before any listener on a page-level overlay <div> ever gets a
+  // chance to preventDefault/stopPropagation. A caller trying to "lock"
+  // scroll by blocking input on an overlay after Lenis already exists is
+  // racing a listener that always wins that race — confirmed live: a quick
+  // scroll during the lock still leaked through to Lenis, which had
+  // already read the delta and updated its own scroll target before the
+  // overlay's handler could run. overflow:hidden alone doesn't save this
+  // either, since Lenis drives scroll programmatically (scrollTo-style),
+  // which ignores that CSS property entirely.
+  //
+  // The only robust fix is to not let there be a Lenis listener to race in
+  // the first place: Lenis is not constructed at all until readyToScroll
+  // is true. Nothing else on this page intercepts scroll, so up until
+  // then, scroll is genuine native browser scroll — which the caller's
+  // overflow:hidden + wheel/touchmove overlay blocks correctly, because
+  // there's no competing capture-phase listener to lose the race to.
   useEffect(() => {
-    // Static import (not the dynamic import('lenis') this used to be) so
-    // Lenis is ready the instant this effect runs — the dynamic import's
-    // network-fetch-then-init gap was exactly the "lag before I can scroll"
-    // window: native scroll worked immediately on page load, then Lenis
-    // took over mid-interaction once its chunk finally loaded, which felt
-    // like the page ignoring the first scroll attempts.
+    if (!readyToScroll) return
     const lenis = new Lenis({ smoothWheel: true })
     lenis.on('scroll', ScrollTrigger.update)
     const lenisTicker = (time: number) => lenis.raf(time * 1000)
     gsap.ticker.add(lenisTicker)
     // Deliberately NOT calling gsap.ticker.lagSmoothing(0) — that call
-    // disables GSAP's protection against exactly the symptom reported:
-    // when the ticker falls behind (e.g. while the page is still
-    // hydrating/loading chunks), lag smoothing normally spreads the
-    // catch-up out smoothly. Disabling it makes GSAP apply all the missed
-    // time in one jump the instant it gets a free frame instead — the
-    // background appears frozen, then suddenly "catches up" all at once,
-    // and scroll feels unresponsive until that jump happens. Leaving this
-    // at GSAP's default (enabled) lets it smooth over any startup jank
-    // instead of visibly lurching through it.
+    // disables GSAP's protection against a ticker that falls behind (e.g.
+    // while the page is still hydrating): lag smoothing normally spreads a
+    // catch-up out smoothly instead of applying all the missed time in one
+    // jump. Left at GSAP's default (enabled) as a second line of defense.
+    return () => {
+      gsap.ticker.remove(lenisTicker)
+      lenis.destroy()
+    }
+  }, [readyToScroll])
 
+  useEffect(() => {
     // Everything below is deferred one frame: SplitText's DOM splitting plus
     // ScrollTrigger.create() with pin:true on a min-h-[160vh] section forces
     // GSAP to synchronously measure the whole document's layout to compute
@@ -145,8 +168,6 @@ export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
       split?.revert()
       revealTl?.kill()
       ScrollTrigger.getAll().forEach((t) => t.kill())
-      gsap.ticker.remove(lenisTicker)
-      lenis.destroy()
     }
   }, [])
 

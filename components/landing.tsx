@@ -92,6 +92,7 @@ export function Landing() {
         }}
       />
       <HeroScrollVideoReveal
+        readyToScroll={ready}
         topBrand={
           <div className="flex items-center gap-2.5">
             <AppLogo className="h-8 w-auto sm:h-9" />
