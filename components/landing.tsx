@@ -176,24 +176,29 @@ export function Landing() {
           // it used to be page-level `fixed`, which kept it pinned over
           // every later section (including the globe reveal's cards),
           // which is exactly what it shouldn't do.
-          isReturningUser ? (
-            <div className="flex items-center gap-5 sm:gap-6">
-              <button
-                type="button"
-                onClick={() => router.push('/sign-in')}
-                className="text-sm font-semibold text-foreground/90 hover:text-foreground transition-colors"
-              >
-                Sign In
-              </button>
-              <button
-                type="button"
-                onClick={() => router.push('/sign-up')}
-                className="text-sm font-semibold text-foreground/90 hover:text-foreground transition-colors"
-              >
-                Sign Up
-              </button>
-            </div>
-          ) : undefined
+          //
+          // Always rendered now, for both new and returning visitors — a
+          // new visitor previously had no top-right way in, only the
+          // hero/bottom CTAs. The isReturningUser mechanism itself is kept
+          // (not deleted) — tried a "Welcome back" label off it, but that
+          // was reverted per feedback, so for now it's only a data
+          // attribute (no visible difference) rather than dead code.
+          <div className="flex items-center gap-5 sm:gap-6" data-returning-user={isReturningUser}>
+            <button
+              type="button"
+              onClick={() => router.push('/sign-in')}
+              className="text-sm font-semibold text-foreground/90 hover:text-foreground transition-colors"
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push('/sign-up')}
+              className="text-sm font-semibold text-foreground/90 hover:text-foreground transition-colors"
+            >
+              Sign Up
+            </button>
+          </div>
         }
         topText={
           <span className={marigold.className}>
@@ -205,15 +210,20 @@ export function Landing() {
         topCta={
           <>
             {/* Live counter sits right under the headline, before any CTA —
-                real proof before the ask, not after it. */}
-            <div className="mt-12 sm:mt-14">
+                real proof before the ask, not after it. mt-20/24 here and
+                mt-28/32 on the method block below are deliberately close
+                to each other (not the old 12/14 vs 24/28 split) so the
+                counter reads as vertically centered in the gap between the
+                headline and the method block, instead of hugging the
+                headline with a lot of empty space beneath it. */}
+            <div className="mt-20 sm:mt-24">
               <LiveStatsCounter />
             </div>
 
             {/* Folded into this same first screen (not a separate section
                 below) so a visitor sees the whole pitch — headline, proof,
                 mechanism, and CTA — with zero scrolling on desktop. */}
-            <div className="w-full max-w-5xl mx-auto mt-24 sm:mt-28">
+            <div className="w-full max-w-5xl mx-auto mt-28 sm:mt-32">
               <p className="text-center text-xs font-bold uppercase tracking-widest text-primary mb-2">The Shortlisted method</p>
               <h2 className="text-center text-[clamp(1.25rem,2.5vw,2rem)] font-bold tracking-tight text-balance mb-8">
                 One profile, eight countries, zero guesswork.
