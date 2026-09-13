@@ -10,6 +10,7 @@ import { RevealGroup } from '@/components/reveal-group'
 import { EarlyAdmissionPanel } from '@/components/early-admission-panel'
 import { ProgressiveFluxLoader, type ProgressiveFluxPhase } from '@/components/ui/progressive-flux-loader'
 import { AcceptanceRateLine } from '@/components/acceptance-rate-line'
+import { BorderBeam } from '@/components/ui/border-beam-search'
 
 // Mirrors the actual stages analyzeTargetUniversity() goes through
 // server-side (see app/actions/analyze-target-university.ts) — catalog-only
@@ -159,23 +160,41 @@ export const TargetUniversityAnalysis = forwardRef<TargetUniversityAnalysisHandl
 
       <div className="flex flex-col sm:flex-row gap-2">
         <div ref={inputWrapperRef} className="relative flex-1 min-w-0">
-          <input
-            type="text"
-            placeholder="e.g. Stanford University"
-            value={name}
-            onChange={(e) => {
-              setName(e.target.value)
-              setShowSuggestions(true)
-            }}
-            onFocus={() => setShowSuggestions(true)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleAnalyze()
-              if (e.key === 'Escape') setShowSuggestions(false)
-            }}
-            disabled={!hasProfile}
-            autoComplete="off"
-            className="w-full bg-secondary border border-border rounded-xl p-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary disabled:opacity-60"
-          />
+          {/* colorVariant="ocean" is the closest built-in preset to this
+              site's teal, then shifted the rest of the way there with a
+              --beam-hue-base hue-rotate override (ocean's blue/purple sits
+              around 220-260deg). -55deg read as blue, -85deg overshot into
+              plain green — -70deg is the middle ground that actually lands
+              on teal-green, matching --primary's real hue (~178deg). */}
+          <BorderBeam
+            size="line"
+            colorVariant="ocean"
+            theme="dark"
+            duration={3.1}
+            hueRange={5}
+            borderRadius={20}
+            brightness={1.7}
+            saturation={1.6}
+            style={{ '--beam-hue-base': '-70deg' } as React.CSSProperties}
+          >
+            <input
+              type="text"
+              placeholder="e.g. Stanford University"
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value)
+                setShowSuggestions(true)
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleAnalyze()
+                if (e.key === 'Escape') setShowSuggestions(false)
+              }}
+              disabled={!hasProfile}
+              autoComplete="off"
+              className="w-full bg-secondary border border-border rounded-xl p-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary disabled:opacity-60"
+            />
+          </BorderBeam>
           {showSuggestions && suggestions.length > 0 && (
             <ul className="absolute z-20 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-xl shadow-lg max-h-56 overflow-y-auto py-1">
               {suggestions.map((suggestion) => (
