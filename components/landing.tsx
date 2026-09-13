@@ -44,7 +44,7 @@ const READY_SETTLE_MS = 150
 
 // Dark box + teal border/text (matching the step cards) rather than a
 // filled bright pill — the boxed-card treatment moved here from the stats
-// row above it, which now floats with no box instead. "970+ real
+// row above it, which now floats with no box instead. "3500+ real
 // universities" dropped entirely since the stats row right above already
 // shows that exact number — no need to repeat it a second time immediately
 // below.
@@ -55,13 +55,13 @@ const FEATURE_TAGS: TagItem[] = [
   { text: 'Personalized action plan', background: 'var(--card)', color: 'var(--primary)', border: 'var(--primary)' },
 ]
 
-// Real catalog numbers (Sept 2026 snapshot) — same convention as the "970+"
+// Real catalog numbers (Sept 2026 snapshot) — same convention as the "3500+"
 // figure already used elsewhere on this page, never an invented number.
 // Labels deliberately worded differently from the near-identical category
 // names other admissions tools use for the same 4 numbers (universities/
 // countries/curricula/fields), even though the underlying facts are the same.
 const STATS = [
-  { value: '970+', label: 'Real universities' },
+  { value: '3500+', label: 'Real universities' },
   { value: '8', label: 'Countries we cover' },
   { value: '7', label: 'Grading systems handled' },
 ]
@@ -85,6 +85,21 @@ export function Landing() {
       html.style.overflow = prevOverflow
     }
   }, [ready])
+
+  // Proximity (not mandatory) scroll-snap on the last section — momentum
+  // scroll off the globe reveal used to sail straight past "Stop guessing"
+  // into the footer below. Proximity only pulls the scroll in when it's
+  // already close, so it settles on that section instead of overshooting,
+  // without fighting normal scrolling the rest of the page (mandatory snap
+  // would re-trigger this page's known history of scroll-jank).
+  useEffect(() => {
+    const html = document.documentElement
+    const prev = html.style.scrollSnapType
+    html.style.scrollSnapType = 'y proximity'
+    return () => {
+      html.style.scrollSnapType = prev
+    }
+  }, [])
 
   useEffect(() => {
     if (ready) return
@@ -191,14 +206,14 @@ export function Landing() {
           <>
             {/* Live counter sits right under the headline, before any CTA —
                 real proof before the ask, not after it. */}
-            <div className="mt-6">
+            <div className="mt-12 sm:mt-14">
               <LiveStatsCounter />
             </div>
 
             {/* Folded into this same first screen (not a separate section
                 below) so a visitor sees the whole pitch — headline, proof,
                 mechanism, and CTA — with zero scrolling on desktop. */}
-            <div className="w-full max-w-5xl mx-auto mt-20 sm:mt-28">
+            <div className="w-full max-w-5xl mx-auto mt-24 sm:mt-28">
               <p className="text-center text-xs font-bold uppercase tracking-widest text-primary mb-2">The Shortlisted method</p>
               <h2 className="text-center text-[clamp(1.25rem,2.5vw,2rem)] font-bold tracking-tight text-balance mb-8">
                 One profile, eight countries, zero guesswork.

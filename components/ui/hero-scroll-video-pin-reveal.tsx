@@ -185,7 +185,7 @@ export const HeroScrollVideoReveal: React.FC<HeroScrollRevealProps> = ({
       {afterBenefit}
 
       {bottomText && (
-        <section className="w-full min-h-[70vh] flex justify-center items-center text-center px-4 sm:px-8 py-8 text-[clamp(1.8rem,4.5vw,4.5rem)] font-bold tracking-tight text-balance leading-tight relative z-10">
+        <section className="snap-start w-full min-h-[70vh] flex justify-center items-center text-center px-4 sm:px-8 py-8 text-[clamp(1.8rem,4.5vw,4.5rem)] font-bold tracking-tight text-balance leading-tight relative z-10">
           {bottomText}
         </section>
       )}

@@ -21,7 +21,7 @@ interface CountryCard {
 }
 
 // Real per-country catalog counts (Sept 2026 snapshot), rounded down to a
-// clean "+" threshold — same convention as "970+ real universities"
+// clean "+" threshold — same convention as "3500+ real universities"
 // elsewhere on this page. Never an invented number. Singapore + Hong Kong
 // are combined into one card (their real counts summed, then rounded
 // down) — everything else stands alone.
@@ -29,7 +29,7 @@ const CARDS: CountryCard[] = [
   {
     id: 'us',
     label: 'United States',
-    stat: '270+ universities',
+    stat: '1600+ universities',
     blurb: "The world's largest higher-ed market — Ivy League research giants down to specialized colleges.",
     image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Aerial_of_the_Harvard_Business_School_campus.jpeg/960px-Aerial_of_the_Harvard_Business_School_campus.jpeg',
     side: 'right',
@@ -38,7 +38,7 @@ const CARDS: CountryCard[] = [
   {
     id: 'uk',
     label: 'United Kingdom',
-    stat: '120+ universities',
+    stat: '220+ universities',
     blurb: 'From Oxbridge to a deep bench of research-intensive Russell Group universities.',
     image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/1_christ_church_hall_2012.jpg/960px-1_christ_church_hall_2012.jpg',
     side: 'right',
@@ -47,7 +47,7 @@ const CARDS: CountryCard[] = [
   {
     id: 'germany',
     label: 'Germany',
-    stat: '140+ universities',
+    stat: '440+ universities',
     blurb: 'Anchored by its Technische Universitäten and tuition-free public research universities.',
     image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/MI-Geb%C3%A4ude_der_TU_M%C3%BCnchen_Magistrale2.JPG/960px-MI-Geb%C3%A4ude_der_TU_M%C3%BCnchen_Magistrale2.JPG',
     side: 'right',
@@ -56,7 +56,7 @@ const CARDS: CountryCard[] = [
   {
     id: 'india',
     label: 'India',
-    stat: '190+ universities',
+    stat: '540+ universities',
     blurb: 'Home to the IITs and IIMs, plus a fast-growing set of private research universities.',
     image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Ariel_view_of_campus.jpg/960px-Ariel_view_of_campus.jpg',
     side: 'left',
@@ -66,7 +66,7 @@ const CARDS: CountryCard[] = [
     id: 'france',
     label: 'France',
     blurb: 'Grandes écoles and public universities together, from Sciences Po to the Sorbonne.',
-    stat: '160+ universities',
+    stat: '420+ universities',
     image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Entree_scpo.jpg/960px-Entree_scpo.jpg',
     side: 'left',
     beat: 4,
@@ -74,7 +74,7 @@ const CARDS: CountryCard[] = [
   {
     id: 'singapore-hk',
     label: 'Singapore & Hong Kong',
-    stat: '25+ universities',
+    stat: '35+ universities',
     blurb: 'Two small, research-intensive systems — Singapore top-ranked, Hong Kong UK-rooted.',
     image: 'https://upload.wikimedia.org/wikipedia/commons/a/a1/NUSHighSchool-entrance-20081201.jpg',
     side: 'left',
