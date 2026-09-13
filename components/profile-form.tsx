@@ -386,7 +386,15 @@ export function ProfileForm({
   }
 
   const [pending, startTransition] = useTransition()
+  // `saved` is a short-lived flash ("Saved!" for 3s, see handleSave) — good
+  // for the button's own feedback, wrong for gating Run Match, which needs
+  // to know "does a saved profile exist at all," a fact that shouldn't
+  // disappear 3 seconds after saving. hasSavedProfile is that persistent
+  // fact: true if the user already had a saved profile on page load
+  // (initialProfiles non-empty) or once a save succeeds this session.
   const [saved, setSaved] = useState(false)
+  const [hasSavedProfile, setHasSavedProfile] = useState(initialProfiles.length > 0)
+  const [runMatchWarning, setRunMatchWarning] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const errorRef = useRef<HTMLParagraphElement>(null)
 
@@ -521,6 +529,8 @@ export function ProfileForm({
           return
         }
         setSaved(true)
+        setHasSavedProfile(true)
+        setRunMatchWarning(false)
         setTimeout(() => setSaved(false), 3000)
       } catch (e) {
         const message = e instanceof Error ? e.message : 'Something went wrong saving your profile.'
@@ -565,6 +575,15 @@ export function ProfileForm({
         </div>
         <ProfileCompletionRing percent={completionPercent} />
       </div>
+
+      {/* Persistent, not just a post-save toast — edits below aren't kept
+          until "Save profile" is pressed, and Run Match only ever reads
+          the saved version, never the live draft. */}
+      {!hasSavedProfile && (
+        <p className="text-xs text-muted-foreground bg-secondary/40 border border-border rounded-xl px-4 py-2.5 mb-8">
+          Remember to save your profile below — your matches and analysis are generated from your saved profile, not what's currently on screen.
+        </p>
+      )}
 
       <div className="space-y-12">
         <HowWeAnalyze />
@@ -994,6 +1013,31 @@ export function ProfileForm({
           </button>
         ) : (
           <LiquidButton onClick={handleSave} fullWidth>Save profile</LiquidButton>
+        )}
+
+        {/* Always visible now (not just right after a save) — but only
+            actually navigates once a saved profile exists. Run Match reads
+            the profile from the database (getLatestProfile), not from
+            whatever's currently typed in this form, so unsaved edits don't
+            block it — only ever having saved at all does. */}
+        {hasSavedProfile ? (
+          <Link
+            href="/matches"
+            className="w-full flex items-center justify-center gap-2 border border-border text-foreground font-semibold text-sm py-4 rounded-2xl hover:bg-muted hover:-translate-y-0.5 transition-all"
+          >
+            Run Match <ArrowRight className="w-4 h-4" />
+          </Link>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setRunMatchWarning(true)}
+            className="w-full flex items-center justify-center gap-2 border border-border text-muted-foreground font-semibold text-sm py-4 rounded-2xl cursor-not-allowed"
+          >
+            Run Match <ArrowRight className="w-4 h-4" />
+          </button>
+        )}
+        {runMatchWarning && !hasSavedProfile && (
+          <p className="text-xs text-destructive text-center">Profile has not been saved yet — save it above first, then Run Match.</p>
         )}
 
         {error && <p ref={errorRef} tabIndex={-1} className="text-xs text-destructive text-center outline-none" role="alert">{error}</p>}

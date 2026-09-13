@@ -16,21 +16,36 @@ import { getLiveStats, type LiveStats } from '@/app/actions/stats'
 // matter how small durationMs is set, which is what made this feel slow.
 // Tied to actual time, the whole climb always finishes in durationMs
 // regardless of the target's size.
+//
+// The counter now polls for fresh real numbers while the page stays open
+// (see POLL_INTERVAL_MS below), so `target` can change more than once.
+// Only the FIRST activation animates from 0 — later target changes (a real
+// new match/profile came in since the last poll) animate from whatever is
+// currently on screen up to the new number, so a live update reads as a
+// small bump, not the counter resetting itself back to zero.
 function useCountUp(target: number, active: boolean, durationMs = 600) {
   const [value, setValue] = useState(0)
+  const valueRef = useRef(0)
+  const hasStarted = useRef(false)
 
   useEffect(() => {
     if (!active) return
     if (target <= 0) {
       setValue(0)
+      valueRef.current = 0
       return
     }
-    setValue(0)
+    const from = hasStarted.current ? valueRef.current : 0
+    hasStarted.current = true
+    if (from === target) return
+
     let raf = 0
     const start = performance.now()
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / durationMs)
-      setValue(Math.round(t * target))
+      const next = Math.round(from + (target - from) * t)
+      valueRef.current = next
+      setValue(next)
       if (t < 1) raf = requestAnimationFrame(tick)
     }
     raf = requestAnimationFrame(tick)
@@ -40,13 +55,35 @@ function useCountUp(target: number, active: boolean, durationMs = 600) {
   return value
 }
 
+// How often to re-check the real DB numbers while the page is open — real
+// students matching/signing up elsewhere should show up here without a
+// page refresh. Not aggressive: this is a cheap aggregate COUNT(*), and a
+// visitor sitting on the landing page for many minutes is the rare case,
+// not the common one.
+const POLL_INTERVAL_MS = 20000
+
 export function LiveStatsCounter() {
   const [stats, setStats] = useState<LiveStats | null>(null)
   const [inView, setInView] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    getLiveStats().then(setStats).catch(() => setStats({ matchesRun: 0, studentsConnected: 0 }))
+    let cancelled = false
+    const load = () => {
+      getLiveStats()
+        .then((s) => {
+          if (!cancelled) setStats(s)
+        })
+        .catch(() => {
+          if (!cancelled) setStats((prev) => prev ?? { matchesRun: 0, studentsConnected: 0 })
+        })
+    }
+    load()
+    const interval = setInterval(load, POLL_INTERVAL_MS)
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+    }
   }, [])
 
   useEffect(() => {
