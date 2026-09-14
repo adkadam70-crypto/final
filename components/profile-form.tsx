@@ -616,85 +616,100 @@ export function ProfileForm({
           </Link>
         </section>
 
-        <section className="bg-card border border-border rounded-3xl p-6">
-          <h2 className="text-xl font-extrabold tracking-tight text-primary mb-4 flex items-center gap-2"><GraduationCap className="w-5 h-5 text-primary" /> Academics</h2>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="curriculum" className="text-xs text-muted-foreground block mb-2">Curriculum / board</label>
-              <select id="curriculum" value={curriculum} onChange={(e) => handleCurriculumChange(e.target.value as Curriculum)} className="w-full bg-secondary border border-border rounded-xl p-3 text-xs text-foreground focus:outline-none focus:border-primary">
-                <option value="CBSE">{CURRICULUM_LABELS.CBSE}</option>
-                <option value="ICSE">{CURRICULUM_LABELS.ICSE}</option>
-                <option value="STATE_BOARD">{CURRICULUM_LABELS.STATE_BOARD}</option>
-                <option value="A_LEVELS">{CURRICULUM_LABELS.A_LEVELS}</option>
-                <option value="INTL_A_LEVELS">{CURRICULUM_LABELS.INTL_A_LEVELS}</option>
-                <option value="IB_DIPLOMA">{CURRICULUM_LABELS.IB_DIPLOMA}</option>
-                <option value="US_GPA_PCT">{CURRICULUM_LABELS.US_GPA_PCT}</option>
-              </select>
-            </div>
-
-            <AcademicDetailInput detail={academicDetail} onChange={setAcademicDetail} />
-
-            <div className="p-3 bg-accent/60 border border-primary/25 rounded-2xl flex items-center gap-3">
-              <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
+        {/* Two columns on large screens — earlier-grades used to sit inline
+            below the grade 12 form, disrupting the main fill-it-in flow
+            (flagged as likely contributing to sign-up -> Run Match drop-off:
+            the profile felt like it kept going after the part that actually
+            matters). Now it's a separate side panel, clearly optional
+            extra context rather than another required step in the same
+            column. Stacks below on mobile, same as any other section. */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4 items-start">
+          <section className="bg-card border border-border rounded-3xl p-6">
+            <h2 className="text-xl font-extrabold tracking-tight text-primary mb-4 flex items-center gap-2"><GraduationCap className="w-5 h-5 text-primary" /> Academics</h2>
+            <div className="space-y-4">
               <div>
-                <div className="text-[10px] text-primary/90 uppercase tracking-wider font-semibold">Grade summary</div>
-                <div className="text-xs font-mono text-accent-foreground font-semibold">{badge}</div>
+                <label htmlFor="curriculum" className="text-xs text-muted-foreground block mb-2">Curriculum / board</label>
+                <select id="curriculum" value={curriculum} onChange={(e) => handleCurriculumChange(e.target.value as Curriculum)} className="w-full bg-secondary border border-border rounded-xl p-3 text-xs text-foreground focus:outline-none focus:border-primary">
+                  <option value="CBSE">{CURRICULUM_LABELS.CBSE}</option>
+                  <option value="ICSE">{CURRICULUM_LABELS.ICSE}</option>
+                  <option value="STATE_BOARD">{CURRICULUM_LABELS.STATE_BOARD}</option>
+                  <option value="A_LEVELS">{CURRICULUM_LABELS.A_LEVELS}</option>
+                  <option value="INTL_A_LEVELS">{CURRICULUM_LABELS.INTL_A_LEVELS}</option>
+                  <option value="IB_DIPLOMA">{CURRICULUM_LABELS.IB_DIPLOMA}</option>
+                  <option value="US_GPA_PCT">{CURRICULUM_LABELS.US_GPA_PCT}</option>
+                </select>
+              </div>
+
+              {/* Explicit "Grade 12" label — this whole block is the current/
+                  final-year record that actually drives matches, but nothing
+                  said so before; a student could easily mistake it for just
+                  "your grades" with no sense of which year it covers. */}
+              <div>
+                <span className="text-sm font-bold text-primary bg-accent/50 px-2 py-0.5 rounded-lg inline-block mb-2">Grade 12</span>
+                <AcademicDetailInput detail={academicDetail} onChange={setAcademicDetail} />
+              </div>
+
+              <div className="p-3 bg-accent/60 border border-primary/25 rounded-2xl flex items-center gap-3">
+                <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
+                <div>
+                  <div className="text-[10px] text-primary/90 uppercase tracking-wider font-semibold">Grade summary</div>
+                  <div className="text-xs font-mono text-accent-foreground font-semibold">{badge}</div>
+                </div>
               </div>
             </div>
+          </section>
 
-            <div className="pt-2 border-t border-border">
-              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                <History className="w-4 h-4 text-primary" />
-                <span className="text-sm font-bold text-primary bg-accent/50 px-2 py-0.5 rounded-lg">Earlier grades (9th–11th)</span>
-                <span className="text-xs text-muted-foreground/70 font-normal">— optional, helps sharpen the AI's analysis</span>
-              </div>
-              {targetCountries.length > 0 && <RelevanceLine breakdown={priorGradesRelevance(targetCountries)} />}
-              <p className="text-xs text-muted-foreground/70 mb-2">Grade 12 above is what actually powers your matches — everything below is extra context that the AI still reads, so fill in whichever years are worth including.</p>
-              {targetCountries.length > 0 && (
-                <details className="group mb-3">
-                  <summary className="cursor-pointer list-none text-xs text-primary font-medium flex items-center gap-1 w-fit">
-                    How each of your countries views this <ChevronDown className="w-3 h-3 transition-transform group-open:rotate-180" />
-                  </summary>
-                  <ul className="text-xs text-muted-foreground/80 mt-2 space-y-1">
-                    {targetCountries.map((c) => GRADE_RELEVANCE[c] && (
-                      <li key={c}><strong className="text-foreground/80">{c}:</strong> {GRADE_RELEVANCE[c]}</li>
-                    ))}
-                  </ul>
-                </details>
-              )}
+          <aside className="bg-card border border-border rounded-3xl p-5 lg:sticky lg:top-6">
+            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+              <History className="w-4 h-4 text-primary" />
+              <span className="text-sm font-bold text-primary bg-accent/50 px-2 py-0.5 rounded-lg">Earlier grades (9th–11th)</span>
+            </div>
+            <p className="text-xs text-muted-foreground/70 mb-2">Optional, helps sharpen the AI's analysis. Grade 12 on the left is what actually powers your matches — everything here is extra context, so fill in whichever years are worth including.</p>
+            {targetCountries.length > 0 && <RelevanceLine breakdown={priorGradesRelevance(targetCountries)} />}
+            {targetCountries.length > 0 && (
+              <details className="group mb-3">
+                <summary className="cursor-pointer list-none text-xs text-primary font-medium flex items-center gap-1 w-fit">
+                  How each of your countries views this <ChevronDown className="w-3 h-3 transition-transform group-open:rotate-180" />
+                </summary>
+                <ul className="text-xs text-muted-foreground/80 mt-2 space-y-1">
+                  {targetCountries.map((c) => GRADE_RELEVANCE[c] && (
+                    <li key={c}><strong className="text-foreground/80">{c}:</strong> {GRADE_RELEVANCE[c]}</li>
+                  ))}
+                </ul>
+              </details>
+            )}
 
-              <div className="space-y-4">
-                <div className="bg-secondary/40 border border-border rounded-2xl p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[11px] font-semibold text-foreground/80">11th grade{(curriculum === 'A_LEVELS' || curriculum === 'INTL_A_LEVELS') && ' (AS-Level)'}</span>
-                    {eleventh && (
-                      <button type="button" onClick={() => setEleventh(null)} className="text-[10px] text-muted-foreground hover:text-destructive flex items-center gap-0.5">
-                        <X className="w-3 h-3" /> Remove
-                      </button>
-                    )}
-                  </div>
-                  {eleventh ? (
-                    <div className="scale-[0.92] origin-top -mx-2 -mb-2">
-                      <AcademicDetailInput detail={eleventh} onChange={setEleventh} variant={curriculum === 'A_LEVELS' || curriculum === 'INTL_A_LEVELS' ? 'as' : 'full'} />
-                    </div>
-                  ) : (
-                    <div>
-                      <p className="text-[10px] text-primary/80 font-medium mb-1.5">Optional — adding this helps strengthen your analysis.</p>
-                      <button type="button" onClick={() => setEleventh(defaultAcademicDetail(curriculum))} className="text-[11px] text-primary font-medium flex items-center gap-1">
-                        <Plus className="w-3 h-3" /> Add 11th grade detail ({CURRICULUM_LABELS[curriculum]})
-                      </button>
-                    </div>
+            <div className="space-y-4">
+              <div className="bg-secondary/40 border border-border rounded-2xl p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-bold text-primary">11th grade{(curriculum === 'A_LEVELS' || curriculum === 'INTL_A_LEVELS') && ' (AS-Level)'}</span>
+                  {eleventh && (
+                    <button type="button" onClick={() => setEleventh(null)} className="text-[10px] text-muted-foreground hover:text-destructive flex items-center gap-0.5">
+                      <X className="w-3 h-3" /> Remove
+                    </button>
                   )}
                 </div>
+                {eleventh ? (
+                  <div className="scale-[0.92] origin-top -mx-2 -mb-2">
+                    <AcademicDetailInput detail={eleventh} onChange={setEleventh} variant={curriculum === 'A_LEVELS' || curriculum === 'INTL_A_LEVELS' ? 'as' : 'full'} />
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-[10px] text-primary/80 font-medium mb-1.5">Optional — adding this helps strengthen your analysis.</p>
+                    <button type="button" onClick={() => setEleventh(defaultAcademicDetail(curriculum))} className="text-[11px] text-primary font-medium flex items-center gap-1">
+                      <Plus className="w-3 h-3" /> Add 11th grade detail ({CURRICULUM_LABELS[curriculum]})
+                    </button>
+                  </div>
+                )}
+              </div>
 
-                <div className="bg-secondary/40 border border-border rounded-2xl p-3">
-                  <span className="text-[11px] font-semibold text-foreground/80 block mb-2">9th &amp; 10th grade</span>
-                  <NinthTenthInput value={ninthTenth} onChange={setNinthTenth} />
-                </div>
+              <div className="bg-secondary/40 border border-border rounded-2xl p-3">
+                <span className="text-sm font-bold text-primary block mb-2">9th &amp; 10th grade</span>
+                <NinthTenthInput value={ninthTenth} onChange={setNinthTenth} />
               </div>
             </div>
-          </div>
-        </section>
+          </aside>
+        </div>
 
         <section className="bg-card border border-border rounded-3xl p-6">
             <h2 className="text-xl font-extrabold tracking-tight text-primary mb-1 flex items-center gap-2"><Award className="w-5 h-5 text-chart-4" /> Standardized tests</h2>
