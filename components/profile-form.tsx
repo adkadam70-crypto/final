@@ -656,6 +656,40 @@ export function ProfileForm({
                   <div className="text-xs font-mono text-accent-foreground font-semibold">{badge}</div>
                 </div>
               </div>
+
+              {/* 11th, then 9th/10th, directly under Grade 12 — no repeated
+                  "earlier grades, optional, grade 12 is what powers your
+                  matches" text here anymore, that's already said once in
+                  the Country relevance box beside this. */}
+              <div className="space-y-4 pt-2 border-t border-border">
+                <div className="bg-secondary/40 border border-border rounded-2xl p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-bold text-primary">11th grade{(curriculum === 'A_LEVELS' || curriculum === 'INTL_A_LEVELS') && ' (AS-Level)'}</span>
+                    {eleventh && (
+                      <button type="button" onClick={() => setEleventh(null)} className="text-[10px] text-muted-foreground hover:text-destructive flex items-center gap-0.5">
+                        <X className="w-3 h-3" /> Remove
+                      </button>
+                    )}
+                  </div>
+                  {eleventh ? (
+                    <div className="scale-[0.92] origin-top -mx-2 -mb-2">
+                      <AcademicDetailInput detail={eleventh} onChange={setEleventh} variant={curriculum === 'A_LEVELS' || curriculum === 'INTL_A_LEVELS' ? 'as' : 'full'} />
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-[10px] text-primary/80 font-medium mb-1.5">Optional — adding this helps strengthen your analysis.</p>
+                      <button type="button" onClick={() => setEleventh(defaultAcademicDetail(curriculum))} className="text-[11px] text-primary font-medium flex items-center gap-1">
+                        <Plus className="w-3 h-3" /> Add 11th grade detail ({CURRICULUM_LABELS[curriculum]})
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-secondary/40 border border-border rounded-2xl p-3">
+                  <span className="text-sm font-bold text-primary block mb-2">9th &amp; 10th grade</span>
+                  <NinthTenthInput value={ninthTenth} onChange={setNinthTenth} />
+                </div>
+              </div>
             </div>
           </section>
 
