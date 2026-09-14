@@ -842,9 +842,16 @@ export function ProfileForm({
             </div>
         </section>
 
-        <section className="bg-card border border-border rounded-3xl p-6">
-          <h2 className="text-xl font-extrabold tracking-tight text-primary mb-1 flex items-center gap-2"><Flame className="w-5 h-5 text-chart-2" /> Extracurricular flexes</h2>
-          {targetCountries.length > 0 && <RelevanceLine breakdown={extracurricularsRelevance(targetCountries)} />}
+        {/* Collapsed by default — three full activity-entry groups stacked
+            open was a lot of the page's "clustered" feeling. Defaults open
+            if the user already has entries here (from a loaded/saved
+            profile), so existing data is never hidden behind a click. */}
+        <details className="group bg-card border border-border rounded-3xl p-6" open={[...ec1, ...ec2, ...ec3].some((e) => e.type.trim() || e.description.trim())}>
+          <summary className="cursor-pointer list-none flex items-center justify-between gap-2">
+            <h2 className="text-xl font-extrabold tracking-tight text-primary mb-0 flex items-center gap-2"><Flame className="w-5 h-5 text-chart-2" /> Extracurricular flexes</h2>
+            <ChevronDown className="w-5 h-5 text-muted-foreground shrink-0 transition-transform group-open:rotate-180" />
+          </summary>
+          {targetCountries.length > 0 && <div className="mt-2"><RelevanceLine breakdown={extracurricularsRelevance(targetCountries)} /></div>}
           <div className="space-y-6 mt-3">
             <ActivityGroupFields
               label="Honors & national-level achievements"
@@ -868,7 +875,7 @@ export function ProfileForm({
               {...activityHandlers(setEc3)}
             />
           </div>
-        </section>
+        </details>
 
         {suggestedActivities !== null && activities.length > 0 && (
           <section className="bg-card border border-border rounded-3xl p-6">
