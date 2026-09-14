@@ -616,14 +616,12 @@ export function ProfileForm({
           </Link>
         </section>
 
-        {/* Two columns on large screens — earlier-grades used to sit inline
-            below the grade 12 form, disrupting the main fill-it-in flow
-            (flagged as likely contributing to sign-up -> Run Match drop-off:
-            the profile felt like it kept going after the part that actually
-            matters). Now it's a separate side panel, clearly optional
-            extra context rather than another required step in the same
-            column. Stacks below on mobile, same as any other section. */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4 items-start">
+        {/* Grade 12 -> 11th -> 9th/10th stack back in one vertical flow, in
+            that order, same as before — only the country-relevance info
+            (which used to sit inline and break up that flow with an
+            expandable list) moved out to a small side box. Stacks below on
+            mobile, same as any other section. */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-4 items-start">
           <section className="bg-card border border-border rounded-3xl p-6">
             <h2 className="text-xl font-extrabold tracking-tight text-primary mb-4 flex items-center gap-2"><GraduationCap className="w-5 h-5 text-primary" /> Academics</h2>
             <div className="space-y-4">
@@ -656,58 +654,74 @@ export function ProfileForm({
                   <div className="text-xs font-mono text-accent-foreground font-semibold">{badge}</div>
                 </div>
               </div>
+
+              <div className="pt-2 border-t border-border">
+                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                  <History className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-bold text-primary bg-accent/50 px-2 py-0.5 rounded-lg">Earlier grades (9th–11th)</span>
+                  <span className="text-xs text-muted-foreground/70 font-normal">— optional, helps sharpen the AI's analysis</span>
+                </div>
+                <p className="text-xs text-muted-foreground/70 mb-3">Grade 12 above is what actually powers your matches — everything below is extra context that the AI still reads, so fill in whichever years are worth including.</p>
+
+                <div className="space-y-4">
+                  <div className="bg-secondary/40 border border-border rounded-2xl p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-bold text-primary">11th grade{(curriculum === 'A_LEVELS' || curriculum === 'INTL_A_LEVELS') && ' (AS-Level)'}</span>
+                      {eleventh && (
+                        <button type="button" onClick={() => setEleventh(null)} className="text-[10px] text-muted-foreground hover:text-destructive flex items-center gap-0.5">
+                          <X className="w-3 h-3" /> Remove
+                        </button>
+                      )}
+                    </div>
+                    {eleventh ? (
+                      <div className="scale-[0.92] origin-top -mx-2 -mb-2">
+                        <AcademicDetailInput detail={eleventh} onChange={setEleventh} variant={curriculum === 'A_LEVELS' || curriculum === 'INTL_A_LEVELS' ? 'as' : 'full'} />
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="text-[10px] text-primary/80 font-medium mb-1.5">Optional — adding this helps strengthen your analysis.</p>
+                        <button type="button" onClick={() => setEleventh(defaultAcademicDetail(curriculum))} className="text-[11px] text-primary font-medium flex items-center gap-1">
+                          <Plus className="w-3 h-3" /> Add 11th grade detail ({CURRICULUM_LABELS[curriculum]})
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="bg-secondary/40 border border-border rounded-2xl p-3">
+                    <span className="text-sm font-bold text-primary block mb-2">9th &amp; 10th grade</span>
+                    <NinthTenthInput value={ninthTenth} onChange={setNinthTenth} />
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
 
-          <aside className="bg-card border border-border rounded-3xl p-5 lg:sticky lg:top-6">
-            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-              <History className="w-4 h-4 text-primary" />
-              <span className="text-sm font-bold text-primary bg-accent/50 px-2 py-0.5 rounded-lg">Earlier grades (9th–11th)</span>
-            </div>
-            <p className="text-xs text-muted-foreground/70 mb-2">Optional, helps sharpen the AI's analysis. Grade 12 on the left is what actually powers your matches — everything here is extra context, so fill in whichever years are worth including.</p>
-            {targetCountries.length > 0 && <RelevanceLine breakdown={priorGradesRelevance(targetCountries)} />}
-            {targetCountries.length > 0 && (
-              <details className="group mb-3">
-                <summary className="cursor-pointer list-none text-xs text-primary font-medium flex items-center gap-1 w-fit">
-                  How each of your countries views this <ChevronDown className="w-3 h-3 transition-transform group-open:rotate-180" />
-                </summary>
-                <ul className="text-xs text-muted-foreground/80 mt-2 space-y-1">
-                  {targetCountries.map((c) => GRADE_RELEVANCE[c] && (
-                    <li key={c}><strong className="text-foreground/80">{c}:</strong> {GRADE_RELEVANCE[c]}</li>
-                  ))}
-                </ul>
-              </details>
+          {/* Small side box, just for the country-relevance info — this is
+              the one piece that actually used to interrupt the 12th -> 11th
+              -> 9th/10th flow with an expandable list wedged in the middle
+              of it. Everything else about that flow is back to how it was. */}
+          <aside className="bg-card border border-border rounded-3xl p-4 lg:sticky lg:top-6">
+            <span className="text-xs font-bold text-primary bg-accent/50 px-2 py-0.5 rounded-lg inline-block mb-2">Country relevance</span>
+            <p className="text-[11px] text-muted-foreground/70 mb-2">
+              Whether your 9th–11th grades matter depends on where you're applying — some of your target countries weigh them, some don't look at them at all. Either way, it's optional: Grade 12 is what actually drives your matches.
+            </p>
+            {targetCountries.length > 0 ? (
+              <>
+                <RelevanceLine breakdown={priorGradesRelevance(targetCountries)} />
+                <details className="group mt-2">
+                  <summary className="cursor-pointer list-none text-xs text-primary font-medium flex items-center gap-1 w-fit">
+                    How each of your countries views this <ChevronDown className="w-3 h-3 transition-transform group-open:rotate-180" />
+                  </summary>
+                  <ul className="text-xs text-muted-foreground/80 mt-2 space-y-1">
+                    {targetCountries.map((c) => GRADE_RELEVANCE[c] && (
+                      <li key={c}><strong className="text-foreground/80">{c}:</strong> {GRADE_RELEVANCE[c]}</li>
+                    ))}
+                  </ul>
+                </details>
+              </>
+            ) : (
+              <p className="text-[11px] text-muted-foreground/60">Pick your target countries above to see this.</p>
             )}
-
-            <div className="space-y-4">
-              <div className="bg-secondary/40 border border-border rounded-2xl p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-bold text-primary">11th grade{(curriculum === 'A_LEVELS' || curriculum === 'INTL_A_LEVELS') && ' (AS-Level)'}</span>
-                  {eleventh && (
-                    <button type="button" onClick={() => setEleventh(null)} className="text-[10px] text-muted-foreground hover:text-destructive flex items-center gap-0.5">
-                      <X className="w-3 h-3" /> Remove
-                    </button>
-                  )}
-                </div>
-                {eleventh ? (
-                  <div className="scale-[0.92] origin-top -mx-2 -mb-2">
-                    <AcademicDetailInput detail={eleventh} onChange={setEleventh} variant={curriculum === 'A_LEVELS' || curriculum === 'INTL_A_LEVELS' ? 'as' : 'full'} />
-                  </div>
-                ) : (
-                  <div>
-                    <p className="text-[10px] text-primary/80 font-medium mb-1.5">Optional — adding this helps strengthen your analysis.</p>
-                    <button type="button" onClick={() => setEleventh(defaultAcademicDetail(curriculum))} className="text-[11px] text-primary font-medium flex items-center gap-1">
-                      <Plus className="w-3 h-3" /> Add 11th grade detail ({CURRICULUM_LABELS[curriculum]})
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div className="bg-secondary/40 border border-border rounded-2xl p-3">
-                <span className="text-sm font-bold text-primary block mb-2">9th &amp; 10th grade</span>
-                <NinthTenthInput value={ninthTenth} onChange={setNinthTenth} />
-              </div>
-            </div>
           </aside>
         </div>
 
