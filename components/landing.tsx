@@ -322,8 +322,8 @@ export function Landing() {
             <p className="text-xs text-muted-foreground leading-relaxed text-pretty">
               Every ranking and acceptance rate we cite is pulled from named, citable sources — U.S. News &amp; World Report,
               the U.S. Department of Education&apos;s College Scorecard, NIRF (India&apos;s official government ranking framework),
-              The Complete University Guide (UK), Times Higher Education (Australia, Germany &amp; France), and QS World
-              University Rankings (Singapore &amp; Hong Kong). Where a real published number doesn&apos;t exist yet for a
+              The Complete University Guide (UK), Times Higher Education (Australia, Germany &amp; France), QS World
+              University Rankings (Singapore &amp; Hong Kong), Niche, and The Princeton Review. Where a real published number doesn&apos;t exist yet for a
               school, we say so — never a guess dressed up as fact.
             </p>
           </div>

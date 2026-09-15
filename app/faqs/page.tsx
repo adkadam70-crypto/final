@@ -13,7 +13,7 @@ const FAQS: { q: string; a: React.ReactNode }[] = [
   },
   {
     q: 'How are the acceptance-odds estimates calculated?',
-    a: 'An AI model assesses your profile against each university, grounded in named, citable sources — U.S. News & World Report, the U.S. Department of Education’s College Scorecard, NIRF, The Complete University Guide (UK), Times Higher Education, and QS World University Rankings. Where a real published number doesn’t exist yet for a school, we say so instead of inventing one.',
+    a: 'An AI model assesses your profile against each university, grounded in named, citable sources — U.S. News & World Report, the U.S. Department of Education’s College Scorecard, NIRF, The Complete University Guide (UK), Times Higher Education, QS World University Rankings, Niche, and The Princeton Review. Where a real published number doesn’t exist yet for a school, we say so instead of inventing one.',
   },
   {
     q: 'Is this a guarantee I’ll get in?',

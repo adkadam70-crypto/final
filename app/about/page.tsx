@@ -50,8 +50,8 @@ export default function AboutPage() {
               3500+ real universities across eight countries
               (US, UK, Australia, Singapore, Hong Kong, India, Germany &amp; France), and every match or acceptance
               estimate is grounded in named, citable sources: U.S. News &amp; World Report, the U.S. Department of
-              Education&apos;s College Scorecard, NIRF, The Complete University Guide, Times Higher Education, and
-              QS World University Rankings — never a made-up number.
+              Education&apos;s College Scorecard, NIRF, The Complete University Guide, Times Higher Education,
+              QS World University Rankings, Niche, and The Princeton Review — never a made-up number.
             </p>
           </section>
 
