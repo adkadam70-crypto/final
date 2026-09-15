@@ -32,13 +32,19 @@ export function AcceptanceRateLine({ info, className = '' }: { info: AcceptanceR
     // accurately so the tooltip and the number agree.
     const isOfferRate = /offer rate/i.test(info.source)
     const label = isOfferRate ? 'Offer rate' : 'Acceptance rate'
+    // Some schools' real rate is only published as a range (varies by
+    // course) rather than one flat figure — if the cited source spells one
+    // out (e.g. "16-21%"), show that range instead of the single
+    // representative number stored in the rate column.
+    const rangeMatch = info.source.match(/(\d{1,3})\s*[-–]\s*(\d{1,3})%/)
+    const displayRate = rangeMatch ? `${rangeMatch[1]}-${rangeMatch[2]}%` : `${info.rate}%`
     return (
       <span
-        className={`relative inline-flex items-center gap-1 text-[11px] text-muted-foreground ${className}`}
+        className={`relative inline-flex items-center gap-1 text-[11px] text-muted-foreground ${showExplainer ? 'z-[999]' : ''} ${className}`}
         title={isOfferRate ? undefined : `Source: ${info.source}`}
       >
         <Percent className="w-3 h-3 text-chart-2" />
-        {label} <strong className="font-semibold text-foreground/90">{info.rate}%</strong>
+        {label} <strong className="font-semibold text-foreground/90">{displayRate}</strong>
         {isOfferRate && (
           <button
             type="button"
@@ -55,7 +61,7 @@ export function AcceptanceRateLine({ info, className = '' }: { info: AcceptanceR
         {isOfferRate && showExplainer && (
           <span
             role="tooltip"
-            className="absolute z-20 top-full left-0 mt-1.5 w-64 bg-popover border border-border rounded-xl shadow-lg p-3 text-[11px] font-normal text-foreground/80 leading-relaxed normal-case"
+            className="absolute z-[999] top-full left-0 mt-1.5 w-64 bg-popover border border-border rounded-xl shadow-2xl p-3 text-[11px] font-normal text-foreground/80 leading-relaxed normal-case isolate"
           >
             {OFFER_RATE_EXPLAINER}
             <span className="block mt-1.5 text-muted-foreground/70">Source: {info.source}</span>
