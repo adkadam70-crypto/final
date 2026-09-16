@@ -42,7 +42,8 @@ const footerLinks: FooterSection[] = [
     links: [
       { title: 'Why we built Shortlisted', href: '/about' },
       { title: 'Data Sources & Methodology', href: '/data-sources' },
-      { title: 'Terms of Service & Privacy', href: '/terms' },
+      { title: 'Terms of Service', href: '/terms' },
+      { title: 'Privacy Policy', href: '/privacy' },
       { title: 'FAQs', href: '/faqs' },
       { title: 'Contact', href: 'mailto:adkadam70@gmail.com' },
     ],
