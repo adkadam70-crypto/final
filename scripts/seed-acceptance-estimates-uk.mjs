@@ -37,10 +37,21 @@ const sql = neon(process.env.DATABASE_URL)
 const SRC = 'UCAS 2024 end-of-cycle offer rate (offers ÷ applications) — the standard UK admissions measure, published per provider by UCAS. An offer is the admission; whether the student enrols is their choice.'
 const D = 'A research estimate, not a figure certified by the university.'
 
+// A school whose flat institutional offer rate needs a caveat — e.g. LSE's
+// headline blends widely different by-course rates, so the plain SRC string
+// alone would understate how much tighter its flagship courses actually are.
+// Full override string (not an append) so the exact live wording stays
+// reproducible here instead of only existing as a direct DB edit.
+const CUSTOM_SOURCE = {
+  'London School of Economics':
+    "UCAS 2024 end-of-cycle offer rate (offers ÷ applications) — the standard UK admissions measure, published per provider by UCAS. LSE's offer rate varies by course, roughly 16-21% across its most competitive programmes (e.g. Law, Economics); 18% used here as a representative figure. An offer is the admission; whether the student enrols is their choice.",
+}
+
 // Exact UCAS 2024 provider offer rates — real published figures, written to
-// actualAcceptanceRate + acceptanceRateSource (SRC), not treated as estimates.
+// actualAcceptanceRate + acceptanceRateSource (SRC, or CUSTOM_SOURCE where
+// set), not treated as estimates.
 const EXACT = {
-  'University of Oxford': 20, 'London School of Economics': 21, 'University of Cambridge': 25,
+  'University of Oxford': 20, 'London School of Economics': 18, 'University of Cambridge': 25,
   'Imperial College London': 33, 'University College London': 35, 'University of Edinburgh': 44,
   "King's College London": 44, 'University of Manchester': 58, 'University of Leeds': 60,
   'Queen Mary University of London': 65, 'University of Glasgow': 67, 'University of Bristol': 68,
@@ -81,15 +92,18 @@ const rows = await sql`SELECT id, name, "rankValue", "actualAcceptanceRate", "ac
 let real = 0
 let estimated = 0
 for (const r of rows) {
+  const source = CUSTOM_SOURCE[r.name] ?? SRC
+
   // Skip a row that carries a real published rate from another source (e.g.
   // a US-style Scorecard figure) — but DO refresh a row we ourselves
-  // promoted with the UCAS SRC, so the exact figures stay editable here.
-  if (r.actualAcceptanceRate != null && r.acceptanceRateSource !== SRC) continue
+  // promoted with this script's own source string, so the exact figures
+  // (and CUSTOM_SOURCE overrides) stay editable here.
+  if (r.actualAcceptanceRate != null && r.acceptanceRateSource !== source) continue
 
   if (EXACT[r.name] != null) {
     const rate = EXACT[r.name]
     await sql`UPDATE universities SET
-      "actualAcceptanceRate" = ${rate}, "acceptanceRateSource" = ${SRC},
+      "actualAcceptanceRate" = ${rate}, "acceptanceRateSource" = ${source},
       "estimatedAcceptanceRate" = NULL, "acceptanceRateNote" = NULL,
       "baselineSelectivity" = ${100 - rate}
       WHERE id = ${r.id}`
