@@ -217,6 +217,12 @@ export const dreamProfiles = pgTable('dreamProfiles', {
   hobbies: text('hobbies').notNull().default(''), // Q2: free-text passions/hobbies
   interests: jsonb('interests').$type<string[]>().notNull().default([]), // Q3: real-world problem/industry tags
   interestsOther: text('interestsOther').notNull().default(''), // Q3: open-text addition
+  // Added in the 4->6 question expansion — how they like to actually work
+  // (not just what they're interested in) and what "success" means to
+  // them, so the field recommendation reasons about fit, not just topic
+  // overlap. Same tag-array/single-value pattern as the original questions.
+  workingStyle: jsonb('workingStyle').$type<string[]>().notNull().default([]), // Q5: how they prefer to work/learn
+  futureVision: text('futureVision').notNull().default(''), // Q6: what success looks like in ~10 years
   // AI field-recommendation output — recommendedField is one of
   // ACADEMIC_FIELDS, proposed from the onboarding answers + master profile;
   // confirmedField is what the student actually locked in (their own choice

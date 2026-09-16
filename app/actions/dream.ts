@@ -72,6 +72,8 @@ export type DreamOnboardingInput = {
   hobbies: string
   interests: string[]
   interestsOther: string
+  workingStyle: string[]
+  futureVision: string
   currentGrade: string
   applicationYear: number
 }
@@ -83,9 +85,11 @@ const CURRENT_YEAR = new Date().getFullYear()
 function validateOnboarding(input: DreamOnboardingInput): string | null {
   if (input.strengths.length > MAX_TAGS) return `Select at most ${MAX_TAGS} subjects.`
   if (input.interests.length > MAX_TAGS) return `Select at most ${MAX_TAGS} interests.`
+  if (input.workingStyle.length > MAX_TAGS) return `Select at most ${MAX_TAGS} working styles.`
   if (input.hobbies.length > MAX_FIELD_LENGTH) return 'That answer is too long.'
   if (input.interestsOther.length > MAX_FIELD_LENGTH) return 'That answer is too long.'
-  if (input.strengths.some((s) => s.length > MAX_FIELD_LENGTH) || input.interests.some((s) => s.length > MAX_FIELD_LENGTH)) {
+  if (input.futureVision.length > MAX_FIELD_LENGTH) return 'That answer is too long.'
+  if (input.strengths.some((s) => s.length > MAX_FIELD_LENGTH) || input.interests.some((s) => s.length > MAX_FIELD_LENGTH) || input.workingStyle.some((s) => s.length > MAX_FIELD_LENGTH)) {
     return 'One of your entries is too long.'
   }
   if (!CURRENT_GRADES.includes(input.currentGrade as (typeof CURRENT_GRADES)[number])) return 'Select your current grade.'
@@ -120,6 +124,8 @@ export async function saveDreamOnboarding(input: DreamOnboardingInput): Promise<
         hobbies: input.hobbies,
         interests: input.interests,
         interestsOther: input.interestsOther,
+        workingStyle: input.workingStyle,
+        futureVision: input.futureVision,
         currentGrade: input.currentGrade,
         applicationYear: input.applicationYear,
         updatedAt: new Date(),
@@ -131,6 +137,8 @@ export async function saveDreamOnboarding(input: DreamOnboardingInput): Promise<
           hobbies: input.hobbies,
           interests: input.interests,
           interestsOther: input.interestsOther,
+          workingStyle: input.workingStyle,
+          futureVision: input.futureVision,
           currentGrade: input.currentGrade,
           applicationYear: input.applicationYear,
           updatedAt: new Date(),
@@ -199,6 +207,8 @@ ONBOARDING ANSWERS:
 - Subjects they excel in / enjoy: ${dream.strengths.length ? dream.strengths.join('; ') : 'Not answered'}
 - What they spend free time on: ${dream.hobbies || 'Not answered'}
 - Real-world problems/industries that excite them: ${[...dream.interests, dream.interestsOther].filter(Boolean).join('; ') || 'Not answered'}
+- How they prefer to work/learn: ${dream.workingStyle?.length ? dream.workingStyle.join('; ') : 'Not answered'}
+- What success looks like to them in ~10 years: ${dream.futureVision || 'Not answered'}
 
 EXISTING ACADEMIC PROFILE:
 - Academics: ${badge}
@@ -206,7 +216,7 @@ EXISTING ACADEMIC PROFILE:
 - Extracurriculars: ${profile.extracurriculars.length ? profile.extracurriculars.join('; ') : 'None provided'}
 - AP courses taken: ${profile.apCourses.length ? profile.apCourses.join('; ') : 'None reported'}
 
-Pick the single best-fit field and explain briefly why, citing specific things from both the onboarding answers and the academic profile — not just one or the other.`
+Pick the single best-fit field and explain briefly why, citing specific things from both the onboarding answers and the academic profile — not just one or the other. Weigh how they prefer to work and what success means to them as fit signals, not just topic overlap (e.g. someone who loves biology but wants to work directly with people and lead teams may fit better in healthcare management or medicine than pure research).`
 
   try {
     const call = () =>

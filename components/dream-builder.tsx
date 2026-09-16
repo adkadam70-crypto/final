@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Sparkles, ArrowRight, ArrowLeft, CheckCircle2, Wand2, Plus } from 'lucide-react'
+import { Sparkles, ArrowRight, ArrowLeft, CheckCircle2, Wand2, Plus, Info, X, RotateCcw } from 'lucide-react'
 import {
   saveDreamOnboarding,
   recommendDreamField,
@@ -25,6 +25,20 @@ const INTEREST_OPTIONS = [
   'Technology & Innovation', 'Healthcare & Medicine', 'Climate & Sustainability',
   'Business & Finance', 'Social Justice & Policy', 'Arts & Media', 'Education',
   'Science & Research', 'Law & Government', 'Design & Architecture',
+]
+
+// Q5/Q6 — added in the 4->6 question expansion. These ask about *fit*
+// (how they like to work, what success means to them) rather than more
+// topic overlap, since two students who both pick "Biology" can still
+// belong in very different fields depending on these answers.
+const WORKING_STYLE_OPTIONS = [
+  'Hands-on building/making', 'Deep independent research', 'Working directly with people',
+  'Leading & organizing teams', 'Analyzing data & numbers', 'Creative & open-ended problems',
+]
+
+const FUTURE_VISION_OPTIONS = [
+  'Start my own company', 'Do cutting-edge research', 'Work directly helping people',
+  'Build large-scale products/systems', 'Shape policy or public discourse', 'Create art/media that reaches people',
 ]
 
 const GRADE_OPTIONS = ['9th', '10th', '11th', '12th']
@@ -101,11 +115,62 @@ function BottomBar({
   )
 }
 
-function Header({ title, subtitle }: { title: string; subtitle: string }) {
+function Header({ title, subtitle, onInfoClick }: { title: string; subtitle: string; onInfoClick?: () => void }) {
   return (
     <div className="mb-6">
-      <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-1">{title}</h1>
+      <div className="flex items-center gap-2">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-1">{title}</h1>
+        {onInfoClick && (
+          <button
+            type="button"
+            onClick={onInfoClick}
+            aria-label="Learn what Build Your Dream is"
+            className="mb-1 inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+          >
+            <Info className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
       <p className="text-sm text-muted-foreground">{subtitle}</p>
+    </div>
+  )
+}
+
+// The explainer modal — what this feature is, that it reads the main
+// profile (not just these onboarding answers), and the overall flow, so a
+// first-time user isn't guessing what they're about to spend 6 questions
+// answering. Reachable from the (i) button next to the "Build Your Dream"
+// title at every stage, not just the dashboard.
+function InfoModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div className="bg-card border border-border rounded-3xl p-6 max-w-md w-full max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start justify-between mb-3">
+          <h2 className="text-lg font-bold tracking-tight">What is Build Your Dream?</h2>
+          <button type="button" onClick={onClose} aria-label="Close" className="text-muted-foreground hover:text-foreground">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="space-y-3 text-xs text-muted-foreground leading-relaxed">
+          <p>
+            It's a guided plan built around one field of study you're aiming for — not a generic checklist. It answers three
+            questions: what should I study, what do I need to do to get in, and how am I actually tracking against it.
+          </p>
+          <p>
+            <span className="font-semibold text-foreground">It reads your main profile.</span> Your saved academics, test
+            scores, and extracurriculars from your regular Shortlisted profile feed directly into the field recommendation
+            and every country's roadmap here — that's why it's locked until your main profile is set up.
+          </p>
+          <p className="font-semibold text-foreground">The flow:</p>
+          <ol className="list-decimal list-inside space-y-1.5">
+            <li>Answer 6 quick questions about your strengths, interests, and how you like to work.</li>
+            <li>Get an AI field recommendation (or pick your own) — this becomes the lens for everything after.</li>
+            <li>Add a country. Each one gets its own AI roadmap and a real, researched application checklist for that field.</li>
+            <li>Track specific universities against their own per-school checklist as you shortlist them.</li>
+          </ol>
+          <p>You can come back and re-answer the 6 questions any time your interests change — see the button on your dashboard.</p>
+        </div>
+      </div>
     </div>
   )
 }
@@ -127,6 +192,8 @@ export function DreamBuilder({
   const [hobbies, setHobbies] = useState(initialDream?.hobbies ?? '')
   const [interests, setInterests] = useState<string[]>(initialDream?.interests ?? [])
   const [interestsOther, setInterestsOther] = useState(initialDream?.interestsOther ?? '')
+  const [workingStyle, setWorkingStyle] = useState<string[]>(initialDream?.workingStyle ?? [])
+  const [futureVision, setFutureVision] = useState(initialDream?.futureVision ?? '')
   const [currentGrade, setCurrentGrade] = useState(initialDream?.currentGrade ?? '')
   const [applicationYear, setApplicationYear] = useState<number | ''>(initialDream?.applicationYear ?? '')
 
@@ -140,8 +207,23 @@ export function DreamBuilder({
 
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showInfo, setShowInfo] = useState(false)
+  // Lets a user with already-confirmed field/countries walk back through
+  // the 6 questions (pre-filled with their current answers) without losing
+  // their confirmed field or any country/checklist data — only the
+  // onboarding-answer columns get overwritten on save.
+  const [reanswering, setReanswering] = useState(false)
+  // After re-answering, the field recommendation was generated from the
+  // OLD answers — this surfaces a one-click way to regenerate it against
+  // the new ones instead of silently leaving it stale.
+  const [recheckResult, setRecheckResult] = useState<{ field: string; rationale: string } | null>(null)
+  const [rechecking, setRechecking] = useState(false)
 
-  const onboardingDone = !!dream && (dream.strengths.length > 0 || !!dream.hobbies || dream.interests.length > 0) && !!dream.currentGrade && !!dream.applicationYear
+  const onboardingDone =
+    !!dream &&
+    (dream.strengths.length > 0 || !!dream.hobbies || dream.interests.length > 0 || dream.workingStyle?.length > 0 || !!dream.futureVision) &&
+    !!dream.currentGrade &&
+    !!dream.applicationYear
   const fieldConfirmed = !!dream?.confirmedField
 
   function toggle(list: string[], setList: (v: string[]) => void, tag: string) {
@@ -152,13 +234,14 @@ export function DreamBuilder({
     if (!currentGrade || applicationYear === '') return
     setPending(true)
     setError(null)
-    const res = await saveDreamOnboarding({ strengths, hobbies, interests, interestsOther, currentGrade, applicationYear })
+    const res = await saveDreamOnboarding({ strengths, hobbies, interests, interestsOther, workingStyle, futureVision, currentGrade, applicationYear })
     setPending(false)
     if (!res.success) {
       setError(res.message)
       return
     }
-    setDream((d) => ({ ...(d as NonNullable<DreamProfileRow>), strengths, hobbies, interests, interestsOther, currentGrade, applicationYear }))
+    setDream((d) => ({ ...(d as NonNullable<DreamProfileRow>), strengths, hobbies, interests, interestsOther, workingStyle, futureVision, currentGrade, applicationYear }))
+    if (reanswering) setReanswering(false)
   }
 
   async function handleGetRecommendation() {
@@ -181,6 +264,19 @@ export function DreamBuilder({
     setPending(false)
     if (!res.success) return setError(res.message)
     setDream((d) => ({ ...(d as NonNullable<DreamProfileRow>), confirmedField: field }))
+    setRecheckResult(null)
+  }
+
+  async function handleRecheckRecommendation() {
+    setRechecking(true)
+    setError(null)
+    const res = await recommendDreamField()
+    setRechecking(false)
+    if ('error' in res && res.error) return setError(res.message)
+    if ('rateLimited' in res && res.rateLimited) return setError(res.message)
+    if ('needsOnboarding' in res && res.needsOnboarding) return setError('Please finish the questions above first.')
+    if ('needsProfile' in res && res.needsProfile) return setError('Set up your main profile first — we need your academics to make a recommendation.')
+    setRecheckResult({ field: res.field, rationale: res.rationale })
   }
 
   async function handleAddCountry(code: string) {
@@ -193,8 +289,37 @@ export function DreamBuilder({
     router.push(`/dream/${code}`)
   }
 
+  const infoModal = showInfo && <InfoModal onClose={() => setShowInfo(false)} />
+
+  // ---------------------------------------------------------------- PROFILE GATE
+  // Every recommendation and roadmap here reasons over the main profile
+  // together with these onboarding answers — without it there's nothing
+  // to actually ground a recommendation in, so this blocks the whole
+  // feature (not just the "Get recommendation" button) until it exists.
+  if (!hasProfile) {
+    return (
+      <main className="max-w-2xl mx-auto px-4 py-8 pb-28">
+        <Header title="Build Your Dream" subtitle="A guided plan built around one field, grounded in your real profile." onInfoClick={() => setShowInfo(true)} />
+        <div className="bg-card border border-border rounded-3xl p-6 text-center">
+          <p className="text-sm font-bold mb-2">Set up your main profile first</p>
+          <p className="text-xs text-muted-foreground leading-relaxed mb-5 text-pretty">
+            Build Your Dream reads your saved academics, test scores, and extracurriculars from your main Shortlisted profile to ground
+            every field recommendation and roadmap in your real record — not guesses. There's nothing to build on until that's saved.
+          </p>
+          <button
+            onClick={() => router.push('/profile')}
+            className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold text-sm px-5 py-2.5 rounded-2xl hover:brightness-110 transition-all"
+          >
+            Set up your profile <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+        {infoModal}
+      </main>
+    )
+  }
+
   // ---------------------------------------------------------------- ONBOARDING
-  if (!onboardingDone) {
+  if (!onboardingDone || reanswering) {
     const steps = [
       {
         label: 'Which subjects do you excel in or enjoy the most?',
@@ -243,6 +368,28 @@ export function DreamBuilder({
         ),
       },
       {
+        label: 'How do you prefer to work and learn?',
+        valid: workingStyle.length > 0,
+        content: (
+          <div className="flex flex-wrap gap-2">
+            {WORKING_STYLE_OPTIONS.map((s) => (
+              <Pill key={s} label={s} active={workingStyle.includes(s)} onClick={() => toggle(workingStyle, setWorkingStyle, s)} />
+            ))}
+          </div>
+        ),
+      },
+      {
+        label: 'What does success look like to you in about 10 years?',
+        valid: futureVision.trim().length > 0,
+        content: (
+          <div className="flex flex-wrap gap-2">
+            {FUTURE_VISION_OPTIONS.map((s) => (
+              <Pill key={s} label={s} active={futureVision === s} onClick={() => setFutureVision(s)} />
+            ))}
+          </div>
+        ),
+      },
+      {
         label: 'What grade are you in, and when do you plan to start college?',
         valid: !!currentGrade && applicationYear !== '',
         content: (
@@ -272,7 +419,12 @@ export function DreamBuilder({
 
     return (
       <main className="max-w-2xl mx-auto px-4 py-8 pb-28">
-        <Header title="Build Your Dream" subtitle="A few quick questions to find the field that fits you best." />
+        <Header title="Build Your Dream" subtitle="A few quick questions to find the field that fits you best." onInfoClick={() => setShowInfo(true)} />
+        {reanswering && (
+          <p className="text-[11px] text-primary font-medium mb-3 flex items-center gap-1.5">
+            <RotateCcw className="w-3 h-3" /> Updating your answers — your confirmed field and countries stay as-is until you decide otherwise.
+          </p>
+        )}
         <div className="bg-card border border-border rounded-3xl p-6">
           <div className="flex items-center gap-1.5 mb-4">
             {steps.map((_, i) => (
@@ -293,10 +445,11 @@ export function DreamBuilder({
             }
             await saveOnboardingIfLastStep()
           }}
-          onBack={onboardingStep > 1 ? () => setOnboardingStep((s) => s - 1) : undefined}
+          onBack={onboardingStep > 1 ? () => setOnboardingStep((s) => s - 1) : reanswering ? () => setReanswering(false) : undefined}
           disabled={!current.valid || pending}
           pending={pending}
         />
+        {infoModal}
       </main>
     )
   }
@@ -305,7 +458,7 @@ export function DreamBuilder({
   if (!fieldConfirmed) {
     return (
       <main className="max-w-2xl mx-auto px-4 py-8 pb-28">
-        <Header title="Confirm your field" subtitle="Based on your answers and your saved profile." />
+        <Header title="Confirm your field" subtitle="Based on your answers and your saved profile." onInfoClick={() => setShowInfo(true)} />
         <div className="bg-card border border-border rounded-3xl p-6">
           {!recommendation && !chooseOwnField ? (
             <div className="text-center py-6">
@@ -317,7 +470,6 @@ export function DreamBuilder({
               >
                 {pending ? <LoadingDots /> : <><Wand2 className="w-4 h-4" /> Get my recommendation</>}
               </button>
-              {!hasProfile && <p className="text-[11px] text-muted-foreground mt-2">Set up your main profile first.</p>}
               <button onClick={() => setChooseOwnField(true)} className="block mx-auto mt-3 text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2">
                 Or just pick your own field
               </button>
@@ -366,6 +518,7 @@ export function DreamBuilder({
           {error && <p className="text-[11px] text-destructive mt-3">{error}</p>}
         </div>
         <BottomBar label="Up next: confirm your field of study" />
+        {infoModal}
       </main>
     )
   }
@@ -376,7 +529,42 @@ export function DreamBuilder({
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-8 pb-28">
-      <Header title="Build Your Dream" subtitle={`Target field: ${dream!.confirmedField}`} />
+      <Header title="Build Your Dream" subtitle={`Target field: ${dream!.confirmedField}`} onInfoClick={() => setShowInfo(true)} />
+      <p className="text-[11px] text-muted-foreground -mt-4 mb-6">
+        Grounded in your <button onClick={() => router.push('/profile')} className="text-primary underline underline-offset-2">main profile</button> plus your onboarding answers.{' '}
+        <button
+          onClick={() => {
+            setReanswering(true)
+            setOnboardingStep(1)
+            setRecheckResult(null)
+          }}
+          className="text-primary font-medium underline underline-offset-2 inline-flex items-center gap-1"
+        >
+          <RotateCcw className="w-2.5 h-2.5" /> Update your answers
+        </button>
+      </p>
+
+      {recheckResult && (
+        <div className="bg-card border border-primary/30 rounded-3xl p-5 mb-6">
+          <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1">Updated recommendation</p>
+          <p className="text-base font-bold text-primary mb-2">{recheckResult.field}</p>
+          <p className="text-xs text-muted-foreground leading-relaxed mb-4 text-pretty">{recheckResult.rationale}</p>
+          <div className="flex flex-wrap gap-2">
+            {recheckResult.field !== dream?.confirmedField && (
+              <button
+                onClick={() => handleConfirmField(recheckResult.field)}
+                disabled={pending}
+                className="flex items-center gap-1.5 bg-primary text-primary-foreground font-semibold text-xs px-4 py-2.5 rounded-xl hover:brightness-110 disabled:opacity-50"
+              >
+                {pending ? <LoadingDots /> : <><CheckCircle2 className="w-3.5 h-3.5" /> Switch to {recheckResult.field}</>}
+              </button>
+            )}
+            <button onClick={() => setRecheckResult(null)} className="text-xs font-medium text-muted-foreground hover:text-foreground px-4 py-2.5 rounded-xl border border-border">
+              Keep {dream?.confirmedField}
+            </button>
+          </div>
+        </div>
+      )}
 
       {countries.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
@@ -401,13 +589,24 @@ export function DreamBuilder({
 
       <div className="bg-card border border-border rounded-3xl p-6">
         {!addingCountry ? (
-          <button
-            onClick={() => setAddingCountry(true)}
-            disabled={availableToAdd.length === 0}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-primary disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Plus className="w-4 h-4" /> Add a country
-          </button>
+          <div className="flex flex-wrap items-center gap-4">
+            <button
+              onClick={() => setAddingCountry(true)}
+              disabled={availableToAdd.length === 0}
+              className="inline-flex items-center gap-2 text-sm font-semibold text-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Plus className="w-4 h-4" /> Add a country
+            </button>
+            {!recheckResult && (
+              <button
+                onClick={handleRecheckRecommendation}
+                disabled={rechecking}
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground disabled:opacity-50"
+              >
+                {rechecking ? <LoadingDots /> : <><Wand2 className="w-3.5 h-3.5" /> Re-check my recommended field</>}
+              </button>
+            )}
+          </div>
         ) : (
           <div>
             <label className="text-[11px] text-muted-foreground block mb-1.5">Which country do you want to build next?</label>
@@ -434,6 +633,7 @@ export function DreamBuilder({
       </div>
 
       <BottomBar label={countries.length === 0 ? 'Up next: add your first country' : 'Click a country above to keep building it'} />
+      {infoModal}
     </main>
   )
 }
