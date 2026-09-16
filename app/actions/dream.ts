@@ -776,7 +776,12 @@ export async function getSuggestedActivities() {
 
 const MAX_ACTIVITY_LENGTH = 200
 
-export async function addSuggestedActivity(text: string): Promise<{ success: boolean; message: string }> {
+// country is which Build Your Dream country page this was shortlisted
+// from — this list is shared across every country's workspace AND the
+// main profile page, so recording the origin is what lets the UI show a
+// "from your US roadmap" badge instead of an unlabeled activity that reads
+// as if it applies to every country the same way.
+export async function addSuggestedActivity(text: string, country: string): Promise<{ success: boolean; message: string }> {
   let userId: string
   try {
     await assertDreamAdmin()
@@ -787,8 +792,9 @@ export async function addSuggestedActivity(text: string): Promise<{ success: boo
   const trimmed = text.trim()
   if (!trimmed) return { success: false, message: 'Enter an activity.' }
   if (trimmed.length > MAX_ACTIVITY_LENGTH) return { success: false, message: 'That activity is too long.' }
+  if (!APPLICATION_INFO[country]) return { success: false, message: 'Not a supported country.' }
   try {
-    await db.insert(profileSuggestedActivities).values({ userId, text: trimmed })
+    await db.insert(profileSuggestedActivities).values({ userId, text: trimmed, country })
     revalidatePath('/dream')
     revalidatePath('/profile')
     return { success: true, message: 'Added.' }

@@ -186,11 +186,11 @@ export function DreamCountryWorkspace({
 
   async function handleAddSuggestedActivity(text: string, key: number | 'custom') {
     setActivityPendingId(key)
-    const res = await addSuggestedActivity(text)
+    const res = await addSuggestedActivity(text, country)
     setActivityPendingId(null)
     if (!res.success) return setError(res.message)
     if (key === 'custom') setCustomActivity('')
-    setSuggestedActivities((prev) => [...prev, { id: Date.now(), userId: '', text, status: 'shortlisted', createdAt: new Date() }])
+    setSuggestedActivities((prev) => [...prev, { id: Date.now(), userId: '', text, status: 'shortlisted', country, createdAt: new Date() }])
   }
 
   async function handleMarkActivityDone(id: number) {
@@ -443,7 +443,17 @@ export function DreamCountryWorkspace({
                 <ul className="space-y-1.5">
                   {suggestedActivities.map((a) => (
                     <li key={a.id} className="flex items-center justify-between gap-2 text-xs">
-                      <span className={a.status === 'completed' ? 'text-muted-foreground line-through' : 'text-foreground/90'}>{a.text}</span>
+                      <span className="flex items-center gap-1.5 min-w-0">
+                        {a.country && (
+                          <span
+                            title={`From your ${APPLICATION_INFO[a.country]?.name ?? a.country} Build Your Dream roadmap${a.country !== country ? ' — not ' + (countryInfo?.name ?? country) : ''}`}
+                            className={`shrink-0 text-sm font-bold uppercase px-1.5 py-0.5 rounded border ${a.country === country ? 'text-primary border-primary/30 bg-primary/10' : 'text-muted-foreground border-border bg-secondary'}`}
+                          >
+                            {a.country}
+                          </span>
+                        )}
+                        <span className={a.status === 'completed' ? 'text-muted-foreground line-through' : 'text-foreground/90'}>{a.text}</span>
+                      </span>
                       {a.status === 'completed' ? (
                         <span className="shrink-0 text-xs font-semibold text-chart-2 uppercase flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Completed</span>
                       ) : (

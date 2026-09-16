@@ -340,6 +340,13 @@ export const profileSuggestedActivities = pgTable('profileSuggestedActivities', 
   userId: uuid('userId').notNull(),
   text: text('text').notNull(),
   status: text('status').notNull().default('shortlisted'), // 'shortlisted' | 'completed'
+  // Which Build Your Dream country page this was shortlisted from (e.g.
+  // 'US', 'IN') — this list is shared across every country's workspace AND
+  // the main profile page, so without this a suggestion from one country's
+  // roadmap showed up unlabeled everywhere else, reading as if it applied
+  // generally. Nullable: rows created before this column existed have no
+  // origin recorded and just render without a country badge.
+  country: text('country'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
 

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { GraduationCap, Globe, Flame, Compass, Loader2, CheckCircle2, Award, ChevronDown, ArrowRight, Plus, X, BookOpen, Info } from 'lucide-react'
 import { saveProfile, type SaveProfileInput } from '@/app/actions/profile'
 import { markSuggestedActivityDone, type SuggestedActivityRow } from '@/app/actions/dream'
+import { APPLICATION_INFO } from '@/lib/application-info'
 import { AP_COURSE_CATEGORIES, AP_COURSES } from '@/lib/ap-courses'
 import { LiquidButton } from '@/components/ui/liquid-glass-button'
 import { gradeBadge } from '@/lib/grade'
@@ -882,11 +883,21 @@ export function ProfileForm({
             <h2 className="text-xl font-extrabold tracking-tight text-primary mb-1 flex items-center gap-2">
               <Flame className="w-5 h-5 text-chart-5" /> Suggested activities
             </h2>
-            <p className="text-[11px] text-muted-foreground mb-3">From your Build Your Dream roadmap — mark one completed to fold it into your extracurriculars above.</p>
+            <p className="text-[11px] text-muted-foreground mb-3">From your Build Your Dream roadmaps — mark one completed to fold it into your extracurriculars above.</p>
             <ul className="space-y-1.5">
               {activities.map((a) => (
                 <li key={a.id} className="flex items-center justify-between gap-2 text-xs bg-secondary border border-border rounded-xl px-3 py-2">
-                  <span className={a.status === 'completed' ? 'text-muted-foreground line-through' : 'text-foreground/90'}>{a.text}</span>
+                  <span className="flex items-center gap-1.5 min-w-0">
+                    {a.country && (
+                      <span
+                        title={`From your ${APPLICATION_INFO[a.country]?.name ?? a.country} Build Your Dream roadmap — a suggestion specific to that country's application, not a general one`}
+                        className="shrink-0 text-sm font-bold uppercase px-1.5 py-0.5 rounded border text-muted-foreground border-border bg-card"
+                      >
+                        {a.country}
+                      </span>
+                    )}
+                    <span className={a.status === 'completed' ? 'text-muted-foreground line-through' : 'text-foreground/90'}>{a.text}</span>
+                  </span>
                   {a.status === 'completed' ? (
                     <span className="shrink-0 text-[10px] font-semibold text-chart-2 uppercase flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Completed</span>
                   ) : (
