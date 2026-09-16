@@ -23,6 +23,9 @@ import { mergeChecklistProgress, overallCompletionPct, getSectionCoverage } from
 import { APPLICATION_INFO } from '@/lib/application-info'
 import { COMMON_APP_SECTIONS, COMMON_APP_ESSAY_PROMPTS, PER_UNIVERSITY_TASK_DETAILS } from '@/lib/common-app-sections'
 import { getIndiaApplicationSections, type IndiaApplicationSection, INDIA_PER_UNIVERSITY_TASK_DETAILS, INDIA_PER_UNIVERSITY_TASK_SHORT_LABELS } from '@/lib/india-application-sections'
+import { UK_APPLICATION_SECTIONS, UK_PER_UNIVERSITY_TASK_DETAILS } from '@/lib/uk-application-sections'
+import { HK_APPLICATION_SECTIONS, HK_PER_UNIVERSITY_TASK_DETAILS } from '@/lib/hk-application-sections'
+import { SG_APPLICATION_SECTIONS, SG_PER_UNIVERSITY_TASK_DETAILS } from '@/lib/sg-application-sections'
 import { LoadingDots } from '@/components/loading-dots'
 import type { StandardizedTests } from '@/lib/standardized-tests'
 
@@ -123,10 +126,18 @@ export function DreamCountryWorkspace({
   // exams/requirements apply depends heavily on the student's target field
   // (engineering vs. medicine vs. law vs. a general CUET-gated seat), so
   // this varies per user rather than being one fixed list the way the US
-  // one is. Every other country still falls back to the generic flat
-  // requirements text until the same research pass is done for them too.
+  // one is. UK/HK/SG each get their own researched, flat section list too
+  // (lib/uk-application-sections.ts, lib/hk-application-sections.ts,
+  // lib/sg-application-sections.ts) — none of them are field-gated the way
+  // India is, so no classifier is needed for them. Australia, Germany, and
+  // France still fall back to the generic flat requirements text until the
+  // same research pass is done for them too.
   const indiaSections = country === 'IN' ? getIndiaApplicationSections(confirmedField, profile?.curriculum) : null
-  const checklistDefs = country === 'US' ? COMMON_APP_SECTIONS.map((s) => s.label) : indiaSections ? indiaSections.map((s) => s.label) : (countryInfo?.requirements ?? [])
+  const ukSections = country === 'UK' ? UK_APPLICATION_SECTIONS : null
+  const hkSections = country === 'HK' ? HK_APPLICATION_SECTIONS : null
+  const sgSections = country === 'SG' ? SG_APPLICATION_SECTIONS : null
+  const countrySections = indiaSections ?? ukSections ?? hkSections ?? sgSections
+  const checklistDefs = country === 'US' ? COMMON_APP_SECTIONS.map((s) => s.label) : countrySections ? countrySections.map((s) => s.label) : (countryInfo?.requirements ?? [])
 
   const checklistItems =
     checklistDefs.length && profile
@@ -477,7 +488,18 @@ export function DreamCountryWorkspace({
           <section className="bg-card border border-border rounded-3xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-chart-2" /> {country === 'US' ? 'Common App checklist' : country === 'IN' ? 'India application checklist' : 'Application checklist'}
+                <CheckCircle2 className="w-4 h-4 text-chart-2" />{' '}
+                {country === 'US'
+                  ? 'Common App checklist'
+                  : country === 'IN'
+                    ? 'India application checklist'
+                    : country === 'UK'
+                      ? 'UCAS checklist'
+                      : country === 'HK'
+                        ? 'Hong Kong application checklist'
+                        : country === 'SG'
+                          ? 'Singapore application checklist'
+                          : 'Application checklist'}
               </h2>
               <span className="text-xs font-bold text-primary">{commonAppCompletionPct}%</span>
             </div>
@@ -492,7 +514,12 @@ export function DreamCountryWorkspace({
             {checklistItems.length > 0 ? (
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {checklistItems.map(({ requirement, progress, autoDetected }) => {
-                  const sectionInfo = COMMON_APP_SECTIONS.find((s) => s.label === requirement) ?? indiaSections?.find((s) => s.label === requirement)
+                  const sectionInfo =
+                    COMMON_APP_SECTIONS.find((s) => s.label === requirement) ??
+                    indiaSections?.find((s) => s.label === requirement) ??
+                    ukSections?.find((s) => s.label === requirement) ??
+                    hkSections?.find((s) => s.label === requirement) ??
+                    sgSections?.find((s) => s.label === requirement)
                   // The two section models carry slightly different extra
                   // fields (US has an `example` + essay archive links,
                   // India has a `furtherReading` list of official exam
@@ -767,7 +794,12 @@ export function DreamCountryWorkspace({
                         <ul className="space-y-2">
                           {track.tasks.map((task) => {
                             const taskDone = (track.taskProgress[task] ?? 0) >= 100
-                            const detail = PER_UNIVERSITY_TASK_DETAILS[task] ?? INDIA_PER_UNIVERSITY_TASK_DETAILS[task]
+                            const detail =
+                              PER_UNIVERSITY_TASK_DETAILS[task] ??
+                              INDIA_PER_UNIVERSITY_TASK_DETAILS[task] ??
+                              UK_PER_UNIVERSITY_TASK_DETAILS[task] ??
+                              HK_PER_UNIVERSITY_TASK_DETAILS[task] ??
+                              SG_PER_UNIVERSITY_TASK_DETAILS[task]
                             const shortLabel = INDIA_PER_UNIVERSITY_TASK_SHORT_LABELS[task]
                             const taskKey = `${track.universityId}::${task}`
                             const isExpanded = expandedTask === taskKey

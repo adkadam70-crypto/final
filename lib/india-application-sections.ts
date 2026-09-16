@@ -113,7 +113,7 @@ const JEE_MAIN: IndiaApplicationSection = {
   whatToInclude: [
     'Paper 1 (B.Tech): 75 questions / 300 marks across Physics, Chemistry, Maths (20 MCQ + 5 numerical-value per subject), 3 hours',
     'Marking: +4 for a correct answer, -1 for a wrong one (numerical-value questions also carry -1)',
-    'Runs twice a year — your better of the two scores counts toward your final percentile',
+    'Runs twice a year — Session 1 in January, Session 2 in April — your better of the two scores counts toward your final percentile',
     'Only the top ~2.5 lakh rankers across all categories become eligible to sit JEE Advanced (see below) — General cutoff is calibrated each year so exactly that many qualify; category cutoffs sit meaningfully lower (OBC/SC/ST/EWS)',
   ],
   furtherReading: [{ label: 'NTA — JEE Main', url: 'https://jeemain.nta.nic.in/' }],
@@ -155,6 +155,7 @@ const NEET: IndiaApplicationSection = {
   whatToInclude: [
     '180 compulsory MCQs across Physics (45), Chemistry (45), and Biology/Botany+Zoology combined (90) — 720 marks total, 180 minutes, offered in 13 languages',
     'Marking: +4 correct, -1 wrong, 0 for unattempted',
+    'Runs once a year, typically in May — there is no second-session retake the way JEE Main offers',
     'Board marks alone are never sufficient here — your NEET rank fully gates every seat, unlike engineering where a strong board percentage can matter at direct-admission private colleges',
     '15% of seats nationally form the All-India Quota (AIQ) — within it, OBC 27%, SC 15%, ST 7.5%, EWS 10% are reserved; the remaining 85% is State Quota, where individual state policy applies (only centrally-issued OBC-NCL/EWS certificates count toward the AIQ portion)',
     "B.V.Sc (veterinary) is NEET-gated too — it is NOT covered by ICAR AIEEA the way general agriculture programs are, a common mix-up",
@@ -168,6 +169,7 @@ const CLAT: IndiaApplicationSection = {
   description: "CLAT is the dominant national law entrance exam, run by the NLU Consortium for admission across 24 National Law Universities plus 60+ affiliated colleges. NLU Delhi runs its own separate exam, AILET, for its own seats.",
   whatToInclude: [
     'CLAT UG: ~120 comprehension-based MCQs across English, Current Affairs/GK, Legal Reasoning, Logical Reasoning, and Quantitative Techniques — 2-hour offline (pen-and-paper) test, +1 correct / -0.25 wrong',
+    'Runs once a year in December — noticeably earlier than JEE/NEET/CUET, for admission the following academic year, so law-track preparation is on a different clock than other fields',
     'AILET (NLU Delhi only, not part of the Consortium): a separate 90-minute offline OMR test — apply to this independently if NLU Delhi is a target, a CLAT score alone doesn\'t cover it',
     'Reservation is set individually by each NLU based on its own home-state quota policy — there is no single national CLAT reservation table the way there is for JEE/NEET, so check your specific target NLU\'s own published policy',
     "Outside the NLU system, private law schools often run their own test (Symbiosis SET, LSAT-India) or admit via board marks + interview — don't assume CLAT is required everywhere",
@@ -197,6 +199,7 @@ const CUET: IndiaApplicationSection = {
   label: 'CUET-UG',
   description: 'The real gateway for Central Universities (DU, JNU, BHU, AMU, Jamia, and 40+ others) and accepted as one option at 260+ other participating state/private universities — the closest thing India has to a shared application for humanities, sciences, and social sciences.',
   whatToInclude: [
+    'Runs once a year, typically in May, computer-based',
     'Choose a minimum of 3 and maximum of 10 subjects total across Languages, Domain-Specific Subjects (23 on offer — pick the ones matching your intended course), and a General Test',
     'Each section: +5 for a correct answer, -1 for a wrong one, 0 unattempted — computer-based test',
     'Legally mandatory only for the Central Universities — everywhere else it\'s one accepted option among several, so a private university can accept CUET scores without requiring them and run its own admission process in parallel',
@@ -242,20 +245,40 @@ const ICAR_AIEEA: IndiaApplicationSection = {
   ],
 }
 
+// Strengthening pass: clearing an entrance exam is only half the process —
+// what actually gets you a seat is the counselling round(s) after it, which
+// every exam-gated category runs through in roughly the same shape (even
+// though the specific body differs). This was a real gap: the sections
+// above documented exam FACTS but not the actionable steps a student has
+// to execute after the result is out, which is exactly what a checklist
+// needs to cover.
+const COUNSELLING_PROCESS: IndiaApplicationSection = {
+  id: 'counselling-process',
+  label: 'Counselling & Seat Allotment',
+  description: "Clearing the exam only gets you a rank — a separate counselling process is what actually converts that rank into a seat, and it has its own real deadlines you can miss even with a great score.",
+  whatToInclude: [
+    'Register separately for counselling once your result is out — this is not automatic just because you sat the exam, and has its own registration window and fee',
+    'Choice filling & locking: rank-order every college+program combination you would accept, in real preference order — an unlocked or unsubmitted choice list can mean no seat at all, even with a qualifying rank',
+    'Seat allotment runs in multiple rounds — in each round you can Accept & Freeze (you\'re done), Accept & Upgrade (keep this seat but stay in the running for a better one in later rounds), or Decline — know the real consequence of each option before choosing, since a wrong choice can drop you out of the process entirely',
+    'Document verification (physical or online, depending on the counselling body) and a seat-acceptance fee are due on tight deadlines after each allotment round — missing either one typically forfeits the seat',
+    'Reporting to the allotted college by its own deadline is the final step — a seat is not secured until you\'ve completed this, not merely been allotted',
+  ],
+}
+
 // One catch-all section every category (except where explicitly noted
 // otherwise below) still carries, since it's a genuinely common admission
 // path for these fields specifically.
 const DIRECT_ADMISSION_CATEGORIES: IndiaProgramCategory[] = ['commerce', 'general']
 
 const SECTIONS_BY_CATEGORY: Record<IndiaProgramCategory, IndiaApplicationSection[]> = {
-  engineering: [JEE_MAIN, JEE_ADVANCED, STATE_PRIVATE_ENGINEERING],
-  medicine: [NEET],
-  law: [CLAT],
-  design: [DESIGN_ARCHITECTURE],
-  commerce: [CUET, BBA_MANAGEMENT_ENTRANCE],
-  hospitality: [NCHM_JEE],
-  agriculture: [ICAR_AIEEA],
-  general: [CUET],
+  engineering: [JEE_MAIN, JEE_ADVANCED, STATE_PRIVATE_ENGINEERING, COUNSELLING_PROCESS],
+  medicine: [NEET, COUNSELLING_PROCESS],
+  law: [CLAT, COUNSELLING_PROCESS],
+  design: [DESIGN_ARCHITECTURE, COUNSELLING_PROCESS],
+  commerce: [CUET, BBA_MANAGEMENT_ENTRANCE, COUNSELLING_PROCESS],
+  hospitality: [NCHM_JEE, COUNSELLING_PROCESS],
+  agriculture: [ICAR_AIEEA, COUNSELLING_PROCESS],
+  general: [CUET, COUNSELLING_PROCESS],
 }
 
 // Generic per-university tasks for the "My Universities" tab — the US

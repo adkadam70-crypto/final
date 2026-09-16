@@ -11,6 +11,9 @@ import { db } from '@/lib/db'
 import { dreamProfiles, dreamCountryProfiles, dreamUniversityTracks, profileSuggestedActivities, aiRateLimitLog } from '@/lib/db/schema'
 import { PER_UNIVERSITY_TASK_TEMPLATE } from '@/lib/common-app-sections'
 import { INDIA_PER_UNIVERSITY_TASK_TEMPLATE } from '@/lib/india-application-sections'
+import { UK_PER_UNIVERSITY_TASK_TEMPLATE } from '@/lib/uk-application-sections'
+import { HK_PER_UNIVERSITY_TASK_TEMPLATE } from '@/lib/hk-application-sections'
+import { SG_PER_UNIVERSITY_TASK_TEMPLATE } from '@/lib/sg-application-sections'
 import { getUserId } from '@/lib/get-user-id'
 import { getClientIp } from '@/lib/request-fingerprint'
 import { getLatestProfile, appendExtracurricularToProfile } from '@/app/actions/profile'
@@ -626,10 +629,16 @@ export async function addUniversityToDreamList(
     return { success: false, message: 'Your session has expired — please sign in again.' }
   }
   try {
-    // India has no shared application, so the US Common-App-specific
-    // baseline (FERPA release, self-reported courses & grades) is
-    // meaningless there — swap in the India-specific baseline instead.
-    const baselineTasks = country === 'IN' ? INDIA_PER_UNIVERSITY_TASK_TEMPLATE : PER_UNIVERSITY_TASK_TEMPLATE
+    // India/UK/HK/SG each have their own real per-university baseline —
+    // the US Common-App-specific one (FERPA release, self-reported courses
+    // & grades) is meaningless outside the Common App system.
+    const BASELINE_BY_COUNTRY: Record<string, string[]> = {
+      IN: INDIA_PER_UNIVERSITY_TASK_TEMPLATE,
+      UK: UK_PER_UNIVERSITY_TASK_TEMPLATE,
+      HK: HK_PER_UNIVERSITY_TASK_TEMPLATE,
+      SG: SG_PER_UNIVERSITY_TASK_TEMPLATE,
+    }
+    const baselineTasks = BASELINE_BY_COUNTRY[country] ?? PER_UNIVERSITY_TASK_TEMPLATE
     const tasks = [...baselineTasks, ...schoolSpecificTasks].filter((t, i, arr) => arr.indexOf(t) === i)
     await db
       .insert(dreamUniversityTracks)
