@@ -14,6 +14,9 @@ import { INDIA_PER_UNIVERSITY_TASK_TEMPLATE } from '@/lib/india-application-sect
 import { UK_PER_UNIVERSITY_TASK_TEMPLATE } from '@/lib/uk-application-sections'
 import { HK_PER_UNIVERSITY_TASK_TEMPLATE } from '@/lib/hk-application-sections'
 import { SG_PER_UNIVERSITY_TASK_TEMPLATE } from '@/lib/sg-application-sections'
+import { DE_PER_UNIVERSITY_TASK_TEMPLATE } from '@/lib/de-application-sections'
+import { FR_PER_UNIVERSITY_TASK_TEMPLATE } from '@/lib/fr-application-sections'
+import { AU_PER_UNIVERSITY_TASK_TEMPLATE } from '@/lib/au-application-sections'
 import { getUserId } from '@/lib/get-user-id'
 import { getClientIp } from '@/lib/request-fingerprint'
 import { getLatestProfile, appendExtracurricularToProfile } from '@/app/actions/profile'
@@ -633,14 +636,17 @@ export async function addUniversityToDreamList(
     return { success: false, message: 'Your session has expired — please sign in again.' }
   }
   try {
-    // India/UK/HK/SG each have their own real per-university baseline —
-    // the US Common-App-specific one (FERPA release, self-reported courses
-    // & grades) is meaningless outside the Common App system.
+    // Every supported country now has its own real per-university baseline
+    // — the US Common-App-specific one (FERPA release, self-reported
+    // courses & grades) is meaningless outside the Common App system.
     const BASELINE_BY_COUNTRY: Record<string, string[]> = {
       IN: INDIA_PER_UNIVERSITY_TASK_TEMPLATE,
       UK: UK_PER_UNIVERSITY_TASK_TEMPLATE,
       HK: HK_PER_UNIVERSITY_TASK_TEMPLATE,
       SG: SG_PER_UNIVERSITY_TASK_TEMPLATE,
+      DE: DE_PER_UNIVERSITY_TASK_TEMPLATE,
+      FR: FR_PER_UNIVERSITY_TASK_TEMPLATE,
+      AU: AU_PER_UNIVERSITY_TASK_TEMPLATE,
     }
     const baselineTasks = BASELINE_BY_COUNTRY[country] ?? PER_UNIVERSITY_TASK_TEMPLATE
     const tasks = [...baselineTasks, ...schoolSpecificTasks].filter((t, i, arr) => arr.indexOf(t) === i)

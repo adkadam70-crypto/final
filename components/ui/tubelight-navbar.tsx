@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { HammerIcon, type HammerIconHandle } from '@/components/ui/hammer-icon'
 
 interface NavItem {
   name: string
@@ -45,39 +46,78 @@ export function NavBar({ items, className, compact }: NavBarProps) {
   const activeUrl = optimisticUrl ?? pathname
 
   return (
-    <div className={cn('flex items-center bg-muted/40 border border-border rounded-full p-1', compact ? 'gap-0.5' : 'gap-1', className)}>
+    <div
+      className={cn(
+        'flex items-center bg-muted/40 border border-border rounded-full p-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+        compact ? 'gap-0.5' : 'gap-1',
+        className,
+      )}
+    >
       {items.map((item) => {
         const isActive = activeUrl === item.url
+        const isDream = item.name === 'Build Your Dream'
         return (
-          <Link
+          <NavLink
             key={item.name}
-            href={item.url}
+            item={item}
+            isActive={isActive}
+            isDream={isDream}
+            compact={compact}
             onClick={() => setOptimisticUrl(item.url)}
-            className={cn(
-              'relative flex items-center font-medium rounded-full transition-colors whitespace-nowrap',
-              compact ? 'gap-1 text-sm px-2 py-1' : 'gap-1.5 text-sm px-3 py-2',
-              isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
-            )}
-          >
-            <item.icon className={compact ? 'w-3.5 h-3.5 shrink-0' : 'w-4 h-4 shrink-0'} />
-            {item.name}
-            {isActive && (
-              <motion.div
-                layoutId="tubelight"
-                className="absolute inset-0 rounded-full bg-primary/10 -z-10"
-                initial={false}
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              >
-                <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-8 h-1 bg-primary rounded-b-full">
-                  <div className="absolute w-12 h-6 bg-primary/20 rounded-full blur-md -top-2 -left-2" />
-                  <div className="absolute w-8 h-6 bg-primary/20 rounded-full blur-md -top-1" />
-                  <div className="absolute w-4 h-4 bg-primary/20 rounded-full blur-sm top-0 left-2" />
-                </div>
-              </motion.div>
-            )}
-          </Link>
+          />
         )
       })}
     </div>
+  )
+}
+
+function NavLink({
+  item,
+  isActive,
+  isDream,
+  compact,
+  onClick,
+}: {
+  item: NavItem
+  isActive: boolean
+  isDream: boolean
+  compact?: boolean
+  onClick: () => void
+}) {
+  const hammerRef = useRef<HammerIconHandle>(null)
+  return (
+    <Link
+      href={item.url}
+      onClick={() => {
+        onClick()
+        hammerRef.current?.startAnimation()
+      }}
+      className={cn(
+        'relative flex items-center font-medium rounded-full transition-colors whitespace-nowrap',
+        compact ? 'gap-1 text-sm px-2 py-1' : 'gap-1.5 text-sm px-3 py-2',
+        isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
+      )}
+    >
+      {isDream ? (
+        <HammerIcon ref={hammerRef} size={compact ? 14 : 16} className="shrink-0" />
+      ) : (
+        <item.icon className={compact ? 'w-3.5 h-3.5 shrink-0' : 'w-4 h-4 shrink-0'} />
+      )}
+      {item.name}
+      {isActive && (
+        <motion.div
+          layoutId="tubelight"
+          className="absolute inset-0 rounded-full bg-primary/10 -z-10"
+          initial={false}
+          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        >
+          <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-8 h-1 bg-primary rounded-b-full">
+            <div className="absolute w-12 h-6 bg-primary/20 rounded-full blur-md -top-2 -left-2" />
+            <div className="absolute w-8 h-6 bg-primary/20 rounded-full blur-md -top-1" />
+            <div className="absolute w-4 h-4 bg-primary/20 rounded-full blur-sm top-0 left-2" />
+          </div>
+        </motion.div>
+      )}
+    </Link>
   )
 }

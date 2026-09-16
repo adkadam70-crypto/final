@@ -73,14 +73,14 @@ export const APPLICATION_INFO: Record<string, CountryApplicationInfo> = {
   AU: {
     code: 'AU',
     name: 'Australia',
-    platform: "No single national platform — apply via your state's admissions center (e.g. UAC for NSW/ACT) or directly to the university.",
-    platformLinks: [{ label: 'UAC (NSW/ACT example)', url: 'https://www.uac.edu.au/' }],
-    howToApply: "International applicants with an IB, A-Level, or other non-ATAR qualification usually get it converted into an ATAR-equivalent 'Selection Rank' by the admissions center, then apply like any other applicant.",
+    platform: "State admissions centers (UAC, VTAC, QTAC, SATAC) are for Australian-curriculum Year 12, IB-at-an-Australian-school, or NZ NCEA students only — CBSE/ISC/State Board, A-Levels, and IB taken outside Australia apply DIRECTLY to each university instead, no shared platform.",
+    platformLinks: [{ label: 'UAC — international Year 12 eligibility', url: 'https://uac.edu.au/future-applicants/international-year-12-students' }],
+    howToApply: "Apply directly to each university's own international-admissions portal — each one converts your result into its own ATAR-equivalent 'Selection Rank' using its own published table (there is no single national formula, and UAC is not part of this process for these curricula).",
     requirements: [
       'Final 2 years of secondary results (Year 11-12, or IB/A-Level equivalent)',
-      'English language proficiency proof for international students',
-      'No essay for most direct-entry programs',
-      "CBSE/ISC/State Board (and IB/A-Levels) are converted to an ATAR-equivalent Selection Rank via your state's admissions center (e.g. UAC) — a US high school diploma works differently: GPA alone isn't enough for a direct rank conversion, so it's normally paired with an SAT or ACT score instead.",
+      'English language proficiency proof for international students — the Group of Eight\'s common undergraduate baseline is IELTS 6.5 overall with no band below 6.0',
+      'A personal statement is required by most Group of Eight universities for direct applications (commonly ~500 words) — separately, every international student must also file a Genuine Student (GS) statement for their visa regardless of whether the university itself asks for one',
+      "CBSE/ISC/State Board (and IB/A-Levels) are each converted to an ATAR-equivalent Selection Rank by the UNIVERSITY itself, per its own published table — a US high school diploma works differently: GPA alone isn't enough for a direct rank conversion, so it's normally paired with an SAT or ACT score instead.",
     ],
     extracurriculars: "Generally not weighed for direct ATAR entry. 'Adjustment factor' bonus points — added on top of your ATAR to form a course-specific 'selection rank,' never changing the ATAR itself — exist for a few cases: subject bonus points (a strong result in a course-relevant Year 12 subject), regional/location, the Educational Access Scheme for disadvantage, and EAPL for elite athletes/performers (up to ~5 points). Most universities cap total adjustments around 10-15 points.",
     tests: 'No universal standardized test — the ATAR (or its international equivalent) is calculated from your coursework itself, not a separate exam.',
@@ -173,12 +173,12 @@ export const APPLICATION_INFO: Record<string, CountryApplicationInfo> = {
   FR: {
     code: 'FR',
     name: 'France',
-    platform: 'Parcoursup for most undergraduate (licence) programs. Non-EU students from a Campus France "CEF" country (India included) must first complete the Campus France "Études en France" dossier. Many grandes écoles run their own concours (competitive exams) or post-bac admissions (SESAME/ACCÈS for business; GEIPI, Avenir, Puissance Alpha for engineering).',
+    platform: 'Parcoursup is for French Baccalauréat holders and non-Europeans who sat a French curriculum at a lycée français abroad ONLY. Students on a foreign board (CBSE/ISC/State Board, A-Levels, IB taken outside France) use DAP (Demande d\'Admission Préalable) through the Campus France "Études en France" platform instead for a first-year licence. Many grandes écoles run their own concours (competitive exams) or post-bac admissions (SESAME/ACCÈS for business; GEIPI, Avenir, Puissance Alpha for engineering).',
     platformLinks: [
-      { label: 'Parcoursup', url: 'https://www.parcoursup.gouv.fr/' },
+      { label: 'Campus France — DAP or Parcoursup?', url: 'https://www.southafrica.campusfrance.org/dap-or-parcoursup' },
       { label: 'Campus France — Études en France', url: 'https://www.campusfrance.org/en/application-etudes-en-france-procedure' },
     ],
-    howToApply: 'Non-EU students from a CEF country complete the Campus France "Études en France" dossier first (academic records, motivation letter, language results, CV), then apply — via Parcoursup for licence programs (registration mid-January to mid-March, up to 20 wishes) or directly to grandes écoles and master\'s programs. EU students and applicants in non-CEF countries can apply directly to institutions.',
+    howToApply: 'A foreign-board student (CBSE/ISC/State Board and most other non-French curricula) applies for a first-year licence via DAP through the Campus France "Études en France" dossier — NOT Parcoursup, which is reserved for French Baccalauréat holders and French-curriculum students abroad. DAP caps you at 3 course choices; the current cycle\'s window has run 1 October to 15 December for the following September intake. Grandes écoles and master\'s programs run their own separate application tracks.',
     requirements: [
       'A secondary diploma recognized as equivalent to the French Baccalauréat (CBSE/ISC/State Board, IB, and A-Levels are accepted; a US diploma is usually paired with SAT/AP)',
       'High-school transcripts (bulletins) from the last 2-3 years — weighed heavily for selective programs',

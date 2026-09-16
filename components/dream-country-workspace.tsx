@@ -26,6 +26,9 @@ import { getIndiaApplicationSections, type IndiaApplicationSection, INDIA_PER_UN
 import { UK_APPLICATION_SECTIONS, UK_PER_UNIVERSITY_TASK_DETAILS } from '@/lib/uk-application-sections'
 import { HK_APPLICATION_SECTIONS, HK_PER_UNIVERSITY_TASK_DETAILS } from '@/lib/hk-application-sections'
 import { SG_APPLICATION_SECTIONS, SG_PER_UNIVERSITY_TASK_DETAILS } from '@/lib/sg-application-sections'
+import { DE_APPLICATION_SECTIONS, DE_PER_UNIVERSITY_TASK_DETAILS } from '@/lib/de-application-sections'
+import { FR_APPLICATION_SECTIONS, FR_PER_UNIVERSITY_TASK_DETAILS } from '@/lib/fr-application-sections'
+import { AU_APPLICATION_SECTIONS, AU_PER_UNIVERSITY_TASK_DETAILS } from '@/lib/au-application-sections'
 import { LoadingDots } from '@/components/loading-dots'
 import type { StandardizedTests } from '@/lib/standardized-tests'
 
@@ -126,17 +129,18 @@ export function DreamCountryWorkspace({
   // exams/requirements apply depends heavily on the student's target field
   // (engineering vs. medicine vs. law vs. a general CUET-gated seat), so
   // this varies per user rather than being one fixed list the way the US
-  // one is. UK/HK/SG each get their own researched, flat section list too
-  // (lib/uk-application-sections.ts, lib/hk-application-sections.ts,
-  // lib/sg-application-sections.ts) — none of them are field-gated the way
-  // India is, so no classifier is needed for them. Australia, Germany, and
-  // France still fall back to the generic flat requirements text until the
-  // same research pass is done for them too.
+  // one is. Every other supported country now has its own researched,
+  // flat section list too (lib/{uk,hk,sg,de,fr,au}-application-sections.ts)
+  // — none of them are field-gated the way India is, so no classifier is
+  // needed for them.
   const indiaSections = country === 'IN' ? getIndiaApplicationSections(confirmedField, profile?.curriculum) : null
   const ukSections = country === 'UK' ? UK_APPLICATION_SECTIONS : null
   const hkSections = country === 'HK' ? HK_APPLICATION_SECTIONS : null
   const sgSections = country === 'SG' ? SG_APPLICATION_SECTIONS : null
-  const countrySections = indiaSections ?? ukSections ?? hkSections ?? sgSections
+  const deSections = country === 'DE' ? DE_APPLICATION_SECTIONS : null
+  const frSections = country === 'FR' ? FR_APPLICATION_SECTIONS : null
+  const auSections = country === 'AU' ? AU_APPLICATION_SECTIONS : null
+  const countrySections = indiaSections ?? ukSections ?? hkSections ?? sgSections ?? deSections ?? frSections ?? auSections
   const checklistDefs = country === 'US' ? COMMON_APP_SECTIONS.map((s) => s.label) : countrySections ? countrySections.map((s) => s.label) : (countryInfo?.requirements ?? [])
 
   const checklistItems =
@@ -492,9 +496,10 @@ export function DreamCountryWorkspace({
             </div>
           </section>
 
-          {/* Section 1: the country-wide application checklist (Common App's
-              real sections for US; the generic per-country list for
-              everyone else until that research pass is done too). */}
+          {/* Section 1: the country-wide application checklist — every
+              supported country now has its own researched checklist
+              (Common App's real sections for US, a field-aware classifier
+              for India, flat researched lists for everyone else). */}
           <section className="bg-card border border-border rounded-3xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
@@ -509,7 +514,13 @@ export function DreamCountryWorkspace({
                         ? 'Hong Kong application checklist'
                         : country === 'SG'
                           ? 'Singapore application checklist'
-                          : 'Application checklist'}
+                          : country === 'DE'
+                            ? 'Germany application checklist'
+                            : country === 'FR'
+                              ? 'France application checklist'
+                              : country === 'AU'
+                                ? 'Australia application checklist'
+                                : 'Application checklist'}
               </h2>
               <span className="text-xs font-bold text-primary">{commonAppCompletionPct}%</span>
             </div>
@@ -529,7 +540,10 @@ export function DreamCountryWorkspace({
                     indiaSections?.find((s) => s.label === requirement) ??
                     ukSections?.find((s) => s.label === requirement) ??
                     hkSections?.find((s) => s.label === requirement) ??
-                    sgSections?.find((s) => s.label === requirement)
+                    sgSections?.find((s) => s.label === requirement) ??
+                    deSections?.find((s) => s.label === requirement) ??
+                    frSections?.find((s) => s.label === requirement) ??
+                    auSections?.find((s) => s.label === requirement)
                   // The two section models carry slightly different extra
                   // fields (US has an `example` + essay archive links,
                   // India has a `furtherReading` list of official exam
@@ -809,7 +823,10 @@ export function DreamCountryWorkspace({
                               INDIA_PER_UNIVERSITY_TASK_DETAILS[task] ??
                               UK_PER_UNIVERSITY_TASK_DETAILS[task] ??
                               HK_PER_UNIVERSITY_TASK_DETAILS[task] ??
-                              SG_PER_UNIVERSITY_TASK_DETAILS[task]
+                              SG_PER_UNIVERSITY_TASK_DETAILS[task] ??
+                              DE_PER_UNIVERSITY_TASK_DETAILS[task] ??
+                              FR_PER_UNIVERSITY_TASK_DETAILS[task] ??
+                              AU_PER_UNIVERSITY_TASK_DETAILS[task]
                             const shortLabel = INDIA_PER_UNIVERSITY_TASK_SHORT_LABELS[task]
                             const taskKey = `${track.universityId}::${task}`
                             const isExpanded = expandedTask === taskKey

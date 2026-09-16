@@ -71,6 +71,45 @@ function Pill({ label, active, onClick }: { label: string; active: boolean; onCl
   )
 }
 
+// Lets a user type an answer that isn't one of the preset pills — appends it
+// to the same tags array as a selected custom tag, rather than a separate
+// field, so it flows through scoring/AI prompts identically to a preset pick.
+function CustomTagInput({ list, setList }: { list: string[]; setList: (v: string[]) => void }) {
+  const [value, setValue] = useState('')
+  function add() {
+    const v = value.trim()
+    if (!v || list.includes(v)) return
+    setList([...list, v])
+    setValue('')
+  }
+  return (
+    <div className="flex gap-2">
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            add()
+          }
+        }}
+        maxLength={100}
+        placeholder="Type your own..."
+        className="flex-1 bg-secondary border border-border rounded-xl p-2.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary"
+      />
+      <button
+        type="button"
+        onClick={add}
+        disabled={!value.trim()}
+        className="px-3 py-2 rounded-xl text-xs font-medium bg-accent text-accent-foreground disabled:opacity-40 transition-opacity"
+      >
+        Add
+      </button>
+    </div>
+  )
+}
+
 function BottomBar({
   label,
   nextLabel,
@@ -330,10 +369,18 @@ export function DreamBuilder({
         label: 'Which subjects do you excel in or enjoy the most?',
         valid: strengths.length > 0,
         content: (
-          <div className="flex flex-wrap gap-2">
-            {SUBJECT_OPTIONS.map((s) => (
-              <Pill key={s} label={s} active={strengths.includes(s)} onClick={() => toggle(strengths, setStrengths, s)} />
-            ))}
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {strengths
+                .filter((s) => !SUBJECT_OPTIONS.includes(s))
+                .map((s) => (
+                  <Pill key={s} label={s} active onClick={() => toggle(strengths, setStrengths, s)} />
+                ))}
+              {SUBJECT_OPTIONS.map((s) => (
+                <Pill key={s} label={s} active={strengths.includes(s)} onClick={() => toggle(strengths, setStrengths, s)} />
+              ))}
+            </div>
+            <CustomTagInput list={strengths} setList={setStrengths} />
           </div>
         ),
       },
@@ -376,10 +423,18 @@ export function DreamBuilder({
         label: 'How do you prefer to work and learn?',
         valid: workingStyle.length > 0,
         content: (
-          <div className="flex flex-wrap gap-2">
-            {WORKING_STYLE_OPTIONS.map((s) => (
-              <Pill key={s} label={s} active={workingStyle.includes(s)} onClick={() => toggle(workingStyle, setWorkingStyle, s)} />
-            ))}
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {workingStyle
+                .filter((s) => !WORKING_STYLE_OPTIONS.includes(s))
+                .map((s) => (
+                  <Pill key={s} label={s} active onClick={() => toggle(workingStyle, setWorkingStyle, s)} />
+                ))}
+              {WORKING_STYLE_OPTIONS.map((s) => (
+                <Pill key={s} label={s} active={workingStyle.includes(s)} onClick={() => toggle(workingStyle, setWorkingStyle, s)} />
+              ))}
+            </div>
+            <CustomTagInput list={workingStyle} setList={setWorkingStyle} />
           </div>
         ),
       },
@@ -387,10 +442,20 @@ export function DreamBuilder({
         label: 'What does success look like to you in about 10 years?',
         valid: futureVision.trim().length > 0,
         content: (
-          <div className="flex flex-wrap gap-2">
-            {FUTURE_VISION_OPTIONS.map((s) => (
-              <Pill key={s} label={s} active={futureVision === s} onClick={() => setFutureVision(s)} />
-            ))}
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {FUTURE_VISION_OPTIONS.map((s) => (
+                <Pill key={s} label={s} active={futureVision === s} onClick={() => setFutureVision(s)} />
+              ))}
+            </div>
+            <input
+              type="text"
+              value={FUTURE_VISION_OPTIONS.includes(futureVision) ? '' : futureVision}
+              onChange={(e) => setFutureVision(e.target.value)}
+              maxLength={300}
+              placeholder="Or type your own..."
+              className="w-full bg-secondary border border-border rounded-xl p-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary"
+            />
           </div>
         ),
       },
@@ -592,7 +657,7 @@ export function DreamBuilder({
   const availableToAdd = COUNTRY_OPTIONS.filter((c) => !addedCodes.has(c.code))
 
   return (
-    <main className="max-w-4xl mx-auto px-4 py-8 pb-28">
+    <main className="max-w-4xl mx-auto px-4 py-8">
       <Header title="Build Your Dream" subtitle={`Target field: ${dream!.confirmedField}`} onInfoClick={() => setShowInfo(true)} />
       <p className="text-[11px] text-muted-foreground -mt-4 mb-4">
         Grounded in your <button onClick={() => router.push('/profile')} className="text-primary underline underline-offset-2">main profile</button> plus your onboarding answers.
@@ -678,7 +743,6 @@ export function DreamBuilder({
         {error && <p className="text-[11px] text-destructive mt-3">{error}</p>}
       </div>
 
-      <BottomBar label={countries.length === 0 ? 'Up next: add your first country' : 'Click a country above to keep building it'} />
       {infoModal}
     </main>
   )

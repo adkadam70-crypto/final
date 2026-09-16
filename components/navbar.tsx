@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { LayoutDashboard, User, Search, Bookmark, LogOut, Menu, X, BookOpenCheck, Settings, ShieldCheck, Sparkles } from 'lucide-react'
+import { LayoutDashboard, User, Search, Bookmark, LogOut, Menu, X, BookOpenCheck, Settings, Sparkles } from 'lucide-react'
 import { authClient } from '@/lib/auth-client'
 import { useMarkReturningUser } from '@/lib/returning-user'
 import { cn } from '@/lib/utils'
@@ -69,12 +69,7 @@ export function Navbar({ userName, userEmail }: { userName: string; userEmail: s
           <NavBar items={NAV_LINKS.map((l) => ({ name: l.label, url: l.href, icon: l.icon }))} compact={isAdmin} />
         </div>
 
-        <div className="flex items-center gap-3 justify-self-end ml-6">
-          {isAdmin && (
-            <Link href="/admin" className={cn('hidden lg:flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl transition-colors whitespace-nowrap shrink-0', pathname === '/admin' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-muted')}>
-              <ShieldCheck className="w-4 h-4 shrink-0" /> Admin
-            </Link>
-          )}
+        <div className="flex items-center gap-2 justify-self-end ml-6">
           <div className="hidden sm:block">
             <ProfileMenu userName={userName} userEmail={userEmail} />
           </div>
@@ -99,11 +94,6 @@ export function Navbar({ userName, userEmail }: { userName: string; userEmail: s
             <Link href="/account" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 text-sm font-medium px-3 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
               <Settings className="w-4 h-4" /> Account settings
             </Link>
-            {isAdmin && (
-              <Link href="/admin" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 text-sm font-medium px-3 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-                <ShieldCheck className="w-4 h-4" /> Admin
-              </Link>
-            )}
             <button onClick={handleSignOut} className="w-full flex items-center gap-2 text-sm font-medium px-3 py-2.5 rounded-xl text-destructive hover:bg-destructive/10 transition-colors">
               <LogOut className="w-4 h-4" /> Sign out
             </button>

@@ -117,3 +117,13 @@
   outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
+
+/* Plays once on the emerald badge (components/emerald-icon.tsx) when a
+   level-up is detected client-side — a scale bounce + brief glow flash, not
+   a permanent style, so it only fires the moment progress is actually made. */
+@keyframes emerald-level-up {
+  0% { transform: scale(1); filter: brightness(1); }
+  35% { transform: scale(1.35); filter: brightness(1.6); }
+  60% { transform: scale(0.95); filter: brightness(1.2); }
+  100% { transform: scale(1); filter: brightness(1); }
+}

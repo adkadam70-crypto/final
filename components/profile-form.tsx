@@ -10,6 +10,7 @@ import { AP_COURSE_CATEGORIES, AP_COURSES } from '@/lib/ap-courses'
 import { LiquidButton } from '@/components/ui/liquid-glass-button'
 import { gradeBadge } from '@/lib/grade'
 import { AcademicDetailInput } from '@/components/academic-detail-input'
+import { EmeraldBadgeSmall } from '@/components/emerald-badge'
 import { defaultAcademicDetail, ACADEMIC_FIELDS, type AcademicDetail } from '@/lib/academic-detail'
 import { satComposite, ENGLISH_TEST_TYPES, ENGLISH_TEST_RANGES, type StandardizedTests, type EnglishTestType } from '@/lib/standardized-tests'
 import {
@@ -574,7 +575,10 @@ export function ProfileForm({
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-1">Your Profile</h1>
           <p className="text-sm text-muted-foreground">Tell us about your academics and preferences. This powers your match results and university recommendations.</p>
         </div>
-        <ProfileCompletionRing percent={completionPercent} />
+        <div className="flex items-center gap-3">
+          {suggestedActivities !== null && <EmeraldBadgeSmall />}
+          <ProfileCompletionRing percent={completionPercent} />
+        </div>
       </div>
 
       {/* Build Your Dream is admin-only right now (see app/dream/layout.tsx)
