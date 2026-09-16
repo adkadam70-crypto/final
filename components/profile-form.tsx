@@ -577,6 +577,22 @@ export function ProfileForm({
         <ProfileCompletionRing percent={completionPercent} />
       </div>
 
+      {/* Build Your Dream is admin-only right now (see app/dream/layout.tsx)
+          — suggestedActivities is null for everyone else, so it's already
+          the signal this page uses to know if the current user can even
+          reach that feature. Reused here rather than adding a new prop. */}
+      {suggestedActivities !== null && (
+        <div className="bg-accent/40 border border-primary/30 rounded-2xl px-4 py-3 mb-8 flex items-center justify-between gap-3 flex-wrap">
+          <p className="text-xs text-foreground/90">
+            <span className="font-semibold">Want to improve your profile further?</span> Fill this in, save it, then head over to{' '}
+            <span className="font-semibold text-primary">Build Your Dream</span> to build a plan tailored to your target university.
+          </p>
+          <a href="/dream" className="shrink-0 text-xs font-semibold text-primary hover:brightness-125 underline underline-offset-2">
+            Go to Build Your Dream
+          </a>
+        </div>
+      )}
+
       {/* Persistent, not just a post-save toast — edits below aren't kept
           until "Save profile" is pressed, and Run Match only ever reads
           the saved version, never the live draft. */}

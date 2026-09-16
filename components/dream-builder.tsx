@@ -213,9 +213,11 @@ export function DreamBuilder({
   // their confirmed field or any country/checklist data — only the
   // onboarding-answer columns get overwritten on save.
   const [reanswering, setReanswering] = useState(false)
-  // After re-answering, the field recommendation was generated from the
-  // OLD answers — this surfaces a one-click way to regenerate it against
-  // the new ones instead of silently leaving it stale.
+  // Shown right after finishing a re-answer pass — the natural moment to
+  // offer reanalysis is immediately after answers changed, not as a
+  // standing button that sits on the dashboard indefinitely regardless of
+  // whether anything's actually different.
+  const [justReanswered, setJustReanswered] = useState(false)
   const [recheckResult, setRecheckResult] = useState<{ field: string; rationale: string } | null>(null)
   const [rechecking, setRechecking] = useState(false)
 
@@ -241,7 +243,10 @@ export function DreamBuilder({
       return
     }
     setDream((d) => ({ ...(d as NonNullable<DreamProfileRow>), strengths, hobbies, interests, interestsOther, workingStyle, futureVision, currentGrade, applicationYear }))
-    if (reanswering) setReanswering(false)
+    if (reanswering) {
+      setReanswering(false)
+      setJustReanswered(true)
+    }
   }
 
   async function handleGetRecommendation() {
@@ -523,6 +528,65 @@ export function DreamBuilder({
     )
   }
 
+  // ---------------------------------------------------------------- JUST RE-ANSWERED
+  // The natural moment to offer reanalysis — right after answers actually
+  // changed — rather than a button that sits on the dashboard forever.
+  if (justReanswered) {
+    return (
+      <main className="max-w-2xl mx-auto px-4 py-8 pb-28">
+        <Header title="Answers updated" subtitle="Want to reanalyze your recommended field against these new answers?" onInfoClick={() => setShowInfo(true)} />
+        <div className="bg-card border border-border rounded-3xl p-6 text-center">
+          {!recheckResult ? (
+            <>
+              <p className="text-xs text-muted-foreground mb-4">Your confirmed field stays <span className="font-semibold text-foreground">{dream?.confirmedField}</span> unless you switch it below.</p>
+              <button
+                onClick={handleRecheckRecommendation}
+                disabled={rechecking}
+                className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold text-sm px-5 py-2.5 rounded-2xl hover:brightness-110 disabled:opacity-50 transition-all"
+              >
+                {rechecking ? <LoadingDots /> : <><Wand2 className="w-4 h-4" /> Reanalyze my profile</>}
+              </button>
+              <button onClick={() => setJustReanswered(false)} className="block mx-auto mt-3 text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2">
+                Skip, go to dashboard
+              </button>
+            </>
+          ) : (
+            <div>
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1">Updated recommendation</p>
+              <p className="text-lg font-bold text-primary mb-2">{recheckResult.field}</p>
+              <p className="text-xs text-muted-foreground leading-relaxed mb-5 text-pretty">{recheckResult.rationale}</p>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {recheckResult.field !== dream?.confirmedField && (
+                  <button
+                    onClick={async () => {
+                      await handleConfirmField(recheckResult.field)
+                      setJustReanswered(false)
+                    }}
+                    disabled={pending}
+                    className="flex items-center gap-1.5 bg-primary text-primary-foreground font-semibold text-xs px-4 py-2.5 rounded-xl hover:brightness-110 disabled:opacity-50"
+                  >
+                    {pending ? <LoadingDots /> : <><CheckCircle2 className="w-3.5 h-3.5" /> Switch to {recheckResult.field}</>}
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    setRecheckResult(null)
+                    setJustReanswered(false)
+                  }}
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground px-4 py-2.5 rounded-xl border border-border"
+                >
+                  Keep {dream?.confirmedField}
+                </button>
+              </div>
+            </div>
+          )}
+          {error && <p className="text-[11px] text-destructive mt-3">{error}</p>}
+        </div>
+        {infoModal}
+      </main>
+    )
+  }
+
   // ---------------------------------------------------------------- DASHBOARD
   const addedCodes = new Set(countries.map((c) => c.country))
   const availableToAdd = COUNTRY_OPTIONS.filter((c) => !addedCodes.has(c.code))
@@ -530,41 +594,32 @@ export function DreamBuilder({
   return (
     <main className="max-w-4xl mx-auto px-4 py-8 pb-28">
       <Header title="Build Your Dream" subtitle={`Target field: ${dream!.confirmedField}`} onInfoClick={() => setShowInfo(true)} />
-      <p className="text-[11px] text-muted-foreground -mt-4 mb-6">
-        Grounded in your <button onClick={() => router.push('/profile')} className="text-primary underline underline-offset-2">main profile</button> plus your onboarding answers.{' '}
+      <p className="text-[11px] text-muted-foreground -mt-4 mb-4">
+        Grounded in your <button onClick={() => router.push('/profile')} className="text-primary underline underline-offset-2">main profile</button> plus your onboarding answers.
+      </p>
+
+      {/* A standing "re-check recommendation" link read as background noise
+          sitting there permanently — reanalysis only makes sense once
+          answers have actually changed, so this is now a distinct box that
+          leads WITH re-answering, and the reanalyze step happens right
+          after finishing that (see the justReanswered screen below), not
+          as a second separate button floating on this dashboard. */}
+      <div className="bg-accent/40 border border-primary/30 rounded-3xl p-5 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-bold text-foreground">Interests changed since you answered?</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Re-answer the 6 questions and we'll reanalyze your recommended field against your new answers.</p>
+        </div>
         <button
           onClick={() => {
             setReanswering(true)
             setOnboardingStep(1)
             setRecheckResult(null)
           }}
-          className="text-primary font-medium underline underline-offset-2 inline-flex items-center gap-1"
+          className="shrink-0 inline-flex items-center justify-center gap-1.5 bg-primary text-primary-foreground font-semibold text-xs px-4 py-2.5 rounded-xl hover:brightness-110 transition-all"
         >
-          <RotateCcw className="w-2.5 h-2.5" /> Update your answers
+          <RotateCcw className="w-3.5 h-3.5" /> Re-answer questions
         </button>
-      </p>
-
-      {recheckResult && (
-        <div className="bg-card border border-primary/30 rounded-3xl p-5 mb-6">
-          <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-1">Updated recommendation</p>
-          <p className="text-base font-bold text-primary mb-2">{recheckResult.field}</p>
-          <p className="text-xs text-muted-foreground leading-relaxed mb-4 text-pretty">{recheckResult.rationale}</p>
-          <div className="flex flex-wrap gap-2">
-            {recheckResult.field !== dream?.confirmedField && (
-              <button
-                onClick={() => handleConfirmField(recheckResult.field)}
-                disabled={pending}
-                className="flex items-center gap-1.5 bg-primary text-primary-foreground font-semibold text-xs px-4 py-2.5 rounded-xl hover:brightness-110 disabled:opacity-50"
-              >
-                {pending ? <LoadingDots /> : <><CheckCircle2 className="w-3.5 h-3.5" /> Switch to {recheckResult.field}</>}
-              </button>
-            )}
-            <button onClick={() => setRecheckResult(null)} className="text-xs font-medium text-muted-foreground hover:text-foreground px-4 py-2.5 rounded-xl border border-border">
-              Keep {dream?.confirmedField}
-            </button>
-          </div>
-        </div>
-      )}
+      </div>
 
       {countries.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
@@ -597,15 +652,6 @@ export function DreamBuilder({
             >
               <Plus className="w-4 h-4" /> Add a country
             </button>
-            {!recheckResult && (
-              <button
-                onClick={handleRecheckRecommendation}
-                disabled={rechecking}
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground disabled:opacity-50"
-              >
-                {rechecking ? <LoadingDots /> : <><Wand2 className="w-3.5 h-3.5" /> Re-check my recommended field</>}
-              </button>
-            )}
           </div>
         ) : (
           <div>
