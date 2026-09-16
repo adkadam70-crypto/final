@@ -504,7 +504,9 @@ ${BIAS_INSTRUCTION}
 STUDENT TIMELINE: currently in ${dream.currentGrade ?? 'an unspecified'} grade, planning to start college Fall ${dream.applicationYear ?? 'an unspecified year'}.
 TARGET FIELD: ${dream.confirmedField}
 TARGET COUNTRY: ${countryInfo?.name ?? country}
+${countryInfo ? `WHAT THIS COUNTRY'S ADMISSIONS ACTUALLY PRIORITIZES: ${countryInfo.prioritizes}` : ''}
 ${countryInfo ? `HOW EXTRACURRICULARS ARE WEIGHED HERE: ${countryInfo.extracurriculars}` : ''}
+${countryInfo ? `TESTING LANDSCAPE HERE: ${countryInfo.tests}` : ''}
 ${
   universityTracks.length > 0
     ? `SPECIFIC UNIVERSITIES THIS STUDENT IS TARGETING: ${universityTracks.map((t) => t.universityName).join('; ')} — ground your steps in what actually gets a student INTO these specific schools for ${dream.confirmedField} (their real admissions emphasis, competitiveness, and what they look for), not just generic advice for the country as a whole.${
@@ -528,6 +530,8 @@ EXISTING ACADEMIC PROFILE:
 - AP courses taken: ${profile.apCourses.length ? profile.apCourses.join('; ') : 'None reported'}
 
 CRITICAL — testing: check "Standardized tests already taken" above before suggesting ANYTHING about the SAT/ACT/English proficiency tests. If a test is listed there as already taken, NEVER suggest taking it (or "an" attempt at it) as a step — at most suggest a retake ONLY if the existing score is genuinely weak for this student's target field/country, and say so explicitly citing the actual score. If no test is listed there at all, it's genuinely fine to suggest planning for one.
+
+CRITICAL — country specificity: every single step must be something that genuinely matters for admission to ${countryInfo?.name ?? country}'s ACTUAL system, per "WHAT THIS COUNTRY'S ADMISSIONS ACTUALLY PRIORITIZES" / "HOW EXTRACURRICULARS ARE WEIGHED HERE" / "TESTING LANDSCAPE HERE" above — never advice that would apply equally to any country. If this country's system runs mostly on grades/exam rank with extracurriculars barely weighed (e.g. Germany's NC-GPA system, or an India exam-gated field), do NOT lead with "build extracurriculars" — lead with what actually moves the needle there (sustaining rigor, preparing for the specific gatekeeping exam/test). If it's a holistic, extracurricular-heavy system (e.g. the US), depth and leadership genuinely are the lever. Never reuse a step you'd give for a different country on this same student.
 
 Give a short timeframe summary (how much runway they actually have), then up to 6 concrete steps — extracurriculars to start or deepen (grounded in their OWN stated hobbies/interests, not generic suggestions), grades/rigor to sustain or improve within their actual curriculum, tests to plan for ONLY if not already taken (per the CRITICAL note above) — each one specific to this exact student and paced against how much time they have left. If they're close to applying, prioritize depth/finishing strong over starting new things; if they have years left, prioritize building genuine, sustained commitment over resume padding. For each step, also give up to 4 concrete "how to" sub-steps — real first moves to actually start doing it, not a restatement of the title.
 
