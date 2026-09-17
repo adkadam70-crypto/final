@@ -11,6 +11,8 @@ import { LiquidButton } from '@/components/ui/liquid-glass-button'
 import { gradeBadge } from '@/lib/grade'
 import { AcademicDetailInput } from '@/components/academic-detail-input'
 import { EmeraldBadgeSmall } from '@/components/emerald-badge'
+import { AdminUserManagement } from '@/components/admin/user-management'
+import type { AdminUserRow } from '@/app/actions/admin'
 import { defaultAcademicDetail, ACADEMIC_FIELDS, type AcademicDetail } from '@/lib/academic-detail'
 import { satComposite, ENGLISH_TEST_TYPES, ENGLISH_TEST_RANGES, type StandardizedTests, type EnglishTestType } from '@/lib/standardized-tests'
 import {
@@ -372,10 +374,12 @@ export function ProfileForm({
   initialProfiles,
   latestProfile,
   suggestedActivities,
+  adminUsers,
 }: {
   initialProfiles: ProfileRow[]
   latestProfile: LatestProfile
   suggestedActivities: SuggestedActivityRow[] | null
+  adminUsers?: AdminUserRow[]
 }) {
   const [activities, setActivities] = useState(suggestedActivities ?? [])
   const [activityPendingId, setActivityPendingId] = useState<number | null>(null)
@@ -580,6 +584,8 @@ export function ProfileForm({
           <ProfileCompletionRing percent={completionPercent} />
         </div>
       </div>
+
+      {adminUsers && <AdminUserManagement users={adminUsers} />}
 
       {/* Build Your Dream is admin-only right now (see app/dream/layout.tsx)
           — suggestedActivities is null for everyone else, so it's already
