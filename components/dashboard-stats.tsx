@@ -2,7 +2,8 @@ import { db } from '@/lib/db'
 import { profiles, matches, savedSchools } from '@/lib/db/schema'
 import { eq, desc, count } from 'drizzle-orm'
 import Link from 'next/link'
-import { Search, Bookmark, GraduationCap, Sparkles, ArrowRight } from 'lucide-react'
+import { Search, Bookmark, GraduationCap, ArrowRight } from 'lucide-react'
+import { CheckList3Icon } from '@/components/ui/check-list-3-icon'
 import { tierBadgeClass } from '@/lib/match-tier'
 import { StatCard } from '@/components/stat-card'
 import { ProfileStrengthCard } from '@/components/profile-strength-card'
@@ -36,7 +37,7 @@ export async function DashboardStats({ userId }: { userId: string }) {
 
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold flex items-center gap-2"><Sparkles className="w-5 h-5 text-primary" /> Featured Recommendations</h2>
+          <h2 className="text-lg font-bold flex items-center gap-2"><CheckList3Icon size={20} className="text-primary" /> Featured Recommendations</h2>
           {featured.length > 0 && <Link href="/matches" className="text-xs text-primary font-medium flex items-center gap-1 hover:brightness-125">View all <ArrowRight className="w-3 h-3" /></Link>}
         </div>
         {featured.length === 0 ? (
