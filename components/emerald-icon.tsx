@@ -23,10 +23,10 @@ function imageSrc(level: EmeraldLevel) {
 // overlapping/breaking the compact admin navbar's layout next to it.
 const GLOW_STRENGTH_AT_104: Record<EmeraldLevel, number> = {
   1: 0,
-  2: 16,
-  3: 30,
-  4: 46,
-  5: 64,
+  2: 10,
+  3: 19,
+  4: 29,
+  5: 40,
 }
 const GLOW_REFERENCE_SIZE = 104
 

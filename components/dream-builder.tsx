@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Sparkles, ArrowRight, ArrowLeft, CheckCircle2, Wand2, Plus, Info, X, RotateCcw } from 'lucide-react'
+import { HammerIcon, type HammerIconHandle } from '@/components/ui/hammer-icon'
 import {
   saveDreamOnboarding,
   recommendDreamField,
@@ -125,11 +126,12 @@ function BottomBar({
   disabled?: boolean
   pending?: boolean
 }) {
+  const hammerRef = useRef<HammerIconHandle>(null)
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-30 bg-card border-t border-border px-4 py-3">
-      <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
+    <div className="bg-card border border-t-0 border-border rounded-b-3xl px-4 py-3 -mt-px">
+      <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
-          <Sparkles className="w-4 h-4 text-primary shrink-0" />
+          <HammerIcon ref={hammerRef} size={16} className="text-primary shrink-0" />
           <p className="text-xs text-muted-foreground truncate">{label}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -141,7 +143,10 @@ function BottomBar({
           {onNext && (
             <button
               type="button"
-              onClick={onNext}
+              onClick={() => {
+                hammerRef.current?.startAnimation()
+                onNext()
+              }}
               disabled={disabled}
               className="flex items-center gap-1.5 bg-primary text-primary-foreground font-semibold text-xs px-4 py-2.5 rounded-xl hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
@@ -488,14 +493,14 @@ export function DreamBuilder({
     const current = steps[onboardingStep - 1]
 
     return (
-      <main className="max-w-2xl mx-auto px-4 py-8 pb-28">
+      <main className="max-w-2xl mx-auto px-4 py-8">
         <Header title="Build Your Dream" subtitle="A few quick questions to find the field that fits you best." onInfoClick={() => setShowInfo(true)} />
         {reanswering && (
           <p className="text-[11px] text-primary font-medium mb-3 flex items-center gap-1.5">
             <RotateCcw className="w-3 h-3" /> Updating your answers — your confirmed field and countries stay as-is until you decide otherwise.
           </p>
         )}
-        <div className="bg-card border border-border rounded-3xl p-6">
+        <div className="bg-card border border-border rounded-t-3xl border-b-0 p-6">
           <div className="flex items-center gap-1.5 mb-4">
             {steps.map((_, i) => (
               <div key={i} className={`h-1 flex-1 rounded-full ${i < onboardingStep ? 'bg-primary' : 'bg-secondary'}`} />
@@ -527,9 +532,9 @@ export function DreamBuilder({
   // ---------------------------------------------------------------- FIELD CONFIRMATION
   if (!fieldConfirmed) {
     return (
-      <main className="max-w-2xl mx-auto px-4 py-8 pb-28">
+      <main className="max-w-2xl mx-auto px-4 py-8">
         <Header title="Confirm your field" subtitle="Based on your answers and your saved profile." onInfoClick={() => setShowInfo(true)} />
-        <div className="bg-card border border-border rounded-3xl p-6">
+        <div className="bg-card border border-border rounded-t-3xl border-b-0 p-6">
           {!recommendation && !chooseOwnField ? (
             <div className="text-center py-6">
               <p className="text-xs text-muted-foreground mb-4">Ready when you are — this looks at your onboarding answers together with your saved academic profile.</p>

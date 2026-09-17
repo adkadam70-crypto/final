@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils'
 import { ProfileMenu } from '@/components/profile-menu'
 import { AppLogo } from '@/components/app-logo'
 import { NavBar } from '@/components/ui/tubelight-navbar'
+import { EmeraldBadgeSmall } from '@/components/emerald-badge'
 
 const NAV_LINKS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -63,6 +64,7 @@ export function Navbar({ userName, userEmail }: { userName: string; userEmail: s
         </div>
 
         <div className="flex items-center gap-2 justify-self-end ml-6">
+          <EmeraldBadgeSmall />
           <div className="hidden sm:block">
             <ProfileMenu userName={userName} userEmail={userEmail} />
           </div>
