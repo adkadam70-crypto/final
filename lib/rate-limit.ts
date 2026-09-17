@@ -54,11 +54,25 @@ const ANALYSIS_WINDOW_MINUTES = 15
 const PROFILE_STRENGTH_LIMIT = 10
 const PROFILE_STRENGTH_WINDOW_MINUTES = 10
 
-const DREAM_FIELD_LIMIT = 8
-const DREAM_FIELD_WINDOW_MINUTES = 15
+// Build Your Dream's AI features (field recommendation — including the
+// re-answer-questions reanalysis, which calls this same function —
+// strengths/gaps analysis, roadmap generation, activities formatting) are
+// each capped at 2/day per owner request: these are meant to be occasional,
+// considered actions a student revisits as their profile changes, not
+// something to spam while iterating on wording.
+const DREAM_DAILY_WINDOW_MINUTES = 24 * 60
 
-const DREAM_ANALYSIS_LIMIT = 8
-const DREAM_ANALYSIS_WINDOW_MINUTES = 15
+const DREAM_FIELD_LIMIT = 2
+const DREAM_FIELD_WINDOW_MINUTES = DREAM_DAILY_WINDOW_MINUTES
+
+const DREAM_ANALYSIS_LIMIT = 2
+const DREAM_ANALYSIS_WINDOW_MINUTES = DREAM_DAILY_WINDOW_MINUTES
+
+const DREAM_ROADMAP_LIMIT = 2
+const DREAM_ROADMAP_WINDOW_MINUTES = DREAM_DAILY_WINDOW_MINUTES
+
+const DREAM_ACTIVITIES_PLAN_LIMIT = 2
+const DREAM_ACTIVITIES_PLAN_WINDOW_MINUTES = DREAM_DAILY_WINDOW_MINUTES
 
 // Per-account limits above are easy to multiply by signing up with several
 // emails (the signup-fingerprint throttle in lib/auth.ts raises the cost of
@@ -176,9 +190,9 @@ export async function assertDreamFieldRateLimit(userId: string, ip: string) {
     throw new Error(`Rate limit check failed: ${message}`)
   }
   if (Number(count) >= DREAM_FIELD_LIMIT) {
-    void alertOnceOnBreach(userId, ip, 'Dream Field Recommendation', `${DREAM_FIELD_LIMIT}/${DREAM_FIELD_WINDOW_MINUTES}min`, DREAM_FIELD_WINDOW_MINUTES)
+    void alertOnceOnBreach(userId, ip, 'Dream Field Recommendation', `${DREAM_FIELD_LIMIT}/day`, DREAM_FIELD_WINDOW_MINUTES)
     throw new Error(
-      `You've requested a field recommendation ${DREAM_FIELD_LIMIT} times in the last ${DREAM_FIELD_WINDOW_MINUTES} minutes — please wait a few minutes before trying again.`,
+      `You've requested a field recommendation (including re-answering the questions) ${DREAM_FIELD_LIMIT} times today — please try again tomorrow.`,
     )
   }
 }
@@ -196,9 +210,49 @@ export async function assertDreamAnalysisRateLimit(userId: string, ip: string) {
     throw new Error(`Rate limit check failed: ${message}`)
   }
   if (Number(count) >= DREAM_ANALYSIS_LIMIT) {
-    void alertOnceOnBreach(userId, ip, 'Dream Profile Analysis', `${DREAM_ANALYSIS_LIMIT}/${DREAM_ANALYSIS_WINDOW_MINUTES}min`, DREAM_ANALYSIS_WINDOW_MINUTES)
-    throw new Error(
-      `You've re-analyzed your dream profile ${DREAM_ANALYSIS_LIMIT} times in the last ${DREAM_ANALYSIS_WINDOW_MINUTES} minutes — please wait a few minutes before trying again.`,
-    )
+    void alertOnceOnBreach(userId, ip, 'Dream Profile Analysis', `${DREAM_ANALYSIS_LIMIT}/day`, DREAM_ANALYSIS_WINDOW_MINUTES)
+    throw new Error(`You've re-analyzed your dream profile ${DREAM_ANALYSIS_LIMIT} times today — please try again tomorrow.`)
+  }
+}
+
+// generateDreamRoadmap and generateActivitiesPlan used to both call
+// assertDreamAnalysisRateLimit, which only ever counts 'dreamProfileAnalysis'
+// rows — since each of these three functions logs a DIFFERENT action name
+// on success (see app/actions/dream.ts), that meant roadmap/activities-plan
+// calls never actually counted against any limit of their own. Split into
+// dedicated limiters, one per action, so each is genuinely capped.
+export async function assertDreamRoadmapRateLimit(userId: string, ip: string) {
+  const since = new Date(Date.now() - DREAM_ROADMAP_WINDOW_MINUTES * 60_000)
+  let count: number
+  try {
+    ;[{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(aiRateLimitLog)
+      .where(and(eq(aiRateLimitLog.userId, userId), eq(aiRateLimitLog.action, 'dreamRoadmap'), gte(aiRateLimitLog.createdAt, since)))
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Rate limit check failed'
+    throw new Error(`Rate limit check failed: ${message}`)
+  }
+  if (Number(count) >= DREAM_ROADMAP_LIMIT) {
+    void alertOnceOnBreach(userId, ip, 'Dream Roadmap', `${DREAM_ROADMAP_LIMIT}/day`, DREAM_ROADMAP_WINDOW_MINUTES)
+    throw new Error(`You've generated your roadmap ${DREAM_ROADMAP_LIMIT} times today — please try again tomorrow.`)
+  }
+}
+
+export async function assertDreamActivitiesPlanRateLimit(userId: string, ip: string) {
+  const since = new Date(Date.now() - DREAM_ACTIVITIES_PLAN_WINDOW_MINUTES * 60_000)
+  let count: number
+  try {
+    ;[{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(aiRateLimitLog)
+      .where(and(eq(aiRateLimitLog.userId, userId), eq(aiRateLimitLog.action, 'dreamActivitiesPlan'), gte(aiRateLimitLog.createdAt, since)))
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Rate limit check failed'
+    throw new Error(`Rate limit check failed: ${message}`)
+  }
+  if (Number(count) >= DREAM_ACTIVITIES_PLAN_LIMIT) {
+    void alertOnceOnBreach(userId, ip, 'Dream Activities Plan', `${DREAM_ACTIVITIES_PLAN_LIMIT}/day`, DREAM_ACTIVITIES_PLAN_WINDOW_MINUTES)
+    throw new Error(`You've formatted your activities ${DREAM_ACTIVITIES_PLAN_LIMIT} times today — please try again tomorrow.`)
   }
 }

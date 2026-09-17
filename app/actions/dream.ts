@@ -25,7 +25,7 @@ import { formatStandardizedTests } from '@/lib/standardized-tests'
 import { ACADEMIC_FIELDS, type AcademicField } from '@/lib/academic-detail'
 import { APPLICATION_INFO } from '@/lib/application-info'
 import { BIAS_INSTRUCTION } from '@/lib/bias-instruction'
-import { assertDreamFieldRateLimit, assertDreamAnalysisRateLimit } from '@/lib/rate-limit'
+import { assertDreamFieldRateLimit, assertDreamAnalysisRateLimit, assertDreamRoadmapRateLimit, assertDreamActivitiesPlanRateLimit } from '@/lib/rate-limit'
 import { isGarbledStrings } from '@/lib/ai-response-guard'
 
 // Every Build Your Dream action requires a real signed-in session — same
@@ -471,7 +471,7 @@ export async function generateDreamRoadmap(country: string): Promise<GenerateRoa
     return { error: true, message: err instanceof Error && err.message === 'Unauthorized' ? 'Your session has expired — please sign in again.' : 'Something went wrong. Please refresh and try again.' }
   }
   try {
-    await assertDreamAnalysisRateLimit(userId, clientIp)
+    await assertDreamRoadmapRateLimit(userId, clientIp)
   } catch (err) {
     return { rateLimited: true, message: err instanceof Error ? err.message : 'Rate limit exceeded — please try again later.' }
   }
@@ -690,7 +690,7 @@ export async function generateActivitiesPlan(country: string): Promise<{ success
     return { success: false, message: err instanceof Error && err.message === 'Unauthorized' ? 'Your session has expired — please sign in again.' : 'Something went wrong. Please refresh and try again.' }
   }
   try {
-    await assertDreamAnalysisRateLimit(userId, clientIp)
+    await assertDreamActivitiesPlanRateLimit(userId, clientIp)
   } catch (err) {
     return { success: false, message: err instanceof Error ? err.message : 'Rate limit exceeded — please try again later.' }
   }
