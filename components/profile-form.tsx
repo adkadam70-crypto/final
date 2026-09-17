@@ -587,10 +587,6 @@ export function ProfileForm({
 
       {adminUsers && <AdminUserManagement users={adminUsers} />}
 
-      {/* Build Your Dream is admin-only right now (see app/dream/layout.tsx)
-          — suggestedActivities is null for everyone else, so it's already
-          the signal this page uses to know if the current user can even
-          reach that feature. Reused here rather than adding a new prop. */}
       {suggestedActivities !== null && (
         <div className="bg-accent/40 border border-primary/30 rounded-2xl px-4 py-3 mb-8 flex items-center justify-between gap-3 flex-wrap">
           <p className="text-xs text-foreground/90">

@@ -15,10 +15,7 @@ export default async function ProfilePage() {
   const isAdmin = session?.user.email === ADMIN_EMAIL
 
   const recentProfiles = await db.select().from(profiles).where(eq(profiles.userId, userId)).orderBy(desc(profiles.createdAt)).limit(5)
-  // Build Your Dream is admin-only while it's being tested (see
-  // app/dream/layout.tsx) — getSuggestedActivities enforces the same gate
-  // server-side, so this only fetches for the admin account.
-  const suggestedActivities = isAdmin ? await getSuggestedActivities() : null
+  const suggestedActivities = await getSuggestedActivities()
   const adminUsers = isAdmin ? await getAllUsersForAdmin() : undefined
 
   return (

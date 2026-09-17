@@ -10,20 +10,15 @@ import { cn } from '@/lib/utils'
 import { ProfileMenu } from '@/components/profile-menu'
 import { AppLogo } from '@/components/app-logo'
 import { NavBar } from '@/components/ui/tubelight-navbar'
-import { ADMIN_EMAIL } from '@/lib/admin'
 
-const BASE_NAV_LINKS = [
+const NAV_LINKS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/profile', label: 'Profile', icon: User },
+  { href: '/dream', label: 'Build Your Dream', icon: Sparkles },
   { href: '/matches', label: 'Find Matches', icon: Search },
   { href: '/saved', label: 'Saved Schools', icon: Bookmark },
   { href: '/application-info', label: 'Application Info', icon: BookOpenCheck },
 ]
-
-// Admin-only while "Build Your Dream" is still being tested (see
-// app/dream/layout.tsx) — remove this split once it ships generally and
-// just fold it back into BASE_NAV_LINKS.
-const DREAM_NAV_LINK = { href: '/dream', label: 'Build Your Dream', icon: Sparkles }
 
 export function Navbar({ userName, userEmail }: { userName: string; userEmail: string }) {
   const pathname = usePathname()
@@ -33,8 +28,6 @@ export function Navbar({ userName, userEmail }: { userName: string; userEmail: s
   // marks this browser as "has signed in before" for the landing page's
   // returning-user Sign In/Sign Up pill.
   useMarkReturningUser()
-  const isAdmin = userEmail === ADMIN_EMAIL
-  const NAV_LINKS = isAdmin ? [BASE_NAV_LINKS[0], BASE_NAV_LINKS[1], DREAM_NAV_LINK, ...BASE_NAV_LINKS.slice(2)] : BASE_NAV_LINKS
 
   async function handleSignOut() {
     await authClient.signOut()
@@ -49,7 +42,7 @@ export function Navbar({ userName, userEmail }: { userName: string; userEmail: s
           last ~25% once the menu made the header much taller (Account
           settings / Sign out, at the bottom of the list). */}
       <nav
-        className={cn('max-w-7xl mx-auto items-center px-6 h-16', isAdmin ? 'flex justify-between' : 'grid grid-cols-[1fr_auto_1fr]')}
+        className="max-w-7xl mx-auto items-center px-6 h-16 flex justify-between"
         style={{
           maskImage: 'linear-gradient(to bottom, black 75%, transparent 100%)',
           WebkitMaskImage: 'linear-gradient(to bottom, black 75%, transparent 100%)',
@@ -60,13 +53,13 @@ export function Navbar({ userName, userEmail }: { userName: string; userEmail: s
           <span className="text-lg font-bold tracking-tight">Shortlisted</span>
         </Link>
 
-        <div className={cn('hidden lg:block min-w-0', !isAdmin && 'justify-self-center')}>
-          {/* Admin: parent is a flex row with justify-between, so the nav
-              sits exactly centered between the logo and the right-side
-              icons, with equal gaps on both sides — the extra "Build Your
-              Dream" link is what makes this bar wide enough to need the
+        <div className="hidden lg:block min-w-0">
+          {/* Parent is a flex row with justify-between, so the nav sits
+              exactly centered between the logo and the right-side icons,
+              with equal gaps on both sides — 6 links (including "Build
+              Your Dream") is what makes this bar wide enough to need the
               compact sizing in the first place. */}
-          <NavBar items={NAV_LINKS.map((l) => ({ name: l.label, url: l.href, icon: l.icon }))} compact={isAdmin} />
+          <NavBar items={NAV_LINKS.map((l) => ({ name: l.label, url: l.href, icon: l.icon }))} compact />
         </div>
 
         <div className="flex items-center gap-2 justify-self-end ml-6">

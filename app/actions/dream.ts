@@ -25,17 +25,16 @@ import { formatStandardizedTests } from '@/lib/standardized-tests'
 import { ACADEMIC_FIELDS, type AcademicField } from '@/lib/academic-detail'
 import { APPLICATION_INFO } from '@/lib/application-info'
 import { BIAS_INSTRUCTION } from '@/lib/bias-instruction'
-import { ADMIN_EMAIL } from '@/lib/admin'
 import { assertDreamFieldRateLimit, assertDreamAnalysisRateLimit } from '@/lib/rate-limit'
 import { isGarbledStrings } from '@/lib/ai-response-guard'
 
-// "Build Your Dream" is admin-only while it's still being tested (see
-// app/dream/layout.tsx, which already blocks the page itself) — this is
-// defence in depth for the actions directly, same pattern as
-// app/actions/admin.ts's isAdmin(). Remove once the feature ships generally.
+// Every Build Your Dream action requires a real signed-in session — same
+// pattern as app/actions/admin.ts's isAdmin(), just without the email
+// check now that the feature is available to every user (see
+// app/dream/layout.tsx).
 async function assertDreamAdmin(): Promise<void> {
   const session = await auth.api.getSession({ headers: await headers() })
-  if (!session?.user || session.user.email !== ADMIN_EMAIL) {
+  if (!session?.user) {
     throw new Error('Unauthorized')
   }
 }
