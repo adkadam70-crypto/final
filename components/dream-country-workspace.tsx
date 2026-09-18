@@ -19,7 +19,8 @@ import {
   type SuggestedActivityRow,
 } from '@/app/actions/dream'
 import { DreamUniversitySearch } from '@/components/dream-university-search'
-import { mergeChecklistProgress, overallCompletionPct, getSectionCoverage } from '@/lib/dream-checklist'
+import { mergeChecklistProgress, overallCompletionPct, getSectionCoverage, computeSectionCoverageBar } from '@/lib/dream-checklist'
+import type { PriorGrades } from '@/lib/prior-grades'
 import { APPLICATION_INFO } from '@/lib/application-info'
 import { COMMON_APP_SECTIONS, COMMON_APP_ESSAY_PROMPTS, PER_UNIVERSITY_TASK_DETAILS } from '@/lib/common-app-sections'
 import { getIndiaApplicationSections, type IndiaApplicationSection, INDIA_PER_UNIVERSITY_TASK_DETAILS, INDIA_PER_UNIVERSITY_TASK_SHORT_LABELS } from '@/lib/india-application-sections'
@@ -38,6 +39,7 @@ type WorkspaceProfile = {
   extracurriculars: string[]
   curriculum: string
   apCourses: string[]
+  priorGrades: unknown
 }
 
 // Simple circular completion ring — SVG stroke-dashoffset trick, no chart
@@ -143,13 +145,7 @@ export function DreamCountryWorkspace({
   const countrySections = indiaSections ?? ukSections ?? hkSections ?? sgSections ?? deSections ?? frSections ?? auSections
   const checklistDefs = country === 'US' ? COMMON_APP_SECTIONS.map((s) => s.label) : countrySections ? countrySections.map((s) => s.label) : (countryInfo?.requirements ?? [])
 
-  const checklistItems =
-    checklistDefs.length && profile
-      ? mergeChecklistProgress(checklistDefs, checklistDraft, {
-          standardizedTests: profile.standardizedTests,
-          extracurriculars: profile.extracurriculars,
-        })
-      : []
+  const checklistItems = checklistDefs.length ? mergeChecklistProgress(checklistDefs, checklistDraft) : []
   const commonAppCompletionPct = overallCompletionPct(checklistItems)
 
   const universityCompletionPcts = universityTracks.map((u) => {
@@ -534,7 +530,7 @@ export function DreamCountryWorkspace({
             </div>
             {checklistItems.length > 0 ? (
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {checklistItems.map(({ requirement, progress, autoDetected }) => {
+                {checklistItems.map(({ requirement, progress }) => {
                   const sectionInfo =
                     COMMON_APP_SECTIONS.find((s) => s.label === requirement) ??
                     indiaSections?.find((s) => s.label === requirement) ??
@@ -551,20 +547,22 @@ export function DreamCountryWorkspace({
                   // need to branch by which model produced this section.
                   const sectionExample = sectionInfo && 'example' in sectionInfo ? sectionInfo.example : undefined
                   const sectionLinks = sectionInfo ? ('essayExampleLinks' in sectionInfo ? sectionInfo.essayExampleLinks : (sectionInfo as IndiaApplicationSection).furtherReading) : undefined
-                  const coverage = profile ? getSectionCoverage(requirement, { standardizedTests: profile.standardizedTests, extracurriculars: profile.extracurriculars, curriculum: profile.curriculum, apCourses: profile.apCourses }) : null
+                  const coveragePersonProfile = profile
+                    ? { standardizedTests: profile.standardizedTests, extracurriculars: profile.extracurriculars, curriculum: profile.curriculum, apCourses: profile.apCourses, priorGrades: profile.priorGrades as PriorGrades | null, hasTwelfth: !!profile.academicDetail }
+                    : null
+                  const coverage = coveragePersonProfile ? getSectionCoverage(requirement, coveragePersonProfile, country) : null
+                  const coverageBar = coveragePersonProfile ? computeSectionCoverageBar(requirement, coveragePersonProfile, country) : null
                   const expanded = expandedSection === requirement
                   return (
                     <li key={requirement} className="p-2.5 rounded-xl border border-border bg-secondary">
                       <div className="flex items-start gap-2">
                         <button
                           type="button"
-                          disabled={autoDetected}
-                          onClick={() => !autoDetected && handleToggleChecklist(requirement, progress < 100)}
-                          className={`flex-1 min-w-0 text-left text-xs flex items-start gap-2 ${autoDetected ? 'cursor-default' : 'cursor-pointer'}`}
+                          onClick={() => handleToggleChecklist(requirement, progress < 100)}
+                          className="flex-1 min-w-0 text-left text-xs flex items-start gap-2 cursor-pointer"
                         >
                           <CheckCircle2 className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${progress >= 100 ? 'text-primary' : 'text-muted-foreground/40'}`} />
                           <span className={progress >= 100 ? 'text-muted-foreground line-through' : 'text-foreground/90'}>{requirement}</span>
-                          {autoDetected && <span className="shrink-0 text-sm text-muted-foreground/60 uppercase">auto</span>}
                         </button>
                         {sectionInfo && (
                           <button
@@ -579,6 +577,20 @@ export function DreamCountryWorkspace({
                         )}
                       </div>
                       {sectionInfo && <p className="text-xs text-muted-foreground/70 mt-1 ml-5.5 text-pretty">{sectionInfo.description}</p>}
+                      {coverageBar && (
+                        <button
+                          type="button"
+                          onClick={() => sectionInfo && setExpandedSection(expanded ? null : requirement)}
+                          className="w-full ml-5.5 mt-1.5 text-left"
+                          style={{ width: 'calc(100% - 1.375rem)' }}
+                          aria-label={`${coverageBar.label} — click for details`}
+                        >
+                          <div className="h-1 w-full bg-border rounded-full overflow-hidden">
+                            <div className="h-full bg-chart-2 rounded-full transition-all" style={{ width: `${coverageBar.pct}%` }} />
+                          </div>
+                          <p className="text-[10px] text-muted-foreground/60 mt-0.5">{coverageBar.label}</p>
+                        </button>
+                      )}
                       {expanded && sectionInfo && (
                         <div className="mt-2 ml-5.5 p-2.5 bg-card border border-border rounded-lg space-y-2">
                           {requirement === 'Activities' && (

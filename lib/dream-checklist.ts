@@ -1,4 +1,5 @@
 import type { StandardizedTests } from '@/lib/standardized-tests'
+import { computeGradeYearCoverage, type PriorGrades } from '@/lib/prior-grades'
 
 // Minimal shape this needs from the master profile — kept narrow so this
 // isn't coupled to the full Drizzle row type.
@@ -7,55 +8,7 @@ export type ChecklistProfile = {
   extracurriculars: string[]
 }
 
-// Auto-detects how "done" a real application-requirement line item already
-// is, based on what's already filled in on the student's MASTER profile —
-// so a US student who already entered an SAT score doesn't see 0% on a
-// checklist that's actually already partly satisfied. Returns null when
-// there's no real matching profile field to check (essays, recommendation
-// letters, interviews, portfolios, concours, etc.) — those fall back to the
-// student's own manual toggle instead of a guess.
-//
-// Deliberately binary (0 or 100) even where auto-detected, not a fuzzy
-// in-between percentage — either the relevant score/field exists on the
-// profile or it doesn't, there's no honest partial-credit reading of "half
-// an SAT score."
-export function computeAutoChecklistProgress(requirement: string, profile: ChecklistProfile): number | null {
-  const r = requirement.toLowerCase()
-  const t = profile.standardizedTests
-  const hasSat = t.satMath !== undefined && t.satReadingWriting !== undefined
-  const hasAct = t.act !== undefined
-  const hasEnglishTest = t.englishTestType !== undefined && t.englishTestScore !== undefined
-
-  // Common App section labels (US-specific, see lib/common-app-sections.ts)
-  // — matched as exact section names, not substrings, so "Education" here
-  // doesn't collide with a country requirements string that happens to
-  // mention "education" in passing.
-  if (r === 'testing') return hasSat || hasAct || hasEnglishTest ? 100 : 0
-  if (r === 'activities') return profile.extracurriculars.length > 0 ? 100 : 0
-  if (r === 'education') return 100 // reaching this feature already requires a filled-in academic profile
-  if (r === 'profile' || r === 'family' || r === 'writing') return null // no matching master-profile field — manual
-
-  // "jee main"/"jee advanced" specifically, not a bare "jee" substring —
-  // NCHM JEE (hotel management) is a completely unrelated exam that also
-  // contains the letters "jee" and must NOT be treated as satisfied by an
-  // engineering jeePercentile field.
-  if (r.includes('jee main') || r.includes('jee advanced')) return t.jeePercentile !== undefined ? 100 : 0
-  if (r.includes('neet')) return t.neetScore !== undefined ? 100 : 0
-  if (r.includes('cuet')) return null // no dedicated CUET field on the profile yet
-  if (r.includes('sat') || r.includes('act')) return hasSat || hasAct ? 100 : 0
-  if (r.includes('ielts') || r.includes('toefl') || r.includes('duolingo') || r.includes('pte') || r.includes('cambridge english') || (r.includes('english') && (r.includes('proficiency') || r.includes('language')))) {
-    return hasEnglishTest ? 100 : 0
-  }
-  // Reaching this feature at all already requires a filled-in academicDetail
-  // (see the needsProfile gate in app/actions/dream.ts), so any
-  // transcript/board-result/grades line is already satisfied by definition.
-  if (r.includes('transcript') || r.includes('board') || r.includes('grade') || r.includes('curriculum works') || r.includes('bulletin')) return 100
-  if (r.includes('extracurricular')) return profile.extracurriculars.length > 0 ? 100 : 0
-
-  return null
-}
-
-export type SectionCoverageProfile = ChecklistProfile & { curriculum?: string; apCourses?: string[] }
+export type SectionCoverageProfile = ChecklistProfile & { curriculum?: string; apCourses?: string[]; priorGrades?: PriorGrades | null; hasTwelfth?: boolean }
 
 export type SectionCoverage = { have: string; need: string }
 
@@ -64,10 +17,10 @@ export type SectionCoverage = { have: string; need: string }
 // still missing — the static whatToInclude bullets (lib/common-app-sections.ts)
 // stay generic reference material, this is the "where do YOU actually
 // stand" layer on top of it. Exact-match on the Common App section labels
-// only (see computeAutoChecklistProgress above for why) — returns null for
+// only (see computeSectionCoverageBar below for why) — returns null for
 // anything else (the generic per-country requirement strings, which have no
 // equivalent personalized breakdown yet).
-export function getSectionCoverage(requirement: string, profile: SectionCoverageProfile): SectionCoverage | null {
+export function getSectionCoverage(requirement: string, profile: SectionCoverageProfile, country: string): SectionCoverage | null {
   const r = requirement.toLowerCase()
   const t = profile.standardizedTests
 
@@ -90,10 +43,13 @@ export function getSectionCoverage(requirement: string, profile: SectionCoverage
     }
   }
 
-  if (r === 'education') {
+  if (r === 'education' || r.includes('transcript') || r.includes('board') || r.includes('curriculum works') || r.includes('bulletin') || r.includes('grade')) {
+    const { haveYears, missingYears } = computeGradeYearCoverage(country, profile.priorGrades, !!profile.hasTwelfth)
+    const curriculumNote = profile.curriculum ? `${profile.curriculum} curriculum. ` : ''
+    const apNote = profile.apCourses?.length ? ` ${profile.apCourses.length} AP course(s) reported.` : ''
     return {
-      have: profile.curriculum ? `${profile.curriculum} curriculum, grades on file.${profile.apCourses?.length ? ` ${profile.apCourses.length} AP course(s) reported.` : ''}` : 'Grades on file.',
-      need: 'Nothing more needed here — pulled automatically from your saved profile.',
+      have: haveYears.length ? `${curriculumNote}${haveYears.join(', ')} grade${haveYears.length > 1 ? 's' : ''} on file.${apNote}` : 'No grade years on file yet.',
+      need: missingYears.length ? `Still need ${missingYears.join(', ')} grade transcript${missingYears.length > 1 ? 's' : ''} — add them under Prior Grades on your main profile.` : 'Nothing more needed here — every grade-year this country actually reviews is on file.',
     }
   }
 
@@ -121,26 +77,72 @@ export function getSectionCoverage(requirement: string, profile: SectionCoverage
   return null
 }
 
-export type ChecklistItemProgress = {
-  requirement: string
-  progress: number // 0-100, whichever of auto-detected or manual applies
-  autoDetected: boolean
+export type CoverageBar = { pct: number; label: string }
+
+// How much of a checklist item is ALREADY backed by real profile data —
+// shown as an informational progress bar alongside the item, separate from
+// the student's own manual "done" tick (see ChecklistItemProgress below).
+// This used to silently mark transcript/grade line items 100% done just
+// because *a* profile existed — wrong for e.g. a US applicant who only
+// entered 12th-grade data: US holistic review reads all 4 years, so that
+// line item was genuinely only 25% covered, not "done". Returns null for
+// requirements with no real matching profile signal (essays, recommendation
+// letters, interviews, portfolios, concours, etc.) — those get no bar, just
+// the manual tick.
+export function computeSectionCoverageBar(requirement: string, profile: SectionCoverageProfile, country: string): CoverageBar | null {
+  const r = requirement.toLowerCase()
+  const t = profile.standardizedTests
+  const hasSat = t.satMath !== undefined && t.satReadingWriting !== undefined
+  const hasAct = t.act !== undefined
+  const hasEnglishTest = t.englishTestType !== undefined && t.englishTestScore !== undefined
+
+  if (r === 'testing') {
+    const pct = hasSat || hasAct || hasEnglishTest ? 100 : 0
+    return { pct, label: pct === 100 ? 'Test score on file' : 'No test score on file yet' }
+  }
+  if (r === 'activities' || r.includes('extracurricular')) {
+    const n = profile.extracurriculars.length
+    const pct = Math.min(100, Math.round((n / 10) * 100))
+    return { pct, label: `${n}/10 activities added` }
+  }
+  if (r === 'education' || r.includes('transcript') || r.includes('board') || r.includes('curriculum works') || r.includes('bulletin') || r.includes('grade')) {
+    const { pct, haveYears, missingYears } = computeGradeYearCoverage(country, profile.priorGrades, !!profile.hasTwelfth)
+    return { pct, label: missingYears.length ? `${haveYears.length}/${haveYears.length + missingYears.length} grade-years on file` : 'All required grade-years on file' }
+  }
+  if (r.includes('jee main') || r.includes('jee advanced')) {
+    const pct = t.jeePercentile !== undefined ? 100 : 0
+    return { pct, label: pct === 100 ? 'JEE score on file' : 'No JEE score on file yet' }
+  }
+  if (r.includes('neet')) {
+    const pct = t.neetScore !== undefined ? 100 : 0
+    return { pct, label: pct === 100 ? 'NEET score on file' : 'No NEET score on file yet' }
+  }
+  if (r.includes('sat') || r.includes('act')) {
+    const pct = hasSat || hasAct ? 100 : 0
+    return { pct, label: pct === 100 ? 'Score on file' : 'No score on file yet' }
+  }
+  if (r.includes('ielts') || r.includes('toefl') || r.includes('duolingo') || r.includes('pte') || r.includes('cambridge english') || (r.includes('english') && (r.includes('proficiency') || r.includes('language')))) {
+    const pct = hasEnglishTest ? 100 : 0
+    return { pct, label: pct === 100 ? 'Score on file' : 'No score on file yet' }
+  }
+
+  return null
 }
 
-// Merges auto-detected progress with the student's manual overrides (stored
-// per-country in dreamCountryProfiles.checklist) — auto-detected items
-// always win over a stale manual value, since the master profile is the
-// source of truth for anything it can actually answer.
-export function mergeChecklistProgress(
-  requirements: string[],
-  manualChecklist: Record<string, number>,
-  profile: ChecklistProfile,
-): ChecklistItemProgress[] {
-  return requirements.map((requirement) => {
-    const auto = computeAutoChecklistProgress(requirement, profile)
-    if (auto !== null) return { requirement, progress: auto, autoDetected: true }
-    return { requirement, progress: manualChecklist[requirement] ?? 0, autoDetected: false }
-  })
+export type ChecklistItemProgress = {
+  requirement: string
+  progress: number // 0 or 100 — always the student's own manual tick, never inferred
+}
+
+// Purely reflects the student's own manual toggle now (stored per-country
+// in dreamCountryProfiles.checklist) — no item is ever auto-marked done.
+// Coverage info (see computeSectionCoverageBar above) is shown alongside as
+// a separate, informational bar instead of silently flipping the tick,
+// since "some real data exists" and "this requirement is actually done"
+// are genuinely different things (a US applicant with only 12th-grade data
+// has SOME transcript coverage, not a submittable transcript record).
+export function mergeChecklistProgress(requirements: string[], manualChecklist: Record<string, number>): ChecklistItemProgress[] {
+  return requirements.map((requirement) => ({ requirement, progress: manualChecklist[requirement] ?? 0 }))
 }
 
 export function overallCompletionPct(items: ChecklistItemProgress[]): number {

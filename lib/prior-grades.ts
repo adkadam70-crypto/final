@@ -101,6 +101,50 @@ function yearHasData(y: NinthTenthYear): boolean {
   return igcseCount(y.igcse) > 0 || y.percentage !== undefined || y.gpa !== undefined || y.ibAverage !== undefined || !!y.note?.trim()
 }
 
+// Which grade-years a country's admissions process actually looks at —
+// structured companion to the GRADE_RELEVANCE prose below, used to compute
+// a real fractional "how much of your transcript record do we have"
+// coverage instead of a flat "profile exists -> 100%" guess. E.g. a US
+// student who's only entered 12th-grade data is genuinely missing 3 of the
+// 4 years a US holistic review actually reads — this is what surfaces that
+// instead of silently marking the transcripts requirement done.
+export const RELEVANT_GRADE_YEARS: Record<string, Array<'9' | '10' | '11' | '12'>> = {
+  US: ['9', '10', '11', '12'],
+  UK: ['10', '11', '12'],
+  AU: ['11', '12'],
+  SG: ['10', '11', '12'],
+  HK: ['10', '11', '12'],
+  IN: ['12'],
+  DE: ['12'],
+  FR: ['10', '11', '12'],
+}
+
+export type GradeYearCoverage = {
+  pct: number
+  haveYears: string[]
+  missingYears: string[]
+}
+
+// hasTwelfth is passed in rather than re-derived here: reaching any Build
+// Your Dream screen already requires a saved main profile (12th-equivalent
+// AcademicDetail), so callers that already know that can just pass true
+// instead of threading the whole AcademicDetail object through for one
+// boolean.
+export function computeGradeYearCoverage(country: string, priorGrades: PriorGrades | null | undefined, hasTwelfth: boolean): GradeYearCoverage {
+  const relevant = RELEVANT_GRADE_YEARS[country] ?? ['12']
+  const ninthTenth = priorGrades?.ninthTenth
+  const has9 = !!ninthTenth?.curriculum && yearHasData(ninthTenth.grade9 ?? {})
+  const has10 = !!ninthTenth?.curriculum && yearHasData(ninthTenth.grade10 ?? {})
+  const has11 = !!priorGrades?.eleventh
+  const haveMap: Record<'9' | '10' | '11' | '12', boolean> = { '9': has9, '10': has10, '11': has11, '12': hasTwelfth }
+
+  const haveYears = relevant.filter((y) => haveMap[y]).map((y) => `${y}th`)
+  const missingYears = relevant.filter((y) => !haveMap[y]).map((y) => `${y}th`)
+  const pct = relevant.length ? Math.round((haveYears.length / relevant.length) * 100) : 100
+
+  return { pct, haveYears, missingYears }
+}
+
 export function validatePriorGrades(p: PriorGrades): string | null {
   for (const y of [p.ninthTenth.grade9, p.ninthTenth.grade10]) {
     if (y.percentage !== undefined && (y.percentage < 0 || y.percentage > 100)) return '9th/10th percentage must be between 0 and 100.'

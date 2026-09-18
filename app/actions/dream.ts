@@ -571,13 +571,13 @@ TARGETUNIVERSITY TAGGING — most steps should be general (targetUniversity: nul
   }
 }
 
-// Bulk-persists the MANUAL checklist overrides in one write — the student
-// toggles freely in the UI (local state only, see components/dream-country-
-// workspace.tsx) and this is only called once they press "Save changes",
-// deliberately not auto-saved per click. Only ever meaningful for items
-// computeAutoChecklistProgress (lib/dream-checklist.ts) can't auto-detect
-// from the master profile; auto-detected items ignore this entirely and are
-// recomputed fresh on every read.
+// Bulk-persists the student's own manual "done" ticks in one write — the
+// student toggles freely in the UI (local state only, see components/dream-
+// country-workspace.tsx) and this is only called once they press "Save
+// changes", deliberately not auto-saved per click. Every checklist item is
+// manual now (see lib/dream-checklist.ts) — profile-derived coverage is
+// shown alongside as a separate informational bar instead of auto-ticking
+// the item itself.
 export async function saveDreamChecklist(country: string, checklist: Record<string, number>): Promise<{ success: boolean; message: string }> {
   let userId: string
   try {
