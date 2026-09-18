@@ -701,9 +701,6 @@ export function DreamCountryWorkspace({
                           )}
                         </div>
                       )}
-                      <div className="h-1 w-full bg-border rounded-full overflow-hidden mt-2">
-                        <div className={`h-full rounded-full transition-all ${progress >= 100 ? 'bg-chart-2' : 'bg-primary/50'}`} style={{ width: `${progress}%` }} />
-                      </div>
                     </li>
                   )
                 })}
