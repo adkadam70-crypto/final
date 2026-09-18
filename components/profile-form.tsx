@@ -13,7 +13,8 @@ import { AcademicDetailInput } from '@/components/academic-detail-input'
 import { EmeraldBadgeSmall } from '@/components/emerald-badge'
 import { AdminUserManagement } from '@/components/admin/user-management'
 import type { AdminUserRow } from '@/app/actions/admin'
-import { defaultAcademicDetail, ACADEMIC_FIELDS, type AcademicDetail } from '@/lib/academic-detail'
+import { defaultAcademicDetail, ACADEMIC_FIELDS, INDUSTRY_HUBS, type AcademicDetail } from '@/lib/academic-detail'
+import { SearchableSelect } from '@/components/ui/searchable-select'
 import { satComposite, ENGLISH_TEST_TYPES, ENGLISH_TEST_RANGES, type StandardizedTests, type EnglishTestType } from '@/lib/standardized-tests'
 import {
   GRADE_RELEVANCE,
@@ -1046,24 +1047,11 @@ export function ProfileForm({
             </div>
             <div>
               <label htmlFor="sector" className="text-[11px] text-muted-foreground block mb-1">Industry hub</label>
-              <select id="sector" value={preferredSector} onChange={(e) => setPreferredSector(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none focus:border-primary">
-                <option>No preference</option>
-                <option>Business</option>
-                <option>Creative Hub</option>
-                <option>Finance Capital</option>
-                <option>Government & Policy Hub</option>
-                <option>Healthcare & Biotech Hub</option>
-                <option>Manufacturing & Engineering Hub</option>
-                <option>Research</option>
-                <option>Tech Hub</option>
-              </select>
+              <SearchableSelect id="sector" value={preferredSector} onChange={setPreferredSector} options={['No preference', ...INDUSTRY_HUBS]} placeholder="No preference" />
             </div>
             <div>
               <label htmlFor="field" className="text-[11px] text-muted-foreground block mb-1">Intended field of study</label>
-              <select id="field" value={intendedField} onChange={(e) => setIntendedField(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none focus:border-primary">
-                <option>No preference</option>
-                {ACADEMIC_FIELDS.map((f) => <option key={f}>{f}</option>)}
-              </select>
+              <SearchableSelect id="field" value={intendedField} onChange={setIntendedField} options={['No preference', ...ACADEMIC_FIELDS]} placeholder="No preference" />
             </div>
             <div>
               <label htmlFor="rank" className="text-[11px] text-muted-foreground block mb-1">Preferred university ranking</label>

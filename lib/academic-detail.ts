@@ -211,24 +211,59 @@ export function defaultAcademicDetail(curriculum: AcademicDetail['curriculum']):
   }
 }
 
-// Alphabetical so the "intended field" dropdown is easy to scan.
+// Alphabetical so the "intended field" dropdown is easy to scan. The 7
+// fields marked NEW below were added after a real user (via a friend's
+// feedback) couldn't find a specific Finance program and had to settle for
+// the generic "Business" bucket — these sit alongside the broader
+// categories they used to fold into (Business, Social Sciences, Science &
+// Technology / Research), not replacing them, since a genuinely
+// undecided/general student still needs a broad option. Program-ranking
+// research for these is seeded incrementally, same as every other field —
+// see scripts/seed-program-rankings-us-*.mjs.
 export const ACADEMIC_FIELDS = [
+  'Accounting', // NEW — was folded into Business
   'Agriculture & Natural Resources',
   'Architecture & Design',
   'Arts',
+  'Biology & Life Sciences', // NEW — was folded into Science & Technology / Research
   'Business',
   'Communications & Media',
   'Computer Science & IT',
+  'Data Science & Analytics', // NEW — was folded into Computer Science & IT
   'Economics',
   'Education',
   'Engineering',
   'Environmental Science & Sustainability',
+  'Finance', // NEW — was folded into Business
   'Humanities',
+  'Journalism', // NEW — was folded into Communications & Media
   'Law',
+  'Marketing', // NEW — was folded into Business
   'Mathematics & Statistics',
   'Medicine & Health Sciences',
+  'Political Science', // NEW — was folded into Social Sciences
   'Psychology',
   'Science & Technology / Research',
   'Social Sciences',
 ] as const
 export type AcademicField = (typeof ACADEMIC_FIELDS)[number]
+
+// Real values already present on universities.sectors across the catalog
+// (see scripts/seed-*.mjs) — the "Industry hub" preference dropdown used
+// to only offer 8 of the 11 real values in use, so a student could never
+// actually filter for a school tagged "Liberal Arts", "General", or
+// "Agriculture & Natural Resources" even though real schools carry those
+// tags.
+export const INDUSTRY_HUBS = [
+  'Agriculture & Natural Resources',
+  'Business',
+  'Creative Hub',
+  'Finance Capital',
+  'General',
+  'Government & Policy Hub',
+  'Healthcare & Biotech Hub',
+  'Liberal Arts',
+  'Manufacturing & Engineering Hub',
+  'Research',
+  'Tech Hub',
+] as const

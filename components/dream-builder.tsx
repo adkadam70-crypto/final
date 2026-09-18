@@ -13,6 +13,7 @@ import {
   type DreamCountryProfileRow,
 } from '@/app/actions/dream'
 import { ACADEMIC_FIELDS } from '@/lib/academic-detail'
+import { SearchableSelect } from '@/components/ui/searchable-select'
 import { APPLICATION_INFO } from '@/lib/application-info'
 import { LoadingDots } from '@/components/loading-dots'
 
@@ -570,12 +571,9 @@ export function DreamBuilder({
           ) : (
             <div>
               <label className="text-[11px] text-muted-foreground block mb-1.5">Pick your field</label>
-              <select value={manualField} onChange={(e) => setManualField(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-3 text-xs text-foreground focus:outline-none focus:border-primary mb-3">
-                <option value="">Select a field</option>
-                {ACADEMIC_FIELDS.map((f) => (
-                  <option key={f} value={f}>{f}</option>
-                ))}
-              </select>
+              <div className="mb-3">
+                <SearchableSelect value={manualField} onChange={setManualField} options={ACADEMIC_FIELDS} placeholder="Select a field" />
+              </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => handleConfirmField(manualField)}
