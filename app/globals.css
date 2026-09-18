@@ -48,6 +48,44 @@
 }
 
 :root {
+  color-scheme: light;
+  /* Light counterpart of the .dark palette below — same teal primary hue
+     (178) and radius, backgrounds/borders flipped to light. */
+  --background: oklch(0.99 0.002 260);
+  --foreground: oklch(0.18 0.012 260);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.012 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.012 260);
+  --primary: oklch(0.56 0.15 178);
+  --primary-foreground: oklch(0.99 0.01 178);
+  --secondary: oklch(0.95 0.005 260);
+  --secondary-foreground: oklch(0.18 0.012 260);
+  --muted: oklch(0.95 0.005 260);
+  --muted-foreground: oklch(0.46 0.02 260);
+  --accent: oklch(0.93 0.045 178);
+  --accent-foreground: oklch(0.32 0.09 178);
+  --destructive: oklch(0.58 0.22 20);
+  --border: oklch(0 0 0 / 10%);
+  --input: oklch(0 0 0 / 14%);
+  --ring: oklch(0.56 0.15 178);
+  --chart-1: oklch(0.56 0.15 178);
+  --chart-2: oklch(0.66 0.15 85);
+  --chart-3: oklch(0.58 0.2 20);
+  --chart-4: oklch(0.54 0.18 300);
+  --chart-5: oklch(0.58 0.14 235);
+  --radius: 0.875rem;
+  --sidebar: oklch(0.98 0.003 260);
+  --sidebar-foreground: oklch(0.18 0.012 260);
+  --sidebar-primary: oklch(0.56 0.15 178);
+  --sidebar-primary-foreground: oklch(0.99 0.01 178);
+  --sidebar-accent: oklch(0.95 0.005 260);
+  --sidebar-accent-foreground: oklch(0.18 0.012 260);
+  --sidebar-border: oklch(0 0 0 / 10%);
+  --sidebar-ring: oklch(0.56 0.15 178);
+}
+
+.dark {
   color-scheme: dark;
   /* zinc-950 base with emerald primary — the AuraAdmit aesthetic */
   --background: oklch(0.16 0.008 260);
