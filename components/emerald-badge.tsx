@@ -97,7 +97,7 @@ function EmeraldDetail({ data, iconSize, animate, onInfoClick }: { data: Profile
     { label: 'AI matches & analyses', value: breakdown.aiActivity, max: 20 },
   ]
   return (
-    <div className="flex flex-col sm:flex-row items-center gap-6">
+    <div className="flex flex-col sm:flex-row items-center gap-4">
       {/* An (i) button sitting on the gem's own corner used to overlap and
           visually hide part of the crystal at this icon's small size — it
           lives next to the level name instead now, clear of the image. */}
@@ -197,7 +197,7 @@ export function EmeraldBadgeSmall() {
         createPortal(
           <div
             ref={popoverRef}
-            className="fixed w-80 max-w-[90vw] bg-card border border-border rounded-3xl p-5 shadow-2xl z-[65]"
+            className="fixed w-[28rem] max-w-[92vw] bg-card border border-border rounded-3xl p-5 shadow-2xl z-[65]"
             style={{ top: coords.top, right: coords.right }}
           >
             <EmeraldDetail data={data} iconSize={140} animate={justLeveledUp} onInfoClick={() => setShowInfo(true)} />
