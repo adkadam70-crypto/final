@@ -126,7 +126,16 @@ export function Landing() {
   }, [ready])
 
   return (
-    <main className="min-h-svh text-foreground">
+    // Forced dark regardless of the site-wide theme toggle — this hero is a
+    // full-screen WebGL video background (Velaris) with text/logo tuned
+    // against it; flipping to the light CSS variables here doesn't give a
+    // "light landing page", it breaks the one this page actually has
+    // (dark text/backgrounds rendered over dark video = illegible). The
+    // toggle itself only lives in the authenticated Navbar anyway, so nothing
+    // reachable from this page can normally trigger light mode here — this
+    // just makes that true even if the stored preference is already light
+    // from a previous session.
+    <main className="dark min-h-svh text-foreground bg-background">
       {/* Opaque until the background has actually rendered (plus a short
           settle buffer for the rest of the page's own scroll-reveal effects
           to have mounted too) — see the effects above and Velaris's
