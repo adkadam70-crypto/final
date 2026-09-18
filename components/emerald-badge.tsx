@@ -200,7 +200,7 @@ export function EmeraldBadgeSmall() {
             className="fixed w-80 max-w-[90vw] bg-card border border-border rounded-3xl p-5 shadow-2xl z-[65]"
             style={{ top: coords.top, right: coords.right }}
           >
-            <EmeraldDetail data={data} iconSize={104} animate={justLeveledUp} onInfoClick={() => setShowInfo(true)} />
+            <EmeraldDetail data={data} iconSize={140} animate={justLeveledUp} onInfoClick={() => setShowInfo(true)} />
           </div>,
           document.body,
         )}
