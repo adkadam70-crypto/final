@@ -100,8 +100,13 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
     // Theme colors read straight from the CSS variables (app/globals.css) so
     // this always matches the live palette instead of a hardcoded guess —
     // canvas fillStyle/strokeStyle accepts any valid CSS color string,
-    // including the oklch() values this app uses.
-    const themeColor = (variable: string) => getComputedStyle(document.documentElement).getPropertyValue(variable).trim()
+    // including the oklch() values this app uses. Read from this globe's
+    // OWN container, not document.documentElement — custom properties
+    // inherit down the DOM, so a container reads whatever the cascade
+    // actually resolves to at that point (e.g. the landing page's forced
+    // `.dark` override), while documentElement always reports the root
+    // <html> theme regardless of any such override further down the tree.
+    const themeColor = (variable: string) => getComputedStyle(container).getPropertyValue(variable).trim()
     const colors = {
       ocean: themeColor('--card'),
       // --border is only ~10% white — fine for a subtle grid line, too
