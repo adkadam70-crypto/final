@@ -39,9 +39,21 @@ import Velaris from '@/components/ui/velaris'
 import { AppLogo } from '@/components/app-logo'
 import { LiquidButton } from '@/components/ui/liquid-glass-button'
 import { Footer } from '@/components/ui/footer-section'
+import { TestimonialCard, type TestimonialAuthor } from '@/components/ui/testimonial-card'
 import { tierBadgeClass } from '@/lib/match-tier'
 
 const STAGE_COUNT = 5
+
+// Real student feedback, collected directly — no handles/photos attached
+// since these aren't public social accounts.
+const LANDING_TESTIMONIALS: Array<{ author: TestimonialAuthor; text: string }> = [
+  { author: { name: 'Mahi Singh' }, text: "Honestly saved me so much time — I used to spend hours cross-checking schools myself, now I just get straight answers." },
+  { author: { name: 'Ishan Chabria' }, text: "What I liked most is it actually tells you which universities you have a real shot at and which ones are a stretch, instead of just leaving you to guess." },
+  { author: { name: 'Anaya Kadam' }, text: "Genuinely such a wonderful tool — it made the whole process feel a lot less overwhelming." },
+  { author: { name: 'Rida Khalfay' }, text: "The Build Your Dream feature is my favorite part. It helped me figure out exactly what to work on in my profile." },
+  { author: { name: 'Chirayu Pinjarkar' }, text: "As a CBSE student, there's barely anything built with us in mind — this one actually stood out." },
+  { author: { name: 'Mannat Bathija' }, text: "The program-specific rankings are what sold me — it's not just 'this school is good,' it actually breaks down how strong they are in the exact major I'm applying to." },
+]
 
 const COUNTRY_CHIPS = [
   { label: 'United States', stat: '1600+ universities' },
@@ -218,6 +230,29 @@ function IgnitionTerminal({ onLaunch }: { onLaunch: () => void }) {
   )
 }
 
+// Small, always-visible strip of auto-scrolling testimonials — sits inside
+// the hero itself (not a separate below-the-fold section) so a first-time
+// visitor sees real feedback without having to scroll. Full-bleed width
+// (breaks out of the hero's centered/padded column) so the loop always has
+// enough content to flow continuously, even on wide screens.
+function TestimonialsMarqueeStrip({ testimonials }: { testimonials: Array<{ author: TestimonialAuthor; text: string }> }) {
+  return (
+    <div className="relative mt-6 w-screen left-1/2 -translate-x-1/2 overflow-hidden">
+      <div className="flex overflow-hidden [--gap:0.75rem] [gap:var(--gap)] [--duration:32s]">
+        <div className="flex shrink-0 [gap:var(--gap)] animate-[marquee_var(--duration)_linear_infinite] hover:[animation-play-state:paused]">
+          {[...Array(2)].map((_, setIndex) =>
+            testimonials.map((testimonial, i) => (
+              <TestimonialCard key={`${setIndex}-${i}`} {...testimonial} size="compact" variant="glass" />
+            )),
+          )}
+        </div>
+      </div>
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-16 sm:w-32 bg-gradient-to-r from-background to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-16 sm:w-32 bg-gradient-to-l from-background to-transparent" />
+    </div>
+  )
+}
+
 export function LandingDemo() {
   const router = useRouter()
   const [isLaunched, setIsLaunched] = useState(false)
@@ -335,6 +370,8 @@ export function LandingDemo() {
         <p className="mt-8 text-xs font-mono text-zinc-300 text-center tracking-wide relative z-10">
           ✦ Benchmarked against 3,500+ universities across 8 countries
         </p>
+
+        <TestimonialsMarqueeStrip testimonials={LANDING_TESTIMONIALS} />
       </section>
 
       <Footer />
