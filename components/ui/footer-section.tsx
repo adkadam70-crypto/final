@@ -82,7 +82,7 @@ export function Footer() {
         <div className="mt-10 grid grid-cols-2 gap-8 md:grid-cols-4 xl:col-span-2 xl:mt-0">
           {footerLinks.map((section, index) => (
             <AnimatedContainer key={section.label} delay={0.1 + index * 0.1}>
-              <div className="mb-10 md:mb-0">
+              <div>
                 <h3 className="text-xs">{section.label}</h3>
                 <ul className="text-muted-foreground mt-4 space-y-2 text-sm">
                   {section.links.map((link) => (

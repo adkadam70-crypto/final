@@ -351,7 +351,7 @@ export function LandingDemo() {
 
       {/* ---------- HERO: distraction-free "Ignition Terminal" ---------- */}
       <section
-        className="min-h-[88vh] flex flex-col items-center justify-center px-4 pt-20 pb-8 relative overflow-hidden"
+        className="min-h-[clamp(600px,88vh,860px)] flex flex-col items-center justify-center px-4 pt-20 pb-8 relative overflow-hidden"
         style={{
           backgroundImage: 'radial-gradient(circle at center, rgba(6,78,59,0.25), rgba(9,9,11,0.0) 60%)',
         }}
