@@ -165,3 +165,12 @@
   60% { transform: scale(0.95); filter: brightness(1.2); }
   100% { transform: scale(1); filter: brightness(1); }
 }
+
+/* Continuous horizontal scroll for the testimonials marquee
+   (components/ui/testimonials-with-marquee.tsx) — the track renders the
+   testimonial list twice back to back, so translating by exactly -50%
+   loops seamlessly back to an identical starting frame. */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(-50% - var(--gap) / 2)); }
+}

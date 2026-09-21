@@ -19,6 +19,7 @@ export type SaveProfileInput = {
   preferredSector: string
   preferredRank: string
   intendedField: string
+  intendedConcentration: string
   extracurriculars: string[]
   apCourses: string[]
 }
@@ -47,6 +48,7 @@ function validateFreeTextLengths(input: SaveProfileInput): string | null {
   if (input.preferredSector.length > MAX_FIELD_LENGTH) return 'Preferred sector value is too long.'
   if (input.preferredRank.length > MAX_FIELD_LENGTH) return 'Preferred rank value is too long.'
   if (input.intendedField.length > MAX_FIELD_LENGTH) return 'Intended field value is too long.'
+  if (input.intendedConcentration.length > MAX_FIELD_LENGTH) return 'Intended concentration value is too long.'
 
   if (input.extracurriculars.length > MAX_EXTRACURRICULARS) return `Enter at most ${MAX_EXTRACURRICULARS} extracurricular entries.`
   if (input.extracurriculars.some((e) => e.length > MAX_FIELD_LENGTH)) return 'One of your extracurricular entries is too long.'
@@ -118,6 +120,7 @@ export async function saveProfile(input: SaveProfileInput): Promise<{ success: b
         preferredSector: input.preferredSector,
         preferredRank: input.preferredRank,
         intendedField: input.intendedField,
+        intendedConcentration: input.intendedConcentration,
         extracurriculars: input.extracurriculars,
         apCourses: input.apCourses,
       })
@@ -161,6 +164,7 @@ export async function appendExtracurricularToProfile(text: string): Promise<{ su
     preferredSector: latest.preferredSector,
     preferredRank: latest.preferredRank,
     intendedField: latest.intendedField,
+    intendedConcentration: latest.intendedConcentration,
     extracurriculars: [...latest.extracurriculars, text],
     apCourses: latest.apCourses,
   })

@@ -14,12 +14,6 @@ import { geoArea, geoCentroid, geoContains, geoDistance, geoGraticule, geoInterp
 import type { ExtendedFeatureCollection, GeoProjection } from 'd3-geo'
 import { timer } from 'd3-timer'
 
-// requestIdleCallback isn't in Safari; setTimeout(0) is a fine fallback for
-// what this is used for (yielding a slice of a chunked loop back to the
-// browser, not scheduling truly idle-only work).
-const scheduleIdle: (cb: () => void) => void =
-  typeof requestIdleCallback === 'function' ? (cb) => requestIdleCallback(cb) : (cb) => setTimeout(cb, 0)
-
 interface CountryMarker {
   name: string
   lat: number
@@ -449,6 +443,11 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
         const response = await fetch('/ne-110m-land.json')
         if (!response.ok) throw new Error('Failed to load land data')
         landFeatures = await response.json()
+        // Land silhouette is the primary content — show it the moment its
+        // own fetch resolves, rather than waiting on the country polygons
+        // and (much slower) decorative dot texture below. Those layer in
+        // on top via their own render() calls once ready.
+        render()
 
         // Real country-boundary polygons for the 8 markets this app
         // covers — pre-filtered to just those 8 features (see
@@ -491,24 +490,38 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
             countryPoints.set(displayName, geoCentroid(feature))
           })
           rebuildConnectionLines()
+          // Highlighted-country polygons are ready — render now instead of
+          // waiting on the decorative dot texture computed below, which can
+          // take multiple seconds spread across idle callbacks.
+          render()
 
           // Experimental dot texture on non-highlighted land, per request
           // ("just want to see how it looks") — every point inside any
           // landmass EXCEPT inside one of the 8 real (non-inflated) country
-          // shapes. Computed once; 3.5° spacing keeps the per-frame
-          // re-projection cost low.
+          // shapes.
           //
-          // ~5,000 candidate points, each checked with geoContains against
-          // every land polygon plus (for hits) all 8 country polygons — run
-          // as one plain loop this was a multi-second synchronous block on
-          // the main thread, which starved every other pending timer/effect
-          // (including the landing page's own loading-screen dismissal)
-          // until it finished. Chunked across idle callbacks instead: same
-          // total work, but broken into slices small enough that the
-          // browser can still process other pending work (paint, other
-          // timers) between them.
+          // Two things were making this show up very slowly in Stage 2 of
+          // the landing page (which only holds ~4.6s total): scheduling
+          // and raw work.
+          //
+          // Scheduling: this used requestIdleCallback, but the globe
+          // auto-rotates via a continuous rAF-driven timer (see
+          // rotationTimer below) the moment it scrolls into view — that
+          // constant per-frame work means the browser is essentially never
+          // "idle", so idle-callback chunks were getting starved for
+          // seconds. Switched to requestAnimationFrame, which fires every
+          // frame regardless.
+          //
+          // Raw work: at 3.5° spacing (~5,000 candidate points, each
+          // checked with geoContains against every land polygon plus, for
+          // hits, all 8 country polygons) this is genuinely ~2s of
+          // synchronous CPU work measured end-to-end — no amount of
+          // rescheduling changes that total, only how it's interleaved
+          // with paints. 6° spacing cuts the candidate grid to ~1,800
+          // points (~0.8s measured) for a still-clearly-textured, just
+          // slightly sparser, look — the actual lever for "fast" here.
           if (landFeatures) {
-            const step = 3.5
+            const step = 6
             const points: [number, number][] = []
             for (let lng = -180; lng <= 180; lng += step) {
               for (let lat = -85; lat <= 85; lat += step) {
@@ -517,7 +530,10 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
             }
 
             const dots: [number, number][] = []
-            const CHUNK_SIZE = 150
+            // Small enough per chunk to still paint between them, large
+            // enough that the (now ~0.8s of total work) ~1,800-point set
+            // finishes in well under a dozen frames.
+            const CHUNK_SIZE = 250
             await new Promise<void>((resolve) => {
               let idx = 0
               const processChunk = () => {
@@ -529,7 +545,7 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
                   if (!inHighlighted) dots.push(point)
                 }
                 if (idx < points.length) {
-                  scheduleIdle(processChunk)
+                  requestAnimationFrame(processChunk)
                 } else {
                   resolve()
                 }
@@ -537,6 +553,7 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
               processChunk()
             })
             landDots = dots
+            render()
           }
 
           // Singapore and Hong Kong's true land area is a couple of pixels

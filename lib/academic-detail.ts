@@ -248,6 +248,70 @@ export const ACADEMIC_FIELDS = [
 ] as const
 export type AcademicField = (typeof ACADEMIC_FIELDS)[number]
 
+// Common concentrations/sub-specializations within each broad
+// ACADEMIC_FIELDS bucket — purely informational, shown to reassure a
+// student picking (say) "Engineering" that their specific interest
+// (Aerospace, say) is still covered by that broad field.
+//
+// NOT tied to programRankings: that table's `field` column only stores
+// the broad ACADEMIC_FIELDS value — a concentration like "Aerospace
+// Engineering" only ever shows up inside a rankSource citation string
+// (e.g. "ARWU ... — Aerospace Engineering"), never as its own queryable
+// row. So this list can't drive which schools/ranks are shown; it's
+// context only. A field not listed here just doesn't show the box —
+// left blank rather than guessed at.
+export const FIELD_CONCENTRATIONS: Partial<Record<AcademicField, string[]>> = {
+  Engineering: [
+    'Aerospace Engineering',
+    'Mechanical Engineering',
+    'Civil Engineering',
+    'Electrical Engineering',
+    'Chemical Engineering',
+    'Biomedical Engineering',
+    'Industrial Engineering',
+    'Materials Science & Engineering',
+    'Environmental Engineering',
+    'Software Engineering',
+  ],
+  'Computer Science & IT': [
+    'Artificial Intelligence & Machine Learning',
+    'Software Engineering',
+    'Cybersecurity',
+    'Human-Computer Interaction',
+    'Computer Systems & Networks',
+    'Game Development',
+    'Theoretical Computer Science',
+  ],
+  'Data Science & Analytics': ['Statistics & Machine Learning', 'Business Analytics', 'Bioinformatics', 'Data Engineering'],
+  Business: [
+    'General Management',
+    'Entrepreneurship',
+    'International Business',
+    'Supply Chain & Operations',
+    'Human Resources',
+    'Business Information Systems',
+  ],
+  'Medicine & Health Sciences': [
+    'Pre-Medicine',
+    'Nursing',
+    'Public Health',
+    'Pharmacy',
+    'Physical Therapy',
+    'Dentistry',
+    'Veterinary Science',
+  ],
+  'Biology & Life Sciences': ['Molecular & Cell Biology', 'Genetics', 'Neuroscience', 'Microbiology', 'Ecology & Evolutionary Biology'],
+  'Science & Technology / Research': ['Physics', 'Chemistry', 'Materials Science', 'Astronomy & Astrophysics'],
+  'Mathematics & Statistics': ['Pure Mathematics', 'Applied Mathematics', 'Statistics', 'Actuarial Science'],
+  Psychology: ['Clinical Psychology', 'Cognitive Psychology', 'Developmental Psychology', 'Behavioral Neuroscience'],
+  Law: ['Corporate Law', 'International Law', 'Criminal Law', 'Human Rights Law'],
+  Economics: ['Financial Economics', 'Development Economics', 'Econometrics', 'Behavioral Economics'],
+  'Social Sciences': ['Sociology', 'Anthropology', 'International Relations', 'Public Policy'],
+  'Environmental Science & Sustainability': ['Climate Science', 'Sustainable Development', 'Conservation Biology', 'Environmental Policy'],
+  Arts: ['Fine Arts', 'Graphic Design', 'Film & Media Production', 'Music'],
+  'Architecture & Design': ['Architecture', 'Urban Planning', 'Industrial Design', 'Landscape Architecture'],
+}
+
 // Real values already present on universities.sectors across the catalog
 // (see scripts/seed-*.mjs) — the "Industry hub" preference dropdown used
 // to only offer 8 of the 11 real values in use, so a student could never

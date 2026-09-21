@@ -39,9 +39,22 @@ import Velaris from '@/components/ui/velaris'
 import { AppLogo } from '@/components/app-logo'
 import { LiquidButton } from '@/components/ui/liquid-glass-button'
 import { Footer } from '@/components/ui/footer-section'
+import { TestimonialCard, type TestimonialAuthor } from '@/components/ui/testimonial-card'
 import { tierBadgeClass } from '@/lib/match-tier'
 
 const STAGE_COUNT = 5
+
+// Real student feedback, collected directly — no handles/photos attached
+// since these aren't public social accounts.
+const LANDING_TESTIMONIALS: Array<{ author: TestimonialAuthor; text: string }> = [
+  { author: { name: 'Mahi Singh' }, text: "Ngl this saved me so much time. I used to spend hours cross checking schools myself, now I just get a straight answer." },
+  { author: { name: 'Ishan Chabria' }, text: "What I liked most is it actually tells you which universities you have a real shot at and which ones are a stretch, instead of just leaving you to guess." },
+  { author: { name: 'Anaya Kadam' }, text: "Genuinely such a wonderful tool, it made the whole process feel a lot less overwhelming." },
+  { author: { name: 'Rida Khalfay' }, text: "The Build Your Dream feature is my favorite part fr. It helped me figure out exactly what to work on in my profile." },
+  { author: { name: 'Chirayu Pinjarkar' }, text: "As a CBSE student there's barely anything built with us in mind, so this one actually stood out." },
+  { author: { name: 'Mannat Bathija' }, text: "The program specific rankings are what sold me tbh. It's not just \"this school is good\", it actually breaks down how strong they are in the exact major I'm applying to." },
+  { author: { name: 'Geet Doshi' }, text: "I was so lost trying to figure out where I even had a shot, this actually gave me a clear starting point instead of just a random list of names." },
+]
 
 const COUNTRY_CHIPS = [
   { label: 'United States', stat: '1600+ universities' },
@@ -174,7 +187,7 @@ function IgnitionTerminal({ onLaunch }: { onLaunch: () => void }) {
     // per landing-page CTA research: 40-60px+ separation from surrounding
     // content, and 44-72px thumb targets read as more confidently tappable
     // than a button sitting right at the minimum.
-    <div className="w-full max-w-lg mx-auto mt-16 sm:mt-20 bg-zinc-900/60 border border-white/10 rounded-2xl p-6 backdrop-blur-xl shadow-2xl shadow-emerald-950/40 relative">
+    <div className="w-full max-w-lg mx-auto mt-8 sm:mt-10 bg-zinc-900/60 border border-white/10 rounded-2xl p-6 backdrop-blur-xl shadow-2xl shadow-emerald-950/40 relative">
       {/* Header strip */}
       <div className="flex items-center justify-between mb-5">
         <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-400">Admission Engine</span>
@@ -218,11 +231,38 @@ function IgnitionTerminal({ onLaunch }: { onLaunch: () => void }) {
   )
 }
 
+// Small, always-visible strip of auto-scrolling testimonials — sits inside
+// the hero itself (not a separate below-the-fold section) so a first-time
+// visitor sees real feedback without having to scroll. Full-bleed width
+// (breaks out of the hero's centered/padded column) so the loop always has
+// enough content to flow continuously, even on wide screens.
+function TestimonialsMarqueeStrip({ testimonials }: { testimonials: Array<{ author: TestimonialAuthor; text: string }> }) {
+  return (
+    <div className="relative mt-6 w-screen left-1/2 -translate-x-1/2 overflow-hidden">
+      <div className="flex overflow-hidden [--gap:0.75rem] [gap:var(--gap)] [--duration:32s]">
+        <div className="flex shrink-0 [gap:var(--gap)] animate-[marquee_var(--duration)_linear_infinite] hover:[animation-play-state:paused]">
+          {[...Array(2)].map((_, setIndex) =>
+            testimonials.map((testimonial, i) => (
+              <TestimonialCard key={`${setIndex}-${i}`} {...testimonial} size="compact" variant="glass" />
+            )),
+          )}
+        </div>
+      </div>
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-16 sm:w-32 bg-gradient-to-r from-background to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-16 sm:w-32 bg-gradient-to-l from-background to-transparent" />
+    </div>
+  )
+}
+
 export function LandingDemo() {
   const router = useRouter()
   const [isLaunched, setIsLaunched] = useState(false)
   const [currentStage, setCurrentStage] = useState(1)
   const [itemsShown, setItemsShown] = useState(0)
+  // Tracks whether the auto-play has reached stage 5 yet — Back first
+  // appears there, then stays available on every earlier stage too so it
+  // can be clicked all the way back to the hero, not just once.
+  const [hasReachedEnd, setHasReachedEnd] = useState(false)
   const timers = useRef<ReturnType<typeof setTimeout>[]>([])
 
   const after = (ms: number, fn: () => void) => {
@@ -238,6 +278,7 @@ export function LandingDemo() {
 
   const launchSequence = () => {
     setCurrentStage(1)
+    setHasReachedEnd(false)
     setIsLaunched(true)
   }
   const exitSequence = () => {
@@ -245,6 +286,7 @@ export function LandingDemo() {
     setIsLaunched(false)
     setCurrentStage(1)
     setItemsShown(0)
+    setHasReachedEnd(false)
   }
   // The only manual control: steps backward. From stage 1, it exits the
   // whole sequence back to the hero ("click back, back, back... and come
@@ -265,7 +307,11 @@ export function LandingDemo() {
     clearTimers()
     setItemsShown(0)
     const timing = STAGE_TIMING[currentStage as keyof typeof STAGE_TIMING]
-    if (!timing) return
+    if (!timing) {
+      // Only stage 5 has no timing entry — the end of the auto-play run.
+      setHasReachedEnd(true)
+      return
+    }
     for (let i = 0; i < timing.itemCount; i++) {
       after(timing.stagger * (i + 1), () => setItemsShown(i + 1))
     }
@@ -280,7 +326,7 @@ export function LandingDemo() {
       <Velaris height="100vh" className="fixed inset-0" />
 
       {/* ---------- STICKY HEADER ---------- */}
-      <header className="fixed top-0 inset-x-0 z-20 h-16 flex items-center justify-between px-6 sm:px-8 border-b border-white/5 bg-white/[0.02] backdrop-blur-md">
+      <header className="fixed top-0 inset-x-0 z-20 h-12 flex items-center justify-between px-6 sm:px-8 border-b border-white/5 bg-white/[0.02] backdrop-blur-md">
         <div className="flex items-center gap-2.5">
           <AppLogo className="h-7 w-auto sm:h-8" />
           <span className="hidden sm:inline text-xl font-bold tracking-tight">Shortlisted</span>
@@ -305,7 +351,7 @@ export function LandingDemo() {
 
       {/* ---------- HERO: distraction-free "Ignition Terminal" ---------- */}
       <section
-        className="min-h-[88vh] flex flex-col items-center justify-center px-4 pt-8 pb-12 relative overflow-hidden"
+        className="min-h-[88vh] flex flex-col items-center justify-center px-4 pt-20 pb-8 relative overflow-hidden"
         style={{
           backgroundImage: 'radial-gradient(circle at center, rgba(6,78,59,0.25), rgba(9,9,11,0.0) 60%)',
         }}
@@ -335,6 +381,8 @@ export function LandingDemo() {
         <p className="mt-8 text-xs font-mono text-zinc-300 text-center tracking-wide relative z-10">
           ✦ Benchmarked against 3,500+ universities across 8 countries
         </p>
+
+        <TestimonialsMarqueeStrip testimonials={LANDING_TESTIMONIALS} />
       </section>
 
       <Footer />
@@ -390,14 +438,15 @@ export function LandingDemo() {
               </AnimatePresence>
             </div>
 
-            {/* Bottom controls — Back only appears once auto-play has
-                finished (stage 5, the final page) — stages 1-4 advance
-                themselves, so a manual control there would be redundant.
-                On stage 5, Back steps back into the sequence one stage at
-                a time. No Continue: every stage advances itself once its
-                items have finished revealing. */}
+            {/* Bottom controls — Back first appears once auto-play has
+                finished (stage 5, the final page); stages 1-4 advance
+                themselves, so a manual control isn't needed to arrive here.
+                From then on it stays visible on every stage, so a student
+                can keep clicking Back through 5→4→3→2→1 and then out to the
+                hero, not just once. No Continue: every stage advances
+                itself once its items have finished revealing. */}
             <div className="flex items-center justify-between h-9">
-              {currentStage === STAGE_COUNT && (
+              {hasReachedEnd && (
                 <button
                   type="button"
                   onClick={back}
