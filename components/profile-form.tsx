@@ -438,6 +438,7 @@ export function ProfileForm({
   const [activities, setActivities] = useState(suggestedActivities ?? [])
   const [activityPendingId, setActivityPendingId] = useState<number | null>(null)
   const [showAdminPanel, setShowAdminPanel] = useState(false)
+  const [showConcentrationInfo, setShowConcentrationInfo] = useState(false)
 
   async function handleMarkActivityDone(id: number) {
     setActivityPendingId(id)
@@ -1127,25 +1128,45 @@ export function ProfileForm({
                 options={['No preference', ...ACADEMIC_FIELDS]}
                 placeholder="No preference"
               />
-              {/* Reassurance + an optional, saved refinement — a student
-                  picking "Engineering" shouldn't worry their actual interest
+              {/* An optional, saved refinement — a student picking
+                  "Engineering" shouldn't worry their actual interest
                   (Aerospace, say) isn't covered by that broad bucket. Saved
                   and passed to the AI as context, but never changes which
                   schools/ranks are shown (see intendedConcentration's
-                  comment in lib/db/schema.ts). Renders nothing for a field
-                  with no list above (left blank rather than guessed at). */}
+                  comment in lib/db/schema.ts). Nested visually under the
+                  field select (left border + indent) since it's a
+                  refinement of that choice, not a separate field. Renders
+                  nothing for a field with no list above (left blank rather
+                  than guessed at). */}
               {FIELD_CONCENTRATIONS[intendedField as keyof typeof FIELD_CONCENTRATIONS] && (
-                <div className="mt-2.5">
-                  <p className="text-[10.5px] text-muted-foreground/70 leading-relaxed mb-1.5">
-                    Covers {FIELD_CONCENTRATIONS[intendedField as keyof typeof FIELD_CONCENTRATIONS]!.slice(0, 4).join(', ')}
-                    {FIELD_CONCENTRATIONS[intendedField as keyof typeof FIELD_CONCENTRATIONS]!.length > 4 ? ', and more' : ''} — pick one below if you have a specific interest.
-                  </p>
+                <div className="mt-2.5 pl-3 border-l-2 border-border">
+                  <label htmlFor="concentration" className="text-[11px] text-muted-foreground flex items-center gap-1 mb-1">
+                    Concentration within {intendedField} (optional)
+                    <button
+                      type="button"
+                      onClick={() => setShowConcentrationInfo((v) => !v)}
+                      aria-expanded={showConcentrationInfo}
+                      aria-label="What is a concentration?"
+                      className="text-muted-foreground/60 hover:text-primary shrink-0"
+                    >
+                      <Info className="w-3 h-3" />
+                    </button>
+                  </label>
+                  {showConcentrationInfo && (
+                    <p className="text-[10.5px] text-muted-foreground/80 bg-secondary/60 border border-border rounded-lg p-2 mb-2 text-pretty leading-relaxed">
+                      A concentration is a specific area of study within your broader field — e.g. Aerospace Engineering is a
+                      concentration within Engineering, the way a major has sub-tracks. This tells us (and the AI) more
+                      precisely what you're aiming for, purely as context for advice and rationale — it doesn't change which
+                      schools or ranks are shown, since our ranking data only goes down to the broader field. It's completely
+                      fine to leave this as "No preference" if you haven't decided yet or are still researching options.
+                    </p>
+                  )}
                   <SearchableSelect
                     id="concentration"
                     value={intendedConcentration}
                     onChange={setIntendedConcentration}
                     options={['No preference', ...FIELD_CONCENTRATIONS[intendedField as keyof typeof FIELD_CONCENTRATIONS]!]}
-                    placeholder="Concentration (optional)"
+                    placeholder="No preference"
                   />
                 </div>
               )}

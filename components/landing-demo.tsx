@@ -258,6 +258,10 @@ export function LandingDemo() {
   const [isLaunched, setIsLaunched] = useState(false)
   const [currentStage, setCurrentStage] = useState(1)
   const [itemsShown, setItemsShown] = useState(0)
+  // Tracks whether the auto-play has reached stage 5 yet — Back first
+  // appears there, then stays available on every earlier stage too so it
+  // can be clicked all the way back to the hero, not just once.
+  const [hasReachedEnd, setHasReachedEnd] = useState(false)
   const timers = useRef<ReturnType<typeof setTimeout>[]>([])
 
   const after = (ms: number, fn: () => void) => {
@@ -273,6 +277,7 @@ export function LandingDemo() {
 
   const launchSequence = () => {
     setCurrentStage(1)
+    setHasReachedEnd(false)
     setIsLaunched(true)
   }
   const exitSequence = () => {
@@ -280,6 +285,7 @@ export function LandingDemo() {
     setIsLaunched(false)
     setCurrentStage(1)
     setItemsShown(0)
+    setHasReachedEnd(false)
   }
   // The only manual control: steps backward. From stage 1, it exits the
   // whole sequence back to the hero ("click back, back, back... and come
@@ -300,7 +306,11 @@ export function LandingDemo() {
     clearTimers()
     setItemsShown(0)
     const timing = STAGE_TIMING[currentStage as keyof typeof STAGE_TIMING]
-    if (!timing) return
+    if (!timing) {
+      // Only stage 5 has no timing entry — the end of the auto-play run.
+      setHasReachedEnd(true)
+      return
+    }
     for (let i = 0; i < timing.itemCount; i++) {
       after(timing.stagger * (i + 1), () => setItemsShown(i + 1))
     }
@@ -427,14 +437,15 @@ export function LandingDemo() {
               </AnimatePresence>
             </div>
 
-            {/* Bottom controls — Back only appears once auto-play has
-                finished (stage 5, the final page) — stages 1-4 advance
-                themselves, so a manual control there would be redundant.
-                On stage 5, Back steps back into the sequence one stage at
-                a time. No Continue: every stage advances itself once its
-                items have finished revealing. */}
+            {/* Bottom controls — Back first appears once auto-play has
+                finished (stage 5, the final page); stages 1-4 advance
+                themselves, so a manual control isn't needed to arrive here.
+                From then on it stays visible on every stage, so a student
+                can keep clicking Back through 5→4→3→2→1 and then out to the
+                hero, not just once. No Continue: every stage advances
+                itself once its items have finished revealing. */}
             <div className="flex items-center justify-between h-9">
-              {currentStage === STAGE_COUNT && (
+              {hasReachedEnd && (
                 <button
                   type="button"
                   onClick={back}
