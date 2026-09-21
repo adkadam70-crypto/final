@@ -39,9 +39,20 @@ import Velaris from '@/components/ui/velaris'
 import { AppLogo } from '@/components/app-logo'
 import { LiquidButton } from '@/components/ui/liquid-glass-button'
 import { Footer } from '@/components/ui/footer-section'
+import { TestimonialsSection } from '@/components/ui/testimonials-with-marquee'
 import { tierBadgeClass } from '@/lib/match-tier'
 
 const STAGE_COUNT = 5
+
+// Real student feedback, collected directly — no handles/photos attached
+// since these aren't public social accounts.
+const LANDING_TESTIMONIALS = [
+  { author: { name: 'Mahi Singh' }, text: 'This tool helped me save so much time.' },
+  { author: { name: 'Ishan Chabria' }, text: "This tool gave me guidance on what universities I have a chance at and which ones I don't." },
+  { author: { name: 'Anaya Kadam' }, text: 'It is truly wonderful.' },
+  { author: { name: 'Rida Khalfay' }, text: 'I love the Build Your Dream feature — it helped me work on my profile so much.' },
+  { author: { name: 'Chirayu Pijnakar' }, text: 'As a CBSE student with no such tools available, this one really stood out.' },
+]
 
 const COUNTRY_CHIPS = [
   { label: 'United States', stat: '1600+ universities' },
@@ -336,6 +347,12 @@ export function LandingDemo() {
           ✦ Benchmarked against 3,500+ universities across 8 countries
         </p>
       </section>
+
+      <TestimonialsSection
+        title="What students are saying"
+        description="Real feedback from students who used Shortlisted to plan their applications."
+        testimonials={LANDING_TESTIMONIALS}
+      />
 
       <Footer />
 
