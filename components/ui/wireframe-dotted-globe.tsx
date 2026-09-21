@@ -520,7 +520,14 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
           // with paints. 6° spacing cuts the candidate grid to ~1,800
           // points (~0.8s measured) for a still-clearly-textured, just
           // slightly sparser, look — the actual lever for "fast" here.
-          if (landFeatures) {
+          // Every current usage of this globe is a small (<=300px),
+          // non-interactive preview shown for only a few seconds inside a
+          // scripted demo sequence — this dot texture is barely visible at
+          // that scale, but the ~0.8s it takes to compute was the single
+          // biggest chunk of "still loading" time the globe spent on screen
+          // before its stage moved on. Skip it below a size threshold where
+          // it wouldn't read as missing anyway.
+          if (landFeatures && containerWidth > 400) {
             const step = 6
             const points: [number, number][] = []
             for (let lng = -180; lng <= 180; lng += step) {

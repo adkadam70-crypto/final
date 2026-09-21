@@ -271,6 +271,17 @@ export function LandingDemo() {
   const [hasReachedEnd, setHasReachedEnd] = useState(false)
   const timers = useRef<ReturnType<typeof setTimeout>[]>([])
 
+  // Stage 2's globe fetches these two JSON files itself on mount, but that
+  // stage is only ~4.6s on screen total — starting both fetches cold right
+  // as the user arrives there was a real chunk of why it looked like it was
+  // still loading. Warm the browser's HTTP cache for them as soon as the
+  // page itself mounts, well before the user ever clicks in, so by the time
+  // the globe's own fetch runs it resolves from cache instead of the network.
+  useEffect(() => {
+    fetch('/ne-110m-land.json').catch(() => {})
+    fetch('/ne-50m-our-countries.json').catch(() => {})
+  }, [])
+
   const after = (ms: number, fn: () => void) => {
     const id = setTimeout(fn, ms)
     timers.current.push(id)
