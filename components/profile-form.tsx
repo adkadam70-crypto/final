@@ -1154,11 +1154,8 @@ export function ProfileForm({
                   </label>
                   {showConcentrationInfo && (
                     <p className="text-[10.5px] text-muted-foreground/80 bg-secondary/60 border border-border rounded-lg p-2 mb-2 text-pretty leading-relaxed">
-                      A concentration is a specific area of study within your broader field — e.g. Aerospace Engineering is a
-                      concentration within Engineering, the way a major has sub-tracks. This tells us (and the AI) more
-                      precisely what you're aiming for, purely as context for advice and rationale — it doesn't change which
-                      schools or ranks are shown, since our ranking data only goes down to the broader field. It's completely
-                      fine to leave this as "No preference" if you haven't decided yet or are still researching options.
+                      A specific track within your field (e.g. Aerospace within Engineering). Just gives the AI more context —
+                      won't change which schools or ranks you see. Fine to leave as "No preference" if you're still deciding.
                     </p>
                   )}
                   <SearchableSelect
