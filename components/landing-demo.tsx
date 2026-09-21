@@ -1,8 +1,7 @@
 'use client'
 
-// EXPERIMENTAL — "Ignition Terminal" hero + 5-stage modal walkthrough,
-// built for local preview only per explicit request ("try building it...
-// don't deploy or push anything"). Not wired into app/page.tsx.
+// The live landing page — "Ignition Terminal" hero + 5-stage modal
+// walkthrough. Wired in from app/page.tsx.
 //
 // Stages auto-advance on a timer (self-filling segmented progress bar,
 // same mechanism as the earlier inline auto-play version) — no Continue
