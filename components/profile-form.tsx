@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useRef, useEffect, type Dispatch, type SetStateAction } from 'react'
 import Link from 'next/link'
-import { GraduationCap, Globe, Flame, Compass, Loader2, CheckCircle2, Award, ChevronDown, ArrowRight, Plus, X, BookOpen, Info } from 'lucide-react'
+import { GraduationCap, Globe, Flame, Compass, Loader2, CheckCircle2, Award, ChevronDown, ArrowRight, Plus, X, BookOpen, Info, ShieldCheck } from 'lucide-react'
 import { saveProfile, type SaveProfileInput } from '@/app/actions/profile'
 import { markSuggestedActivityDone, type SuggestedActivityRow } from '@/app/actions/dream'
 import { APPLICATION_INFO } from '@/lib/application-info'
@@ -322,40 +322,91 @@ function ActivityGroupFields({
   )
 }
 
-function ProfileCompletionRing({ percent }: { percent: number }) {
+// isAdmin/onOpenAdmin make the ring itself the entry point for admin tools
+// (a small "Admin" menu item, not a permanently-visible user-management
+// panel taking up page space for the one account that can see it) — see
+// showAdminPanel in ProfileForm.
+function ProfileCompletionRing({ percent, isAdmin, onOpenAdmin }: { percent: number; isAdmin?: boolean; onOpenAdmin?: () => void }) {
   const size = 56
   const stroke = 5
   const radius = (size - stroke) / 2
   const circumference = 2 * Math.PI * radius
   const offset = circumference * (1 - percent / 100)
-  return (
-    <div className="shrink-0 flex flex-col items-center gap-1" title={`Profile ${percent}% complete`}>
-      <div className="relative" style={{ width: size, height: size }}>
-        <svg width={size} height={size} className="-rotate-90">
-          <circle cx={size / 2} cy={size / 2} r={radius} stroke="var(--border)" strokeWidth={stroke} fill="none" />
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke="var(--primary)"
-            strokeWidth={stroke}
-            fill="none"
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={offset}
-            className="transition-[stroke-dashoffset] duration-500"
-          />
-        </svg>
-        {/* A counter-rotated <text> inside the -rotate-90 <svg> used to carry
-            the number, but SVG `transform-origin: center` resolves against
-            the viewport, not the element's own box, unless `transform-box:
-            fill-box` is set — support for that split differently across
-            browsers, so the digits didn't reliably land back in the same
-            spot everywhere. A plain HTML overlay, positioned independently
-            of the SVG's rotation, doesn't have that ambiguity. */}
-        <div className="absolute inset-0 flex items-center justify-center text-[13px] font-bold text-foreground">{percent}%</div>
+  const [menuOpen, setMenuOpen] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const onClickOutside = (e: MouseEvent) => {
+      if (!rootRef.current?.contains(e.target as Node)) setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [menuOpen])
+
+  const ring = (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={radius} stroke="var(--border)" strokeWidth={stroke} fill="none" />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="var(--primary)"
+          strokeWidth={stroke}
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          className="transition-[stroke-dashoffset] duration-500"
+        />
+      </svg>
+      {/* A counter-rotated <text> inside the -rotate-90 <svg> used to carry
+          the number, but SVG `transform-origin: center` resolves against
+          the viewport, not the element's own box, unless `transform-box:
+          fill-box` is set — support for that split differently across
+          browsers, so the digits didn't reliably land back in the same
+          spot everywhere. A plain HTML overlay, positioned independently
+          of the SVG's rotation, doesn't have that ambiguity. */}
+      <div className="absolute inset-0 flex items-center justify-center text-[13px] font-bold text-foreground">{percent}%</div>
+    </div>
+  )
+
+  if (!isAdmin) {
+    return (
+      <div className="shrink-0 flex flex-col items-center gap-1" title={`Profile ${percent}% complete`}>
+        {ring}
+        <span className="text-[10px] text-muted-foreground font-medium">Profile complete</span>
       </div>
+    )
+  }
+
+  return (
+    <div ref={rootRef} className="relative shrink-0 flex flex-col items-center gap-1">
+      <button
+        type="button"
+        onClick={() => setMenuOpen((v) => !v)}
+        title={`Profile ${percent}% complete — click for admin tools`}
+        className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      >
+        {ring}
+      </button>
       <span className="text-[10px] text-muted-foreground font-medium">Profile complete</span>
+      {menuOpen && (
+        <div className="absolute top-full right-0 mt-1 z-30 w-36 bg-card border border-border rounded-xl shadow-xl overflow-hidden">
+          <button
+            type="button"
+            onClick={() => {
+              onOpenAdmin?.()
+              setMenuOpen(false)
+            }}
+            className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-left hover:bg-secondary transition-colors"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-primary shrink-0" />
+            Admin
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -386,6 +437,7 @@ export function ProfileForm({
 }) {
   const [activities, setActivities] = useState(suggestedActivities ?? [])
   const [activityPendingId, setActivityPendingId] = useState<number | null>(null)
+  const [showAdminPanel, setShowAdminPanel] = useState(false)
 
   async function handleMarkActivityDone(id: number) {
     setActivityPendingId(id)
@@ -592,11 +644,15 @@ export function ProfileForm({
         </div>
         <div className="flex items-center gap-3">
           {suggestedActivities !== null && <EmeraldBadgeSmall />}
-          <ProfileCompletionRing percent={completionPercent} />
+          <ProfileCompletionRing
+            percent={completionPercent}
+            isAdmin={!!adminUsers}
+            onOpenAdmin={() => setShowAdminPanel((v) => !v)}
+          />
         </div>
       </div>
 
-      {adminUsers && <AdminUserManagement users={adminUsers} />}
+      {adminUsers && showAdminPanel && <AdminUserManagement users={adminUsers} />}
 
       {suggestedActivities !== null && (
         <div className="bg-accent/40 border border-primary/30 rounded-2xl px-4 py-3 mb-8 flex items-center justify-between gap-3 flex-wrap">
@@ -1079,26 +1135,17 @@ export function ProfileForm({
                   comment in lib/db/schema.ts). Renders nothing for a field
                   with no list above (left blank rather than guessed at). */}
               {FIELD_CONCENTRATIONS[intendedField as keyof typeof FIELD_CONCENTRATIONS] && (
-                <div className="mt-2 rounded-xl border border-border bg-secondary/50 p-3">
-                  <p className="text-[11px] text-muted-foreground mb-2">
-                    {intendedField} covers a range of concentrations, including:
+                <div className="mt-2.5">
+                  <p className="text-[10.5px] text-muted-foreground/70 leading-relaxed mb-1.5">
+                    Covers {FIELD_CONCENTRATIONS[intendedField as keyof typeof FIELD_CONCENTRATIONS]!.slice(0, 4).join(', ')}
+                    {FIELD_CONCENTRATIONS[intendedField as keyof typeof FIELD_CONCENTRATIONS]!.length > 4 ? ', and more' : ''} — pick one below if you have a specific interest.
                   </p>
-                  <div className="flex flex-wrap gap-1.5 mb-3">
-                    {FIELD_CONCENTRATIONS[intendedField as keyof typeof FIELD_CONCENTRATIONS]!.map((c) => (
-                      <span key={c} className="text-[10px] font-medium px-2 py-1 rounded-full bg-accent/60 text-foreground/80">
-                        {c}
-                      </span>
-                    ))}
-                  </div>
-                  <label htmlFor="concentration" className="text-[11px] text-muted-foreground block mb-1">
-                    Specific concentration (optional — shared with the AI as context, doesn't change which schools are shown)
-                  </label>
                   <SearchableSelect
                     id="concentration"
                     value={intendedConcentration}
                     onChange={setIntendedConcentration}
                     options={['No preference', ...FIELD_CONCENTRATIONS[intendedField as keyof typeof FIELD_CONCENTRATIONS]!]}
-                    placeholder="No preference"
+                    placeholder="Concentration (optional)"
                   />
                 </div>
               )}
