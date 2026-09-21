@@ -46,7 +46,7 @@ export function TestimonialCard({ author, text, size = "default", variant = "sol
       )}
     >
       <div className="flex items-center gap-3">
-        <Avatar className={cn("border", glass ? "border-white/15" : "border-border", compact ? "h-7 w-7 sm:h-8 sm:w-8" : "h-10 w-10")}>
+        <Avatar className={cn("border", glass ? "border-white/15" : "border-border", compact ? "h-7 w-7 sm:h-8 sm:w-8 lg:h-9 lg:w-9" : "h-10 w-10")}>
           <AvatarFallback
             className={cn(
               "font-bold text-primary",
@@ -70,7 +70,7 @@ export function TestimonialCard({ author, text, size = "default", variant = "sol
         className={cn(
           glass ? "text-zinc-100" : "text-muted-foreground",
           "leading-relaxed",
-          compact ? "mt-2 text-[10px] sm:mt-2.5 sm:text-[11px] line-clamp-4" : "mt-4 text-sm",
+          compact ? "mt-2 text-[10px] sm:mt-2.5 sm:text-[11px] lg:mt-3 lg:text-xs line-clamp-4 lg:line-clamp-5" : "mt-4 text-sm",
         )}
       >
         {text}

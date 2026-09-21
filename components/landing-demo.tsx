@@ -187,7 +187,7 @@ function IgnitionTerminal({ onLaunch }: { onLaunch: () => void }) {
     // per landing-page CTA research: 40-60px+ separation from surrounding
     // content, and 44-72px thumb targets read as more confidently tappable
     // than a button sitting right at the minimum.
-    <div className="w-full max-w-lg mx-auto mt-8 sm:mt-10 bg-zinc-900/60 border border-white/10 rounded-2xl p-6 backdrop-blur-xl shadow-2xl shadow-emerald-950/40 relative">
+    <div className="w-full max-w-lg lg:max-w-xl mx-auto mt-8 sm:mt-10 bg-zinc-900/60 border border-white/10 rounded-2xl p-6 lg:p-7 backdrop-blur-xl shadow-2xl shadow-emerald-950/40 relative">
       {/* Header strip */}
       <div className="flex items-center justify-between mb-5">
         <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-400">Admission Engine</span>
@@ -243,7 +243,13 @@ function TestimonialsMarqueeStrip({ testimonials }: { testimonials: Array<{ auth
         <div className="flex shrink-0 [gap:var(--gap)] animate-[marquee_var(--duration)_linear_infinite] hover:[animation-play-state:paused]">
           {[...Array(2)].map((_, setIndex) =>
             testimonials.map((testimonial, i) => (
-              <TestimonialCard key={`${setIndex}-${i}`} {...testimonial} size="compact" variant="glass" className="w-[220px] p-3 sm:w-[270px] sm:p-3.5" />
+              <TestimonialCard
+                key={`${setIndex}-${i}`}
+                {...testimonial}
+                size="compact"
+                variant="glass"
+                className="w-[220px] p-3 sm:w-[270px] sm:p-3.5 lg:w-[320px] lg:p-4"
+              />
             )),
           )}
         </div>
@@ -364,11 +370,11 @@ export function LandingDemo() {
           {/* Headline restored to the styling from before the Ignition
               Terminal rebuild — gradient fade instead of flat white, which
               was reported as blending into the background. */}
-          <h1 className="text-[clamp(2.25rem,6vw,4rem)] font-bold tracking-tight text-balance leading-[1.05] bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent max-w-3xl mx-auto">
+          <h1 className="text-[clamp(2.25rem,6vw,5rem)] font-bold tracking-tight text-balance leading-[1.05] bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent max-w-3xl lg:max-w-4xl mx-auto">
             Stop guessing your reach schools.
           </h1>
 
-          <p className="text-sm sm:text-base text-zinc-400 max-w-lg mx-auto font-normal leading-relaxed">
+          <p className="text-sm sm:text-base lg:text-lg text-zinc-400 max-w-lg lg:max-w-xl mx-auto font-normal leading-relaxed">
             Run your GPA, test scores, and activities through our predictive admissions model.
           </p>
         </div>
