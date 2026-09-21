@@ -39,20 +39,9 @@ import Velaris from '@/components/ui/velaris'
 import { AppLogo } from '@/components/app-logo'
 import { LiquidButton } from '@/components/ui/liquid-glass-button'
 import { Footer } from '@/components/ui/footer-section'
-import { TestimonialsSection } from '@/components/ui/testimonials-with-marquee'
 import { tierBadgeClass } from '@/lib/match-tier'
 
 const STAGE_COUNT = 5
-
-// Real student feedback, collected directly — no handles/photos attached
-// since these aren't public social accounts.
-const LANDING_TESTIMONIALS = [
-  { author: { name: 'Mahi Singh' }, text: 'This tool helped me save so much time.' },
-  { author: { name: 'Ishan Chabria' }, text: "This tool gave me guidance on what universities I have a chance at and which ones I don't." },
-  { author: { name: 'Anaya Kadam' }, text: 'It is truly wonderful.' },
-  { author: { name: 'Rida Khalfay' }, text: 'I love the Build Your Dream feature — it helped me work on my profile so much.' },
-  { author: { name: 'Chirayu Pijnakar' }, text: 'As a CBSE student with no such tools available, this one really stood out.' },
-]
 
 const COUNTRY_CHIPS = [
   { label: 'United States', stat: '1600+ universities' },
@@ -185,7 +174,7 @@ function IgnitionTerminal({ onLaunch }: { onLaunch: () => void }) {
     // per landing-page CTA research: 40-60px+ separation from surrounding
     // content, and 44-72px thumb targets read as more confidently tappable
     // than a button sitting right at the minimum.
-    <div className="w-full max-w-lg mx-auto mt-16 sm:mt-20 bg-zinc-900/60 border border-white/10 rounded-2xl p-6 backdrop-blur-xl shadow-2xl shadow-emerald-950/40 relative">
+    <div className="w-full max-w-lg mx-auto mt-8 sm:mt-10 bg-zinc-900/60 border border-white/10 rounded-2xl p-6 backdrop-blur-xl shadow-2xl shadow-emerald-950/40 relative">
       {/* Header strip */}
       <div className="flex items-center justify-between mb-5">
         <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-400">Admission Engine</span>
@@ -316,7 +305,7 @@ export function LandingDemo() {
 
       {/* ---------- HERO: distraction-free "Ignition Terminal" ---------- */}
       <section
-        className="min-h-[88vh] flex flex-col items-center justify-center px-4 pt-8 pb-12 relative overflow-hidden"
+        className="min-h-[88vh] flex flex-col items-center justify-center px-4 pt-20 pb-8 relative overflow-hidden"
         style={{
           backgroundImage: 'radial-gradient(circle at center, rgba(6,78,59,0.25), rgba(9,9,11,0.0) 60%)',
         }}
@@ -347,12 +336,6 @@ export function LandingDemo() {
           ✦ Benchmarked against 3,500+ universities across 8 countries
         </p>
       </section>
-
-      <TestimonialsSection
-        title="What students are saying"
-        description="Real feedback from students who used Shortlisted to plan their applications."
-        testimonials={LANDING_TESTIMONIALS}
-      />
 
       <Footer />
 

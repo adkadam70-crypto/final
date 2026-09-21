@@ -449,6 +449,11 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
         const response = await fetch('/ne-110m-land.json')
         if (!response.ok) throw new Error('Failed to load land data')
         landFeatures = await response.json()
+        // Land silhouette is the primary content — show it the moment its
+        // own fetch resolves, rather than waiting on the country polygons
+        // and (much slower) decorative dot texture below. Those layer in
+        // on top via their own render() calls once ready.
+        render()
 
         // Real country-boundary polygons for the 8 markets this app
         // covers — pre-filtered to just those 8 features (see
@@ -491,6 +496,10 @@ export default function RotatingEarth({ width = 800, height = 600, className = '
             countryPoints.set(displayName, geoCentroid(feature))
           })
           rebuildConnectionLines()
+          // Highlighted-country polygons are ready — render now instead of
+          // waiting on the decorative dot texture computed below, which can
+          // take multiple seconds spread across idle callbacks.
+          render()
 
           // Experimental dot texture on non-highlighted land, per request
           // ("just want to see how it looks") — every point inside any
