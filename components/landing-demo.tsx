@@ -238,12 +238,12 @@ function IgnitionTerminal({ onLaunch }: { onLaunch: () => void }) {
 // enough content to flow continuously, even on wide screens.
 function TestimonialsMarqueeStrip({ testimonials }: { testimonials: Array<{ author: TestimonialAuthor; text: string }> }) {
   return (
-    <div className="relative mt-6 w-screen left-1/2 -translate-x-1/2 overflow-hidden">
+    <div className="relative mt-8 sm:mt-12 lg:mt-16 w-screen left-1/2 -translate-x-1/2 overflow-hidden">
       <div className="flex overflow-hidden [--gap:0.75rem] [gap:var(--gap)] [--duration:32s]">
         <div className="flex shrink-0 [gap:var(--gap)] animate-[marquee_var(--duration)_linear_infinite] hover:[animation-play-state:paused]">
           {[...Array(2)].map((_, setIndex) =>
             testimonials.map((testimonial, i) => (
-              <TestimonialCard key={`${setIndex}-${i}`} {...testimonial} size="compact" variant="glass" />
+              <TestimonialCard key={`${setIndex}-${i}`} {...testimonial} size="compact" variant="glass" className="w-[220px] p-3 sm:w-[270px] sm:p-3.5" />
             )),
           )}
         </div>
