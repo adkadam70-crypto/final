@@ -280,7 +280,7 @@ export function LandingDemo() {
       <Velaris height="100vh" className="fixed inset-0" />
 
       {/* ---------- STICKY HEADER ---------- */}
-      <header className="fixed top-0 inset-x-0 z-20 h-16 flex items-center justify-between px-6 sm:px-8 border-b border-white/5 bg-white/[0.02] backdrop-blur-md">
+      <header className="fixed top-0 inset-x-0 z-20 h-12 flex items-center justify-between px-6 sm:px-8 border-b border-white/5 bg-white/[0.02] backdrop-blur-md">
         <div className="flex items-center gap-2.5">
           <AppLogo className="h-7 w-auto sm:h-8" />
           <span className="hidden sm:inline text-xl font-bold tracking-tight">Shortlisted</span>
