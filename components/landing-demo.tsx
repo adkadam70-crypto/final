@@ -47,12 +47,12 @@ const STAGE_COUNT = 5
 // Real student feedback, collected directly — no handles/photos attached
 // since these aren't public social accounts.
 const LANDING_TESTIMONIALS: Array<{ author: TestimonialAuthor; text: string }> = [
-  { author: { name: 'Mahi Singh' }, text: "Honestly saved me so much time — I used to spend hours cross-checking schools myself, now I just get straight answers." },
+  { author: { name: 'Mahi Singh' }, text: "Ngl this saved me so much time. I used to spend hours cross checking schools myself, now I just get a straight answer." },
   { author: { name: 'Ishan Chabria' }, text: "What I liked most is it actually tells you which universities you have a real shot at and which ones are a stretch, instead of just leaving you to guess." },
-  { author: { name: 'Anaya Kadam' }, text: "Genuinely such a wonderful tool — it made the whole process feel a lot less overwhelming." },
-  { author: { name: 'Rida Khalfay' }, text: "The Build Your Dream feature is my favorite part. It helped me figure out exactly what to work on in my profile." },
-  { author: { name: 'Chirayu Pinjarkar' }, text: "As a CBSE student, there's barely anything built with us in mind — this one actually stood out." },
-  { author: { name: 'Mannat Bathija' }, text: "The program-specific rankings are what sold me — it's not just 'this school is good,' it actually breaks down how strong they are in the exact major I'm applying to." },
+  { author: { name: 'Anaya Kadam' }, text: "Genuinely such a wonderful tool, it made the whole process feel a lot less overwhelming." },
+  { author: { name: 'Rida Khalfay' }, text: "The Build Your Dream feature is my favorite part fr. It helped me figure out exactly what to work on in my profile." },
+  { author: { name: 'Chirayu Pinjarkar' }, text: "As a CBSE student there's barely anything built with us in mind, so this one actually stood out." },
+  { author: { name: 'Mannat Bathija' }, text: "The program specific rankings are what sold me tbh. It's not just \"this school is good\", it actually breaks down how strong they are in the exact major I'm applying to." },
 ]
 
 const COUNTRY_CHIPS = [
