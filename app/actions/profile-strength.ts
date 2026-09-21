@@ -105,7 +105,7 @@ STUDENT PROFILE:
 - Standardized tests: ${formatStandardizedTests(profile.standardizedTests)}
 - Earlier grades (9th-11th, optional context): ${formatPriorGrades(profile.priorGrades ?? EMPTY_PRIOR_GRADES)}
 - Target countries: ${profile.targetCountries.join(', ')}
-- Intended field: ${profile.intendedField}
+- Intended field: ${profile.intendedField}${profile.intendedConcentration !== 'No preference' ? ` (concentration: ${profile.intendedConcentration})` : ''}
 - Extracurriculars: ${profile.extracurriculars.length ? profile.extracurriculars.join('; ') : 'None provided'}
 - AP courses taken: ${profile.apCourses.length ? profile.apCourses.join('; ') : 'None reported'}
 

@@ -138,6 +138,14 @@ export const profiles = pgTable('profiles', {
   preferredSector: text('preferredSector').notNull(),
   preferredRank: text('preferredRank').notNull().default('No preference'), // 'Top 50' | 'Top 100' | 'Top 200' | 'No preference'
   intendedField: text('intendedField').notNull().default('No preference'), // one of ACADEMIC_FIELDS, or 'No preference'
+  // A concentration within intendedField (e.g. "Aerospace Engineering"
+  // within "Engineering") — see FIELD_CONCENTRATIONS in
+  // lib/academic-detail.ts. Informational only: programRankings has no
+  // per-concentration column, so this never changes which schools/ranks
+  // are shown — it's passed to the AI as extra qualitative context for
+  // match rationale/profile-strength copy, not used in any numeric
+  // filtering or scoring.
+  intendedConcentration: text('intendedConcentration').notNull().default('No preference'),
   academicDetail: jsonb('academicDetail').$type<AcademicDetail | null>(), // real per-curriculum structure; gradeValue above is computed from this
   standardizedTests: jsonb('standardizedTests').$type<StandardizedTests>().notNull().default({}), // orthogonal to curriculum — SAT/ACT, JEE/NEET etc.
   priorGrades: jsonb('priorGrades').$type<PriorGrades>(), // nullable — 9th-11th context, curriculum-aware; see lib/prior-grades.ts

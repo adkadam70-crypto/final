@@ -194,6 +194,7 @@ async function generateOpenAIMatch({
     preferredSector: string
     preferredRank: string
     intendedField: string
+    intendedConcentration: string
     extracurriculars: string[]
     apCourses: string[]
   }
@@ -254,7 +255,11 @@ STUDENT PROFILE:
 - Preferred climate: ${studentProfile.preferredClimate}
 - Preferred industry hub: ${studentProfile.preferredSector}
 - Preferred university ranking: ${studentProfile.preferredRank} (soft preference — weigh it alongside fit, don't treat it as a hard filter)
-- Intended field of study: ${studentProfile.intendedField}
+- Intended field of study: ${studentProfile.intendedField}${
+      studentProfile.intendedConcentration !== 'No preference'
+        ? ` (specifically interested in ${studentProfile.intendedConcentration} — mention this in rationale/fit context where relevant, but our program-ranking data is only at the ${studentProfile.intendedField} level, not this specific concentration, so don't imply a concentration-specific rank exists)`
+        : ''
+    }
 - Extracurriculars: ${studentProfile.extracurriculars.length ? studentProfile.extracurriculars.join('; ') : 'None provided'}
 - AP courses taken: ${studentProfile.apCourses.length ? studentProfile.apCourses.join('; ') : 'None reported'}
 
@@ -551,6 +556,7 @@ export async function runMatch(): Promise<
       preferredSector: profile.preferredSector,
       preferredRank: profile.preferredRank,
       intendedField: profile.intendedField,
+      intendedConcentration: profile.intendedConcentration,
       extracurriculars: profile.extracurriculars,
       apCourses: profile.apCourses,
     }

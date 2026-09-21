@@ -13,7 +13,7 @@ import { AcademicDetailInput } from '@/components/academic-detail-input'
 import { EmeraldBadgeSmall } from '@/components/emerald-badge'
 import { AdminUserManagement } from '@/components/admin/user-management'
 import type { AdminUserRow } from '@/app/actions/admin'
-import { defaultAcademicDetail, ACADEMIC_FIELDS, INDUSTRY_HUBS, type AcademicDetail } from '@/lib/academic-detail'
+import { defaultAcademicDetail, ACADEMIC_FIELDS, INDUSTRY_HUBS, FIELD_CONCENTRATIONS, type AcademicDetail } from '@/lib/academic-detail'
 import { SearchableSelect } from '@/components/ui/searchable-select'
 import { satComposite, ENGLISH_TEST_TYPES, ENGLISH_TEST_RANGES, type StandardizedTests, type EnglishTestType } from '@/lib/standardized-tests'
 import {
@@ -72,6 +72,7 @@ type ProfileRow = {
   preferredSector: string
   preferredRank: string
   intendedField: string
+  intendedConcentration: string
   academicDetail: AcademicDetail | null
   standardizedTests: StandardizedTests
   priorGrades: PriorGrades | null
@@ -88,6 +89,7 @@ type LatestProfile = {
   preferredSector: string
   preferredRank: string
   intendedField: string
+  intendedConcentration: string
   academicDetail: AcademicDetail | null
   standardizedTests: StandardizedTests
   priorGrades: PriorGrades | null
@@ -422,6 +424,12 @@ export function ProfileForm({
   const [preferredSector, setPreferredSector] = useState(latestProfile?.preferredSector ?? 'Tech Hub')
   const [preferredRank, setPreferredRank] = useState(latestProfile?.preferredRank ?? 'No preference')
   const [intendedField, setIntendedField] = useState(latestProfile?.intendedField ?? 'No preference')
+  // Saved alongside intendedField, but programRankings has no
+  // per-concentration column — see FIELD_CONCENTRATIONS' comment in
+  // lib/academic-detail.ts. So this never changes which schools/ranks are
+  // shown; it's passed to the AI as extra qualitative context (match
+  // rationale, profile-strength copy) only.
+  const [intendedConcentration, setIntendedConcentration] = useState(latestProfile?.intendedConcentration ?? 'No preference')
   const [ec1, setEc1] = useState<ActivityEntry[]>(entriesFromLegacy(latestProfile?.extracurriculars, 0))
   const [ec2, setEc2] = useState<ActivityEntry[]>(entriesFromLegacy(latestProfile?.extracurriculars, 1))
   const [ec3, setEc3] = useState<ActivityEntry[]>(entriesFromLegacy(latestProfile?.extracurriculars, 2))
@@ -500,6 +508,7 @@ export function ProfileForm({
     setPreferredSector(p.preferredSector)
     setPreferredRank(p.preferredRank)
     setIntendedField(p.intendedField)
+    setIntendedConcentration(p.intendedConcentration)
     setEc1(entriesFromLegacy(p.extracurriculars, 0))
     setEc2(entriesFromLegacy(p.extracurriculars, 1))
     setEc3(entriesFromLegacy(p.extracurriculars, 2))
@@ -524,6 +533,7 @@ export function ProfileForm({
       preferredSector,
       preferredRank,
       intendedField,
+      intendedConcentration,
       extracurriculars: [...ec1, ...ec2, ...ec3].map(formatEntry).filter(Boolean),
       apCourses,
     }
@@ -1051,7 +1061,47 @@ export function ProfileForm({
             </div>
             <div>
               <label htmlFor="field" className="text-[11px] text-muted-foreground block mb-1">Intended field of study</label>
-              <SearchableSelect id="field" value={intendedField} onChange={setIntendedField} options={['No preference', ...ACADEMIC_FIELDS]} placeholder="No preference" />
+              <SearchableSelect
+                id="field"
+                value={intendedField}
+                onChange={(value) => {
+                  setIntendedField(value)
+                  setIntendedConcentration('No preference')
+                }}
+                options={['No preference', ...ACADEMIC_FIELDS]}
+                placeholder="No preference"
+              />
+              {/* Reassurance + an optional, saved refinement — a student
+                  picking "Engineering" shouldn't worry their actual interest
+                  (Aerospace, say) isn't covered by that broad bucket. Saved
+                  and passed to the AI as context, but never changes which
+                  schools/ranks are shown (see intendedConcentration's
+                  comment in lib/db/schema.ts). Renders nothing for a field
+                  with no list above (left blank rather than guessed at). */}
+              {FIELD_CONCENTRATIONS[intendedField as keyof typeof FIELD_CONCENTRATIONS] && (
+                <div className="mt-2 rounded-xl border border-border bg-secondary/50 p-3">
+                  <p className="text-[11px] text-muted-foreground mb-2">
+                    {intendedField} covers a range of concentrations, including:
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {FIELD_CONCENTRATIONS[intendedField as keyof typeof FIELD_CONCENTRATIONS]!.map((c) => (
+                      <span key={c} className="text-[10px] font-medium px-2 py-1 rounded-full bg-accent/60 text-foreground/80">
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+                  <label htmlFor="concentration" className="text-[11px] text-muted-foreground block mb-1">
+                    Specific concentration (optional — shared with the AI as context, doesn't change which schools are shown)
+                  </label>
+                  <SearchableSelect
+                    id="concentration"
+                    value={intendedConcentration}
+                    onChange={setIntendedConcentration}
+                    options={['No preference', ...FIELD_CONCENTRATIONS[intendedField as keyof typeof FIELD_CONCENTRATIONS]!]}
+                    placeholder="No preference"
+                  />
+                </div>
+              )}
             </div>
             <div>
               <label htmlFor="rank" className="text-[11px] text-muted-foreground block mb-1">Preferred university ranking</label>

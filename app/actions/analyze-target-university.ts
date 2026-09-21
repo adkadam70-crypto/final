@@ -151,7 +151,7 @@ STUDENT PROFILE:
 - Preferred climate: ${profile.preferredClimate}
 - Preferred industry hub: ${profile.preferredSector}
 - Preferred university ranking: ${profile.preferredRank} (soft preference — weigh it alongside fit, don't treat it as a hard filter)
-- Intended field of study: ${profile.intendedField}
+- Intended field of study: ${profile.intendedField}${profile.intendedConcentration !== 'No preference' ? ` (concentration: ${profile.intendedConcentration} — our program-ranking data is only at the ${profile.intendedField} level, not this specific concentration, so don't imply a concentration-specific rank exists)` : ''}
 - Extracurriculars: ${profile.extracurriculars.length ? profile.extracurriculars.join('; ') : 'None provided'}
 - AP courses taken: ${profile.apCourses.length ? profile.apCourses.join('; ') : 'None reported'}`
 
