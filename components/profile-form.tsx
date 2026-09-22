@@ -1021,7 +1021,7 @@ export function ProfileForm({
 
   return (
     <>
-    <main className="max-w-3xl mx-auto px-4 py-8">
+    <main className="max-w-3xl mx-auto px-4 py-8 pb-28 sm:pb-24">
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight mb-1">Admissions Profile</h1>
@@ -1070,16 +1070,22 @@ export function ProfileForm({
           message in a bordered pill, not a debug-looking note. Still
           reflects real state: edits below aren't kept until saved, and Run
           Match only ever reads the saved version, never the live draft
-          (the bottom sticky bar's dot/label is the persistent indicator;
-          this is the one-time explainer for why that matters). */}
-      {!hasSavedProfile && (
-        <div className="flex items-start gap-2.5 bg-accent/30 border border-primary/20 rounded-2xl px-4 py-3 mb-8">
-          <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-          <p className="text-xs text-foreground/80 leading-relaxed">
-            Your matches and analysis are generated from your <span className="font-semibold text-primary">saved</span> profile — save your changes below before running a match.
-          </p>
-        </div>
-      )}
+          (the bottom sticky bar's dot/label is the persistent indicator,
+          always visible regardless of save state — this banner is the
+          higher-visibility one-time explainer for why that matters).
+          Shown for both first-time and returning users, just with
+          different copy: first-timers get the explainer, returning users
+          get a reminder that this session's edits still need saving. */}
+      <div className="flex items-start gap-2.5 bg-accent/30 border border-primary/20 rounded-2xl px-4 py-3 mb-8">
+        <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+        <p className="text-xs text-foreground/80 leading-relaxed">
+          {hasSavedProfile ? (
+            <>Make sure to <span className="font-semibold text-primary">save your profile</span> — matches and analysis always run on your last saved version, not unsaved edits.</>
+          ) : (
+            <>Your matches and analysis are generated from your <span className="font-semibold text-primary">saved</span> profile — save your changes below before running a match.</>
+          )}
+        </p>
+      </div>
 
       <div className="space-y-12">
         {activeTab === 'academics' && <HowWeAnalyze />}
