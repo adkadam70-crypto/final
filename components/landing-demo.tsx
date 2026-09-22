@@ -241,7 +241,7 @@ function IgnitionTerminal({ onLaunch }: { onLaunch: () => void }) {
 // enough content to flow continuously, even on wide screens.
 function TestimonialsMarqueeStrip({ testimonials }: { testimonials: Array<{ author: TestimonialAuthor; text: string }> }) {
   return (
-    <div className="relative mt-8 sm:mt-12 lg:mt-16 w-screen left-1/2 -translate-x-1/2 overflow-hidden">
+    <div className="relative mt-8 min-[1800px]:mt-14 w-screen left-1/2 -translate-x-1/2 overflow-hidden">
       <div className="flex overflow-hidden [--gap:0.75rem] [gap:var(--gap)] [--duration:32s]">
         <div className="flex shrink-0 [gap:var(--gap)] animate-[marquee_var(--duration)_linear_infinite] hover:[animation-play-state:paused]">
           {[...Array(2)].map((_, setIndex) =>
@@ -371,7 +371,7 @@ export function LandingDemo() {
 
       {/* ---------- HERO: distraction-free "Ignition Terminal" ---------- */}
       <section
-        className="min-h-[min(80vh,620px)] flex flex-col items-center justify-center px-4 pt-28 pb-16 sm:pt-32 sm:pb-20 relative overflow-hidden"
+        className="min-h-[min(80vh,620px)] flex flex-col items-center justify-center px-4 pt-20 pb-10 min-[1800px]:pt-28 min-[1800px]:pb-16 relative overflow-hidden"
         style={{
           backgroundImage: 'radial-gradient(circle at center, rgba(6,78,59,0.25), rgba(9,9,11,0.0) 60%)',
         }}
