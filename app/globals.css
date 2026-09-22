@@ -135,6 +135,21 @@
   }
 }
 
+/* Native <select> chrome differs sharply per browser/OS — Safari draws its
+   own up/down stepper glyph in place of Chrome's single chevron, and sizes
+   it differently, so the same markup looked like two different controls.
+   Stripping the native appearance and drawing one shared chevron makes every
+   select render identically everywhere. */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%2371717a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.65rem center;
+  background-size: 10px 6px;
+  padding-right: 1.75rem !important;
+}
+
 /* Ambient glow for the authenticated app shell (dashboard/matches/profile/
    saved). Applied as the layout <main>'s own background rather than a
    separate fixed sibling — that guarantees it paints behind all of main's
