@@ -306,7 +306,7 @@ function IBRigorTable({
               // to flag.
               const changed = eleventh && s11 && (s11.subjectName !== s.subjectName || s11.level !== s.level)
               return (
-              <tr key={s.group} className="bg-secondary/60 align-top">
+              <tr key={s.group} className="bg-secondary/60 align-middle">
                 <td className="rounded-l-lg p-1.5 pl-2">
                   <div className="flex items-center gap-1.5">
                     <span className="text-[9px] text-muted-foreground shrink-0">{s.group}</span>
@@ -365,12 +365,18 @@ function IBRigorTable({
                       {/* One toggle, three states: quiet invite by default,
                           amber flag once a row has actually diverged, and
                           "Done" while the mini-editor above is open —
-                          never two buttons competing for the same slot. */}
+                          never two buttons competing for the same slot.
+                          Kept microscopic and block-level (not absolutely
+                          positioned) so it adds height to this cell only,
+                          never shifting the row's shared baseline — the row
+                          uses align-middle, so the controls in the other 3
+                          columns stay centered on the row regardless of
+                          how tall this cell's content gets. */}
                       <button
                         type="button"
                         onClick={() => toggleExpanded(i)}
-                        className={`text-[9px] font-mono w-full truncate ${
-                          expandedRows.has(i) ? 'text-muted-foreground hover:text-foreground' : changed ? 'text-amber-400' : 'text-muted-foreground/50 hover:text-foreground'
+                        className={`block text-[10px] font-mono w-full truncate mt-0.5 ${
+                          expandedRows.has(i) ? 'text-zinc-400 hover:text-foreground' : changed ? 'text-amber-400' : 'text-zinc-500 hover:text-emerald-400'
                         }`}
                       >
                         {expandedRows.has(i) ? 'Done' : changed ? 'Changed ✎' : 'Different subject?'}
@@ -1058,13 +1064,21 @@ export function ProfileForm({
         ))}
       </div>
 
-      {/* Persistent, not just a post-save toast — edits below aren't kept
-          until the profile is saved, and Run Match only ever reads the
-          saved version, never the live draft. */}
+      {/* Redesigned from a plain gray disclaimer paragraph into the same
+          accent-card language used elsewhere on this page (e.g. the
+          "specifics for your selected countries" link above) — an icon +
+          message in a bordered pill, not a debug-looking note. Still
+          reflects real state: edits below aren't kept until saved, and Run
+          Match only ever reads the saved version, never the live draft
+          (the bottom sticky bar's dot/label is the persistent indicator;
+          this is the one-time explainer for why that matters). */}
       {!hasSavedProfile && (
-        <p className="text-xs text-muted-foreground bg-secondary/40 border border-border rounded-xl px-4 py-2.5 mb-8">
-          Remember to save your profile below — your matches and analysis are generated from your saved profile, not what's currently on screen.
-        </p>
+        <div className="flex items-start gap-2.5 bg-accent/30 border border-primary/20 rounded-2xl px-4 py-3 mb-8">
+          <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+          <p className="text-xs text-foreground/80 leading-relaxed">
+            Your matches and analysis are generated from your <span className="font-semibold text-primary">saved</span> profile — save your changes below before running a match.
+          </p>
+        </div>
       )}
 
       <div className="space-y-12">
@@ -1105,9 +1119,13 @@ export function ProfileForm({
             place, before ever touching an academic-detail dropdown. */}
         <section className="bg-card border border-border rounded-3xl p-6">
           <h2 className="text-xl font-extrabold tracking-tight text-primary mb-4 flex items-center gap-2"><Compass className="w-5 h-5 text-emerald-400" /> Academic &amp; career focus</h2>
-          {/* 2x2: field/concentration (what to study) on the left,
-              ranking/hub/climate (where to study) on the right — grouped by
-              what they're actually deciding, not just alphabetically. */}
+          {/* Symmetrical 2x2: field / concentration on top, ranking / hub
+              underneath — one control per cell, matching heights, instead
+              of concentration being nested under field (which left the
+              bottom-left cell empty whenever a field had no concentration
+              list). Preferred climate doesn't fit this 2x2 (there are 5
+              real fields here, not 4) so it's kept as its own full-width
+              row below rather than dropped. */}
           <div className="grid grid-cols-2 gap-x-3 gap-y-4">
             <div>
               <label htmlFor="field" className="text-[11px] text-muted-foreground block mb-1">Intended field of study</label>
@@ -1121,18 +1139,19 @@ export function ProfileForm({
                 options={['No preference', ...ACADEMIC_FIELDS]}
                 placeholder="No preference"
               />
+            </div>
+            <div>
               {/* An optional, saved refinement — a student picking
                   "Engineering" shouldn't worry their actual interest
                   (Aerospace, say) isn't covered by that broad bucket. Saved
                   and passed to the AI as context, but never changes which
                   schools/ranks are shown (see intendedConcentration's
-                  comment in lib/db/schema.ts). Nested visually under the
-                  field select (left border + indent) since it's a
-                  refinement of that choice, not a separate field. Renders
-                  nothing for a field with no list above (left blank rather
-                  than guessed at). */}
-              {FIELD_CONCENTRATIONS[intendedField as keyof typeof FIELD_CONCENTRATIONS] && (
-                <div className="mt-2.5 pl-3 border-l-2 border-border">
+                  comment in lib/db/schema.ts). Renders a disabled
+                  placeholder (not left blank) when the current field has no
+                  concentration list, so the 2x2 grid stays visually intact
+                  either way. */}
+              {FIELD_CONCENTRATIONS[intendedField as keyof typeof FIELD_CONCENTRATIONS] ? (
+                <>
                   <label htmlFor="concentration" className="text-[11px] text-muted-foreground flex items-center gap-1 mb-1">
                     Concentration within {intendedField} (optional)
                     <button
@@ -1158,27 +1177,32 @@ export function ProfileForm({
                     options={['No preference', ...FIELD_CONCENTRATIONS[intendedField as keyof typeof FIELD_CONCENTRATIONS]!]}
                     placeholder="No preference"
                   />
-                </div>
+                </>
+              ) : (
+                <>
+                  <label className="text-[11px] text-muted-foreground/50 block mb-1">Concentration / Specialization</label>
+                  <div className="w-full bg-secondary/40 border border-border/60 rounded-xl p-2.5 text-xs text-muted-foreground/50">
+                    Not applicable for this field
+                  </div>
+                </>
               )}
             </div>
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="rank" className="text-[11px] text-muted-foreground block mb-1">Preferred university ranking</label>
-                <select id="rank" value={preferredRank} onChange={(e) => setPreferredRank(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none focus:border-primary">
-                  <option>No preference</option><option>Top 50</option><option>Top 100</option><option>Top 200</option>
-                </select>
-              </div>
-              <div>
-                <label htmlFor="sector" className="text-[11px] text-muted-foreground block mb-1">Industry hub</label>
-                <SearchableSelect id="sector" value={preferredSector} onChange={setPreferredSector} options={['No preference', ...INDUSTRY_HUBS]} placeholder="No preference" />
-              </div>
-              <div>
-                <label htmlFor="climate" className="text-[11px] text-muted-foreground block mb-1">Preferred climate</label>
-                <select id="climate" value={preferredClimate} onChange={(e) => setPreferredClimate(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none focus:border-primary">
-                  <option>No preference</option><option>Balanced</option><option>Cold</option><option>Warm</option>
-                </select>
-              </div>
+            <div>
+              <label htmlFor="rank" className="text-[11px] text-muted-foreground block mb-1">Preferred university ranking</label>
+              <select id="rank" value={preferredRank} onChange={(e) => setPreferredRank(e.target.value)} className="w-full h-10 bg-secondary border border-border rounded-xl px-2.5 text-xs text-foreground focus:outline-none focus:border-primary">
+                <option>No preference</option><option>Top 50</option><option>Top 100</option><option>Top 200</option>
+              </select>
             </div>
+            <div>
+              <label htmlFor="sector" className="text-[11px] text-muted-foreground block mb-1">Industry hub</label>
+              <SearchableSelect id="sector" value={preferredSector} onChange={setPreferredSector} options={['No preference', ...INDUSTRY_HUBS]} placeholder="No preference" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <label htmlFor="climate" className="text-[11px] text-muted-foreground block mb-1">Preferred climate</label>
+            <select id="climate" value={preferredClimate} onChange={(e) => setPreferredClimate(e.target.value)} className="w-full sm:w-1/2 h-10 bg-secondary border border-border rounded-xl px-2.5 text-xs text-foreground focus:outline-none focus:border-primary">
+              <option>No preference</option><option>Balanced</option><option>Cold</option><option>Warm</option>
+            </select>
           </div>
         </section>
         </>
