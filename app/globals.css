@@ -1,6 +1,10 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
-@import 'shadcn/tailwind.css';
+/* Vendored locally (not the `shadcn` npm package) — that package is a CLI
+   scaffolding tool with a devDependency tree that conflicts with vinext's
+   build toolchain; the app only ever needed this one static CSS file it
+   ships, not the CLI itself. */
+@import './styles/shadcn-base.css';
 
 @custom-variant dark (&:is(.dark *));
 

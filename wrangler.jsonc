@@ -1,0 +1,25 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "shortlisted",
+  "compatibility_date": "2026-09-22",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  // Public/client-exposed by design (NEXT_PUBLIC_ prefix) — not a secret,
+  // so it belongs in plain vars, not wrangler secret.
+  "vars": {
+    "NEXT_PUBLIC_TURNSTILE_SITE_KEY": "0x4AAAAAAEjoMJ_wNMV4uOAA"
+  },
+  "main": "vinext/server/fetch-handler",
+  "assets": {
+    "directory": "dist/client",
+    "not_found_handling": "none",
+    "binding": "ASSETS"
+  },
+  "version_metadata": {
+    "binding": "CF_VERSION_METADATA"
+  },
+  "cache": {
+    "enabled": false
+  }
+}
