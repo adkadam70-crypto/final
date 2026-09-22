@@ -384,7 +384,7 @@ export function LandingDemo() {
           {/* Headline restored to the styling from before the Ignition
               Terminal rebuild — gradient fade instead of flat white, which
               was reported as blending into the background. */}
-          <h1 className="text-[clamp(2.25rem,6vw,4.5rem)] font-bold tracking-tight text-balance leading-[1.05] bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent max-w-3xl mx-auto">
+          <h1 className="text-[clamp(2.25rem,6vw,5rem)] font-bold tracking-tight text-balance leading-[1.05] bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent max-w-3xl mx-auto">
             Stop guessing your reach schools.
           </h1>
 
