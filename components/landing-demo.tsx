@@ -47,13 +47,16 @@ const STAGE_COUNT = 5
 // Real student feedback, collected directly — no handles/photos attached
 // since these aren't public social accounts.
 const LANDING_TESTIMONIALS: Array<{ author: TestimonialAuthor; text: string }> = [
-  { author: { name: 'Mahi Singh' }, text: "Ngl this saved me so much time. I used to spend hours cross checking schools myself, now I just get a straight answer." },
-  { author: { name: 'Ishan Chabria' }, text: "What I liked most is it actually tells you which universities you have a real shot at and which ones are a stretch, instead of just leaving you to guess." },
-  { author: { name: 'Anaya Kadam' }, text: "Genuinely such a wonderful tool, it made the whole process feel a lot less overwhelming." },
-  { author: { name: 'Rida Khalfay' }, text: "The Build Your Dream feature is my favorite part fr. It helped me figure out exactly what to work on in my profile." },
-  { author: { name: 'Chirayu Pinjarkar' }, text: "As a CBSE student there's barely anything built with us in mind, so this one actually stood out." },
-  { author: { name: 'Mannat Bathija' }, text: "The program specific rankings are what sold me tbh. It's not just \"this school is good\", it actually breaks down how strong they are in the exact major I'm applying to." },
-  { author: { name: 'Geet Doshi' }, text: "I was so lost trying to figure out where I even had a shot, this actually gave me a clear starting point instead of just a random list of names." },
+  { author: { name: 'Mahi Singh', badge: 'IBDP Student' }, text: "Ngl this saved me so much time. I used to spend hours cross checking schools myself, now I just get a straight answer." },
+  { author: { name: 'Ishan Chabria', badge: 'IBDP Student' }, text: "What I liked most is it actually tells you which universities you have a real shot at and which ones are a stretch, instead of just leaving you to guess." },
+  { author: { name: 'Anaya Kadam', badge: 'ICSE Student' }, text: "Genuinely such a wonderful tool, it made the whole process feel a lot less overwhelming." },
+  { author: { name: 'Rida Khalfay', badge: 'IBDP Student' }, text: "The Build Your Dream feature is my favorite part fr. It helped me figure out exactly what to work on in my profile." },
+  { author: { name: 'Chirayu Pinjarkar', badge: 'CBSE Student' }, text: "As a CBSE student there's barely anything built with us in mind, so this one actually stood out." },
+  { author: { name: 'Mannat Bathija', badge: 'IBDP Student' }, text: "The program specific rankings are what sold me tbh. It's not just \"this school is good\", it actually breaks down how strong they are in the exact major I'm applying to." },
+  { author: { name: 'Geet Doshi', badge: 'IBDP Student' }, text: "I was so lost trying to figure out where I even had a shot, this actually gave me a clear starting point instead of just a random list of names." },
+  { author: { name: 'Prithviraj Ranavat', badge: 'State Board Student' }, text: "Being on State Board, most tools abroad don't even know what to do with my marks. This one actually converted everything properly instead of just guessing." },
+  { author: { name: 'Katyayini Sinha', badge: 'IBDP Student' }, text: "The bias-checked analysis is what got me honestly, felt like an actually honest read on my predicted grades instead of just telling me what I wanted to hear." },
+  { author: { name: 'Neel Bode', badge: 'A-Levels Student' }, text: "Applying to the US with A-Levels always felt confusing until this. It actually explained how my grades stack up instead of leaving me to guess." },
 ]
 
 const COUNTRY_CHIPS = [

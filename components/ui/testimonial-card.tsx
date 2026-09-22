@@ -4,6 +4,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 export interface TestimonialAuthor {
   name: string
   handle?: string
+  /** Short curriculum/status tag shown as a plain black-on-white sub-header
+   *  under the name, e.g. "IBDP Student" — distinct from `handle`, which was
+   *  always unused on real entries (no public social handles attached). */
+  badge?: string
 }
 
 export interface TestimonialCardProps {
@@ -57,12 +61,25 @@ export function TestimonialCard({ author, text, size = "default", variant = "sol
             {initials(author.name)}
           </AvatarFallback>
         </Avatar>
-        <div className="flex flex-col items-start min-w-0">
+        <div className="flex flex-col items-start min-w-0 gap-1">
           <h3 className={cn("font-bold leading-none text-white truncate max-w-full", compact ? "text-xs" : "text-sm")}>
             {author.name}
           </h3>
+          {author.badge && (
+            <div className="w-full">
+              <div className={cn("border-t", glass ? "border-white/20" : "border-border")} />
+              <span
+                className={cn(
+                  "block font-semibold tracking-wide text-primary whitespace-nowrap",
+                  compact ? "text-[9px] mt-1" : "text-[10px] mt-1.5",
+                )}
+              >
+                {author.badge}
+              </span>
+            </div>
+          )}
           {author.handle && (
-            <p className={cn("mt-1 text-muted-foreground", compact ? "text-[10px]" : "text-xs")}>{author.handle}</p>
+            <p className={cn("text-muted-foreground", compact ? "text-[10px]" : "text-xs")}>{author.handle}</p>
           )}
         </div>
       </div>
