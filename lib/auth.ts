@@ -99,8 +99,16 @@ export const auth = betterAuth({
       'auraadmit-smoky.vercel.app',
       '*.vercel.app',
       'localhost:3000',
+      // Local Cloudflare Workers runtime test (wrangler dev) — not a public
+      // host, just this machine's own testing port for the Cloudflare
+      // migration. Doesn't affect the Vercel deployment at all.
+      'localhost:8787',
+      '127.0.0.1:8787',
       'shortlisted.space',
       'www.shortlisted.space',
+      // Real Workers preview domain, once we deploy — added ahead of time
+      // so the first real deploy doesn't need a second round-trip.
+      '*.workers.dev',
     ],
   },
 

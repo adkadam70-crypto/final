@@ -142,6 +142,12 @@ const resultSchema = z.object({
   results: z.array(
     z.object({
       universityId: z.union([z.string(), z.number()]).describe('The id of the university from the provided list.'),
+      concentrationOffered: z
+        .enum(['yes', 'no', 'unsure'])
+        .nullable()
+        .describe(
+          'Only meaningful when the student specified an intended concentration below — leave null otherwise. Using your own real knowledge of this university\'s actual program offerings (not the programRankingForIntendedField data, which is only field-level), judge whether this specific university offers a real, named track/concentration/specialization matching the student\'s stated concentration within their broader intended field. "no" only when you are confident the school does not offer anything matching it — a large university with a broad department should usually be "yes" or "unsure" rather than "no" unless you have a specific reason to doubt it. Schools marked "no" are filtered out of what the student sees, so a false "no" hides a real option from them — default to "unsure" over a confident-sounding guess.',
+        ),
       matchTier: z.enum(['Safety', 'Good Chance', 'Reach', 'Ultra Reach']),
       acceptanceProbability: z
         .number()
@@ -257,7 +263,7 @@ STUDENT PROFILE:
 - Preferred university ranking: ${studentProfile.preferredRank} (soft preference — weigh it alongside fit, don't treat it as a hard filter)
 - Intended field of study: ${studentProfile.intendedField}${
       studentProfile.intendedConcentration !== 'No preference'
-        ? ` (specifically interested in ${studentProfile.intendedConcentration} — mention this in rationale/fit context where relevant, but our program-ranking data is only at the ${studentProfile.intendedField} level, not this specific concentration, so don't imply a concentration-specific rank exists)`
+        ? ` (specifically interested in ${studentProfile.intendedConcentration} — mention this in rationale/fit context where relevant, and set concentrationOffered per school below using your real knowledge of that school's programs; our program-ranking data is only at the ${studentProfile.intendedField} level, not this specific concentration, so don't imply a concentration-specific RANK exists even when the concentration itself is real)`
         : ''
     }
 - Extracurriculars: ${studentProfile.extracurriculars.length ? studentProfile.extracurriculars.join('; ') : 'None provided'}
@@ -329,7 +335,11 @@ ${ENGLISH_TEST_GUIDANCE} Given rationale/improvementTips are terse here (unlike 
 
 Do the same cross-reference for programSpecificAdditionalRequirements, when it's a real list rather than "None on file...": these are requirements for the student's own intended field/program specifically — on top of, not instead of, admissionRequirements above (e.g. a supplemental essay, a portfolio, or a specific score a particular school of engineering or business requires beyond what the university asks of everyone). If one of these isn't reflected in the student's profile, flag it the same way — name it directly, and note it's specific to this student's intended program at this school, not a school-wide requirement. Like programRankingForIntendedField, this is fit/preparedness context only — never use it to move acceptanceProbability itself.
 
-Assess every university in the list above and return one result per university, including exactly 2 specific improvementTips per school. Keep rationale and tips terse — brevity over completeness.`
+Assess every university in the list above and return one result per university, including exactly 2 specific improvementTips per school. Keep rationale and tips terse — brevity over completeness.${
+    studentProfile.intendedConcentration !== 'No preference'
+      ? ` Schools you mark concentrationOffered: "no" are removed from what the student sees — set it only when you're genuinely confident this specific school doesn't offer anything matching "${studentProfile.intendedConcentration}", not as a default for schools you simply don't know well.`
+      : ''
+  }`
 
   const call = () =>
     client.responses.parse({
@@ -581,9 +591,21 @@ export async function runMatch(): Promise<
 
     const { object } = await generateOpenAIMatch({ studentProfile, catalog: aiCatalog, targetCountries: profile.targetCountries, contextByCountry })
 
+    // When a concentration is set, drop schools the model is confident don't
+    // offer it — but only if that still leaves a usable list. A niche
+    // concentration (or a run where the model is over-cautious) should never
+    // be able to zero out a student's entire result set; better to show
+    // everything with the concentration caveat left to the rationale text
+    // than to show nothing.
+    const concentrationFiltered =
+      studentProfile.intendedConcentration !== 'No preference'
+        ? object.results.filter((r) => r.concentrationOffered !== 'no')
+        : object.results
+    const aiResults = concentrationFiltered.length > 0 ? concentrationFiltered : object.results
+
     // Merge AI output back with DB records (source of truth for display fields).
     const byId = new Map(catalog.map((u) => [String(u.id), u]))
-    const results: MatchResult[] = object.results
+    const results: MatchResult[] = aiResults
       .filter((r) => {
         const idStr = String(r.universityId)
         return byId.has(idStr)

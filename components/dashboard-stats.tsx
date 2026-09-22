@@ -2,8 +2,7 @@ import { db } from '@/lib/db'
 import { profiles, matches, savedSchools } from '@/lib/db/schema'
 import { eq, desc, count } from 'drizzle-orm'
 import Link from 'next/link'
-import { Search, Bookmark, GraduationCap, ArrowRight } from 'lucide-react'
-import { CheckList3Icon } from '@/components/ui/check-list-3-icon'
+import { Search, Bookmark, Compass, ArrowRight } from 'lucide-react'
 import { tierBadgeClass } from '@/lib/match-tier'
 import { StatCard } from '@/components/stat-card'
 import { ProfileStrengthCard } from '@/components/profile-strength-card'
@@ -11,9 +10,9 @@ import { RevealGroup } from '@/components/reveal-group'
 import { GlowCard } from '@/components/ui/spotlight-card'
 
 // Split out from the dashboard page and wrapped in <Suspense> there so the
-// static shell (greeting, quick-action cards) streams to the browser
-// immediately instead of the whole page blocking on this section's four DB
-// queries — only this card grid shows a skeleton while they resolve.
+// static shell (greeting) streams to the browser immediately instead of the
+// whole page blocking on this section's four DB queries — only this card
+// grid shows a skeleton while they resolve.
 export async function DashboardStats({ userId }: { userId: string }) {
   const [profileCountRes, matchCountRes, savedCountRes, recentMatches] = await Promise.all([
     db.select({ count: count() }).from(profiles).where(eq(profiles.userId, userId)),
@@ -29,34 +28,86 @@ export async function DashboardStats({ userId }: { userId: string }) {
 
   return (
     <>
-      <RevealGroup className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <ProfileStrengthCard hasProfile={profileCount > 0} />
-        <StatCard icon={<Search className="w-5 h-5 text-primary" />} label="Matches Found" value={matchCount} hint={matchCount === 0 ? 'Run your first match' : 'Keep exploring'} />
-        <StatCard icon={<Bookmark className="w-5 h-5 text-primary" />} label="Saved Schools" value={savedCount} hint={savedCount === 0 ? 'Bookmark schools you like' : 'Track your apps'} />
+      {/* Unified command grid — each card pairs its live metric with the
+          one action that metric actually calls for, instead of a separate
+          action card stacked directly on top of a separate metric card. */}
+      <RevealGroup className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
+        <GlowCard className="rounded-2xl block">
+          <ProfileStrengthCard hasProfile={profileCount > 0} />
+        </GlowCard>
+        <GlowCard className="rounded-2xl block">
+          <StatCard
+            icon={<Search className="w-4 h-4" />}
+            label="MATCHES FOUND"
+            value={matchCount}
+            valueClassName="text-emerald-400"
+            description="Run a match to discover your best-fit universities."
+            hint={matchCount === 0 ? 'Run your first match' : 'Keep exploring'}
+            actionHref="/matches"
+            actionLabel="Find Matches"
+          />
+        </GlowCard>
+        <GlowCard className="rounded-2xl block">
+          <StatCard
+            icon={<Bookmark className="w-4 h-4" />}
+            label="SAVED SCHOOLS"
+            value={savedCount}
+            valueClassName="text-white"
+            description="Track your application status for bookmarked schools."
+            hint={savedCount === 0 ? 'Bookmark schools you like' : 'Track your apps'}
+            actionHref="/saved"
+            actionLabel="Saved Schools"
+          />
+        </GlowCard>
       </RevealGroup>
 
       <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold flex items-center gap-2"><CheckList3Icon size={20} className="text-primary" /> Featured Recommendations</h2>
-          {featured.length > 0 && <Link href="/matches" className="text-xs text-primary font-medium flex items-center gap-1 hover:brightness-125">View all <ArrowRight className="w-3 h-3" /></Link>}
+        <div className="flex flex-wrap items-center justify-between gap-y-2 mb-4">
+          <h2 className="text-base font-semibold text-white flex flex-wrap items-center gap-2">
+            Featured Recommendations
+            {/* These odds come from this catalog's general baseline
+                numbers, not a filled-in student profile — this tag is the
+                honesty check so a 92-93% shown before any profile data
+                reads as "here's a starting benchmark," not a confident,
+                ungrounded guess. Only shown alongside actual data — an
+                empty state has nothing to label as a baseline. */}
+            {featured.length > 0 && (
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-white/5 whitespace-nowrap">BASELINE SEED</span>
+            )}
+          </h2>
+          {featured.length > 0 && (
+            <Link href="/matches" className="text-xs text-zinc-400 hover:text-emerald-400 transition-colors">
+              View all →
+            </Link>
+          )}
         </div>
         {featured.length === 0 ? (
-          <div className="bg-card border border-border border-dashed rounded-3xl p-12 text-center">
-            <div className="inline-flex bg-secondary p-3 rounded-2xl mb-4"><GraduationCap className="w-6 h-6 text-primary" /></div>
-            <h3 className="text-base font-bold mb-1">No matches yet</h3>
-            <p className="text-xs text-muted-foreground max-w-xs mx-auto text-pretty mb-4">Run your first match to see personalized university recommendations here.</p>
-            <Link href="/matches" className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold text-sm px-5 py-2.5 rounded-2xl hover:brightness-110 transition-all">Find Matches <ArrowRight className="w-4 h-4" /></Link>
+          <div className="bg-zinc-900/40 border border-white/5 border-dashed rounded-xl p-12 text-center">
+            <Compass className="w-8 h-8 text-zinc-600 mx-auto" />
+            <h3 className="text-sm font-medium text-zinc-300 mt-2">No matches generated yet</h3>
+            <p className="text-xs text-zinc-500 max-w-sm mx-auto mt-1">Run your first evaluation to calculate reach, target, and safety tiers.</p>
+            <Link
+              href="/matches"
+              className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-xs font-semibold px-4 py-2 rounded-lg mt-4 transition-colors"
+            >
+              Find Matches <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
         ) : (
-          <RevealGroup className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <RevealGroup className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-4">
             {featured.map((uni: any) => (
-              <GlowCard key={uni.universityId} className="rounded-3xl block">
-                <div className="bg-card border border-border rounded-3xl p-5">
-                  <h3 className="text-sm font-bold mb-1 text-balance">{uni.name}</h3>
-                  <p className="text-xs text-muted-foreground mb-3">{uni.location}</p>
-                  <div className="flex items-center justify-between">
-                    <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${tierBadgeClass(uni.matchTier)}`}>{uni.matchTier}</span>
-                    <span className="text-sm font-mono font-bold text-primary">{uni.acceptanceProbability}%</span>
+              <GlowCard key={uni.universityId} className="rounded-xl block">
+                <div className="bg-zinc-950/70 border border-white/5 hover:border-emerald-500/20 rounded-xl p-4 flex flex-col justify-between transition-all">
+                  <div>
+                    <h3 className="text-sm font-semibold text-white text-balance">{uni.name}</h3>
+                    <p className="text-xs text-zinc-400 mt-0.5">{uni.location}</p>
+                  </div>
+                  <div className="flex items-end justify-between mt-3">
+                    <span className={`text-[11px] px-2.5 py-0.5 rounded-md font-medium border ${tierBadgeClass(uni.matchTier)}`}>{uni.matchTier}</span>
+                    <div className="flex flex-col items-end">
+                      <span className="font-mono text-base text-emerald-400 font-bold">{uni.acceptanceProbability}%</span>
+                      <span className="text-[9px] text-zinc-400 font-mono">General Band</span>
+                    </div>
                   </div>
                 </div>
               </GlowCard>
@@ -64,6 +115,29 @@ export async function DashboardStats({ userId }: { userId: string }) {
           </RevealGroup>
         )}
       </section>
+
+      {/* Static/illustrative — there's no deadline-tracking data model yet,
+          so this is a fixed placeholder strip rather than a real per-user
+          countdown. Purely to balance the empty space below the
+          recommendations grid on tall viewports; not a data-bound feature. */}
+      <div className="mt-8 p-4 rounded-xl bg-zinc-900/40 border border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div>
+          <p className="text-[10px] font-mono text-zinc-500 tracking-wider">ADMISSIONS CYCLE 2026–2027</p>
+          <p className="text-xs text-zinc-300 font-medium mt-1">Early Decision &amp; Early Action deadlines approaching in 40 days.</p>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-1.5 text-[10px] font-mono text-zinc-500">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+            </span>
+            Cycle Active
+          </span>
+          <Link href="/application-info?tab=deadlines" className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-medium transition-colors">
+            View Admissions Calendar →
+          </Link>
+        </div>
+      </div>
     </>
   )
 }
@@ -71,14 +145,14 @@ export async function DashboardStats({ userId }: { userId: string }) {
 export function DashboardStatsSkeleton() {
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="bg-card border border-border rounded-3xl p-5 h-[120px] animate-pulse" />
+          <div key={i} className="bg-zinc-900/60 border border-white/10 rounded-2xl p-5 h-[188px] animate-pulse" />
         ))}
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="bg-card border border-border rounded-3xl p-5 h-[100px] animate-pulse" />
+          <div key={i} className="bg-zinc-900/40 border border-white/5 rounded-xl p-4 h-[104px] animate-pulse" />
         ))}
       </div>
     </>

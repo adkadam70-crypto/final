@@ -2,18 +2,19 @@
 
 import { useState, useTransition, useRef, useEffect, type Dispatch, type SetStateAction } from 'react'
 import Link from 'next/link'
-import { GraduationCap, Globe, Flame, Compass, Loader2, CheckCircle2, Award, ChevronDown, ArrowRight, Plus, X, BookOpen, Info, ShieldCheck } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { GraduationCap, Globe, Trophy, Compass, Loader2, CheckCircle2, Award, ChevronDown, ArrowRight, Plus, X, BookOpen, Info, ShieldCheck, History, PenLine } from 'lucide-react'
 import { saveProfile, type SaveProfileInput } from '@/app/actions/profile'
 import { markSuggestedActivityDone, type SuggestedActivityRow } from '@/app/actions/dream'
 import { APPLICATION_INFO } from '@/lib/application-info'
 import { AP_COURSE_CATEGORIES, AP_COURSES } from '@/lib/ap-courses'
-import { LiquidButton } from '@/components/ui/liquid-glass-button'
 import { gradeBadge } from '@/lib/grade'
 import { AcademicDetailInput } from '@/components/academic-detail-input'
 import { EmeraldBadgeSmall } from '@/components/emerald-badge'
 import { AdminUserManagement } from '@/components/admin/user-management'
 import type { AdminUserRow } from '@/app/actions/admin'
-import { defaultAcademicDetail, ACADEMIC_FIELDS, INDUSTRY_HUBS, FIELD_CONCENTRATIONS, type AcademicDetail } from '@/lib/academic-detail'
+import { defaultAcademicDetail, ACADEMIC_FIELDS, INDUSTRY_HUBS, FIELD_CONCENTRATIONS, IB_SUBJECT_GROUPS, ibTotal, type AcademicDetail, type IBCoreGrade } from '@/lib/academic-detail'
+import { ALL_IB_SUBJECTS } from '@/lib/subject-lists'
 import { SearchableSelect } from '@/components/ui/searchable-select'
 import { satComposite, ENGLISH_TEST_TYPES, ENGLISH_TEST_RANGES, type StandardizedTests, type EnglishTestType } from '@/lib/standardized-tests'
 import {
@@ -42,8 +43,6 @@ const CURRICULUM_LABELS: Record<Curriculum, string> = {
   US_GPA_PCT: 'US (GPA)',
 }
 
-// SAT section scores are only ever reported in multiples of 10, from 200-800.
-const SAT_SECTION_SCORES = Array.from({ length: 61 }, (_, i) => 200 + i * 10)
 
 // Plain-text relevance breakdown for an optional section — which of the
 // student's OWN selected countries make it worth filling in, which don't.
@@ -114,22 +113,6 @@ function NinthTenthInput({ value, onChange }: { value: NinthTenthGrades; onChang
     return (
       <div className="space-y-1.5">
         <span className="text-[11px] text-muted-foreground font-medium">{label}</span>
-        {curriculum === 'IGCSE' && (
-          <div className="grid grid-cols-6 gap-1">
-            {(['aStar', 'a', 'b', 'c', 'd', 'e'] as const).map((k) => (
-              <div key={k}>
-                <label className="text-[9px] text-muted-foreground/70 block mb-0.5 text-center">{k === 'aStar' ? 'A*' : k.toUpperCase()}</label>
-                <input
-                  type="number"
-                  min={0}
-                  value={y.igcse?.[k] ?? ''}
-                  onChange={(e) => updateYear(year, { igcse: { ...y.igcse, [k]: e.target.value ? Number(e.target.value) : undefined } })}
-                  className="w-full bg-secondary border border-border rounded-lg p-1.5 text-xs text-foreground text-center focus:outline-none focus:border-primary"
-                />
-              </div>
-            ))}
-          </div>
-        )}
         {curriculum === 'CBSE_ICSE' && (
           <input type="number" min={0} max={100} placeholder="Overall %" value={y.percentage ?? ''} onChange={(e) => updateYear(year, { percentage: e.target.value ? clamp(Number(e.target.value), 0, 100) : undefined })} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
         )}
@@ -151,6 +134,8 @@ function NinthTenthInput({ value, onChange }: { value: NinthTenthGrades; onChang
     )
   }
 
+  const IGCSE_COLS = ['aStar', 'a', 'b', 'c', 'd', 'e'] as const
+
   return (
     <div className="space-y-3">
       <div>
@@ -166,9 +151,311 @@ function NinthTenthInput({ value, onChange }: { value: NinthTenthGrades; onChang
           <option value="US_GPA">US (GPA)</option>
         </select>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {yearBlock('grade9', '9th grade')}
-        {yearBlock('grade10', '10th grade')}
+      {curriculum === 'IGCSE' ? (
+        // Tally matrix — one compact table (rows: 9th/10th, columns: A*-E)
+        // instead of two separate side-by-side grade-count grids that
+        // happened to share the same six columns.
+        <div className="space-y-2">
+          <table className="w-full text-center border-separate border-spacing-1">
+            <thead>
+              <tr>
+                <th className="text-[9px] text-muted-foreground/70 font-medium text-left w-14"></th>
+                {IGCSE_COLS.map((k) => (
+                  <th key={k} className="text-[9px] text-muted-foreground/70 font-medium">{k === 'aStar' ? 'A*' : k.toUpperCase()}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {(['grade9', 'grade10'] as const).map((year) => (
+                <tr key={year}>
+                  <td className="text-[11px] text-muted-foreground font-medium text-left pr-1 whitespace-nowrap">{year === 'grade9' ? '9th' : '10th'}</td>
+                  {IGCSE_COLS.map((k) => (
+                    <td key={k}>
+                      <input
+                        type="number"
+                        min={0}
+                        value={value[year].igcse?.[k] ?? ''}
+                        onChange={(e) => updateYear(year, { igcse: { ...value[year].igcse, [k]: e.target.value ? Number(e.target.value) : undefined } })}
+                        className="w-full bg-secondary border border-border rounded-lg p-1.5 text-xs text-foreground text-center focus:outline-none focus:border-primary"
+                      />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {(['grade9', 'grade10'] as const).map((year) => (
+              <input
+                key={year}
+                type="text"
+                maxLength={150}
+                placeholder={`${year === 'grade9' ? '9th' : '10th'} grade — school threshold / board result notes`}
+                value={value[year].note ?? ''}
+                onChange={(e) => updateYear(year, { note: e.target.value })}
+                className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary"
+              />
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {yearBlock('grade9', '9th grade')}
+          {yearBlock('grade10', '10th grade')}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const IB_CORE_GRADES_LIST: IBCoreGrade[] = ['A', 'B', 'C', 'D', 'E']
+function ibAlphabetical(subjects: readonly string[]): string[] {
+  return [...subjects].sort((a, b) => a.localeCompare(b))
+}
+
+// Merges the 11th and 12th grade IB inputs into one 6-row table — one row
+// per subject group (1-6, fixed under the IB Diploma), since a student
+// doesn't switch subjects between the two years, just gets a different mark
+// each year. Only meaningful for IB_DIPLOMA: every other curriculum lets a
+// student add/drop subjects independently year to year, so there's no
+// reliable row-for-row alignment to merge on — those keep the original
+// stacked 12th-then-11th layout. Subject name and HL/SL level are edited
+// once per row and kept in sync on both years' underlying AcademicDetail
+// objects; only the mark differs per year. EE/TOK/CAS/Total stay solely on
+// the grade-12 (diploma-level) object, same as before — those aren't
+// meaningfully separate "11th grade" facts.
+function IBRigorTable({
+  grade12,
+  eleventh,
+  onGrade12Change,
+  onEleventhChange,
+  onAddEleventh,
+  onRemoveEleventh,
+}: {
+  grade12: Extract<AcademicDetail, { curriculum: 'IB_DIPLOMA' }>
+  eleventh: Extract<AcademicDetail, { curriculum: 'IB_DIPLOMA' }> | null
+  onGrade12Change: (d: AcademicDetail) => void
+  onEleventhChange: (d: AcademicDetail) => void
+  onAddEleventh: () => void
+  onRemoveEleventh: () => void
+}) {
+  const total = ibTotal(grade12)
+
+  // Grade 11 no longer mirrors Grade 12 edits — IB students routinely swap
+  // a subject or drop HL to SL between the two years, so each year's
+  // subject/level has to be independently editable. New rows still START
+  // matched via onAddEleventh/syncFromGrade12 below (the common case is
+  // identical subjects), but editing Grade 12 afterward never silently
+  // rewrites what's already on Grade 11, or vice versa.
+  function updateMeta(i: number, patch: { subjectName?: string; level?: 'HL' | 'SL' }) {
+    const subjects12 = [...grade12.subjects]
+    subjects12[i] = { ...subjects12[i], ...patch }
+    onGrade12Change({ ...grade12, subjects: subjects12 })
+  }
+
+  function updateEleventhMeta(i: number, patch: { subjectName?: string; level?: 'HL' | 'SL' }) {
+    if (!eleventh) return
+    const subjects11 = [...eleventh.subjects]
+    subjects11[i] = { ...subjects11[i], ...patch }
+    onEleventhChange({ ...eleventh, subjects: subjects11 })
+  }
+
+  // One-click bulk copy for the ~90% case where the subject roster didn't
+  // change year to year — copies subject name + level from Grade 12. The
+  // mark resets to the same neutral 4 every fresh row already starts at
+  // (IBSubject.grade has no "unset" state), so the student still has to
+  // deliberately enter their real transcript score rather than it
+  // silently inheriting Grade 12's predicted mark. Never touches Grade 12.
+  function syncFromGrade12() {
+    if (!eleventh) return
+    const subjects11 = grade12.subjects.map((s) => ({ group: s.group, subjectName: s.subjectName, level: s.level, grade: 4 }))
+    onEleventhChange({ ...eleventh, subjects: subjects11 })
+  }
+
+  // Which rows have their Grade 11 subject/level editor expanded — closed
+  // by default on every row (the 90% case never needs it), so the table
+  // stays compact until a student actually has a row that changed.
+  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set())
+  function toggleExpanded(i: number) {
+    setExpandedRows((prev) => {
+      const next = new Set(prev)
+      if (next.has(i)) next.delete(i)
+      else next.add(i)
+      return next
+    })
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="overflow-x-auto -mx-1">
+        <table className="w-full text-xs border-separate border-spacing-y-1.5 px-1">
+          <thead>
+            <tr className="text-[11px] text-foreground/90 uppercase tracking-wider border-b-2 border-border">
+              <th className="text-left font-bold pl-2 pb-2">Subject</th>
+              <th className="font-bold w-12 pb-2">Level</th>
+              <th className="font-bold w-16 pb-2">Gr 11</th>
+              <th className="font-bold w-20 pb-2">Gr 12 Pred.</th>
+            </tr>
+          </thead>
+          <tbody>
+            {grade12.subjects.map((s, i) => {
+              const s11 = eleventh?.subjects[i]
+              // A row only counts as "changed" once it actually diverges
+              // from Grade 12 — right after a sync (or for a freshly added
+              // 11th grade block, which starts identical) there's nothing
+              // to flag.
+              const changed = eleventh && s11 && (s11.subjectName !== s.subjectName || s11.level !== s.level)
+              return (
+              <tr key={s.group} className="bg-secondary/60 align-middle">
+                <td className="rounded-l-lg p-1.5 pl-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[9px] text-muted-foreground shrink-0">{s.group}</span>
+                    <select
+                      className="w-full min-w-0 bg-transparent text-xs text-foreground focus:outline-none"
+                      value={s.subjectName}
+                      onChange={(e) => updateMeta(i, { subjectName: e.target.value })}
+                    >
+                      <option value="">{IB_SUBJECT_GROUPS[s.group - 1].name}</option>
+                      {ibAlphabetical(ALL_IB_SUBJECTS).map((subj) => <option key={subj} value={subj}>{subj}</option>)}
+                    </select>
+                  </div>
+                </td>
+                <td className="p-1.5 text-center">
+                  <button
+                    type="button"
+                    onClick={() => updateMeta(i, { level: s.level === 'HL' ? 'SL' : 'HL' })}
+                    className="text-[10px] font-bold text-primary bg-primary/10 border border-primary/30 rounded-md px-2 py-1 w-full"
+                  >
+                    {s.level}
+                  </button>
+                </td>
+                <td className="p-1.5 text-center">
+                  {eleventh && s11 ? (
+                    <div className="space-y-1">
+                      {expandedRows.has(i) && (
+                        <div className="space-y-1 pb-1 border-b border-border/60 mb-1">
+                          <select
+                            className="w-full bg-secondary border border-border rounded-md p-1 text-[10px] text-foreground focus:outline-none focus:border-primary"
+                            value={s11.subjectName}
+                            onChange={(e) => updateEleventhMeta(i, { subjectName: e.target.value })}
+                          >
+                            <option value="">{IB_SUBJECT_GROUPS[s11.group - 1].name}</option>
+                            {ibAlphabetical(ALL_IB_SUBJECTS).map((subj) => <option key={subj} value={subj}>{subj}</option>)}
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => updateEleventhMeta(i, { level: s11.level === 'HL' ? 'SL' : 'HL' })}
+                            className="text-[9px] font-bold text-primary bg-primary/10 border border-primary/30 rounded-md px-1.5 py-0.5 w-full"
+                          >
+                            {s11.level}
+                          </button>
+                        </div>
+                      )}
+                      <select
+                        className="w-full bg-secondary border border-border rounded-lg p-1.5 text-xs text-foreground text-center focus:outline-none focus:border-primary"
+                        value={s11.grade}
+                        onChange={(e) => {
+                          const subjects11 = [...eleventh.subjects]
+                          subjects11[i] = { ...subjects11[i], grade: Number(e.target.value) }
+                          onEleventhChange({ ...eleventh, subjects: subjects11 })
+                        }}
+                      >
+                        {[1, 2, 3, 4, 5, 6, 7].map((g) => <option key={g} value={g}>{g}</option>)}
+                      </select>
+                      {/* One toggle, three states: quiet invite by default,
+                          amber flag once a row has actually diverged, and
+                          "Done" while the mini-editor above is open —
+                          never two buttons competing for the same slot.
+                          Kept microscopic and block-level (not absolutely
+                          positioned) so it adds height to this cell only,
+                          never shifting the row's shared baseline — the row
+                          uses align-middle, so the controls in the other 3
+                          columns stay centered on the row regardless of
+                          how tall this cell's content gets. */}
+                      <button
+                        type="button"
+                        onClick={() => toggleExpanded(i)}
+                        className={`block text-[10px] font-mono w-full truncate mt-0.5 ${
+                          expandedRows.has(i) ? 'text-zinc-400 hover:text-foreground' : changed ? 'text-amber-400' : 'text-zinc-500 hover:text-emerald-400'
+                        }`}
+                      >
+                        {expandedRows.has(i) ? 'Done' : changed ? 'Changed ✎' : 'Different subject?'}
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground/40">—</span>
+                  )}
+                </td>
+                <td className="rounded-r-lg p-1.5 text-center">
+                  <select
+                    className="w-full bg-secondary border border-border rounded-lg p-1.5 text-xs text-foreground text-center focus:outline-none focus:border-primary"
+                    value={s.grade}
+                    onChange={(e) => {
+                      const subjects12 = [...grade12.subjects]
+                      subjects12[i] = { ...subjects12[i], grade: Number(e.target.value) }
+                      onGrade12Change({ ...grade12, subjects: subjects12 })
+                    }}
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7].map((g) => <option key={g} value={g}>{g}</option>)}
+                  </select>
+                </td>
+              </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {eleventh ? (
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <button type="button" onClick={onRemoveEleventh} className="text-[11px] text-muted-foreground hover:text-destructive flex items-center gap-1">
+            <X className="w-3 h-3" /> Remove 11th grade marks
+          </button>
+          {/* Bulk re-sync for whenever Grade 12's subjects change after the
+              fact (a late add/drop) — same copy as the "Add 11th grade
+              marks" cold-start path, just re-runnable on demand instead of
+              only available once. */}
+          <button
+            type="button"
+            onClick={syncFromGrade12}
+            className="text-[11px] font-mono text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 border border-emerald-500/20 bg-emerald-950/40 px-2.5 py-1 rounded-md transition-colors"
+          >
+            ⚡ Match Grade 12 Subjects
+          </button>
+        </div>
+      ) : (
+        <div>
+          <p className="text-[10px] text-primary/80 font-medium mb-1">Optional — adding this helps strengthen your analysis.</p>
+          <button type="button" onClick={onAddEleventh} className="text-[11px] text-primary font-medium flex items-center gap-1">
+            <Plus className="w-3 h-3" /> Add 11th grade marks
+          </button>
+        </div>
+      )}
+
+      {/* Integrated core bar — EE/TOK/CAS/Total docked directly under the
+          table instead of living in their own separate section. */}
+      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border">
+        <div>
+          <label className="text-[11px] text-muted-foreground block mb-1">Extended Essay</label>
+          <select className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" value={grade12.eeGrade} onChange={(e) => onGrade12Change({ ...grade12, eeGrade: e.target.value as IBCoreGrade })}>
+            {IB_CORE_GRADES_LIST.map((g) => <option key={g} value={g}>{g}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="text-[11px] text-muted-foreground block mb-1">Theory of Knowledge</label>
+          <select className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" value={grade12.tokGrade} onChange={(e) => onGrade12Change({ ...grade12, tokGrade: e.target.value as IBCoreGrade })}>
+            {IB_CORE_GRADES_LIST.map((g) => <option key={g} value={g}>{g}</option>)}
+          </select>
+        </div>
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <label className="flex items-center gap-2 text-xs text-foreground">
+          <input type="checkbox" checked={grade12.casComplete} onChange={(e) => onGrade12Change({ ...grade12, casComplete: e.target.checked })} className="accent-primary" />
+          CAS complete
+        </label>
+        <span className={`text-xs font-mono font-bold px-2.5 py-1 rounded-lg ${total === 'FAIL' ? 'text-destructive bg-destructive/10' : 'text-emerald-400 bg-emerald-950'}`}>
+          {total === 'FAIL' ? 'EE/TOK: diploma-failing' : `Total: ${total} / 45`}
+        </span>
       </div>
     </div>
   )
@@ -205,55 +492,64 @@ const PROJECT_EXAMPLES = [
   'A sustained hobby that shows genuine, long-term interest rather than a single entry',
 ]
 
-// Each of the three groups below used to be a single free-text field. Now
-// every group holds a repeatable list of activities, each with its own
-// type and description — closer to how Common App's real Activities list
-// works, and it lets a student log more than one honor/leadership
-// role/project without cramming them into one 200-char field.
-type ActivityEntry = { type: string; description: string }
-const emptyEntry = (): ActivityEntry => ({ type: '', description: '' })
+// Modular per-activity entry — title/role/scope/impact, one card per real
+// achievement, instead of a single free-text box a student would otherwise
+// cram six unrelated achievements into as one run-on paragraph. Scope is a
+// closed dropdown (not free text) specifically so the AI can reliably read
+// competitive tier back out, rather than guessing it from prose.
+type ActivityScope = '' | 'Personal' | 'School' | 'Regional/State' | 'National' | 'International'
+type ActivityEntry = { title: string; role: string; scope: ActivityScope; impact: string }
+const emptyEntry = (): ActivityEntry => ({ title: '', role: '', scope: '', impact: '' })
 
-const HONORS_TYPES = ['Award or honor', 'Olympiad / competition', 'Scholarship', 'Certification', 'Published research or paper', 'Other']
-const SERVICE_TYPES = ['Leadership role', 'Volunteering / community service', 'Work experience / internship', 'Fundraiser or event organized', 'Other']
-const PROJECT_TYPES = ['Sport / athletics', 'Music, art, or performance', 'Personal project (app, writing, business)', 'Portfolio / exhibition / publication', 'Hobby or self-taught skill', 'Other']
+// Personal sits first — a self-directed pursuit with no institutional scope
+// at all (a hobby, a solo project) is a distinct, smaller-than-School tier,
+// not a variant of School itself.
+const ACTIVITY_SCOPES: ActivityScope[] = ['Personal', 'School', 'Regional/State', 'National', 'International']
 
-// Existing saved profiles have a flat string[] with no type info (the old
-// three-field form). Slots 0/1/2 map to the three groups in order, same as
-// before; anything beyond index 2 used to be silently dropped on every
-// resave (the old form only ever read/wrote 3 slots) — now it survives as
-// extra entries on the third group instead of vanishing.
+// Existing saved profiles have a flat string[] from the older free-text
+// form (or an even older type+description form before that). Slots 0/1/2
+// map to the three groups in order, same as before; anything beyond index
+// 2 used to be silently dropped on every resave — now it survives as extra
+// entries on the third group instead of vanishing. There's no reliable way
+// to split old unstructured prose back into title/role/scope, so it's
+// carried forward into the Impact field as-is — the student re-titles it
+// once, rather than losing the content.
 function entriesFromLegacy(extracurriculars: string[] | undefined, groupIndex: 0 | 1 | 2): ActivityEntry[] {
   const list = extracurriculars ?? []
-  const first: ActivityEntry = { type: '', description: list[groupIndex] ?? '' }
+  const raw = list[groupIndex]
+  const first: ActivityEntry = raw ? { ...emptyEntry(), impact: raw } : emptyEntry()
   if (groupIndex !== 2) return [first]
-  const extras = list.slice(3).filter(Boolean).map((description) => ({ type: '', description }))
+  const extras = list.slice(3).filter(Boolean).map((impact) => ({ ...emptyEntry(), impact }))
   return [first, ...extras]
 }
 
 function formatEntry(entry: ActivityEntry): string {
-  const description = entry.description.trim()
-  if (!description) return ''
-  return entry.type ? `${entry.type}: ${description}` : description
+  const title = entry.title.trim()
+  const role = entry.role.trim()
+  const impact = entry.impact.trim()
+  if (!title && !impact) return ''
+  const head = [title, role].filter(Boolean).join(' — ')
+  const scopeTag = entry.scope ? ` [${entry.scope}]` : ''
+  const parts = [head, impact].filter(Boolean)
+  return `${parts.join(': ')}${scopeTag}`.trim()
 }
 
-function wordCount(text: string): number {
-  const trimmed = text.trim()
-  return trimmed ? trimmed.split(/\s+/).length : 0
-}
-
-// A 50-word cap only makes sense counted in words, not characters — plain
-// maxLength on the textarea can't express that. Truncates rather than
-// blocking further typing mid-word, so it never feels like the field just
-// stopped responding.
-function capWords(text: string, max: number): string {
-  const words = text.split(/\s+/)
-  if (words.length <= max) return text
-  return words.slice(0, max).join(' ')
+// Emerald for National/International, amber for Regional/State, zinc for
+// School — a quick-scan competitive tier at a glance across a long list,
+// instead of every entry reading the same visual weight regardless of level.
+function scopeBadgeClass(scope: ActivityScope): string {
+  if (scope === 'National' || scope === 'International') return 'bg-emerald-950 text-emerald-400 border border-emerald-500/30'
+  if (scope === 'Regional/State') return 'bg-amber-950 text-amber-400 border border-amber-500/30'
+  if (scope === 'School') return 'bg-zinc-800 text-zinc-400 border border-white/5'
+  // Personal gets its own dim tone, distinct from School's neutral gray —
+  // it's a real, separate tier (no institution behind it at all), not just
+  // an unstyled fallback.
+  if (scope === 'Personal') return 'bg-zinc-900 text-zinc-500 border border-white/5'
+  return 'bg-zinc-800 text-zinc-500 border border-white/5'
 }
 
 function ActivityGroupFields({
   label,
-  types,
   examples,
   entries,
   onChange,
@@ -261,61 +557,126 @@ function ActivityGroupFields({
   onRemove,
 }: {
   label: string
-  types: string[]
   examples: string[]
   entries: ActivityEntry[]
   onChange: (idx: number, patch: Partial<ActivityEntry>) => void
   onAdd: () => void
   onRemove: (idx: number) => void
 }) {
+  // "Playlist" pattern: a filled-in entry collapses to a slim scannable row
+  // (title, role, one-line impact, scope badge) instead of staying open as
+  // a full edit form forever — a list of 5-6 activities was previously a
+  // wall of open textboxes. Blank entries (new, or never filled in) stay
+  // expanded by default since there's nothing to collapse to yet.
+  const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const isFilled = (e: ActivityEntry) => e.title.trim().length > 0 || e.impact.trim().length > 0
+
   return (
     <div>
       <label className="text-sm font-semibold text-foreground/90 block mb-2">{label}</label>
-      <div className="space-y-2.5">
-        {entries.map((entry, idx) => (
-          <div key={idx} className="bg-secondary/60 border border-border rounded-xl p-3 space-y-2">
-            <div className="flex items-center gap-2">
-              {/* Deliberately styled unlike the plain grey <select>s used
-                  elsewhere in this form (e.g. the grade/curriculum picker)
-                  — a rounded pill with an accent border/fill so this reads
-                  as "pick a category for this entry," not just another
-                  generic dropdown. */}
-              <select
-                value={entry.type}
-                onChange={(e) => onChange(idx, { type: e.target.value })}
-                className="shrink-0 max-w-[65%] bg-chart-2/10 border-2 border-chart-2/40 text-chart-2 rounded-full px-3 py-1.5 text-[11px] font-semibold focus:outline-none focus:border-chart-2"
-              >
-                <option value="">Type of activity…</option>
-                {types.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-              {entries.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => onRemove(idx)}
-                  aria-label="Remove this activity"
-                  className="ml-auto text-muted-foreground hover:text-destructive p-1"
-                >
-                  <X className="w-3.5 h-3.5" />
+      <div className="space-y-2">
+        {entries.map((entry, idx) => {
+          const collapsed = editingIndex !== idx && isFilled(entry)
+          if (collapsed) {
+            return (
+              <div key={idx} className="bg-secondary/60 border border-border rounded-xl px-3 py-2.5 flex items-center gap-3">
+                <button type="button" onClick={() => setEditingIndex(idx)} className="min-w-0 flex-1 text-left">
+                  <div className="flex items-baseline gap-2 min-w-0">
+                    <span className="font-semibold text-white text-xs truncate">{entry.title || 'Untitled activity'}</span>
+                    {entry.role && <span className="text-zinc-400 text-[11px] truncate shrink-0">{entry.role}</span>}
+                  </div>
+                  {entry.impact && <p className="text-zinc-300 text-xs mt-0.5 truncate">{entry.impact}</p>}
                 </button>
-              )}
+                {entry.scope && (
+                  <span className={`shrink-0 text-[10px] font-mono px-2 py-0.5 rounded ${scopeBadgeClass(entry.scope)}`}>
+                    {entry.scope === 'Regional/State' ? 'STATE / TIER 2' : entry.scope === 'School' ? 'SCHOOL' : entry.scope === 'Personal' ? 'PERSONAL' : `${entry.scope.toUpperCase()} / TIER 1`}
+                  </span>
+                )}
+                <button type="button" onClick={() => setEditingIndex(idx)} aria-label="Edit this activity" className="shrink-0 text-muted-foreground hover:text-primary p-1">
+                  <PenLine className="w-3.5 h-3.5" />
+                </button>
+                {entries.length > 1 && (
+                  <button type="button" onClick={() => onRemove(idx)} aria-label="Remove this activity" className="shrink-0 text-muted-foreground hover:text-destructive p-1">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            )
+          }
+          return (
+            <div key={idx} className="bg-secondary/60 border border-border rounded-xl p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Title / Organization (e.g. State Roller Hockey Team)"
+                  value={entry.title}
+                  onChange={(e) => onChange(idx, { title: e.target.value })}
+                  className="w-full bg-secondary border border-border rounded-lg p-2 text-xs font-semibold text-foreground placeholder:text-muted-foreground/60 placeholder:font-normal focus:outline-none focus:border-primary/50"
+                />
+                {isFilled(entry) && (
+                  <button type="button" onClick={() => setEditingIndex(null)} className="shrink-0 text-[11px] font-semibold text-primary hover:brightness-125 px-1.5">
+                    Done
+                  </button>
+                )}
+                {entries.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => onRemove(idx)}
+                    aria-label="Remove this activity"
+                    className="shrink-0 text-muted-foreground hover:text-destructive p-1"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="text"
+                  placeholder="Role / Position (e.g. Captain)"
+                  value={entry.role}
+                  onChange={(e) => onChange(idx, { role: e.target.value })}
+                  className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary/50"
+                />
+                {/* Closed set, not free text — a competitive tier the AI can
+                    read back out directly, matching how Common App itself
+                    buckets activity level. Neutral zinc styling, matching the
+                    Title/Role/Impact inputs beside it — a lone amber border
+                    here previously read as an accidental validation warning. */}
+                <select
+                  value={entry.scope}
+                  onChange={(e) => onChange(idx, { scope: e.target.value as ActivityScope })}
+                  className="w-full bg-secondary border border-border text-foreground rounded-lg px-2 py-2 text-xs font-medium focus:outline-none focus:border-primary/50"
+                >
+                  <option value="">Scope…</option>
+                  {ACTIVITY_SCOPES.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+              <input
+                type="text"
+                maxLength={140}
+                placeholder="Impact & numbers — e.g. Ranked 1st in state tournament; trained 15 varsity underclassmen"
+                value={entry.impact}
+                onChange={(e) => onChange(idx, { impact: e.target.value.slice(0, 140) })}
+                className="w-full bg-secondary border border-border rounded-lg p-2.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary/50"
+              />
+              <div className={`text-[10px] text-right ${entry.impact.length >= 140 ? 'text-rose-400 font-semibold' : 'text-muted-foreground/70'}`}>{entry.impact.length}/140 characters</div>
             </div>
-            <textarea
-              rows={2}
-              placeholder="Describe this activity — what you did, for how long, and any impact"
-              value={entry.description}
-              onChange={(e) => onChange(idx, { description: capWords(e.target.value, 50) })}
-              className="w-full bg-secondary border border-border rounded-xl p-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-chart-2 resize-none"
-            />
-            <div className="text-[10px] text-muted-foreground/70 text-right">{wordCount(entry.description)}/50 words</div>
-          </div>
-        ))}
+          )
+        })}
       </div>
       <div className="flex items-start justify-between gap-2 mt-1.5">
         <ExamplesHint examples={examples} />
-        <button type="button" onClick={onAdd} className="shrink-0 text-[11px] font-semibold text-chart-2 hover:brightness-125 flex items-center gap-1">
-          <Plus className="w-3 h-3" /> Add another
+        <button
+          type="button"
+          onClick={() => {
+            setEditingIndex(entries.length)
+            onAdd()
+          }}
+          className="shrink-0 text-[11px] font-semibold text-primary hover:brightness-125 flex items-center gap-1"
+        >
+          <Plus className="w-3 h-3" /> Add entry
         </button>
       </div>
     </div>
@@ -435,6 +796,24 @@ export function ProfileForm({
   suggestedActivities: SuggestedActivityRow[] | null
   adminUsers?: AdminUserRow[]
 }) {
+  const router = useRouter()
+  // Segmented tabs replace one long scroll — academics (incl. AP courses and
+  // standardized tests), activities/honors, and institutional preferences
+  // each get their own view instead of being stacked one after another.
+  const [activeTab, setActiveTab] = useState<'goals' | 'activities' | 'academics'>('goals')
+  // Drives the sticky bar's single CTA: "Continue to X" on every tab but
+  // the last, where it becomes the real submit action instead. Order here
+  // is the actual tab order (Goals -> Academics -> Extracurriculars) — the
+  // heavier academic tables stay mid-flow, the fastest, most personal
+  // section (past achievements) closes it out.
+  const TAB_ORDER = ['goals', 'academics', 'activities'] as const
+  const TAB_LABELS: Record<(typeof TAB_ORDER)[number], string> = {
+    goals: 'Target Intent',
+    academics: 'Academics & Testing',
+    activities: 'Extracurriculars',
+  }
+  const nextTab = TAB_ORDER[TAB_ORDER.indexOf(activeTab) + 1] ?? null
+
   const [activities, setActivities] = useState(suggestedActivities ?? [])
   const [activityPendingId, setActivityPendingId] = useState<number | null>(null)
   const [showAdminPanel, setShowAdminPanel] = useState(false)
@@ -456,7 +835,6 @@ export function ProfileForm({
   // (initialProfiles non-empty) or once a save succeeds this session.
   const [saved, setSaved] = useState(false)
   const [hasSavedProfile, setHasSavedProfile] = useState(initialProfiles.length > 0)
-  const [runMatchWarning, setRunMatchWarning] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const errorRef = useRef<HTMLParagraphElement>(null)
 
@@ -572,7 +950,12 @@ export function ProfileForm({
     setLoadedProfileId(p.id)
   }
 
-  async function handleSave() {
+  // `runMatchAfter` collapses the old two-button "Save profile" then
+  // separately "Run Match" flow into the sticky bar's single CTA — Run
+  // Match always re-reads the just-saved profile from the DB anyway
+  // (getLatestProfile), so there's no reason saving and running were ever
+  // two separate clicks.
+  async function handleSave(runMatchAfter = false) {
     setError(null)
     setSaved(false)
     const priorGrades: PriorGrades = { ninthTenth, eleventh }
@@ -600,8 +983,8 @@ export function ProfileForm({
         }
         setSaved(true)
         setHasSavedProfile(true)
-        setRunMatchWarning(false)
         setTimeout(() => setSaved(false), 3000)
+        if (runMatchAfter) router.push('/matches')
       } catch (e) {
         const message = e instanceof Error ? e.message : 'Something went wrong saving your profile.'
         console.error('Profile save failed:', message)
@@ -629,7 +1012,7 @@ export function ProfileForm({
   const completionChecklist = [
     targetCountries.length > 0,
     Boolean(standardizedTests.satMath || standardizedTests.satReadingWriting || standardizedTests.act || standardizedTests.jeePercentile || standardizedTests.jeeAdvancedRank || standardizedTests.neetScore || standardizedTests.clatRank || standardizedTests.cuetScore || standardizedTests.englishTestScore),
-    [...ec1, ...ec2, ...ec3].some((e) => e.description.trim().length > 0),
+    [...ec1, ...ec2, ...ec3].some((e) => e.title.trim().length > 0 || e.impact.trim().length > 0),
     apCourses.length > 0,
     hasPriorGradeYear(ninthTenth.grade9) || hasPriorGradeYear(ninthTenth.grade10) || eleventh !== null,
     intendedField !== 'No preference',
@@ -637,11 +1020,12 @@ export function ProfileForm({
   const completionPercent = Math.round((completionChecklist.filter(Boolean).length / completionChecklist.length) * 100)
 
   return (
+    <>
     <main className="max-w-3xl mx-auto px-4 py-8">
-      <div className="mb-8 flex items-center justify-between gap-4">
+      <div className="mb-6 flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-1">Your Profile</h1>
-          <p className="text-sm text-muted-foreground">Tell us about your academics and preferences. This powers your match results and university recommendations.</p>
+          <h1 className="text-2xl font-bold text-white tracking-tight mb-1">Admissions Profile</h1>
+          <p className="text-sm text-muted-foreground">Calibrate your academic metrics, extracurricular spikes, and regional criteria.</p>
         </div>
         <div className="flex items-center gap-3">
           {suggestedActivities !== null && <EmeraldBadgeSmall />}
@@ -655,30 +1039,53 @@ export function ProfileForm({
 
       {adminUsers && showAdminPanel && <AdminUserManagement users={adminUsers} />}
 
-      {suggestedActivities !== null && (
-        <div className="bg-accent/40 border border-primary/30 rounded-2xl px-4 py-3 mb-8 flex items-center justify-between gap-3 flex-wrap">
-          <p className="text-xs text-foreground/90">
-            <span className="font-semibold">Want to improve your profile further?</span> Fill this in, save it, then head over to{' '}
-            <span className="font-semibold text-primary">Build Your Dream</span> to build a plan tailored to your target university.
+      {/* Segmented tabs replace the old bottomless scroll — each tab groups
+          related sections (academics/testing, activities/honors,
+          institutional preferences) instead of stacking all seven one
+          after another. The old "go fill this in, then head over to Build
+          Your Dream" banner is gone entirely — it was pointing students
+          away from this page before they'd even used it. */}
+      <div className="mb-8 border-b border-border flex gap-6 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        {([
+          ['goals', '01. Target Intent'],
+          ['academics', '02. Academics & Testing'],
+          ['activities', '03. Extracurriculars'],
+        ] as const).map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setActiveTab(key)}
+            className={`shrink-0 pb-3 pt-1 text-xs font-semibold border-b-2 -mb-px transition-colors whitespace-nowrap ${
+              activeTab === key ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Redesigned from a plain gray disclaimer paragraph into the same
+          accent-card language used elsewhere on this page (e.g. the
+          "specifics for your selected countries" link above) — an icon +
+          message in a bordered pill, not a debug-looking note. Still
+          reflects real state: edits below aren't kept until saved, and Run
+          Match only ever reads the saved version, never the live draft
+          (the bottom sticky bar's dot/label is the persistent indicator;
+          this is the one-time explainer for why that matters). */}
+      {!hasSavedProfile && (
+        <div className="flex items-start gap-2.5 bg-accent/30 border border-primary/20 rounded-2xl px-4 py-3 mb-8">
+          <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+          <p className="text-xs text-foreground/80 leading-relaxed">
+            Your matches and analysis are generated from your <span className="font-semibold text-primary">saved</span> profile — save your changes below before running a match.
           </p>
-          <a href="/dream" className="shrink-0 text-xs font-semibold text-primary hover:brightness-125 underline underline-offset-2">
-            Go to Build Your Dream
-          </a>
         </div>
       )}
 
-      {/* Persistent, not just a post-save toast — edits below aren't kept
-          until "Save profile" is pressed, and Run Match only ever reads
-          the saved version, never the live draft. */}
-      {!hasSavedProfile && (
-        <p className="text-xs text-muted-foreground bg-secondary/40 border border-border rounded-xl px-4 py-2.5 mb-8">
-          Remember to save your profile below — your matches and analysis are generated from your saved profile, not what's currently on screen.
-        </p>
-      )}
-
       <div className="space-y-12">
-        <HowWeAnalyze />
+        {activeTab === 'academics' && <HowWeAnalyze />}
 
+        {activeTab === 'goals' && (
+        <>
         <section className="bg-card border border-border rounded-3xl p-6">
           <h2 className="text-xl font-extrabold tracking-tight text-primary mb-1 flex items-center gap-2"><Globe className="w-5 h-5 text-primary" /> Target countries</h2>
           <p className="text-[11px] text-muted-foreground/70 mb-5">Select one or more — matches run across every country you pick.</p>
@@ -707,6 +1114,100 @@ export function ProfileForm({
           </Link>
         </section>
 
+        {/* Merged into this same tab — country + intended field/ranking
+            together let a student define their whole target picture in one
+            place, before ever touching an academic-detail dropdown. */}
+        <section className="bg-card border border-border rounded-3xl p-6">
+          <h2 className="text-xl font-extrabold tracking-tight text-primary mb-4 flex items-center gap-2"><Compass className="w-5 h-5 text-emerald-400" /> Academic &amp; career focus</h2>
+          {/* Symmetrical 2x2: field / concentration on top, ranking / hub
+              underneath — one control per cell, matching heights, instead
+              of concentration being nested under field (which left the
+              bottom-left cell empty whenever a field had no concentration
+              list). Preferred climate doesn't fit this 2x2 (there are 5
+              real fields here, not 4) so it's kept as its own full-width
+              row below rather than dropped. */}
+          <div className="grid grid-cols-2 gap-x-3 gap-y-4">
+            <div>
+              <label htmlFor="field" className="text-[11px] text-muted-foreground block mb-1">Intended field of study</label>
+              <SearchableSelect
+                id="field"
+                value={intendedField}
+                onChange={(value) => {
+                  setIntendedField(value)
+                  setIntendedConcentration('No preference')
+                }}
+                options={['No preference', ...ACADEMIC_FIELDS]}
+                placeholder="No preference"
+              />
+            </div>
+            <div>
+              {/* An optional, saved refinement — a student picking
+                  "Engineering" shouldn't worry their actual interest
+                  (Aerospace, say) isn't covered by that broad bucket. Saved
+                  and passed to the AI as context, but never changes which
+                  schools/ranks are shown (see intendedConcentration's
+                  comment in lib/db/schema.ts). Renders a disabled
+                  placeholder (not left blank) when the current field has no
+                  concentration list, so the 2x2 grid stays visually intact
+                  either way. */}
+              {FIELD_CONCENTRATIONS[intendedField as keyof typeof FIELD_CONCENTRATIONS] ? (
+                <>
+                  <label htmlFor="concentration" className="text-[11px] text-muted-foreground flex items-center gap-1 mb-1">
+                    Concentration within {intendedField} (optional)
+                    <button
+                      type="button"
+                      onClick={() => setShowConcentrationInfo((v) => !v)}
+                      aria-expanded={showConcentrationInfo}
+                      aria-label="What is a concentration?"
+                      className="text-muted-foreground/60 hover:text-primary shrink-0"
+                    >
+                      <Info className="w-3 h-3" />
+                    </button>
+                  </label>
+                  {showConcentrationInfo && (
+                    <p className="text-[10.5px] text-muted-foreground/80 bg-secondary/60 border border-border rounded-lg p-2 mb-2 text-pretty leading-relaxed">
+                      A specific track within your field (e.g. Aerospace within Engineering). Just gives the AI more context —
+                      won't change which schools or ranks you see. Fine to leave as "No preference" if you're still deciding.
+                    </p>
+                  )}
+                  <SearchableSelect
+                    id="concentration"
+                    value={intendedConcentration}
+                    onChange={setIntendedConcentration}
+                    options={['No preference', ...FIELD_CONCENTRATIONS[intendedField as keyof typeof FIELD_CONCENTRATIONS]!]}
+                    placeholder="No preference"
+                  />
+                </>
+              ) : (
+                <>
+                  <label className="text-[11px] text-muted-foreground/50 block mb-1">Concentration / Specialization</label>
+                  <div className="w-full bg-secondary/40 border border-border/60 rounded-xl p-2.5 text-xs text-muted-foreground/50">
+                    Not applicable for this field
+                  </div>
+                </>
+              )}
+            </div>
+            <div>
+              <label htmlFor="rank" className="text-[11px] text-muted-foreground block mb-1">Preferred university ranking</label>
+              <select id="rank" value={preferredRank} onChange={(e) => setPreferredRank(e.target.value)} className="w-full h-10 bg-secondary border border-border rounded-xl px-2.5 text-xs text-foreground focus:outline-none focus:border-primary">
+                <option>No preference</option><option>Top 50</option><option>Top 100</option><option>Top 200</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="sector" className="text-[11px] text-muted-foreground block mb-1">Industry hub</label>
+              <SearchableSelect id="sector" value={preferredSector} onChange={setPreferredSector} options={['No preference', ...INDUSTRY_HUBS]} placeholder="No preference" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <label htmlFor="climate" className="text-[11px] text-muted-foreground block mb-1">Preferred climate</label>
+            <select id="climate" value={preferredClimate} onChange={(e) => setPreferredClimate(e.target.value)} className="w-full sm:w-1/2 h-10 bg-secondary border border-border rounded-xl px-2.5 text-xs text-foreground focus:outline-none focus:border-primary">
+              <option>No preference</option><option>Balanced</option><option>Cold</option><option>Warm</option>
+            </select>
+          </div>
+        </section>
+        </>
+        )}
+
         {/* Academics stays full width — same as every other section
             (Target countries above included), not squeezed into a grid
             column. The old inline 9th-11th grade input boxes are gone
@@ -714,6 +1215,8 @@ export function ProfileForm({
             country-relevance note in the side box, and cutting it
             shortens what was a genuinely long, tedious form). `relative`
             here is just the positioning context for that side box. */}
+        {activeTab === 'academics' && (
+        <>
         <div className="relative">
           <section className="bg-card border border-border rounded-3xl p-6">
             <h2 className="text-xl font-extrabold tracking-tight text-primary mb-4 flex items-center gap-2"><GraduationCap className="w-5 h-5 text-primary" /> Academics</h2>
@@ -731,51 +1234,70 @@ export function ProfileForm({
                 </select>
               </div>
 
-              {/* Explicit "Grade 12" label — this whole block is the current/
-                  final-year record that actually drives matches, but nothing
-                  said so before; a student could easily mistake it for just
-                  "your grades" with no sense of which year it covers. */}
-              <div>
-                <span className="text-sm font-bold text-primary bg-accent/50 px-2 py-0.5 rounded-lg inline-block mb-2">Grade 12</span>
-                <AcademicDetailInput detail={academicDetail} onChange={setAcademicDetail} />
-              </div>
-
-              <div className="p-3 bg-accent/60 border border-primary/25 rounded-2xl flex items-center gap-3">
-                <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
+              {curriculum === 'IB_DIPLOMA' && academicDetail.curriculum === 'IB_DIPLOMA' ? (
+                // Unified 2-year rigor table — see IBRigorTable's own
+                // comment for why this merge only applies to IB Diploma.
                 <div>
-                  <div className="text-[10px] text-primary/90 uppercase tracking-wider font-semibold">Grade summary</div>
-                  <div className="text-xs font-mono text-accent-foreground font-semibold">{badge}</div>
+                  <span className="text-sm font-bold text-primary bg-accent/50 px-2 py-0.5 rounded-lg inline-block mb-2">IB Diploma — Grade 11 &amp; 12</span>
+                  <IBRigorTable
+                    grade12={academicDetail}
+                    eleventh={eleventh && eleventh.curriculum === 'IB_DIPLOMA' ? eleventh : null}
+                    onGrade12Change={setAcademicDetail}
+                    onEleventhChange={setEleventh}
+                    onAddEleventh={() => setEleventh({
+                      ...(defaultAcademicDetail(curriculum) as Extract<AcademicDetail, { curriculum: 'IB_DIPLOMA' }>),
+                      subjects: academicDetail.subjects.map((s) => ({ ...s, grade: 4 })),
+                    })}
+                    onRemoveEleventh={() => setEleventh(null)}
+                  />
                 </div>
-              </div>
+              ) : (
+                <>
+                  {/* Explicit "Grade 12" label — this whole block is the current/
+                      final-year record that actually drives matches, but nothing
+                      said so before; a student could easily mistake it for just
+                      "your grades" with no sense of which year it covers. */}
+                  <div>
+                    <span className="text-sm font-bold text-primary bg-accent/50 px-2 py-0.5 rounded-lg inline-block mb-2">Grade 12</span>
+                    <AcademicDetailInput detail={academicDetail} onChange={setAcademicDetail} />
+                  </div>
 
-              {/* 11th, then 9th/10th, directly under Grade 12 — no repeated
-                  "earlier grades, optional, grade 12 is what powers your
-                  matches" text here anymore, that's already said once in
-                  the Country relevance box beside this. */}
-              <div className="space-y-4 pt-2 border-t border-border">
-                <div className="bg-secondary/40 border border-border rounded-2xl p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-bold text-primary">11th grade{(curriculum === 'A_LEVELS' || curriculum === 'INTL_A_LEVELS') && ' (AS-Level)'}</span>
-                    {eleventh && (
-                      <button type="button" onClick={() => setEleventh(null)} className="text-[10px] text-muted-foreground hover:text-destructive flex items-center gap-0.5">
-                        <X className="w-3 h-3" /> Remove
-                      </button>
+                  <div className="p-3 bg-accent/60 border border-primary/25 rounded-2xl flex items-center gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
+                    <div>
+                      <div className="text-[10px] text-primary/90 uppercase tracking-wider font-semibold">Grade summary</div>
+                      <div className="text-xs font-mono text-accent-foreground font-semibold">{badge}</div>
+                    </div>
+                  </div>
+
+                  <div className="bg-secondary/40 border border-border rounded-2xl p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-bold text-primary">11th grade{(curriculum === 'A_LEVELS' || curriculum === 'INTL_A_LEVELS') && ' (AS-Level)'}</span>
+                      {eleventh && (
+                        <button type="button" onClick={() => setEleventh(null)} className="text-[10px] text-muted-foreground hover:text-destructive flex items-center gap-0.5">
+                          <X className="w-3 h-3" /> Remove
+                        </button>
+                      )}
+                    </div>
+                    {eleventh ? (
+                      <div className="scale-[0.92] origin-top -mx-2 -mb-2">
+                        <AcademicDetailInput detail={eleventh} onChange={setEleventh} variant={curriculum === 'A_LEVELS' || curriculum === 'INTL_A_LEVELS' ? 'as' : 'full'} />
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="text-[10px] text-primary/80 font-medium mb-1.5">Optional — adding this helps strengthen your analysis.</p>
+                        <button type="button" onClick={() => setEleventh(defaultAcademicDetail(curriculum))} className="text-[11px] text-primary font-medium flex items-center gap-1">
+                          <Plus className="w-3 h-3" /> Add 11th grade detail ({CURRICULUM_LABELS[curriculum]})
+                        </button>
+                      </div>
                     )}
                   </div>
-                  {eleventh ? (
-                    <div className="scale-[0.92] origin-top -mx-2 -mb-2">
-                      <AcademicDetailInput detail={eleventh} onChange={setEleventh} variant={curriculum === 'A_LEVELS' || curriculum === 'INTL_A_LEVELS' ? 'as' : 'full'} />
-                    </div>
-                  ) : (
-                    <div>
-                      <p className="text-[10px] text-primary/80 font-medium mb-1.5">Optional — adding this helps strengthen your analysis.</p>
-                      <button type="button" onClick={() => setEleventh(defaultAcademicDetail(curriculum))} className="text-[11px] text-primary font-medium flex items-center gap-1">
-                        <Plus className="w-3 h-3" /> Add 11th grade detail ({CURRICULUM_LABELS[curriculum]})
-                      </button>
-                    </div>
-                  )}
-                </div>
+                </>
+              )}
 
+              {/* 9th/10th stays outside the branch above — same for every
+                  curriculum, IB included. */}
+              <div className="space-y-4 pt-2 border-t border-border">
                 <div className="bg-secondary/40 border border-border rounded-2xl p-3">
                   <span className="text-sm font-bold text-primary block mb-2">9th &amp; 10th grade</span>
                   <NinthTenthInput value={ninthTenth} onChange={setNinthTenth} />
@@ -814,201 +1336,10 @@ export function ProfileForm({
           </aside>
         </div>
 
-        <section className="bg-card border border-border rounded-3xl p-6">
-            <h2 className="text-xl font-extrabold tracking-tight text-primary mb-1 flex items-center gap-2"><Award className="w-5 h-5 text-chart-4" /> Standardized tests</h2>
-            <p className="text-xs text-muted-foreground/70 mb-4">These apply regardless of curriculum or target country. All optional.</p>
-            <div className="space-y-5">
-              <div>
-                <div className="text-sm font-semibold text-foreground/90 mb-1.5">English proficiency test — if you've taken one</div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-xs text-muted-foreground/70 block mb-1">Test</label>
-                    <select
-                      value={standardizedTests.englishTestType ?? ''}
-                      onChange={(e) => {
-                        const type = (e.target.value || undefined) as EnglishTestType | undefined
-                        setStandardizedTests((t) => ({ ...t, englishTestType: type, englishTestScore: type ? t.englishTestScore : undefined }))
-                      }}
-                      className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary"
-                    >
-                      <option value="">Select test</option>
-                      {ENGLISH_TEST_TYPES.map((type) => (
-                        <option key={type} value={type}>{type}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground/70 block mb-1">Score</label>
-                    <input
-                      type="number"
-                      disabled={!standardizedTests.englishTestType}
-                      min={standardizedTests.englishTestType ? ENGLISH_TEST_RANGES[standardizedTests.englishTestType].min : undefined}
-                      max={standardizedTests.englishTestType ? ENGLISH_TEST_RANGES[standardizedTests.englishTestType].max : undefined}
-                      step={standardizedTests.englishTestType ? ENGLISH_TEST_RANGES[standardizedTests.englishTestType].step : undefined}
-                      placeholder={standardizedTests.englishTestType ? `${ENGLISH_TEST_RANGES[standardizedTests.englishTestType].min}–${ENGLISH_TEST_RANGES[standardizedTests.englishTestType].max}` : 'Pick a test first'}
-                      value={standardizedTests.englishTestScore ?? ''}
-                      onChange={(e) => setStandardizedTests((t) => {
-                        if (!e.target.value || !t.englishTestType) return { ...t, englishTestScore: e.target.value ? Number(e.target.value) : undefined }
-                        const range = ENGLISH_TEST_RANGES[t.englishTestType]
-                        return { ...t, englishTestScore: clamp(Number(e.target.value), range.min, range.max) }
-                      })}
-                      className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary disabled:opacity-50"
-                    />
-                  </div>
-                </div>
-              </div>
-              {targetCountries.includes('US') && (
-                <div>
-                  <div className="text-sm font-semibold text-foreground/90 mb-1.5">SAT / ACT (United States)</div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div>
-                      <label className="text-xs text-muted-foreground/70 block mb-1">SAT Math</label>
-                      <select value={standardizedTests.satMath ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, satMath: e.target.value ? Number(e.target.value) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary">
-                        <option value="">Select score</option>
-                        {SAT_SECTION_SCORES.map((score) => (
-                          <option key={score} value={score}>{score}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-xs text-muted-foreground/70 block mb-1">SAT Reading & Writing</label>
-                      <select value={standardizedTests.satReadingWriting ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, satReadingWriting: e.target.value ? Number(e.target.value) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary">
-                        <option value="">Select score</option>
-                        {SAT_SECTION_SCORES.map((score) => (
-                          <option key={score} value={score}>{score}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-xs text-muted-foreground/70 block mb-1">ACT</label>
-                      <input type="number" min={1} max={36} placeholder="1–36" value={standardizedTests.act ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, act: e.target.value ? clamp(Number(e.target.value), 1, 36) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
-                    </div>
-                  </div>
-                  {satComposite(standardizedTests) !== null && (
-                    <p className="text-xs text-muted-foreground mt-1.5">SAT composite: <span className="text-primary font-mono font-semibold">{satComposite(standardizedTests)}</span> / 1600</p>
-                  )}
-                </div>
-              )}
-              {targetCountries.includes('IN') && (
-                <div className="space-y-4">
-                  <div>
-                    <div className="text-sm font-semibold text-foreground/90 mb-1.5">JEE (India) — engineering</div>
-                    {indiaExamFieldNote('JEE', intendedField) && (
-                      <p className="text-xs text-muted-foreground/70 mb-1.5">{indiaExamFieldNote('JEE', intendedField)}</p>
-                    )}
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="text-xs text-muted-foreground/70 block mb-1">JEE Main percentile</label>
-                        <input type="number" min={0} max={100} step={0.01} placeholder="0–100" value={standardizedTests.jeePercentile ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, jeePercentile: e.target.value ? clamp(Number(e.target.value), 0, 100) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
-                      </div>
-                      <div>
-                        <label className="text-xs text-muted-foreground/70 block mb-1">JEE Advanced rank (if you sat it)</label>
-                        <input type="number" min={1} placeholder="All India Rank" value={standardizedTests.jeeAdvancedRank ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, jeeAdvancedRank: e.target.value ? clamp(Number(e.target.value), 1, Infinity) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-foreground/90 mb-1.5">NEET (India) — medicine</div>
-                    {indiaExamFieldNote('NEET', intendedField) && (
-                      <p className="text-xs text-muted-foreground/70 mb-1.5">{indiaExamFieldNote('NEET', intendedField)}</p>
-                    )}
-                    <label className="text-xs text-muted-foreground/70 block mb-1">NEET score</label>
-                    <input type="number" min={0} max={720} placeholder="0–720" value={standardizedTests.neetScore ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, neetScore: e.target.value ? clamp(Number(e.target.value), 0, 720) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-foreground/90 mb-1.5">CLAT (India) — law</div>
-                    {indiaExamFieldNote('CLAT', intendedField) && (
-                      <p className="text-xs text-muted-foreground/70 mb-1.5">{indiaExamFieldNote('CLAT', intendedField)}</p>
-                    )}
-                    <label className="text-xs text-muted-foreground/70 block mb-1">CLAT All India Rank</label>
-                    <input type="number" min={1} placeholder="All India Rank" value={standardizedTests.clatRank ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, clatRank: e.target.value ? clamp(Number(e.target.value), 1, Infinity) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-foreground/90 mb-1.5">CUET UG (India) — central/state universities, any field</div>
-                    <label className="text-xs text-muted-foreground/70 block mb-1">CUET total score</label>
-                    <input type="number" min={0} placeholder="From your scorecard" value={standardizedTests.cuetScore ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, cuetScore: e.target.value ? clamp(Number(e.target.value), 0, Infinity) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
-                  </div>
-                </div>
-              )}
-            </div>
-        </section>
-
-        {/* Collapsed by default — three full activity-entry groups stacked
-            open was a lot of the page's "clustered" feeling. Defaults open
-            if the user already has entries here (from a loaded/saved
-            profile), so existing data is never hidden behind a click. */}
-        <details className="group bg-card border border-border rounded-3xl p-6" open={[...ec1, ...ec2, ...ec3].some((e) => e.type.trim() || e.description.trim())}>
-          <summary className="cursor-pointer list-none flex items-center justify-between gap-2">
-            <h2 className="text-xl font-extrabold tracking-tight text-primary mb-0 flex items-center gap-2"><Flame className="w-5 h-5 text-chart-2" /> Extracurricular flexes</h2>
-            <ChevronDown className="w-5 h-5 text-muted-foreground shrink-0 transition-transform group-open:rotate-180" />
-          </summary>
-          {targetCountries.length > 0 && <div className="mt-2"><RelevanceLine breakdown={extracurricularsRelevance(targetCountries)} /></div>}
-          <div className="space-y-6 mt-3">
-            <ActivityGroupFields
-              label="Honors & national-level achievements"
-              types={HONORS_TYPES}
-              examples={HONORS_EXAMPLES}
-              entries={ec1}
-              {...activityHandlers(setEc1)}
-            />
-            <ActivityGroupFields
-              label="Leadership, service & work experience"
-              types={SERVICE_TYPES}
-              examples={SERVICE_EXAMPLES}
-              entries={ec2}
-              {...activityHandlers(setEc2)}
-            />
-            <ActivityGroupFields
-              label="Creative pursuits, sports & personal projects"
-              types={PROJECT_TYPES}
-              examples={PROJECT_EXAMPLES}
-              entries={ec3}
-              {...activityHandlers(setEc3)}
-            />
-          </div>
-        </details>
-
-        {suggestedActivities !== null && activities.length > 0 && (
-          <section className="bg-card border border-border rounded-3xl p-6">
-            <h2 className="text-xl font-extrabold tracking-tight text-primary mb-1 flex items-center gap-2">
-              <Flame className="w-5 h-5 text-chart-5" /> Suggested activities
-            </h2>
-            <p className="text-[11px] text-muted-foreground mb-3">From your Build Your Dream roadmaps — mark one completed to fold it into your extracurriculars above.</p>
-            <ul className="space-y-1.5">
-              {activities.map((a) => (
-                <li key={a.id} className="flex items-center justify-between gap-2 text-xs bg-secondary border border-border rounded-xl px-3 py-2">
-                  <span className="flex items-center gap-1.5 min-w-0">
-                    {a.country && (
-                      <span
-                        title={`From your ${APPLICATION_INFO[a.country]?.name ?? a.country} Build Your Dream roadmap — a suggestion specific to that country's application, not a general one`}
-                        className="shrink-0 text-sm font-bold uppercase px-1.5 py-0.5 rounded border text-muted-foreground border-border bg-card"
-                      >
-                        {a.country}
-                      </span>
-                    )}
-                    <span className={a.status === 'completed' ? 'text-muted-foreground line-through' : 'text-foreground/90'}>{a.text}</span>
-                  </span>
-                  {a.status === 'completed' ? (
-                    <span className="shrink-0 text-[10px] font-semibold text-chart-2 uppercase flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Completed</span>
-                  ) : (
-                    <span className="shrink-0 flex items-center gap-2">
-                      <span className="text-[10px] font-semibold text-muted-foreground uppercase">Shortlisted</span>
-                      <button
-                        type="button"
-                        disabled={activityPendingId === a.id}
-                        onClick={() => handleMarkActivityDone(a.id)}
-                        className="text-[10px] font-semibold text-primary uppercase hover:brightness-125 disabled:opacity-50"
-                      >
-                        Mark completed
-                      </button>
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
+        {/* Advanced coursework lives immediately below the main curriculum
+            block now — it was previously stranded near the bottom of the
+            page, between activities and climate preferences, disconnected
+            from the rest of the academic-rigor picture. */}
         <section className="bg-card border border-border rounded-3xl p-6">
           <h2 className="text-xl font-extrabold tracking-tight text-primary mb-1 flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-chart-2" /> AP courses taken
@@ -1104,139 +1435,291 @@ export function ProfileForm({
         </section>
 
         <section className="bg-card border border-border rounded-3xl p-6">
-          <h2 className="text-xl font-extrabold tracking-tight text-primary mb-4 flex items-center gap-2"><Compass className="w-5 h-5 text-chart-4" /> Climate, sector & ranking</h2>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label htmlFor="climate" className="text-[11px] text-muted-foreground block mb-1">Preferred climate</label>
-              <select id="climate" value={preferredClimate} onChange={(e) => setPreferredClimate(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none focus:border-primary">
-                <option>No preference</option><option>Balanced</option><option>Cold</option><option>Warm</option>
-              </select>
-            </div>
-            <div>
-              <label htmlFor="sector" className="text-[11px] text-muted-foreground block mb-1">Industry hub</label>
-              <SearchableSelect id="sector" value={preferredSector} onChange={setPreferredSector} options={['No preference', ...INDUSTRY_HUBS]} placeholder="No preference" />
-            </div>
-            <div>
-              <label htmlFor="field" className="text-[11px] text-muted-foreground block mb-1">Intended field of study</label>
-              <SearchableSelect
-                id="field"
-                value={intendedField}
-                onChange={(value) => {
-                  setIntendedField(value)
-                  setIntendedConcentration('No preference')
-                }}
-                options={['No preference', ...ACADEMIC_FIELDS]}
-                placeholder="No preference"
-              />
-              {/* An optional, saved refinement — a student picking
-                  "Engineering" shouldn't worry their actual interest
-                  (Aerospace, say) isn't covered by that broad bucket. Saved
-                  and passed to the AI as context, but never changes which
-                  schools/ranks are shown (see intendedConcentration's
-                  comment in lib/db/schema.ts). Nested visually under the
-                  field select (left border + indent) since it's a
-                  refinement of that choice, not a separate field. Renders
-                  nothing for a field with no list above (left blank rather
-                  than guessed at). */}
-              {FIELD_CONCENTRATIONS[intendedField as keyof typeof FIELD_CONCENTRATIONS] && (
-                <div className="mt-2.5 pl-3 border-l-2 border-border">
-                  <label htmlFor="concentration" className="text-[11px] text-muted-foreground flex items-center gap-1 mb-1">
-                    Concentration within {intendedField} (optional)
-                    <button
-                      type="button"
-                      onClick={() => setShowConcentrationInfo((v) => !v)}
-                      aria-expanded={showConcentrationInfo}
-                      aria-label="What is a concentration?"
-                      className="text-muted-foreground/60 hover:text-primary shrink-0"
+            <h2 className="text-xl font-extrabold tracking-tight text-primary mb-1 flex items-center gap-2"><Award className="w-5 h-5 text-chart-4" /> Standardized tests</h2>
+            <p className="text-xs text-muted-foreground/70 mb-4">These apply regardless of curriculum or target country. All optional.</p>
+            <div className="space-y-5">
+              <div>
+                <div className="text-sm font-semibold text-foreground/90 mb-1.5">English proficiency test — if you've taken one</div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs text-muted-foreground/70 block mb-1">Test</label>
+                    <select
+                      value={standardizedTests.englishTestType ?? ''}
+                      onChange={(e) => {
+                        const type = (e.target.value || undefined) as EnglishTestType | undefined
+                        setStandardizedTests((t) => ({ ...t, englishTestType: type, englishTestScore: type ? t.englishTestScore : undefined }))
+                      }}
+                      className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary"
                     >
-                      <Info className="w-3 h-3" />
-                    </button>
-                  </label>
-                  {showConcentrationInfo && (
-                    <p className="text-[10.5px] text-muted-foreground/80 bg-secondary/60 border border-border rounded-lg p-2 mb-2 text-pretty leading-relaxed">
-                      A specific track within your field (e.g. Aerospace within Engineering). Just gives the AI more context —
-                      won't change which schools or ranks you see. Fine to leave as "No preference" if you're still deciding.
-                    </p>
+                      <option value="">Select test</option>
+                      {ENGLISH_TEST_TYPES.map((type) => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground/70 block mb-1">Score</label>
+                    <input
+                      type="number"
+                      disabled={!standardizedTests.englishTestType}
+                      min={standardizedTests.englishTestType ? ENGLISH_TEST_RANGES[standardizedTests.englishTestType].min : undefined}
+                      max={standardizedTests.englishTestType ? ENGLISH_TEST_RANGES[standardizedTests.englishTestType].max : undefined}
+                      step={standardizedTests.englishTestType ? ENGLISH_TEST_RANGES[standardizedTests.englishTestType].step : undefined}
+                      placeholder={standardizedTests.englishTestType ? `${ENGLISH_TEST_RANGES[standardizedTests.englishTestType].min}–${ENGLISH_TEST_RANGES[standardizedTests.englishTestType].max}` : 'Pick a test first'}
+                      value={standardizedTests.englishTestScore ?? ''}
+                      onChange={(e) => setStandardizedTests((t) => {
+                        if (!e.target.value || !t.englishTestType) return { ...t, englishTestScore: e.target.value ? Number(e.target.value) : undefined }
+                        const range = ENGLISH_TEST_RANGES[t.englishTestType]
+                        return { ...t, englishTestScore: clamp(Number(e.target.value), range.min, range.max) }
+                      })}
+                      className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary disabled:opacity-50"
+                    />
+                  </div>
+                </div>
+              </div>
+              {targetCountries.includes('US') && (
+                <div>
+                  <div className="text-sm font-semibold text-foreground/90 mb-1.5">SAT / ACT (United States)</div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="text-xs text-muted-foreground/70 block mb-1">SAT Math</label>
+                      <input
+                        type="number"
+                        step={10}
+                        min={200}
+                        max={800}
+                        placeholder="200–800"
+                        value={standardizedTests.satMath ?? ''}
+                        onChange={(e) => setStandardizedTests((t) => ({ ...t, satMath: e.target.value ? clamp(Number(e.target.value), 200, 800) : undefined }))}
+                        className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground/70 block mb-1">SAT Reading & Writing</label>
+                      <input
+                        type="number"
+                        step={10}
+                        min={200}
+                        max={800}
+                        placeholder="200–800"
+                        value={standardizedTests.satReadingWriting ?? ''}
+                        onChange={(e) => setStandardizedTests((t) => ({ ...t, satReadingWriting: e.target.value ? clamp(Number(e.target.value), 200, 800) : undefined }))}
+                        className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground/70 block mb-1">ACT</label>
+                      <input type="number" min={1} max={36} placeholder="1–36" value={standardizedTests.act ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, act: e.target.value ? clamp(Number(e.target.value), 1, 36) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                    </div>
+                  </div>
+                  {satComposite(standardizedTests) !== null && (
+                    <p className="text-xs text-muted-foreground mt-1.5">SAT Composite: <span className="text-emerald-400 font-mono font-bold">{satComposite(standardizedTests)}</span> / 1600</p>
                   )}
-                  <SearchableSelect
-                    id="concentration"
-                    value={intendedConcentration}
-                    onChange={setIntendedConcentration}
-                    options={['No preference', ...FIELD_CONCENTRATIONS[intendedField as keyof typeof FIELD_CONCENTRATIONS]!]}
-                    placeholder="No preference"
-                  />
+                </div>
+              )}
+              {targetCountries.includes('IN') && (
+                <div className="space-y-4">
+                  <div>
+                    <div className="text-sm font-semibold text-foreground/90 mb-1.5">JEE (India) — engineering</div>
+                    {indiaExamFieldNote('JEE', intendedField) && (
+                      <p className="text-xs text-muted-foreground/70 mb-1.5">{indiaExamFieldNote('JEE', intendedField)}</p>
+                    )}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-xs text-muted-foreground/70 block mb-1">JEE Main percentile</label>
+                        <input type="number" min={0} max={100} step={0.01} placeholder="0–100" value={standardizedTests.jeePercentile ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, jeePercentile: e.target.value ? clamp(Number(e.target.value), 0, 100) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                      </div>
+                      <div>
+                        <label className="text-xs text-muted-foreground/70 block mb-1">JEE Advanced rank (if you sat it)</label>
+                        <input type="number" min={1} placeholder="All India Rank" value={standardizedTests.jeeAdvancedRank ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, jeeAdvancedRank: e.target.value ? clamp(Number(e.target.value), 1, Infinity) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-foreground/90 mb-1.5">NEET (India) — medicine</div>
+                    {indiaExamFieldNote('NEET', intendedField) && (
+                      <p className="text-xs text-muted-foreground/70 mb-1.5">{indiaExamFieldNote('NEET', intendedField)}</p>
+                    )}
+                    <label className="text-xs text-muted-foreground/70 block mb-1">NEET score</label>
+                    <input type="number" min={0} max={720} placeholder="0–720" value={standardizedTests.neetScore ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, neetScore: e.target.value ? clamp(Number(e.target.value), 0, 720) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-foreground/90 mb-1.5">CLAT (India) — law</div>
+                    {indiaExamFieldNote('CLAT', intendedField) && (
+                      <p className="text-xs text-muted-foreground/70 mb-1.5">{indiaExamFieldNote('CLAT', intendedField)}</p>
+                    )}
+                    <label className="text-xs text-muted-foreground/70 block mb-1">CLAT All India Rank</label>
+                    <input type="number" min={1} placeholder="All India Rank" value={standardizedTests.clatRank ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, clatRank: e.target.value ? clamp(Number(e.target.value), 1, Infinity) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-foreground/90 mb-1.5">CUET UG (India) — central/state universities, any field</div>
+                    <label className="text-xs text-muted-foreground/70 block mb-1">CUET total score</label>
+                    <input type="number" min={0} placeholder="From your scorecard" value={standardizedTests.cuetScore ?? ''} onChange={(e) => setStandardizedTests((t) => ({ ...t, cuetScore: e.target.value ? clamp(Number(e.target.value), 0, Infinity) : undefined }))} className="w-full bg-secondary border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary" />
+                  </div>
                 </div>
               )}
             </div>
-            <div>
-              <label htmlFor="rank" className="text-[11px] text-muted-foreground block mb-1">Preferred university ranking</label>
-              <select id="rank" value={preferredRank} onChange={(e) => setPreferredRank(e.target.value)} className="w-full bg-secondary border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none focus:border-primary">
-                <option>No preference</option><option>Top 50</option><option>Top 100</option><option>Top 200</option>
+        </section>
+        </>
+        )}
+
+        {/* Suggested activities (from Build Your Dream roadmaps) used to
+            live here, wedged between past-fact entry and future-planning
+            content. That belongs exclusively in Build Your Dream — this
+            page documents what a student has already done, not what they
+            might do next — so it's gone from here entirely. */}
+        {activeTab === 'activities' && (
+        <div className="relative">
+          <section className="bg-card border border-border rounded-3xl p-6">
+            <h2 className="text-xl font-extrabold tracking-tight text-primary mb-1 flex items-center gap-2"><Trophy className="w-5 h-5 text-primary" /> Extracurriculars</h2>
+            <p className="text-xs text-muted-foreground/70 mb-4">Admissions committees evaluate impact, leadership scope, and spikes.</p>
+            <div className="space-y-6">
+              <ActivityGroupFields
+                label="Honors & national-level achievements"
+                examples={HONORS_EXAMPLES}
+                entries={ec1}
+                {...activityHandlers(setEc1)}
+              />
+              <ActivityGroupFields
+                label="Leadership, service & work experience"
+                examples={SERVICE_EXAMPLES}
+                entries={ec2}
+                {...activityHandlers(setEc2)}
+              />
+              <ActivityGroupFields
+                label="Creative pursuits, sports & personal projects"
+                examples={PROJECT_EXAMPLES}
+                entries={ec3}
+                {...activityHandlers(setEc3)}
+              />
+            </div>
+          </section>
+
+          {/* Docked as a collapsed accordion below the real activity entries
+              — these are speculative, future-facing suggestions from Build
+              Your Dream ("things you might still do"), not documented past
+              achievements, so they read as tactical advice rather than more
+              form to fill in. Collapsed by default unless there's something
+              new (not yet marked completed) to surface. */}
+          {suggestedActivities !== null && activities.length > 0 && (
+            <details className="group bg-card border border-border rounded-3xl p-6 mt-4" open={activities.some((a) => a.status !== 'completed')}>
+              <summary className="cursor-pointer list-none flex items-center justify-between gap-2">
+                <h3 className="text-sm font-bold flex items-center gap-2"><Trophy className="w-4 h-4 text-primary" /> Admissions Spike Recommendations</h3>
+                <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0 transition-transform group-open:rotate-180" />
+              </summary>
+              <p className="text-[11px] text-muted-foreground mt-2 mb-3">From your Build Your Dream roadmaps — mark one completed to fold it into your activities above.</p>
+              <ul className="space-y-1.5">
+                {activities.map((a) => (
+                  <li key={a.id} className="flex items-center justify-between gap-2 text-xs bg-secondary border border-border rounded-xl px-3 py-2">
+                    <span className="flex items-center gap-1.5 min-w-0">
+                      {a.country && (
+                        <span
+                          title={`From your ${APPLICATION_INFO[a.country]?.name ?? a.country} Build Your Dream roadmap — a suggestion specific to that country's application, not a general one`}
+                          className="shrink-0 text-sm font-bold uppercase px-1.5 py-0.5 rounded border text-muted-foreground border-border bg-card"
+                        >
+                          {a.country}
+                        </span>
+                      )}
+                      <span className={a.status === 'completed' ? 'text-muted-foreground line-through' : 'text-foreground/90'}>{a.text}</span>
+                    </span>
+                    {a.status === 'completed' ? (
+                      <span className="shrink-0 text-[10px] font-semibold text-primary uppercase flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Completed</span>
+                    ) : (
+                      <span className="shrink-0 flex items-center gap-2">
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase">Shortlisted</span>
+                        <button
+                          type="button"
+                          disabled={activityPendingId === a.id}
+                          onClick={() => handleMarkActivityDone(a.id)}
+                          className="text-[10px] font-semibold text-primary uppercase hover:brightness-125 disabled:opacity-50"
+                        >
+                          Mark completed
+                        </button>
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
+
+          {/* Same "pokes outside the card" placement as the Academics tab's
+              Country relevance aside — the payoff for having already picked
+              target countries in the Goals tab: this now speaks in their
+              own selected countries instead of a generic disclaimer. */}
+          <aside className="mt-4 lg:mt-0 lg:absolute lg:top-0 lg:left-full lg:ml-4 lg:w-64 bg-card border border-border rounded-3xl p-4">
+            <span className="text-xs font-bold text-primary bg-accent/50 px-2 py-0.5 rounded-lg inline-block mb-2">Country relevance</span>
+            {targetCountries.length > 0 ? (
+              <>
+                <p className="text-[11px] text-muted-foreground/80 mb-2 leading-relaxed">
+                  Since you selected <span className="text-primary font-semibold">{targetCountries.map((c) => COUNTRY_NAMES[c] ?? c).join(' & ')}</span>: extracurriculars carry real weight in your evaluation — spikes at the State/National level or higher meaningfully improve reach odds there.
+                </p>
+                <RelevanceLine breakdown={extracurricularsRelevance(targetCountries)} />
+              </>
+            ) : (
+              <p className="text-[11px] text-muted-foreground/60">Pick your target countries in the Goals tab to see how much these weigh for you.</p>
+            )}
+          </aside>
+        </div>
+        )}
+
+      </div>
+    </main>
+
+    {/* Sibling of <main>, not a child — <main> is capped at max-w-3xl, and
+        this bar needs to span the full viewport width edge-to-edge, not
+        just that center column. `sticky` (not `fixed`) so it docks to the
+        bottom of the page's own scroll flow rather than floating over
+        content regardless of scroll position; on this page (always taller
+        than the viewport once there's real form content) that keeps it
+        permanently visible without ever overlapping the tab content above it. */}
+    <div className="sticky bottom-0 z-40 w-full bg-zinc-950/90 backdrop-blur-xl border-t border-white/10 px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-3">
+        <div className="flex items-center gap-3 min-w-0 overflow-x-auto">
+          <span className="text-xs font-mono text-zinc-400 whitespace-nowrap flex items-center gap-1.5">
+            <span className={`w-1.5 h-1.5 rounded-full ${saved ? 'bg-emerald-400' : 'bg-zinc-600'}`} />
+            {saved ? 'All inputs synchronized' : hasSavedProfile ? 'Saved to cloud' : 'Not saved yet'}
+          </span>
+          {initialProfiles.length > 0 && (
+            <div className="relative flex items-center gap-1.5 shrink-0">
+              <History className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+              {/* A plain chooser — pick which saved profile you want, full
+                  stop. The old popover listed every snapshot's full detail
+                  card permanently in view; this just lets you choose one. */}
+              <select
+                value={loadedProfileId ?? ''}
+                onChange={(e) => {
+                  const p = initialProfiles.find((row) => row.id === Number(e.target.value))
+                  if (p) loadProfile(p)
+                }}
+                className="bg-transparent text-xs text-zinc-400 hover:text-foreground focus:outline-none whitespace-nowrap max-w-[160px] sm:max-w-none"
+              >
+                <option value="" disabled>Version History ({initialProfiles.length})</option>
+                {initialProfiles.map((p) => (
+                  <option key={p.id} value={p.id} className="bg-card text-foreground">
+                    {p.targetCountries.join(', ')} · {p.curriculum} · {new Date(p.createdAt).toLocaleDateString('en-US')}
+                  </option>
+                ))}
               </select>
             </div>
-          </div>
-        </section>
+          )}
+          {error && <p ref={errorRef} tabIndex={-1} className="text-xs text-destructive outline-none truncate" role="alert">{error}</p>}
+        </div>
 
-        {pending || saved ? (
-          <button disabled className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold text-sm py-4 rounded-2xl opacity-90 cursor-not-allowed">
-            {pending ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving profile…</> : <><CheckCircle2 className="w-4 h-4" /> Saved!</>}
-          </button>
-        ) : (
-          <LiquidButton onClick={handleSave} fullWidth>Save profile</LiquidButton>
-        )}
-
-        {/* Always visible now (not just right after a save) — but only
-            actually navigates once a saved profile exists. Run Match reads
-            the profile from the database (getLatestProfile), not from
-            whatever's currently typed in this form, so unsaved edits don't
-            block it — only ever having saved at all does. */}
-        {hasSavedProfile ? (
-          <Link
-            href="/matches"
-            className="w-full flex items-center justify-center gap-2 border border-border text-foreground font-semibold text-sm py-4 rounded-2xl hover:bg-muted hover:-translate-y-0.5 transition-all"
-          >
-            Run Match <ArrowRight className="w-4 h-4" />
-          </Link>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setRunMatchWarning(true)}
-            className="w-full flex items-center justify-center gap-2 border border-border text-muted-foreground font-semibold text-sm py-4 rounded-2xl cursor-not-allowed"
-          >
-            Run Match <ArrowRight className="w-4 h-4" />
-          </button>
-        )}
-        {runMatchWarning && !hasSavedProfile && (
-          <p className="text-xs text-destructive text-center">Profile has not been saved yet — save it above first, then Run Match.</p>
-        )}
-
-        {error && <p ref={errorRef} tabIndex={-1} className="text-xs text-destructive text-center outline-none" role="alert">{error}</p>}
+        <button
+          type="button"
+          onClick={() => (nextTab ? setActiveTab(nextTab) : handleSave(true))}
+          disabled={pending}
+          className="shrink-0 w-full sm:w-auto bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold text-xs px-5 py-2.5 rounded-lg transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {pending ? (
+            <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving…</>
+          ) : nextTab ? (
+            <>Continue to {TAB_LABELS[nextTab]} <ArrowRight className="w-3.5 h-3.5" /></>
+          ) : (
+            <>Save &amp; Run Admissions Match <ArrowRight className="w-3.5 h-3.5" /></>
+          )}
+        </button>
       </div>
-
-      {initialProfiles.length > 0 && (
-        <section className="mt-8">
-          <h2 className="text-sm font-bold mb-1">Recent profiles</h2>
-          <p className="text-[11px] text-muted-foreground/70 mb-4">Pick an older version to load it back into the form above and keep editing.</p>
-          <div className="space-y-2">
-            {initialProfiles.map((p) => {
-              const isLoaded = p.id === loadedProfileId
-              return (
-                <div key={p.id} className={`bg-card border rounded-2xl p-4 flex items-center justify-between text-xs gap-3 ${isLoaded ? 'border-primary' : 'border-border'}`}>
-                  <div>
-                    <span className="font-medium">{p.targetCountries.join(', ')} · {p.curriculum} · grade score {p.gradeValue}</span>
-                    <span className="text-muted-foreground block sm:inline sm:ml-2">{new Date(p.createdAt).toLocaleDateString('en-US')}</span>
-                  </div>
-                  {isLoaded ? (
-                    <span className="text-primary font-semibold shrink-0">Loaded</span>
-                  ) : (
-                    <button onClick={() => loadProfile(p)} className="shrink-0 text-primary font-medium hover:brightness-125">Use this version</button>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </section>
-      )}
-    </main>
+    </>
   )
 }

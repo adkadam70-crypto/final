@@ -11,7 +11,6 @@ import Velaris from '@/components/ui/velaris'
 import { marigold } from '@/lib/fonts'
 import { AppLogo } from '@/components/app-logo'
 import { useIsReturningUser } from '@/lib/returning-user'
-import { LiveStatsCounter } from '@/components/live-stats-counter'
 import { Footer } from '@/components/ui/footer-section'
 
 // A visitor previously had no way to know HOW the product works, or to
@@ -218,17 +217,6 @@ export function Landing() {
         }
         topCta={
           <>
-            {/* Live counter sits right under the headline, before any CTA —
-                real proof before the ask, not after it. mt-20/24 here and
-                mt-28/32 on the method block below are deliberately close
-                to each other (not the old 12/14 vs 24/28 split) so the
-                counter reads as vertically centered in the gap between the
-                headline and the method block, instead of hugging the
-                headline with a lot of empty space beneath it. */}
-            <div className="mt-20 sm:mt-24">
-              <LiveStatsCounter />
-            </div>
-
             {/* Folded into this same first screen (not a separate section
                 below) so a visitor sees the whole pitch — headline, proof,
                 mechanism, and CTA — with zero scrolling on desktop. */}
