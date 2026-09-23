@@ -165,8 +165,11 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
 
       {/* Country pills docked above the tabs, as a sibling of the tab
           content (not inside it) — switching Overview/Deadlines never
-          remounts or repositions this row. */}
-      <div className="flex flex-wrap gap-2 mb-4">
+          remounts or repositions this row. Each pill now leads with its own
+          monospace country-code badge so the row reads as a set of distinct
+          countries at a glance, not identical gray shapes with different
+          text lengths. */}
+      <div className="flex flex-wrap gap-2 mb-6">
         {APPLICATION_INFO_COUNTRIES.map((code) => {
           const isDefault = defaultCountries.includes(code)
           const isActive = active === code
@@ -175,8 +178,9 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
               key={code}
               onClick={() => setActive(code)}
               aria-pressed={isActive}
-              className={`px-4 py-2 rounded-2xl text-xs font-medium border transition-all flex items-center gap-1.5 ${isActive ? 'bg-accent border-primary text-accent-foreground' : 'bg-secondary border-border text-muted-foreground hover:border-foreground/20'}`}
+              className={`pl-2 pr-4 py-2 rounded-2xl text-xs font-medium border transition-all flex items-center gap-2 ${isActive ? 'bg-accent border-primary text-accent-foreground' : 'bg-secondary border-border text-muted-foreground hover:border-foreground/20'}`}
             >
+              <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${isActive ? 'bg-primary text-primary-foreground' : 'bg-card text-foreground/70'}`}>{code}</span>
               {APPLICATION_INFO[code].name}
               {isDefault && <span className="w-1.5 h-1.5 rounded-full bg-primary" aria-label="one of your target countries" />}
             </button>
@@ -184,20 +188,24 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
         })}
       </div>
 
-      {/* Prominent segmented control, not a faint underlined tab pair — this
-          is the primary mode toggle for the whole page (batch dossier vs.
-          deadline calendar), not a secondary sub-filter, so it needs the
-          visual weight of a real switch. */}
-      <div id="admissions-calendar" className="inline-flex p-1 rounded-xl bg-secondary border border-border mb-6 scroll-mt-6">
+      {/* Deliberately NOT the same rounded-pill shape as the country row
+          above (was rounded-xl/rounded-lg, same family as the country
+          pills' rounded-2xl — reading as "more of the same control" instead
+          of a different one). Sharp-ish corners (rounded-md) and a colored
+          border give it its own visual identity as the page's primary mode
+          switch, not a second row of country-style filters. Real vertical
+          gap (mt-2) separates it from the country row instead of both
+          sitting flush against each other. */}
+      <div id="admissions-calendar" className="inline-flex p-1 rounded-md bg-card border-2 border-primary/30 mb-6 mt-2 scroll-mt-6">
         <button
           onClick={() => setTab('overview')}
-          className={`px-5 py-2 rounded-lg text-xs font-semibold transition-colors ${tab === 'overview' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+          className={`px-5 py-2 rounded text-xs font-semibold transition-colors ${tab === 'overview' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
         >
           System &amp; Requirements Dossier
         </button>
         <button
           onClick={() => setTab('deadlines')}
-          className={`px-5 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${tab === 'deadlines' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+          className={`px-5 py-2 rounded text-xs font-semibold flex items-center gap-1.5 transition-colors ${tab === 'deadlines' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
         >
           <CalendarDays className="w-3.5 h-3.5" /> Deadlines &amp; Timelines
         </button>
