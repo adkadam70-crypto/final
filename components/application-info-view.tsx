@@ -146,16 +146,20 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
         })}
       </div>
 
-      <div id="admissions-calendar" className="flex gap-1 mb-6 border-b border-border scroll-mt-6">
+      {/* Prominent segmented control, not a faint underlined tab pair — this
+          is the primary mode toggle for the whole page (batch dossier vs.
+          deadline calendar), not a secondary sub-filter, so it needs the
+          visual weight of a real switch. */}
+      <div id="admissions-calendar" className="inline-flex p-1 rounded-xl bg-secondary border border-border mb-6 scroll-mt-6">
         <button
           onClick={() => setTab('overview')}
-          className={`px-4 py-2.5 text-xs font-semibold border-b-2 -mb-px transition-colors ${tab === 'overview' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+          className={`px-5 py-2 rounded-lg text-xs font-semibold transition-colors ${tab === 'overview' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
         >
-          Overview
+          System &amp; Requirements Dossier
         </button>
         <button
           onClick={() => setTab('deadlines')}
-          className={`px-4 py-2.5 text-xs font-semibold border-b-2 -mb-px flex items-center gap-1.5 transition-colors ${tab === 'deadlines' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+          className={`px-5 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${tab === 'deadlines' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
         >
           <CalendarDays className="w-3.5 h-3.5" /> Deadlines &amp; Timelines
         </button>
@@ -163,20 +167,55 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
 
       {tab === 'overview' ? (
         <div className="space-y-4">
+          {/* Executive briefing — was the "What [Country] actually
+              prioritizes" card buried at the very bottom, beneath 5 other
+              cards. It's the single most decision-useful sentence on the
+              page (the actual weighting logic in plain language), so it
+              leads now instead of being the thing 80% of users scroll past
+              without reading. */}
+          <section className="rounded-2xl bg-card border border-border p-6">
+            <div className="flex items-center justify-between gap-3 flex-wrap mb-1">
+              <h2 className="text-xl font-bold text-foreground tracking-tight flex items-center gap-2"><Globe className="w-5 h-5 text-primary" /> {info.name} admissions dossier</h2>
+            </div>
+            <div className="mt-3 p-3.5 rounded-xl bg-accent/50 border border-primary/25 flex items-start gap-3">
+              <Target className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+              <div>
+                <div className="text-[10px] font-mono text-primary uppercase tracking-wider font-semibold mb-0.5">Core evaluation reality</div>
+                <p className="text-sm text-accent-foreground leading-relaxed text-pretty">{info.prioritizes}</p>
+              </div>
+            </div>
+          </section>
+
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             {/* Left: Platform & Governance */}
             <div className="lg:col-span-5 space-y-4">
               <section className="bg-card border border-border rounded-3xl p-6">
-                <h2 className="text-lg font-bold mb-1 flex items-center gap-2"><Globe className="w-4 h-4 text-primary" /> {info.name}</h2>
-                <p className="text-[13px] text-foreground/75 leading-relaxed text-pretty mb-4">{info.howToApply}</p>
+                <h3 className="text-sm font-bold mb-2 flex items-center gap-2"><LinkIcon className="w-3.5 h-3.5 text-primary" /> How to apply</h3>
+                <p className="text-sm text-foreground/85 leading-relaxed text-pretty mb-4">{info.howToApply}</p>
                 <div className="flex items-center gap-2 mb-2">
                   <LinkIcon className="w-3.5 h-3.5 text-primary" />
                   <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Application platform</span>
                 </div>
-                <p className="text-[13px] text-foreground/75 mb-2">{info.platform}</p>
+                <p className="text-sm text-foreground/80 mb-2">{info.platform}</p>
+                {/* Germany-specific: the €75/€30 uni-assist fee and the
+                    APS-certificate requirement are real (both already in
+                    info.howToApply / requirements above), just buried in
+                    prose — surfaced here as a real callout, not a new fact. */}
+                {active === 'DE' && (
+                  <div className="mt-2 mb-2 p-3 rounded-xl bg-secondary/50 border border-border space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Uni-assist fee</span>
+                      <span className="font-mono text-foreground font-semibold">€75 + €30/extra application</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">APS certificate</span>
+                      <span className="font-mono text-amber-400 font-semibold">Mandatory: India, China, Vietnam</span>
+                    </div>
+                  </div>
+                )}
                 <div className="flex flex-wrap gap-2">
                   {info.platformLinks.map((l) => (
-                    <a key={l.url} href={l.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[11px] bg-secondary border border-border text-primary px-2.5 py-1.5 rounded-lg hover:border-primary/40 transition-colors">
+                    <a key={l.url} href={l.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs font-mono bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 px-3.5 py-2 rounded-lg hover:bg-emerald-900/50 transition-colors">
                       {l.label} <ExternalLink className="w-3 h-3" />
                     </a>
                   ))}
@@ -199,11 +238,30 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                     const { lead, rest } = splitLeadSentence(note)
                     return (
                       <div key={i} className="mt-3 first:mt-0">
-                        <p className="text-[13px] font-semibold text-foreground leading-snug text-pretty">{lead}</p>
-                        {rest && <p className="text-[13px] text-foreground/75 leading-relaxed text-pretty mt-1">{rest}</p>}
+                        <p className="text-sm font-semibold text-foreground leading-snug text-pretty">{lead}</p>
+                        {rest && <p className="text-sm text-foreground/80 leading-relaxed text-pretty mt-1">{rest}</p>}
                       </div>
                     )
                   })}
+                  {/* India: the AIU equivalency requirement (real, already
+                      in requirements) gets its own badge since it's the one
+                      hard procedural step (get a certificate before you can
+                      even apply), not just descriptive context. */}
+                  {active === 'IN' && (
+                    <div className="mt-3 inline-flex items-center gap-1.5 text-xs font-mono px-2.5 py-1 rounded-lg bg-amber-950/40 border border-amber-500/20 text-amber-400">
+                      AIU equivalency certificate required before matriculation
+                    </div>
+                  )}
+                  {/* Hong Kong: the real data explicitly frames 75%+ as ONE
+                      university's example threshold, not a system-wide HK
+                      rule ("e.g. one Hong Kong university requires...") —
+                      keeping that exact framing here rather than generalizing
+                      it into a blanket badge, which would overstate it. */}
+                  {active === 'HK' && (
+                    <div className="mt-3 text-xs font-mono px-2.5 py-1.5 rounded-lg bg-secondary border border-border text-muted-foreground">
+                      Example only — one HK university sets ~75%+ CBSE/CISCE Standard XII average; thresholds vary by school
+                    </div>
+                  )}
                 </section>
               )}
 
@@ -244,8 +302,57 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                     </div>
                     <p className="text-[11px] text-foreground/70 leading-relaxed text-pretty">Most schools are test-optional, but a strong score still helps at selective ones — a school&apos;s own published range (elsewhere in this app) beats any generic number.</p>
                   </>
+                ) : active === 'IN' ? (
+                  // Real figures already in info.tests, restructured as a
+                  // ledger — NTA registration is per-exam, so these are
+                  // genuinely separate rows, not one blended test.
+                  <div className="space-y-2">
+                    <div className="bg-secondary/50 border border-border rounded-xl p-3.5 flex items-center justify-between">
+                      <div>
+                        <div className="text-xs font-semibold text-foreground">JEE Main / Advanced</div>
+                        <div className="text-[11px] text-muted-foreground">75% board marks or top-20th-percentile for JoSAA eligibility</div>
+                      </div>
+                      <span className="font-mono text-xs text-emerald-400 font-bold whitespace-nowrap">top ~2.5L advance</span>
+                    </div>
+                    <div className="bg-secondary/50 border border-border rounded-xl p-3.5 flex items-center justify-between">
+                      <div className="text-xs font-semibold text-foreground">NEET-UG (Medicine)</div>
+                      <span className="font-mono text-xs text-foreground whitespace-nowrap">200 Q (180 attempted) · 720 total</span>
+                    </div>
+                    <div className="bg-secondary/50 border border-border rounded-xl p-3.5 flex items-center justify-between">
+                      <div className="text-xs font-semibold text-foreground">CUET-UG</div>
+                      <span className="font-mono text-xs text-foreground whitespace-nowrap">up to 6 subject papers</span>
+                    </div>
+                    <p className="text-[11px] text-foreground/70 leading-relaxed text-pretty">All run by the NTA and often more decisive than board marks — JEE Main runs twice a year and your better score counts.</p>
+                  </div>
+                ) : active === 'AU' ? (
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-mono text-emerald-400 mb-1">
+                      <span>No SAT/ACT needed</span><span className="text-muted-foreground">·</span>
+                      <span>IELTS 6.5 overall, no band below 6.0</span>
+                    </div>
+                    <p className="text-sm text-foreground/80 leading-relaxed text-pretty">{info.tests}</p>
+                  </div>
+                ) : active === 'DE' ? (
+                  <div className="space-y-2">
+                    <div className="bg-secondary/50 border border-border rounded-xl p-3.5 flex items-center justify-between">
+                      <div>
+                        <div className="text-xs font-semibold text-foreground">TMS (medicine)</div>
+                        <div className="text-[11px] text-muted-foreground">Cognitive test, not a knowledge test</div>
+                      </div>
+                      <span className="font-mono text-xs text-emerald-400 font-bold whitespace-nowrap">~6 hours</span>
+                    </div>
+                    <p className="text-sm text-foreground/80 leading-relaxed text-pretty">No SAT/ACT equivalent otherwise — non-EU applicants often take TestAS instead. Your GPA is the deciding number for everything else.</p>
+                  </div>
+                ) : active === 'FR' ? (
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-mono text-emerald-400 mb-1">
+                      <span>DELF/DALF B2 or TCF (French-taught)</span><span className="text-muted-foreground">·</span>
+                      <span>IELTS/TOEFL (English-taught)</span>
+                    </div>
+                    <p className="text-sm text-foreground/80 leading-relaxed text-pretty">No universal entrance test for public licence programs. Grandes écoles run their own concours (written + oral, usually after 2 years of classes préparatoires/CPGE), or post-bac exams like SESAME/GEIPI.</p>
+                  </div>
                 ) : (
-                  <p className="text-[13px] text-foreground/75 leading-relaxed text-pretty">{info.tests}</p>
+                  <p className="text-sm text-foreground/80 leading-relaxed text-pretty">{info.tests}</p>
                 )}
               </section>
             </div>
@@ -259,7 +366,7 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                 </div>
                 <ul className="space-y-2">
                   {checklist.map((r) => (
-                    <li key={r} className="flex items-start gap-2 text-[13px] text-foreground/80">
+                    <li key={r} className="flex items-start gap-2 text-sm text-foreground/85">
                       <CircleCheck className="w-3.5 h-3.5 mt-0.5 shrink-0 text-primary" />
                       <span className="text-pretty">{r}</span>
                     </li>
@@ -295,10 +402,33 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                         <div className="text-xs text-foreground font-semibold">Depth in 1-2 "spikes" beats a long shallow list</div>
                       </div>
                     </div>
-                    <p className="text-[12.5px] text-foreground/75 leading-relaxed text-pretty">Most colleges admitting under 30% of applicants rate extracurriculars <strong className="text-foreground font-semibold">&quot;important&quot; or &quot;very important.&quot;</strong> <strong className="text-foreground font-semibold">National-level achievement</strong> or founding something real tends to outrank generic membership — an informal lens consultants use, not an official framework.</p>
+                    <p className="text-[13px] text-foreground/80 leading-relaxed text-pretty">Most colleges admitting under 30% of applicants rate extracurriculars <strong className="text-foreground font-semibold">&quot;important&quot; or &quot;very important.&quot;</strong> <strong className="text-foreground font-semibold">National-level achievement</strong> or founding something real tends to outrank generic membership — an informal lens consultants use, not an official framework.</p>
+                  </>
+                ) : active === 'SG' ? (
+                  <>
+                    {/* NOT presenting the old "~5%" figure as current — the
+                        real data is explicit that NUS/NTU discontinued that
+                        fixed weighting in 2007 in favor of an unweighted
+                        discretionary scheme. Stating "~5%" here would
+                        directly contradict this app's own researched fact
+                        and mislead a student into thinking CCA has a known,
+                        fixed weight it no longer has. */}
+                    <div className="bg-secondary/50 border border-border rounded-xl p-3.5 mb-3">
+                      <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider mb-1">Discretionary Admission Scheme</div>
+                      <div className="text-xs text-foreground font-semibold">No fixed weight — folded CCA into a holistic leadership/fit review in 2007</div>
+                    </div>
+                    <p className="text-[13px] text-foreground/80 leading-relaxed text-pretty">{info.extracurriculars}</p>
+                  </>
+                ) : active === 'AU' ? (
+                  <>
+                    <div className="bg-secondary/50 border border-border rounded-xl p-3.5 mb-3">
+                      <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider mb-1">Adjustment factor points</div>
+                      <div className="text-xs text-foreground font-semibold">Max +10 to +15 total, on top of ATAR — never changes the ATAR itself</div>
+                    </div>
+                    <p className="text-[13px] text-foreground/80 leading-relaxed text-pretty">{info.extracurriculars}</p>
                   </>
                 ) : (
-                  <p className="text-[13px] text-foreground/75 leading-relaxed text-pretty">{info.extracurriculars}</p>
+                  <p className="text-sm text-foreground/80 leading-relaxed text-pretty">{info.extracurriculars}</p>
                 )}
               </section>
 
@@ -307,11 +437,11 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                   <PenLine className="w-4 h-4 text-chart-4" />
                   <h3 className="text-sm font-bold">Essays</h3>
                 </div>
-                <p className="text-[13px] text-foreground/75 leading-relaxed text-pretty mb-3">{info.essays}</p>
+                <p className="text-sm text-foreground/80 leading-relaxed text-pretty mb-3">{info.essays}</p>
                 {info.essayResources.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {info.essayResources.map((l) => (
-                      <a key={l.url} href={l.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[11px] bg-secondary border border-border text-primary px-2.5 py-1.5 rounded-lg hover:border-primary/40 transition-colors">
+                      <a key={l.url} href={l.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs font-mono bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 px-3.5 py-2 rounded-lg hover:bg-emerald-900/50 transition-colors">
                         {l.label} <ExternalLink className="w-3 h-3" />
                       </a>
                     ))}
@@ -320,14 +450,6 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
               </section>
             </div>
           </div>
-
-          <section className="bg-accent/50 border border-primary/25 rounded-3xl p-6 flex gap-3">
-            <Target className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-            <div>
-              <h3 className="text-sm font-bold mb-1">What {info.name} actually prioritizes</h3>
-              <p className="text-[13px] text-accent-foreground/90 leading-relaxed text-pretty">{info.prioritizes}</p>
-            </div>
-          </section>
         </div>
       ) : (
         <div className="space-y-4">
