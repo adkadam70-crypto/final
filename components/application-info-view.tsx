@@ -210,7 +210,12 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
           monospace country-code badge so the row reads as a set of distinct
           countries at a glance, not identical gray shapes with different
           text lengths. */}
-      <div className="flex flex-wrap gap-x-2.5 gap-y-3 mb-6">
+      {/* Grid, not flex-wrap — with 8 real countries and varying name
+          lengths, flex-wrap left a short ragged last row (e.g. just 2 of 8
+          items) that read as unbalanced next to the full row above it. A
+          fixed 4-column grid (2 clean rows of 4) keeps every row the same
+          width regardless of how the pills wrap. */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-6">
         {APPLICATION_INFO_COUNTRIES.map((code) => {
           const isDefault = defaultCountries.includes(code)
           const isActive = active === code
@@ -219,15 +224,15 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
               key={code}
               onClick={() => setActive(code)}
               aria-pressed={isActive}
-              className={`pl-2.5 pr-5 py-2.5 rounded-2xl text-sm font-medium border transition-all flex items-center gap-2 hover:-translate-y-0.5 active:translate-y-0 ${
+              className={`pl-2.5 pr-3 py-2.5 rounded-2xl text-sm font-medium border transition-all flex items-center gap-2 hover:-translate-y-0.5 active:translate-y-0 ${
                 isActive
                   ? 'bg-gradient-to-b from-accent to-accent/70 border-primary text-accent-foreground shadow-md shadow-primary/10'
                   : 'bg-gradient-to-b from-secondary to-secondary/60 border-border text-muted-foreground hover:border-foreground/25 hover:text-foreground hover:shadow-sm'
               }`}
             >
-              <span className={`text-xs font-mono font-bold min-w-[26px] text-center px-1.5 py-1 rounded-lg ${isActive ? 'bg-primary text-primary-foreground' : 'bg-card text-foreground/70'}`}>{code}</span>
-              {APPLICATION_INFO[code].name}
-              {isDefault && <span className="w-1.5 h-1.5 rounded-full bg-primary" aria-label="one of your target countries" />}
+              <span className={`text-xs font-mono font-bold min-w-[26px] text-center px-1.5 py-1 rounded-lg shrink-0 ${isActive ? 'bg-primary text-primary-foreground' : 'bg-card text-foreground/70'}`}>{code}</span>
+              <span className="truncate">{APPLICATION_INFO[code].name}</span>
+              {isDefault && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0 ml-auto" aria-label="one of your target countries" />}
             </button>
           )
         })}
@@ -265,7 +270,10 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
               without reading. */}
           <section className="rounded-2xl bg-card border border-border p-6">
             <div className="flex items-center justify-between gap-3 flex-wrap mb-1">
-              <h2 className="text-xl font-bold text-foreground tracking-tight flex items-center gap-2"><Globe className="w-5 h-5 text-primary" /> {info.name} admissions dossier</h2>
+              <h2 className="text-xl font-bold text-foreground tracking-tight flex items-center gap-2.5">
+                <span className="bg-primary/15 rounded-full p-2 shrink-0"><Globe className="w-5 h-5 text-primary" /></span>
+                {info.name} admissions dossier
+              </h2>
               {FORMULA_BADGE[active] && (
                 <span className="text-[11px] font-mono px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/20 text-emerald-400 whitespace-nowrap">
                   {FORMULA_BADGE[active]}
@@ -285,7 +293,7 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
             {/* Left: Platform & Governance */}
             <div className="lg:col-span-5 space-y-4">
               <section className="bg-card border border-border rounded-3xl p-6">
-                <h3 className="text-base font-bold tracking-tight mb-2 flex items-center gap-2"><LinkIcon className="w-3.5 h-3.5 text-primary" /> How to apply</h3>
+                <h3 className="text-base font-bold tracking-tight mb-3 flex items-center gap-2.5"><span className="bg-primary/15 rounded-full p-1.5 shrink-0"><LinkIcon className="w-3.5 h-3.5 text-primary" /></span> How to apply</h3>
                 <div className="mb-4"><BulletText text={info.howToApply} className="text-sm text-foreground/85 leading-relaxed text-pretty" /></div>
                 <div className="flex items-center gap-2 mb-2">
                   <LinkIcon className="w-3.5 h-3.5 text-primary" />
@@ -319,8 +327,8 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
 
               {curriculumNotes.length > 0 && (
                 <section className="bg-card border border-border rounded-3xl p-6">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Landmark className="w-4 h-4 text-primary" />
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <span className="bg-chart-2/15 rounded-full p-1.5 shrink-0"><Landmark className="w-4 h-4 text-chart-2" /></span>
                     <h3 className="text-base font-bold tracking-tight">Curriculum parity</h3>
                   </div>
                   {/* Bold lead sentence per note, not a single hardcoded
@@ -361,8 +369,8 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
               )}
 
               <section className="bg-card border border-border rounded-3xl p-6">
-                <div className="flex items-center gap-2 mb-2">
-                  <FileText className="w-4 h-4 text-chart-5" />
+                <div className="flex items-center gap-2.5 mb-3">
+                  <span className="bg-chart-5/15 rounded-full p-1.5 shrink-0"><FileText className="w-4 h-4 text-chart-5" /></span>
                   <h3 className="text-base font-bold tracking-tight">Required tests</h3>
                 </div>
                 {/* Same reasoning as Extracurriculars below — the US has a
@@ -473,8 +481,8 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
             {/* Right: Submission Dossier & Extracurricular Lens */}
             <div className="lg:col-span-7 space-y-4">
               <section className="bg-card border border-border rounded-3xl p-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <ListChecks className="w-4 h-4 text-primary" />
+                <div className="flex items-center gap-2.5 mb-3">
+                  <span className="bg-primary/15 rounded-full p-1.5 shrink-0"><ListChecks className="w-4 h-4 text-primary" /></span>
                   <h3 className="text-base font-bold tracking-tight">What you&apos;ll need</h3>
                 </div>
                 <ul className="space-y-2">
@@ -488,8 +496,8 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
               </section>
 
               <section className="bg-card border border-border rounded-3xl p-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <Trophy className="w-4 h-4 text-chart-2" />
+                <div className="flex items-center gap-2.5 mb-3">
+                  <span className="bg-chart-2/15 rounded-full p-1.5 shrink-0"><Trophy className="w-4 h-4 text-chart-2" /></span>
                   <h3 className="text-base font-bold tracking-tight">Extracurriculars</h3>
                 </div>
                 {/* US has a genuinely structured, quantifiable version of
@@ -591,8 +599,8 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
               </section>
 
               <section className="bg-card border border-border rounded-3xl p-6">
-                <div className="flex items-center gap-2 mb-2">
-                  <PenLine className="w-4 h-4 text-chart-4" />
+                <div className="flex items-center gap-2.5 mb-3">
+                  <span className="bg-chart-4/15 rounded-full p-1.5 shrink-0"><PenLine className="w-4 h-4 text-chart-4" /></span>
                   <h3 className="text-base font-bold tracking-tight">Essays</h3>
                 </div>
                 <div className="mb-3"><BulletText text={info.essays} className="text-sm text-foreground/80 leading-relaxed text-pretty" /></div>
@@ -665,8 +673,8 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
           </div>
 
           <section className="bg-card border border-border rounded-3xl p-6">
-            <div className="flex items-center gap-2 mb-3">
-              <GraduationCap className="w-4 h-4 text-primary" />
+            <div className="flex items-center gap-2.5 mb-3">
+              <span className="bg-primary/15 rounded-full p-1.5 shrink-0"><GraduationCap className="w-4 h-4 text-primary" /></span>
               <h3 className="text-base font-bold tracking-tight">What must be submitted by then</h3>
             </div>
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5">
