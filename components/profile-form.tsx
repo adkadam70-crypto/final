@@ -1713,13 +1713,18 @@ export function ProfileForm({
 
         <button
           type="button"
-          onClick={() => (nextTab ? setActiveTab(nextTab) : handleSave(true))}
+          onClick={() => (nextTab && !hasSavedProfile ? setActiveTab(nextTab) : handleSave(true))}
           disabled={pending}
           className="shrink-0 w-full sm:w-auto bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold text-xs px-5 py-2.5 rounded-lg transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {pending ? (
             <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving…</>
-          ) : nextTab ? (
+          ) : nextTab && !hasSavedProfile ? (
+            // First-time setup only: guides a new user through all three
+            // tabs in order before their first save. Once hasSavedProfile
+            // is true, tab labels above are already directly clickable —
+            // this button no longer needs to walk them through in sequence,
+            // it just saves immediately from whichever tab they're on.
             <>Continue to {TAB_LABELS[nextTab]} <ArrowRight className="w-3.5 h-3.5" /></>
           ) : (
             <>Save &amp; Run Admissions Match <ArrowRight className="w-3.5 h-3.5" /></>
