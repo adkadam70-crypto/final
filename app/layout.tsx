@@ -44,6 +44,15 @@ export const metadata: Metadata = {
     icon: [
       { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
     ],
+    // Explicit rel="shortcut icon" — Safari's habit of silently fetching
+    // /favicon.ico from the site root with no <link> tag at all turned out
+    // not to be reliable (still showed a letter-avatar fallback for some
+    // users even though the file itself was correct). Declaring it
+    // directly removes the guesswork. public/favicon.ico is the opaque
+    // badge version (see its own history) — Safari's favicon heuristic
+    // treats a mostly-transparent icon as invalid, which is why this
+    // can't just point at the same transparent diamond as `icon` above.
+    shortcut: '/favicon.ico',
     apple: '/apple-icon.png',
   },
 }
