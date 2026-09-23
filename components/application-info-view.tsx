@@ -115,6 +115,44 @@ function boldKeyTerms(text: string): React.ReactNode {
   )
 }
 
+// Splits a multi-sentence paragraph into an array of standalone sentences
+// for bullet rendering — same real text, just broken apart instead of run
+// together as one dense paragraph. Splits on ". " (a period + space), which
+// correctly avoids breaking on abbreviations like "U.S." (no space after
+// that period) or decimals. A single-sentence input just returns one item.
+function sentenceBullets(text: string): string[] {
+  // No lookbehind (this project's tsconfig targets ES6, lookbehind needs
+  // ES2018+) — capture the terminator with the sentence, then split on the
+  // whitespace that follows a captured [.!?].
+  return text
+    .split(/([.!?]\s+)/)
+    .reduce<string[]>((acc, part, i, arr) => {
+      if (i % 2 === 0) {
+        const terminator = arr[i + 1] ?? ''
+        const sentence = (part + terminator).trim()
+        if (sentence) acc.push(sentence)
+      }
+      return acc
+    }, [])
+}
+
+// Renders a block of prose as bullet points (one per real sentence) instead
+// of a dense paragraph — used everywhere a country's text runs 2+ sentences
+// together. A genuinely single-sentence input just renders as one bullet,
+// which is harmless (not worse than the plain paragraph it replaces).
+function BulletText({ text, className }: { text: string; className: string }) {
+  return (
+    <ul className="space-y-1.5">
+      {sentenceBullets(text).map((s, i) => (
+        <li key={i} className={`flex items-start gap-2 ${className}`}>
+          <span className="text-primary mt-1.5 text-[6px] shrink-0">●</span>
+          <span>{s}</span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 function splitLeadSentence(text: string): { lead: string; rest: string } {
   const match = text.match(/^([\s\S]+?[.!?])(\s+([\s\S]*))?$/)
   if (!match) return { lead: text, rest: '' }
@@ -181,9 +219,9 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
               key={code}
               onClick={() => setActive(code)}
               aria-pressed={isActive}
-              className={`pl-2 pr-4 py-2 rounded-2xl text-xs font-medium border transition-all flex items-center gap-2 ${isActive ? 'bg-accent border-primary text-accent-foreground' : 'bg-secondary border-border text-muted-foreground hover:border-foreground/20'}`}
+              className={`pl-2.5 pr-5 py-2.5 rounded-2xl text-sm font-medium border transition-all flex items-center gap-2 ${isActive ? 'bg-accent border-primary text-accent-foreground' : 'bg-secondary border-border text-muted-foreground hover:border-foreground/20'}`}
             >
-              <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${isActive ? 'bg-primary text-primary-foreground' : 'bg-card text-foreground/70'}`}>{code}</span>
+              <span className={`text-[11px] font-mono font-bold px-1.5 py-0.5 rounded ${isActive ? 'bg-primary text-primary-foreground' : 'bg-card text-foreground/70'}`}>{code}</span>
               {APPLICATION_INFO[code].name}
               {isDefault && <span className="w-1.5 h-1.5 rounded-full bg-primary" aria-label="one of your target countries" />}
             </button>
@@ -199,18 +237,18 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
           switch, not a second row of country-style filters. Real vertical
           gap (mt-2) separates it from the country row instead of both
           sitting flush against each other. */}
-      <div id="admissions-calendar" className="inline-flex p-1 rounded-md bg-card border-2 border-primary/30 mb-6 mt-2 scroll-mt-6">
+      <div id="admissions-calendar" className="inline-flex p-1.5 rounded-md bg-card border-2 border-primary/30 mb-6 mt-2 scroll-mt-6">
         <button
           onClick={() => setTab('overview')}
-          className={`px-5 py-2 rounded text-xs font-semibold transition-colors ${tab === 'overview' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+          className={`px-6 py-2.5 rounded text-sm font-semibold transition-colors ${tab === 'overview' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
         >
           System &amp; Requirements Dossier
         </button>
         <button
           onClick={() => setTab('deadlines')}
-          className={`px-5 py-2 rounded text-xs font-semibold flex items-center gap-1.5 transition-colors ${tab === 'deadlines' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+          className={`px-6 py-2.5 rounded text-sm font-semibold flex items-center gap-2 transition-colors ${tab === 'deadlines' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
         >
-          <CalendarDays className="w-3.5 h-3.5" /> Deadlines &amp; Timelines
+          <CalendarDays className="w-4 h-4" /> Deadlines &amp; Timelines
         </button>
       </div>
 
@@ -235,7 +273,7 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
               <Target className="w-4 h-4 text-primary shrink-0 mt-0.5" />
               <div>
                 <div className="text-[10px] font-mono text-primary uppercase tracking-wider font-semibold mb-0.5">Core evaluation reality</div>
-                <p className="text-sm text-accent-foreground leading-relaxed text-pretty">{info.prioritizes}</p>
+                <BulletText text={info.prioritizes} className="text-sm text-accent-foreground leading-relaxed text-pretty" />
               </div>
             </div>
           </section>
@@ -244,8 +282,8 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
             {/* Left: Platform & Governance */}
             <div className="lg:col-span-5 space-y-4">
               <section className="bg-card border border-border rounded-3xl p-6">
-                <h3 className="text-sm font-bold mb-2 flex items-center gap-2"><LinkIcon className="w-3.5 h-3.5 text-primary" /> How to apply</h3>
-                <p className="text-sm text-foreground/85 leading-relaxed text-pretty mb-4">{info.howToApply}</p>
+                <h3 className="text-base font-bold tracking-tight mb-2 flex items-center gap-2"><LinkIcon className="w-3.5 h-3.5 text-primary" /> How to apply</h3>
+                <div className="mb-4"><BulletText text={info.howToApply} className="text-sm text-foreground/85 leading-relaxed text-pretty" /></div>
                 <div className="flex items-center gap-2 mb-2">
                   <LinkIcon className="w-3.5 h-3.5 text-primary" />
                   <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Application platform</span>
@@ -280,7 +318,7 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                 <section className="bg-card border border-border rounded-3xl p-6">
                   <div className="flex items-center gap-2 mb-2">
                     <Landmark className="w-4 h-4 text-primary" />
-                    <h3 className="text-sm font-bold">Curriculum parity</h3>
+                    <h3 className="text-base font-bold tracking-tight">Curriculum parity</h3>
                   </div>
                   {/* Bold lead sentence per note, not a single hardcoded
                       claim — see splitLeadSentence's comment for why: the
@@ -322,7 +360,7 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
               <section className="bg-card border border-border rounded-3xl p-6">
                 <div className="flex items-center gap-2 mb-2">
                   <FileText className="w-4 h-4 text-chart-5" />
-                  <h3 className="text-sm font-bold">Required tests</h3>
+                  <h3 className="text-base font-bold tracking-tight">Required tests</h3>
                 </div>
                 {/* Same reasoning as Extracurriculars below — the US has a
                     genuinely structured, quantifiable set of benchmarks
@@ -384,7 +422,7 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                       <span>No SAT/ACT needed</span><span className="text-muted-foreground">·</span>
                       <span>IELTS 6.5 overall, no band below 6.0</span>
                     </div>
-                    <p className="text-sm text-foreground/80 leading-relaxed text-pretty">{info.tests}</p>
+                    <BulletText text={info.tests} className="text-sm text-foreground/80 leading-relaxed text-pretty" />
                   </div>
                 ) : active === 'DE' ? (
                   <div className="space-y-2">
@@ -424,7 +462,7 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                     <p className="text-[11px] text-foreground/70 leading-relaxed text-pretty">BMAT has been discontinued — UCAT is now the sole admissions test for UK undergraduate medicine and dentistry.</p>
                   </div>
                 ) : (
-                  <p className="text-sm text-foreground/80 leading-relaxed text-pretty">{info.tests}</p>
+                  <BulletText text={info.tests} className="text-sm text-foreground/80 leading-relaxed text-pretty" />
                 )}
               </section>
             </div>
@@ -434,7 +472,7 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
               <section className="bg-card border border-border rounded-3xl p-6">
                 <div className="flex items-center gap-2 mb-3">
                   <ListChecks className="w-4 h-4 text-primary" />
-                  <h3 className="text-sm font-bold">What you&apos;ll need</h3>
+                  <h3 className="text-base font-bold tracking-tight">What you&apos;ll need</h3>
                 </div>
                 <ul className="space-y-2">
                   {checklist.map((r) => (
@@ -449,7 +487,7 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
               <section className="bg-card border border-border rounded-3xl p-6">
                 <div className="flex items-center gap-2 mb-3">
                   <Trophy className="w-4 h-4 text-chart-2" />
-                  <h3 className="text-sm font-bold">Extracurriculars</h3>
+                  <h3 className="text-base font-bold tracking-tight">Extracurriculars</h3>
                 </div>
                 {/* US has a genuinely structured, quantifiable version of
                     this (Common App's 10-slot/150-char cap, well known and
@@ -489,7 +527,7 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                       <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider mb-1">Discretionary Admission Scheme</div>
                       <div className="text-xs text-foreground font-semibold">No fixed weight — folded CCA into a holistic leadership/fit review in 2007</div>
                     </div>
-                    <p className="text-[13px] text-foreground/80 leading-relaxed text-pretty">{info.extracurriculars}</p>
+                    <BulletText text={info.extracurriculars} className="text-[13px] text-foreground/80 leading-relaxed text-pretty" />
                   </>
                 ) : active === 'AU' ? (
                   <>
@@ -497,7 +535,7 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                       <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider mb-1">Adjustment factor points</div>
                       <div className="text-xs text-foreground font-semibold">Max +10 to +15 total, on top of ATAR — never changes the ATAR itself</div>
                     </div>
-                    <p className="text-[13px] text-foreground/80 leading-relaxed text-pretty">{info.extracurriculars}</p>
+                    <BulletText text={info.extracurriculars} className="text-[13px] text-foreground/80 leading-relaxed text-pretty" />
                   </>
                 ) : active === 'UK' ? (
                   <>
@@ -510,7 +548,7 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                       <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider mb-1">Super-curricular focus</div>
                       <div className="text-xs text-foreground font-semibold">Generic hobbies: keep under ~20% of your personal statement</div>
                     </div>
-                    <p className="text-[13px] text-foreground/80 leading-relaxed text-pretty">{info.extracurriculars}</p>
+                    <BulletText text={info.extracurriculars} className="text-[13px] text-foreground/80 leading-relaxed text-pretty" />
                   </>
                 ) : active === 'DE' ? (
                   <>
@@ -518,7 +556,7 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                       <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider mb-1">Public NC admissions</div>
                       <div className="text-xs text-foreground font-semibold">Essentially not considered — Abitur-equivalent GPA decides</div>
                     </div>
-                    <p className="text-[13px] text-foreground/80 leading-relaxed text-pretty">{info.extracurriculars}</p>
+                    <BulletText text={info.extracurriculars} className="text-[13px] text-foreground/80 leading-relaxed text-pretty" />
                   </>
                 ) : active === 'IN' ? (
                   <>
@@ -526,7 +564,7 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                       <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider mb-1">Merit-based admission</div>
                       <div className="text-xs text-foreground font-semibold">Minimal weight — exceptions: Ashoka, Krea run US-style holistic review</div>
                     </div>
-                    <p className="text-[13px] text-foreground/80 leading-relaxed text-pretty">{info.extracurriculars}</p>
+                    <BulletText text={info.extracurriculars} className="text-[13px] text-foreground/80 leading-relaxed text-pretty" />
                   </>
                 ) : active === 'FR' ? (
                   <>
@@ -534,7 +572,7 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                       <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider mb-1">Fiche Avenir</div>
                       <div className="text-xs text-foreground font-semibold">Teacher-assessed autonomy/initiative — feeds selective programs, never replaces grades</div>
                     </div>
-                    <p className="text-[13px] text-foreground/80 leading-relaxed text-pretty">{info.extracurriculars}</p>
+                    <BulletText text={info.extracurriculars} className="text-[13px] text-foreground/80 leading-relaxed text-pretty" />
                   </>
                 ) : active === 'HK' ? (
                   <>
@@ -542,19 +580,19 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                       <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider mb-1">OEA / OLE mechanism</div>
                       <div className="text-xs text-foreground font-semibold">Traditionally secondary to core subjects — weight varies by university</div>
                     </div>
-                    <p className="text-[13px] text-foreground/80 leading-relaxed text-pretty">{info.extracurriculars}</p>
+                    <BulletText text={info.extracurriculars} className="text-[13px] text-foreground/80 leading-relaxed text-pretty" />
                   </>
                 ) : (
-                  <p className="text-sm text-foreground/80 leading-relaxed text-pretty">{info.extracurriculars}</p>
+                  <BulletText text={info.extracurriculars} className="text-sm text-foreground/80 leading-relaxed text-pretty" />
                 )}
               </section>
 
               <section className="bg-card border border-border rounded-3xl p-6">
                 <div className="flex items-center gap-2 mb-2">
                   <PenLine className="w-4 h-4 text-chart-4" />
-                  <h3 className="text-sm font-bold">Essays</h3>
+                  <h3 className="text-base font-bold tracking-tight">Essays</h3>
                 </div>
-                <p className="text-sm text-foreground/80 leading-relaxed text-pretty mb-3">{info.essays}</p>
+                <div className="mb-3"><BulletText text={info.essays} className="text-sm text-foreground/80 leading-relaxed text-pretty" /></div>
                 {info.essayResources.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {info.essayResources.map((l) => (
@@ -571,7 +609,7 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
       ) : (
         <div className="space-y-4">
           <section className="bg-card border border-border rounded-3xl p-6">
-            <h2 className="text-lg font-bold mb-1">{deadlines.name} — admissions calendar</h2>
+            <h2 className="text-xl font-bold tracking-tight mb-1">{deadlines.name} — admissions calendar</h2>
             <p className="text-xs text-muted-foreground leading-relaxed text-pretty">{deadlines.system}</p>
           </section>
 
@@ -598,7 +636,7 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                       </span>
                     </div>
                   </div>
-                  <h3 className="text-sm font-bold text-pretty mb-1">{round.label}</h3>
+                  <h3 className="text-base font-bold tracking-tight text-pretty mb-1">{round.label}</h3>
                   <p className="text-base font-mono font-bold text-primary">{round.date}</p>
                   {round.note && <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed text-pretty">{round.note}</p>}
                   {/* Same gate as the countdown badge — only a real,
@@ -626,7 +664,7 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
           <section className="bg-card border border-border rounded-3xl p-6">
             <div className="flex items-center gap-2 mb-3">
               <GraduationCap className="w-4 h-4 text-primary" />
-              <h3 className="text-sm font-bold">What must be submitted by then</h3>
+              <h3 className="text-base font-bold tracking-tight">What must be submitted by then</h3>
             </div>
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5">
               {deadlines.checklist.map((item) => (
