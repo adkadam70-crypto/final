@@ -215,7 +215,7 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
           items) that read as unbalanced next to the full row above it. A
           fixed 4-column grid (2 clean rows of 4) keeps every row the same
           width regardless of how the pills wrap. */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-8">
         {APPLICATION_INFO_COUNTRIES.map((code) => {
           const isDefault = defaultCountries.includes(code)
           const isActive = active === code
@@ -230,7 +230,12 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                   : 'bg-gradient-to-b from-secondary to-secondary/60 border-border text-muted-foreground hover:border-foreground/25 hover:text-foreground hover:shadow-sm'
               }`}
             >
-              <span className={`text-xs font-mono font-bold min-w-[26px] text-center px-1.5 py-1 rounded-lg shrink-0 ${isActive ? 'bg-primary text-primary-foreground' : 'bg-card text-foreground/70'}`}>{code}</span>
+              {/* Was a flat bg-card/gray badge even when inactive — gave the
+                  code letters no real color of their own. Now a muted
+                  emerald tint always, brightening to solid on the active
+                  pill, so it reads as a colored tag rather than a gray
+                  placeholder. */}
+              <span className={`text-xs font-mono font-bold min-w-[26px] text-center px-1.5 py-1 rounded-lg shrink-0 ${isActive ? 'bg-primary text-primary-foreground' : 'bg-primary/15 text-primary'}`}>{code}</span>
               <span className="truncate">{APPLICATION_INFO[code].name}</span>
               {isDefault && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0 ml-auto" aria-label="one of your target countries" />}
             </button>
@@ -243,9 +248,10 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
           border-2) read as a stiff square slab next to the soft rounded
           pills above it. Same soft rounded-full family as the country
           pills, but visually its own thing: a filled track (bg-secondary)
-          with a solid emerald capsule for whichever mode is active, plus
-          real vertical gap (mt-2) separating it from the country row. */}
-      <div id="admissions-calendar" className="inline-flex p-1 rounded-full bg-secondary border border-border mb-6 mt-2 scroll-mt-6 shadow-sm">
+          with a solid emerald capsule for whichever mode is active. mb-8
+          (was mb-6/mt-2) gives it real breathing room both above and below
+          — it was reading as cramped/congested against the country grid. */}
+      <div id="admissions-calendar" className="inline-flex p-1 rounded-full bg-secondary border border-border mb-8 scroll-mt-6 shadow-sm">
         <button
           onClick={() => setTab('overview')}
           className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${tab === 'overview' ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:text-foreground'}`}
