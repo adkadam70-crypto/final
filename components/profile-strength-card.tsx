@@ -47,7 +47,7 @@ export function ProfileStrengthCard({ hasProfile }: { hasProfile: boolean }) {
 
   return (
     <div
-      className={`rounded-2xl p-5 flex flex-col justify-between transition-all backdrop-blur-xl border bg-zinc-950/70 ${
+      className={`h-full rounded-2xl p-5 flex flex-col justify-between transition-all backdrop-blur-xl border bg-zinc-950/70 ${
         isRequiredFirstStep
           ? 'border-emerald-500/40 shadow-lg shadow-emerald-950/40 hover:border-emerald-500/60'
           : 'border-white/10 hover:border-white/20'
@@ -58,9 +58,9 @@ export function ProfileStrengthCard({ hasProfile }: { hasProfile: boolean }) {
             to it — inline competed with the "—"/score value for width and
             wrapped mid-word on narrower grid columns. */}
         <div className="flex flex-col gap-1 min-w-0">
-          <div className="flex items-center gap-2 text-zinc-400">
+          <div className="flex items-center gap-2 text-foreground/90">
             <User className="w-4 h-4 shrink-0" />
-            <span className="text-[11px] font-mono tracking-wider whitespace-nowrap">PROFILE STRENGTH</span>
+            <span className="text-xs font-bold font-mono tracking-wider whitespace-nowrap">PROFILE STRENGTH</span>
           </div>
           {isRequiredFirstStep && (
             <span className="self-start text-[9px] font-mono text-emerald-400 bg-emerald-950/80 border border-emerald-500/30 px-2 py-0.5 rounded whitespace-nowrap">
@@ -68,14 +68,14 @@ export function ProfileStrengthCard({ hasProfile }: { hasProfile: boolean }) {
             </span>
           )}
         </div>
-        <span className={`text-2xl font-bold font-mono ${result ? 'text-emerald-400' : 'text-zinc-500'}`}>{result ? `${result.score}%` : '—'}</span>
+        <span className={`text-2xl font-bold font-mono ${result ? 'text-emerald-400' : 'text-muted-foreground/70'}`}>{result ? `${result.score}%` : '—'}</span>
       </div>
 
       <div className="flex-1">
         {result ? (
           <>
-            <p className="text-xs text-zinc-300 mt-3 leading-relaxed text-pretty min-h-[2.5rem]">{result.headline}</p>
-            {result.hint && <p className="text-[11px] font-mono text-zinc-500 mt-1 text-pretty">{result.hint}</p>}
+            <p className="text-xs text-foreground/80 mt-5 leading-relaxed text-pretty min-h-[2.5rem]">{result.headline}</p>
+            {result.hint && <p className="text-[11px] font-mono text-muted-foreground/70 mt-1 text-pretty">{result.hint}</p>}
 
             {(result.strengths.length > 0 || result.weaknesses.length > 0) && (
               <button
@@ -92,7 +92,7 @@ export function ProfileStrengthCard({ hasProfile }: { hasProfile: boolean }) {
                 {result.strengths.length > 0 && (
                   <ul className="space-y-1">
                     {result.strengths.map((s, i) => (
-                      <li key={i} className="flex items-start gap-1.5 text-[11px] text-zinc-300">
+                      <li key={i} className="flex items-start gap-1.5 text-[11px] text-foreground/80">
                         <CircleCheck className="w-3 h-3 mt-0.5 shrink-0 text-emerald-400" />
                         <span className="text-pretty">{s}</span>
                       </li>
@@ -102,7 +102,7 @@ export function ProfileStrengthCard({ hasProfile }: { hasProfile: boolean }) {
                 {result.weaknesses.length > 0 && (
                   <ul className="space-y-1">
                     {result.weaknesses.map((w, i) => (
-                      <li key={i} className="flex items-start gap-1.5 text-[11px] text-zinc-300">
+                      <li key={i} className="flex items-start gap-1.5 text-[11px] text-foreground/80">
                         <CircleMinus className="w-3 h-3 mt-0.5 shrink-0 text-red-400" />
                         <span className="text-pretty">{w}</span>
                       </li>
@@ -123,7 +123,7 @@ export function ProfileStrengthCard({ hasProfile }: { hasProfile: boolean }) {
         ) : pending ? (
           <div className="mt-3">
             <LoadingDots className="text-emerald-400" />
-            <p className="text-[11px] text-zinc-400 font-mono mt-2">Reading your profile…</p>
+            <p className="text-[11px] text-muted-foreground font-mono mt-2">Reading your profile…</p>
           </div>
         ) : (
           <>
@@ -133,10 +133,10 @@ export function ProfileStrengthCard({ hasProfile }: { hasProfile: boolean }) {
                 two on mobile, where cards stack in one column and
                 nothing stretches them to match. The CTA itself still
                 lives only in the one bottom link, not duplicated here. */}
-            <p className="text-xs text-zinc-300 mt-2 leading-relaxed min-h-[2.5rem]">
+            <p className="text-xs text-foreground/80 mt-5 leading-relaxed min-h-[2.5rem]">
               Input your GPA, course rigor, and extracurriculars to calculate your baseline admissions index.
             </p>
-            <p className="text-[11px] font-mono text-zinc-500 mt-1">{hasProfile ? 'Ready to calculate' : 'Set up your profile first'}</p>
+            <p className="text-[11px] font-mono text-muted-foreground/70 mt-1">{hasProfile ? 'Ready to calculate' : 'Set up your profile first'}</p>
           </>
         )}
 

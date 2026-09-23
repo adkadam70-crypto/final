@@ -14,7 +14,7 @@ export function StatCard({
   label,
   value,
   suffix = '',
-  valueClassName = 'text-white',
+  valueClassName = 'text-foreground',
   description,
   hint,
   actionHref,
@@ -50,23 +50,23 @@ export function StatCard({
   }, [value, suffix])
 
   return (
-    <div className="bg-zinc-900/60 border border-white/10 hover:border-white/20 rounded-2xl p-5 flex flex-col justify-between transition-all backdrop-blur-xl">
+    <div className="h-full bg-zinc-900/60 border border-white/10 hover:border-white/20 rounded-2xl p-5 flex flex-col justify-between transition-all backdrop-blur-xl">
       <div className="flex items-start justify-between">
-        <div className="flex items-center gap-2 text-zinc-400">
+        <div className="flex items-center gap-2 text-foreground/90">
           {icon}
-          <span className="text-[11px] font-mono tracking-wider">{label}</span>
+          <span className="text-xs font-bold font-mono tracking-wider">{label}</span>
         </div>
         <span className={`text-3xl font-bold font-mono ${valueClassName}`}>
           <span ref={numRef}>0{suffix}</span>
         </span>
       </div>
       <div>
-        <p className="text-xs text-zinc-300 mt-3 leading-relaxed min-h-[2.5rem]">{description}</p>
-        <p className="text-[11px] font-mono text-zinc-500 mt-1">{hint}</p>
+        <p className="text-xs text-foreground/80 mt-5 leading-relaxed min-h-[2.5rem]">{description}</p>
+        <p className="text-[11px] font-mono text-muted-foreground/70 mt-1">{hint}</p>
       </div>
       <Link
         href={actionHref}
-        className="text-xs font-semibold text-white flex items-center gap-1.5 hover:text-emerald-400 transition-colors pt-4 border-t border-white/5 mt-4"
+        className="text-xs font-semibold text-foreground flex items-center gap-1.5 hover:text-emerald-400 transition-colors pt-4 border-t border-white/5 mt-4"
       >
         {actionLabel} →
       </Link>

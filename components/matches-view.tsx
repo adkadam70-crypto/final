@@ -305,19 +305,19 @@ export function MatchesView({ profile, catalogScope }: { profile: ProfileRow; ca
           {profile?.academicDetail && (
             <div className="mb-5 rounded-xl bg-zinc-950/60 border border-white/5 p-3.5 divide-y divide-white/5">
               <div className="flex items-center justify-between pb-2 text-[11px] font-mono">
-                <span className="text-zinc-500 uppercase tracking-wider">Target regions</span>
+                <span className="text-muted-foreground font-semibold uppercase tracking-wider">Target regions</span>
                 <span className="text-emerald-400 font-semibold">{targetCountries.join(' · ')}</span>
               </div>
               {catalogScope !== null && catalogScope !== undefined && (
                 <div className="flex items-center justify-between py-2 text-[11px] font-mono">
-                  <span className="text-zinc-500 uppercase tracking-wider">Institutional scope</span>
-                  <span className="text-white">{catalogScope} universities</span>
+                  <span className="text-muted-foreground font-semibold uppercase tracking-wider">Institutional scope</span>
+                  <span className="text-foreground">{catalogScope} universities</span>
                 </div>
               )}
               {(profile.intendedField !== 'No preference' || profile.preferredRank !== 'No preference') && (
                 <div className="flex items-center justify-between pt-2 text-[11px] font-mono">
-                  <span className="text-zinc-500 uppercase tracking-wider">Active filters</span>
-                  <span className="text-zinc-300">{[profile.intendedField !== 'No preference' && profile.intendedField, profile.preferredRank !== 'No preference' && profile.preferredRank].filter(Boolean).join(' · ')}</span>
+                  <span className="text-muted-foreground font-semibold uppercase tracking-wider">Active filters</span>
+                  <span className="text-foreground/80">{[profile.intendedField !== 'No preference' && profile.intendedField, profile.preferredRank !== 'No preference' && profile.preferredRank].filter(Boolean).join(' · ')}</span>
                 </div>
               )}
             </div>
@@ -411,7 +411,7 @@ export function MatchesView({ profile, catalogScope }: { profile: ProfileRow; ca
             instead of 4 separate paragraph cards. */}
         <div className={mode === 'comprehensive' ? '' : 'hidden'}>
           <section className="bg-zinc-900/30 border border-white/5 rounded-2xl p-4">
-            <h2 className="text-[10px] font-mono text-zinc-500 tracking-wider uppercase mb-3">Regional weighting engine</h2>
+            <h2 className="text-xs font-bold font-mono text-foreground/90 tracking-wider uppercase mb-3">Regional weighting engine</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {targetCountries.map((c) => {
                 const ctx = CONTEXT[c]

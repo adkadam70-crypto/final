@@ -44,15 +44,21 @@ export function Navbar({ userName, userEmail }: { userName: string; userEmail: s
           last ~25% once the menu made the header much taller (Account
           settings / Sign out, at the bottom of the list). */}
       <nav
-        className="max-w-7xl mx-auto items-center px-6 h-16 flex justify-between"
+        // No max-width cap at all now — even the earlier 1800px cap left
+        // visible dead space on both sides on a genuinely wide external
+        // monitor, reading as "bunched toward the middle." Full width +
+        // px scaling by breakpoint anchors the logo/account to the true
+        // screen edges on any size, while staying identical on a
+        // laptop-width viewport (padding, not a cap, is what scales).
+        className="w-full items-center px-6 lg:px-10 2xl:px-20 h-16 flex justify-between"
         style={{
           maskImage: 'linear-gradient(to bottom, black 75%, transparent 100%)',
           WebkitMaskImage: 'linear-gradient(to bottom, black 75%, transparent 100%)',
         }}
       >
         <Link href="/dashboard" className="flex items-center gap-2.5 shrink-0 justify-self-start mr-6">
-          <AppLogo className="h-9 w-auto" />
-          <span className="text-lg font-bold tracking-tight">Shortlisted</span>
+          <AppLogo className="h-9 w-auto 2xl:h-10" />
+          <span className="text-lg 2xl:text-xl font-bold tracking-tight">Shortlisted</span>
         </Link>
 
         <div className="hidden lg:block min-w-0">
@@ -64,7 +70,7 @@ export function Navbar({ userName, userEmail }: { userName: string; userEmail: s
           <NavBar items={NAV_LINKS.map((l) => ({ name: l.label, url: l.href, icon: l.icon }))} compact />
         </div>
 
-        <div className="flex items-center gap-2 justify-self-end ml-6">
+        <div className="flex items-center gap-2 2xl:gap-3 justify-self-end ml-6">
           <EmeraldBadgeSmall />
           <ThemeToggle />
           <div className="hidden sm:block">

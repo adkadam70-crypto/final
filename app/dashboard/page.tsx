@@ -19,8 +19,8 @@ export default async function DashboardPage() {
   return (
     <main className="max-w-6xl mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white tracking-tight">Welcome back, {firstName}</h1>
-        <p className="text-sm text-zinc-400 mt-1">Here&apos;s your admissions overview at a glance.</p>
+        <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Welcome back, {firstName}</h1>
+        <p className="text-sm text-muted-foreground mt-1">Here&apos;s your admissions overview at a glance.</p>
       </div>
 
       {/* Each unified card now pairs its action with its live metric, so the

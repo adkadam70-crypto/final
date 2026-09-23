@@ -103,7 +103,13 @@
   --secondary: oklch(0.27 0.01 260);
   --secondary-foreground: oklch(0.96 0.004 260);
   --muted: oklch(0.27 0.01 260);
-  --muted-foreground: oklch(0.7 0.02 260);
+  /* Bumped from 0.7, then again from 0.76 — still reported as hard to
+     read on larger/high-DPI external monitors even though it passes
+     normal contrast ratios; this is the token every "gray" secondary-text
+     class in the app resolves to (text-muted-foreground), so raising it
+     here fixes readability site-wide in one place instead of hunting
+     down every usage. */
+  --muted-foreground: oklch(0.82 0.012 260);
   --accent: oklch(0.26 0.03 178);
   --accent-foreground: oklch(0.88 0.06 178);
   --destructive: oklch(0.63 0.2 20);
