@@ -37,10 +37,12 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
   },
   icons: {
+    // The bare diamond mark, square canvas but transparent background — the
+    // icon-dark/light-32x32.png files below have their own rounded dark
+    // badge baked in, which is right for the iOS home-screen icon but reads
+    // as an unwanted box around the mark in a browser tab.
     icon: [
-      { url: '/icon-dark-32x32.png', sizes: '32x32', type: 'image/png', media: '(prefers-color-scheme: dark)' },
-      { url: '/icon-light-32x32.png', sizes: '32x32', type: 'image/png', media: '(prefers-color-scheme: light)' },
-      { url: '/icon-dark-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
     ],
     apple: '/apple-icon.png',
   },
