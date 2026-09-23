@@ -68,6 +68,18 @@ function parseDeadlineDate(dateStr: string): Date | null {
   return Number.isNaN(date.getTime()) ? null : date
 }
 
+// Splits off the first sentence of a note so it can be shown bold as the
+// "bottom line," with the rest as supporting detail below — generalized
+// across all 8 countries rather than hardcoding one country's specific
+// claim (e.g. the US genuinely has no GPA conversion table, but Australia,
+// Germany, and the UK all DO run real conversion processes — a single
+// shared headline claiming "no conversion" would be false for those).
+function splitLeadSentence(text: string): { lead: string; rest: string } {
+  const match = text.match(/^([\s\S]+?[.!?])(\s+([\s\S]*))?$/)
+  if (!match) return { lead: text, rest: '' }
+  return { lead: match[1], rest: match[3] ?? '' }
+}
+
 function daysUntil(date: Date): number {
   const now = new Date()
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -156,12 +168,12 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
             <div className="lg:col-span-5 space-y-4">
               <section className="bg-card border border-border rounded-3xl p-6">
                 <h2 className="text-lg font-bold mb-1 flex items-center gap-2"><Globe className="w-4 h-4 text-primary" /> {info.name}</h2>
-                <p className="text-xs text-muted-foreground leading-relaxed text-pretty mb-4">{info.howToApply}</p>
+                <p className="text-[13px] text-foreground/75 leading-relaxed text-pretty mb-4">{info.howToApply}</p>
                 <div className="flex items-center gap-2 mb-2">
                   <LinkIcon className="w-3.5 h-3.5 text-primary" />
                   <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Application platform</span>
                 </div>
-                <p className="text-xs text-muted-foreground mb-2">{info.platform}</p>
+                <p className="text-[13px] text-foreground/75 mb-2">{info.platform}</p>
                 <div className="flex flex-wrap gap-2">
                   {info.platformLinks.map((l) => (
                     <a key={l.url} href={l.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[11px] bg-secondary border border-border text-primary px-2.5 py-1.5 rounded-lg hover:border-primary/40 transition-colors">
@@ -177,9 +189,21 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                     <Landmark className="w-4 h-4 text-primary" />
                     <h3 className="text-sm font-bold">Curriculum parity</h3>
                   </div>
-                  {curriculumNotes.map((note, i) => (
-                    <p key={i} className="text-xs text-muted-foreground leading-relaxed text-pretty mt-2 first:mt-0">{note}</p>
-                  ))}
+                  {/* Bold lead sentence per note, not a single hardcoded
+                      claim — see splitLeadSentence's comment for why: the
+                      real policy genuinely differs by country (US reads
+                      curricula as-is, AU/DE/UK run actual conversion
+                      processes), so the bottom line has to come from each
+                      country's own real text, not one shared headline. */}
+                  {curriculumNotes.map((note, i) => {
+                    const { lead, rest } = splitLeadSentence(note)
+                    return (
+                      <div key={i} className="mt-3 first:mt-0">
+                        <p className="text-[13px] font-semibold text-foreground leading-snug text-pretty">{lead}</p>
+                        {rest && <p className="text-[13px] text-foreground/75 leading-relaxed text-pretty mt-1">{rest}</p>}
+                      </div>
+                    )
+                  })}
                 </section>
               )}
 
@@ -188,7 +212,41 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                   <FileText className="w-4 h-4 text-chart-5" />
                   <h3 className="text-sm font-bold">Required tests</h3>
                 </div>
-                <p className="text-xs text-muted-foreground leading-relaxed text-pretty">{info.tests}</p>
+                {/* Same reasoning as Extracurriculars below — the US has a
+                    genuinely structured, quantifiable set of benchmarks
+                    already in the real data (info.tests' own "~1200+ SAT
+                    ... ~1400+ ... ~1500+" figures, not invented here), so
+                    it gets a real benchmark ladder. Other countries' tests
+                    fields describe completely different things (UCAT/LNAT
+                    scoring, ATAR having no separate test, JEE/NEET negative
+                    marking) with no equivalent 3-tier score-band shape to
+                    structure the same way, so they stay as prose. */}
+                {active === 'US' ? (
+                  <>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-mono text-emerald-400 mb-3">
+                      <span>SAT (400-1600)</span><span className="text-muted-foreground">·</span>
+                      <span>ACT (1-36)</span><span className="text-muted-foreground">·</span>
+                      <span>Superscoring accepted</span>
+                    </div>
+                    <div className="bg-secondary/50 border border-border rounded-xl p-3.5 space-y-2 mb-3">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">State flagships</span>
+                        <span className="font-mono text-foreground font-semibold">~1200+ SAT</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">Selective (Top 50)</span>
+                        <span className="font-mono text-foreground font-semibold">~1400+ SAT</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">Ivy / elite tier</span>
+                        <span className="font-mono text-emerald-400 font-bold">~1500+ SAT</span>
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-foreground/70 leading-relaxed text-pretty">Most schools are test-optional, but a strong score still helps at selective ones — a school&apos;s own published range (elsewhere in this app) beats any generic number.</p>
+                  </>
+                ) : (
+                  <p className="text-[13px] text-foreground/75 leading-relaxed text-pretty">{info.tests}</p>
+                )}
               </section>
             </div>
 
@@ -201,7 +259,7 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                 </div>
                 <ul className="space-y-2">
                   {checklist.map((r) => (
-                    <li key={r} className="flex items-start gap-2 text-xs text-muted-foreground">
+                    <li key={r} className="flex items-start gap-2 text-[13px] text-foreground/80">
                       <CircleCheck className="w-3.5 h-3.5 mt-0.5 shrink-0 text-primary" />
                       <span className="text-pretty">{r}</span>
                     </li>
@@ -237,10 +295,10 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                         <div className="text-xs text-foreground font-semibold">Depth in 1-2 "spikes" beats a long shallow list</div>
                       </div>
                     </div>
-                    <p className="text-[11px] text-muted-foreground leading-relaxed text-pretty">Most colleges admitting under 30% of applicants rate extracurriculars &quot;important&quot; or &quot;very important.&quot; National-level achievement or founding something real tends to outrank generic membership — an informal lens consultants use, not an official framework.</p>
+                    <p className="text-[12.5px] text-foreground/75 leading-relaxed text-pretty">Most colleges admitting under 30% of applicants rate extracurriculars <strong className="text-foreground font-semibold">&quot;important&quot; or &quot;very important.&quot;</strong> <strong className="text-foreground font-semibold">National-level achievement</strong> or founding something real tends to outrank generic membership — an informal lens consultants use, not an official framework.</p>
                   </>
                 ) : (
-                  <p className="text-xs text-muted-foreground leading-relaxed text-pretty">{info.extracurriculars}</p>
+                  <p className="text-[13px] text-foreground/75 leading-relaxed text-pretty">{info.extracurriculars}</p>
                 )}
               </section>
 
@@ -249,7 +307,7 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                   <PenLine className="w-4 h-4 text-chart-4" />
                   <h3 className="text-sm font-bold">Essays</h3>
                 </div>
-                <p className="text-xs text-muted-foreground leading-relaxed text-pretty mb-3">{info.essays}</p>
+                <p className="text-[13px] text-foreground/75 leading-relaxed text-pretty mb-3">{info.essays}</p>
                 {info.essayResources.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {info.essayResources.map((l) => (
@@ -267,7 +325,7 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
             <Target className="w-4 h-4 text-primary shrink-0 mt-0.5" />
             <div>
               <h3 className="text-sm font-bold mb-1">What {info.name} actually prioritizes</h3>
-              <p className="text-xs text-accent-foreground leading-relaxed text-pretty">{info.prioritizes}</p>
+              <p className="text-[13px] text-accent-foreground/90 leading-relaxed text-pretty">{info.prioritizes}</p>
             </div>
           </section>
         </div>
