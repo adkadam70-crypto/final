@@ -210,7 +210,7 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
           monospace country-code badge so the row reads as a set of distinct
           countries at a glance, not identical gray shapes with different
           text lengths. */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="flex flex-wrap gap-x-2.5 gap-y-3 mb-6">
         {APPLICATION_INFO_COUNTRIES.map((code) => {
           const isDefault = defaultCountries.includes(code)
           const isActive = active === code
@@ -219,7 +219,11 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
               key={code}
               onClick={() => setActive(code)}
               aria-pressed={isActive}
-              className={`pl-2.5 pr-5 py-2.5 rounded-2xl text-sm font-medium border transition-all flex items-center gap-2 ${isActive ? 'bg-accent border-primary text-accent-foreground' : 'bg-secondary border-border text-muted-foreground hover:border-foreground/20'}`}
+              className={`pl-2.5 pr-5 py-2.5 rounded-2xl text-sm font-medium border transition-all flex items-center gap-2 hover:-translate-y-0.5 active:translate-y-0 ${
+                isActive
+                  ? 'bg-gradient-to-b from-accent to-accent/70 border-primary text-accent-foreground shadow-md shadow-primary/10'
+                  : 'bg-gradient-to-b from-secondary to-secondary/60 border-border text-muted-foreground hover:border-foreground/25 hover:text-foreground hover:shadow-sm'
+              }`}
             >
               <span className={`text-xs font-mono font-bold min-w-[26px] text-center px-1.5 py-1 rounded-lg ${isActive ? 'bg-primary text-primary-foreground' : 'bg-card text-foreground/70'}`}>{code}</span>
               {APPLICATION_INFO[code].name}
