@@ -105,6 +105,18 @@ export const universities = pgTable('universities', {
 // ACADEMIC_FIELDS value it's separately ranked for). Absence of a row for a
 // given field means "not yet researched," not "unranked" — callers should
 // fall back to baselineSelectivity, never treat a missing row as a zero.
+//
+// field must match the row's actual rankSource subject, not just the
+// nearest/broadest bucket — e.g. a "Best Journalism Schools" ranking goes
+// under field: "Journalism" (its own dedicated ACADEMIC_FIELDS value), never
+// filed under the broader "Communications & Media" just because it's
+// adjacent. Found ~125 rows shipped this way in 2026-09 (Economics under
+// Social Sciences, Journalism under Communications & Media, Agriculture
+// under Science & Technology / Research, etc. — plus a Culinary Arts
+// ranking with no correct field at all, deleted rather than mistagged).
+// After any bulk import or manual insert here, run
+// scripts/validate-program-ranking-fields.mjs before shipping — it flags
+// rows whose rankSource text doesn't match their assigned field.
 export const programRankings = pgTable('programRankings', {
   id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
   universityId: integer('universityId').notNull(), // FK to universities.id (no constraint, matching savedSchools' convention)

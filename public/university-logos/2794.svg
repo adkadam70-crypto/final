@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="de-DE">
+<head>
+    <meta charset="utf-8">
+
+<!-- 
+	This website is powered by TYPO3 - inspiring people to share!
+	TYPO3 is a free open source Content Management Framework initially created by Kasper Skaarhoj and licensed under GNU/GPL.
+	TYPO3 is copyright 1998-2026 of Kasper Skaarhoj. Extensions are copyright of their respective owners.
+	Information and contribution at https://typo3.org/
+-->
+
+
+<title>ASH Berlin: Hochschule für Soziale Arbeit, Gesundheit und Pflege, Erziehung und Bildung | ASH Berlin</title>
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="generator" content="TYPO3 CMS">
+<meta name="description" content="Die ASH Berlin ist die größte deutsche staatliche Hochschule für Soziale Arbeit, Gesundheit und Erziehung (SAGE) mit 20 Master- und Bachelor-Studiengängen.">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, shrink-to-fit=no">
+<meta name="robots" content="INDEX,FOLLOW">
+<meta property="og:title" content="ASH Berlin">
+<meta property="og:description" content="Die ASH Berlin ist die größte deutsche staatliche Hochschule für Soziale Arbeit, Gesundheit und Erziehung (SAGE) mit 20 Master- und Bachelor-Studiengängen.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ASH Berlin">
+<meta name="twitter:description" content="Die ASH Berlin ist die größte deutsche staatliche Hochschule für Soziale Arbeit, Gesundheit und Erziehung (SAGE) mit 20 Master- und Bachelor-Studiengängen.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+
+<link rel="stylesheet" href="/_assets/b64d04ecd5d9c128a9fc8b46089395df/Css/cookie-panel.css?1732808600" media="all">
+<link rel="stylesheet" href="/typo3temp/assets/css/db2417758728fbb85ab813dbcc6f1411.css?1737965539" media="all">
+<link rel="stylesheet" href="/_assets/b64d04ecd5d9c128a9fc8b46089395df/Css/jquery.fancybox.css?1732808601" media="screen">
+<link rel="stylesheet" href="/_assets/b64d04ecd5d9c128a9fc8b46089395df/Css/plyr.css?1782835828" media="screen">
+<link rel="stylesheet" href="/_assets/b64d04ecd5d9c128a9fc8b46089395df/Css/layout.css?1787912421" media="screen">
+<link rel="stylesheet" href="/_assets/b64d04ecd5d9c128a9fc8b46089395df/Css/layout-print.css?1787912423" media="print">
+
+
+
+<script src="/_assets/b64d04ecd5d9c128a9fc8b46089395df/JavaScript/jquery.min.js?1732808626"></script>
+<script src="/_assets/b64d04ecd5d9c128a9fc8b46089395df/JavaScript/jquery.fancybox.min.js?1732808626"></script>
+<script src="/_assets/b64d04ecd5d9c128a9fc8b46089395df/JavaScript/jquery.cookie.js?1732808626"></script>
+<script src="/_assets/b64d04ecd5d9c128a9fc8b46089395df/JavaScript/slick.js?1732808629"></script>
+<script src="/_assets/b64d04ecd5d9c128a9fc8b46089395df/JavaScript/bootstrap.min.js?1732808626"></script>
+<script src="/_assets/b64d04ecd5d9c128a9fc8b46089395df/JavaScript/plyr.min.js?1782834169"></script>
+<script src="/_assets/b64d04ecd5d9c128a9fc8b46089395df/JavaScript/site-helpers.js?1782888913"></script>
+
+
+<script nonce=''>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+    
+            gtag('consent', 'default', {
+              'ad_storage': 'denied',
+              'ad_user_data': 'denied',
+              'ad_personalization': 'denied',
+              'analytics_storage': 'denied'
+            });
+            </script>
+            
+<script id="om-cookie-consent" type="application/json">{"group-2":{"cookie-3":{"header":["<!-- Matomo -->\r\n<script>\r\n  var _paq = window._paq = window._paq || [];\r\n  \/* tracker methods like \"setCustomDimension\" should be called before \"trackPageView\" *\/\r\n  _paq.push(['trackPageView']);\r\n  _paq.push(['enableLinkTracking']);\r\n  (function() {\r\n    var u=\"\/\/www.ash-berlin.eu\/piwik\/\";\r\n    _paq.push(['setTrackerUrl', u+'matomo.php']);\r\n    _paq.push(['setSiteId', '1']);\r\n    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];\r\n    g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);\r\n  })();\r\n<\/script>\r\n<!-- End Matomo Code -->"]}}}</script>
+<link rel="apple-touch-icon" sizes="180x180" href="/typo3conf/ext/ash/Resources/Public/Images/Favicons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/typo3conf/ext/ash/Resources/Public/Images/Favicons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/typo3conf/ext/ash/Resources/Public/Images/Favicons/favicon-16x16.png">
+<link rel="manifest" href="/typo3conf/ext/ash/Resources/Public/Images/Favicons/site.webmanifest">
+<link rel="mask-icon" href="/typo3conf/ext/ash/Resources/Public/Images/Favicons/safari-pinned-tab.svg" color="#d11518">
+<link rel="shortcut icon" href="/typo3conf/ext/ash/Resources/Public/Images/Favicons/favicon.ico">
+<meta name="msapplication-TileColor" content="#ffffff">
+<meta name="msapplication-config" content="/typo3conf/ext/ash/Resources/Public/Images/Favicons/browserconfig.xml">
+<meta name="theme-color" content="#d11518"><link rel="alternate" hreflang="de" href="/index/" /><link rel="alternate" hreflang="en" href="/en/index/" />
+<link rel="canonical" href="https://www.ash-berlin.eu/index/">
+
+<link rel="alternate" hreflang="de-DE" href="https://www.ash-berlin.eu/index/">
+<link rel="alternate" hreflang="en-US" href="https://www.ash-berlin.eu/en/index/">
+<link rel="alternate" hreflang="x-default" href="https://www.ash-berlin.eu/index/">
+</head>
+<body class="layout_pagets__AshStartpage" id="page2">
+      <nav class="visually-hidden-focusable print-hidden">
+        <ul>
+          <li><a href="#teaser">Thematische Einführung</a></li>
+          <li><a href="#main-content">Zum Inhalt</a></li>
+          <li><a href="#contact">Kontakt, Anfahrt und Rechtliches</a></li>
+        </ul>
+      </nav><div class="print-header visible-print" aria-hidden="true"><img src="/_assets/b64d04ecd5d9c128a9fc8b46089395df/Images/ash-logo-claim.svg" alt="Logo Alice-Salomon-Hochschule Berlin"></div><div class="nav-header-wrapper"><div class="container nav-header"><div class="row"><div class="col-2 home-link"><img src="/_assets/b64d04ecd5d9c128a9fc8b46089395df/Images/ash-logo.svg" alt="Logo Alice Salomon Hochschule Berlin"><span class="sr-only">Zur ASH-Startseite</span></div><div class="col-8 col-md-6"><p class="h3">Alice Salomon Hochschule Berlin</p><nav aria-label="Sie sind hier:" class="breadcrumb hidden-sm hidden-xs"><p>ASH Berlin</p></nav></div><div class="col-2 col-md-4 hidden-print"><div class="pull-right position-relative"><p class="menu-shortlinks hidden-xs hidden-sm"><a href="/seiten-in-leichter-sprache/">Leichte Sprache</a><a href="/en/index/">English</a><a href="/gebaerdensprache/">Gebärdensprache</a></p>             <button class="overlay-search-open hidden-xs hidden-sm" aria-label="Suche" aria-expanded="false"><span class="sr-only">Suche</span></button>
+             <button class="overlay-nav-toggle open-menu" aria-label="Hauptmenü" aria-expanded="false"><span class="sr-only">Hauptmenü</span></button></div></div></div><!-- row --></div><!-- container nav-header --></div><div class="overlay-nav"><div class="container nav-header hidden-print"><div class="row"><div class="col-2 col-md-4 home-link"><a href="/index/" class="tabListFirstEl"><img src="/_assets/b64d04ecd5d9c128a9fc8b46089395df/Images/ash-logo.svg" alt="Logo Alice Salomon Hochschule Berlin" aria-hidden="true"><span class="sr-only">Zur ASH-Startseite</span></a></div><div class="col-10 col-md-4 order-md-last"><div class="pull-right position-relative"><p class="menu-shortlinks"><a href="/seiten-in-leichter-sprache/">Leichte Sprache</a><a href="/en/index/">English</a></p><button class="overlay-nav-toggle close-menu" aria-label="Hauptmenü schließen" aria-expanded="true" tabindex="-1"><span class="sr-only">Hauptmenü schließen</span></button></div></div><div class="col-12 col-md-4 col-md-pull-4"><form method="get" id="form_kesearch_searchfield" class="header-searchform" name="form_kesearch_searchfield" action="/suchergebnisse/">
+                    <label for="ke_search_searchfield_sword">Suchbegriff</label>
+                    <input type="hidden" name="id" value="127" />
+                    <input type="text" id="ke_search_searchfield_sword" name="tx_kesearch_pi1[sword]" />
+                    <button type="submit" id="ke_search_searchfield_submit" class="btn btn-default btn-search mt-1">Suchen</button>
+                  </form></div></div><!-- row --></div><!-- container nav-header --><nav class="hidden-print" aria-label="Hauptnavigation"><div class="container"><ul class="row main-menu bg-gray-lighter" id="main-menu"><li class="col-12 col-sm-6 col-md-4 col-lg-4"><p class="h3 active"><a href="/index/">Startseite</a></p></li><li class="col-12 col-sm-6 col-md-4 col-lg-4"><p class="h3"><a href="/hochschule/">Hochschule</a></p><ul><li><a href="/hochschule/sage-profil/ueber-das-sage-profil-der-ash-berlin/" class="item">SAGE-Profil</a></li><li><a href="/hochschule/organisation/" class="item">Organisation</a></li><li><a href="/hochschule/fachbereiche/" class="item">Fachbereiche</a></li><li><a href="/hochschule/vernetzung/" class="item">Vernetzung</a></li><li><a href="/hochschule/job-karriere/" class="item">Job &amp; Karriere</a></li><li><a href="/hochschule/lehrende/" class="item">Lehrende</a></li><li><a href="/hochschule/personen-a-z/" class="item">Personen A-Z</a></li><li><a href="/hochschule/presse-und-newsroom/" class="item">Presse und Newsroom</a></li></ul></li><li class="col-12 col-sm-6 col-md-4 col-lg-4"><p class="h3"><a href="/studium/">Studium</a></p><ul><li><a href="/studium/studiengaenge/" class="item">Studiengänge</a></li><li><a href="/studium/studierendenverwaltung/" class="item">Studierendenverwaltung</a></li><li><a href="/studium/einrichtungen-fuer-studierende/" class="item">Einrichtungen für Studierende</a></li><li><a href="/studium/werkstattraeume/" class="item">Werkstatträume</a></li><li><a href="/studium/beratung-unterstuetzung/" class="item">Beratung &amp; Unterstützung</a></li><li><a href="/studium/hochschulleben/" class="item">Hochschulleben</a></li><li><a href="/hochschule/organisation/input/" class="item">Arbeitsbereich Intersektionale Praxis und Transformation - InPuT</a></li></ul></li><li class="col-12 col-sm-6 col-md-4 col-lg-4"><p class="h3"><a href="/forschung/">Forschung</a></p><ul><li><a href="/forschung/forschungsprofil/" class="item">Forschungsprofil</a></li><li><a href="/forschung/forschungsprojekte-a-z/" class="item">Forschungsprojekte A – Z</a></li><li><a href="/forschung/forschungsfoerderung/service-des-forschungsreferats/" class="item">Forschungsförderung</a></li><li><a href="/forschung/ethikkommission/" class="item">Ethikkommission</a></li><li><a href="/studium/beratung-unterstuetzung/promotionsfoerderung/" class="item">Promotionsförderung</a></li><li><a href="/hochschule/organisation/ombudspersonen/" class="item">Ombudsperson</a></li></ul></li><li class="col-12 col-sm-6 col-md-4 col-lg-4"><p class="h3"><a href="/weiterbildung/">Weiterbildung</a></p><ul><li><a href="/weiterbildung/weiterbildende-masterstudiengaenge/" class="item">Weiterbildende Masterstudiengänge</a></li><li><a href="/weiterbildung/zentrum-fuer-weiterbildung/start/" class="item">Zentrum für Weiterbildung</a></li></ul></li><li class="col-12 col-sm-6 col-md-4 col-lg-4"><p class="h3"><a href="/internationales/">Internationales</a></p><ul><li><a href="/internationales/studium-und-praktikum-im-ausland/" class="item">Studium und Praktikum im Ausland</a></li><li><a href="/internationales/incomings/" class="item">Incomings</a></li><li><a href="/internationales/international-vor-ort/" class="item">International vor Ort</a></li><li><a href="/studium/studiengaenge/ash-pre-study-programm/internationale-newcomer/" class="item">@internationale Newcomer</a></li><li><a href="/internationales/partnerhochschulen/" class="item">Partnerhochschulen</a></li><li><a href="/internationales/personalmobilitaet-und-studienfahrten/" class="item">Personalmobilität und Studienfahrten</a></li><li><a href="/internationales/international-office/international-office/" class="item">International Office</a></li></ul></li></ul></div><!-- container --><div class="container"><div class="row additional-menu bg-white"><div class="col-12 col-sm-6 col-md-4 col-lg-4"><p class="h5"><a href="https://www.ash-berlin.eu/kontakt/kontakt-und-anfahrt/" target="_blank">Kontakt</a></p><ul><li><a href="/kontakt/kontakt-und-anfahrt/" class="item">Kontakt und Anfahrt</a></li><li><a href="/kontakt/impressum/" class="item">Impressum</a></li><li><a href="/hochschule/datenschutz/datenschutzerklaerung/" class="item">Datenschutz</a></li><li><a href="/kontakt/barrierefreiheit/" class="item">Barrierefreiheit</a></li><li><a href="/kontakt/hausordnung/" class="item">Hausordnung</a></li><li><a href="/kontakt/grundordnung/" class="item">Grundordnung</a></li><li><a href="https://www.ash-berlin.eu/intra/" target="_blank" class="item">Intranet</a></li><li><a href="https://webmail.ash-berlin.eu" target="_blank" class="item" rel="noreferrer">Webmailer</a></li><li><a href="https://help.ash-berlin.eu" target="_blank" class="item" rel="noreferrer">Onlinehilfe ComZ</a></li><li><a href="/hochschule/jahreskalender/" class="item">Jahreskalender</a></li></ul></div><div class="col-12 col-sm-6 col-md-4 col-lg-4"><p class="h5"><a href="/social/">Social</a></p><ul><li><a href="http://www.tiktok.com/@ash_berlin" target="_blank" class="item" rel="noreferrer">TikTok</a></li><li><a href="https://de-de.facebook.com/ashbln/" target="_blank" class="item" rel="noreferrer">Facebook</a></li><li><a href="https://twitter.com/ash_berlin?lang=de" target="_blank" class="item" rel="noreferrer">Twitter</a></li><li><a href="https://www.instagram.com/alicesalomonhochschule/" target="_blank" class="item" rel="noreferrer">Instagram</a></li><li><a href="https://www.youtube.com/channel/UCnDEKBNniYb4HM7bv80f_oQ" target="_blank" class="item" rel="noreferrer">Youtube</a></li><li><a href="https://soundcloud.com/ash-berlin" target="_blank" class="item" rel="noreferrer">Soundcloud</a></li></ul></div><div class="col-12 col-sm-6 col-md-4 col-lg-4"><p class="h5"><a href="/seiten-in-leichter-sprache/">Seiten in leichter Sprache</a></p></div></div></div><!-- container --></nav><div class="menu-banner hidden-print">
+
+
+    
+            
+        
+
+
+    
+    
+    
+        
+<div class="box outerWrap  no-padding  "><div class="box innerWrap  container bg-white"><div class="gridBox-2parts row"><div class="col col1 left  col-xs-12 col-sm-6 col-md-6 col-lg-6  "></div><!-- col1 --><div class="col col2 right  col-xs-12 col-sm-6 col-md-6 col-lg-6  "></div><!-- col2 --></div><!-- row --></div><!-- innerWrap --></div><!-- outerWrap -->
+
+    
+
+</div>                <div class="container"><div class="row bg-white">
+                  <div class="col-12 col-sm-12">
+                    <p class="text-right">
+                      <button class="overlay-nav-toggle close-menu tabListLastEl" aria-label="Hauptmenü schließen"><span class="sr-only">Hauptmenü schließen</span></button>
+                    </p>
+                  </div>
+                </div></div><!-- container --></div><!-- overlay-nav --><div id="teaser">
+
+
+    
+
+
+    
+        <div id="c23109" class="frame default elementplayer 0">
+            
+            
+                
+
+
+
+            
+            
+                
+
+    
+
+
+
+            
+            
+<div class="box outerWrap  container-fluid no-padding bg bg-gray-dark   slider-teaser"><div class="box innerWrap  no-padding"><div class="slick-slider-wrap"><section id="slickslider-" class="slick-slider slick-slider-main " data-slick='{
+                    "autoplay": true,"autoplaySpeed":5000,
+                    "dots": false
+                }'><div class="item"><figure><img alt="Studierende der ASH Berlin sitzen vor der Hochschule und unterhalten sich, dabei schauen sie gemeinsam auf ein Handy" src="/fileadmin/_processed_/9/2/csm_Foto_Berendsen_051_beschnitten_93e259054d.jpg" width="2500" height="1200" /></figure><div class="slider-caption"><div class="slider-caption-inner"><h1>Neugierig? | <a href="https://www.ash-berlin.eu/studium/studiengaenge/" target="_blank">Jetzt Informieren! </a><a href="/studium/referenzobjekte-fuer-studiengaenge/">►</a></h1><p>Studieren Sie an Deutschlands größter staatlicher SAGE-Hochschule in den Bereichen Soziale Arbeit, Gesundheit und Pflege sowie Erziehung und Bildung.</p><p><a href="/studium/studiengaenge/" target="_blank" class="btn btn-default btn-more btn-rte">Zu den Studiengängen</a></p><p><a href="https://ashb.hispro.de/qisserver/pages/cs/sys/portal/hisinoneStartPage.faces" target="_blank" class="btn btn-default btn-more btn-rte" rel="noreferrer">Zum Bewerbungsportal</a></p></div><!-- slider-caption --></div></div><!-- item --></section></div><!-- slick-slider-wrap --></div><!-- innerWrap --></div><!-- outerWrap -->
+
+            
+                
+
+
+
+            
+            
+                
+
+
+
+            
+        </div>
+    
+    
+    
+
+</div><main id="main-content">
+
+
+    
+
+
+    
+        <div id="c111" class="frame custom-9000 menu_pages targetgroups">
+            
+            
+                
+
+
+
+            
+            
+                
+
+    
+
+
+
+            
+            
+
+    
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	<div class="container-fluid bg-primary menu-target-groups-wrap">
+    	<div class="container">
+    		<ul class="menu-target-groups">
+    			<li><input type="checkbox" id="show-sub" class="sr-only"><label class="show-sub-label" for="show-sub">Themenfinder</label>
+    				<ul>
+						
+							<li><p class="h5"><a href="/studieren/">Studieren</a></p></li>
+						
+							<li><p class="h5"><a href="/forschung/">Forschen</a></p></li>
+						
+							<li><p class="h5"><a href="/weiterbildung/">Weiterbilden</a></p></li>
+						
+							<li><p class="h5"><a href="/informieren/">Informieren</a></p></li>
+						
+							<li><p class="h5"><a href="/engagieren/">Engagieren</a></p></li>
+						
+							<li><p class="h5"><a href="/internationales/">Internationales</a></p></li>
+						    					
+    				</ul>
+    			</li>
+    		</ul><!-- menu-target-groups -->
+    	</div><!-- container -->
+    </div><!-- menu-target-groups-wrap -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
+            
+                
+
+
+
+            
+            
+                
+
+
+
+            
+        </div>
+    
+    
+    
+
+
+
+
+    
+            
+        
+
+
+    
+    
+    
+        
+<div class="box outerWrap  container-fluid mt-2 "><div class="box innerWrap  container"><header><h2 class="ce-headline-center">
+                Neuigkeiten
+            </h2></header><div class="gridBox-2parts row"><div class="col col1 left  col-xs-12 col-sm-6 col-md-6 col-lg-6  "><div id="c305" class="frame default news_newsliststicky 0"><div class="news"><!--TYPO3SEARCH_end--><div class="news-list-view news-list-view-jumbo-compact"><!--
+	=====================
+		Partials/List/ItemJumboCompact.html
+--><div class="article news-item position-relative articletype-0 topnews" itemscope="itemscope" itemtype="http://schema.org/Article"><!-- header --><h3><span class="news-infos"><!-- Categories --><!-- categories --><span class="news-list-category"><span class="category-14">
+			
+					Erziehung und Bildung
+				
+		</span></span></span><!-- news-infos --><a class="stretched-link" title="Lernen, forschen, mitgestalten" href="/hochschule/presse-und-newsroom/ash-news/lernen-forschen-mitgestalten/">
+					Lernen, forschen, mitgestalten
+				</a></h3><div class="news-img-wrap"><figure><img class="img-responsive" alt="Zwei Studierende sitzen in der Bibliothek und unterhalten sich. Vor ihnen ein Tisch mit Büchern. Im Hintergrund stehen Bücherregale." src="/fileadmin/_processed_/a/1/csm_DSC76628_1920px-Kipaed_203a61dadc.jpg" width="750" height="500" /></figure></div><!-- teaser --><p class="teaser-text">
+					
+							Der Bachelorstudiengang Kindheitspädagogik verbindet Theorie und Praxis. Jetzt bewerben!
+						
+			</p><p class="news-footer text-muted"><small><!-- date --><span class="news-list-date"><time datetime="2026-09-22">
+							22.09.2026
+							<meta itemprop="datePublished" content="2026-09-22" /></time></span><!-- author -->
+					
+						 | <span class="news-list-author">
+							Hochschulkommunikation
+						</span></small></p></div><!--  article = Topnews-item --></div><!--TYPO3SEARCH_begin--></div></div></div><!-- col1 --><div class="col col2 right  col-xs-12 col-sm-6 col-md-6 col-lg-6  "><div id="c306" class="frame default news_newsliststicky 0 mt-4"><div class="news"><!--TYPO3SEARCH_end--><div class="news-list-view news-list-view-compact"><!--
+	=====================
+		Partials/List/ItemCompactTextOnly.html
+--><div class="article position-relative news-item articletype-0" itemscope="itemscope" itemtype="http://schema.org/Article"><!-- header --><h4><span class="news-infos"><!-- Categories --><!-- categories --><span class="news-list-category"><span class="category-3">
+			
+					Studium
+				
+		</span></span></span><!-- news-infos --><a class="stretched-link" href="/hochschule/presse-und-newsroom/ash-news/freie-studienplaetze-fuer-das-wintersemester-2026-27/">
+					Freie Studienplätze für das Wintersemester 2026/27
+				</a></h4><!-- teaser --><p class="teaser-text small" itemprop="description">
+					
+							Interessierte können sich jetzt noch für ein Studium an der ASH Berlin bewerben.
+						
+			</p><p class="news-footer text-muted"><small><!-- date --><span class="news-list-date"><time datetime="2026-09-22">
+							22.09.2026
+							<meta itemprop="datePublished" content="2026-09-22" /></time></span><!-- author -->
+					
+						 | <span class="news-list-author">
+							Hochschulkommunikation
+						</span></small></p></div><!-- article = listItem--><!--
+	=====================
+		Partials/List/ItemCompactTextOnly.html
+--><div class="article position-relative news-item articletype-0" itemscope="itemscope" itemtype="http://schema.org/Article"><!-- header --><h4><span class="news-infos"><!-- Categories --><!-- categories --><span class="news-list-category"><span class="category-23">
+			
+					Forschung, 
+				
+		</span><span class="category-50">
+			
+					Menschen
+				
+		</span></span></span><!-- news-infos --><a class="stretched-link" href="/hochschule/presse-und-newsroom/ash-news/ash-praesidentin-prof-dr-bettina-voelter-zu-gast-im-budrich-podcast/">
+					ASH-Präsidentin Prof. Dr. Bettina Völter zu Gast im Budrich-Podcast
+				</a></h4><!-- teaser --><p class="teaser-text small" itemprop="description">
+					
+							Neue Folge des Budrich-Podcasts widmet sich dem Strukturwandel der SAGE-Hochschulen am Beispiel der ASH Berlin
+						
+			</p><p class="news-footer text-muted"><small><!-- date --><span class="news-list-date"><time datetime="2026-09-08">
+							08.09.2026
+							<meta itemprop="datePublished" content="2026-09-08" /></time></span><!-- author -->
+					
+						 | <span class="news-list-author">
+							Hochschulkommunikation
+						</span></small></p></div><!-- article = listItem--><!--
+	=====================
+		Partials/List/ItemCompactTextOnly.html
+--><div class="article position-relative news-item articletype-0" itemscope="itemscope" itemtype="http://schema.org/Article"><!-- header --><h4><span class="news-infos"><!-- Categories --><!-- categories --><span class="news-list-category"><span class="category-1">
+			
+					Hochschulleben
+				
+		</span></span></span><!-- news-infos --><a class="stretched-link" href="/hochschule/presse-und-newsroom/ash-news/ergebnisse-der-studieneingangsbefragung-wise-2025-26/">
+					Ergebnisse der Studieneingangsbefragung WiSe 2025/26
+				</a></h4><!-- teaser --><p class="teaser-text small" itemprop="description">
+					
+							Befragung zum Studienstart zeigt: Unsere Studierenden wählen ihr Fach primär aus echtem Interesse und zur persönlichen Weiterentwicklung. 
+						
+			</p><p class="news-footer text-muted"><small><!-- date --><span class="news-list-date"><time datetime="2026-09-04">
+							04.09.2026
+							<meta itemprop="datePublished" content="2026-09-04" /></time></span><!-- author --></small></p></div><!-- article = listItem--></div><!--TYPO3SEARCH_begin--></div></div></div><!-- col2 --></div><!-- row --></div><!-- innerWrap --></div><!-- outerWrap -->
+
+    
+
+
+
+
+    
+
+
+    
+        <div id="c89" class="frame default text 0 mb-2">
+            
+            
+                
+
+
+
+            
+            
+                
+
+    
+
+
+
+            
+            
+
+    <p class="align-center"><a href="/hochschule/presse-und-newsroom/ash-news/" class="btn btn-default btn-rte btn-more">Alle News zeigen</a></p>
+
+
+            
+                
+
+
+
+            
+            
+                
+
+
+
+            
+        </div>
+    
+    
+    
+
+
+
+
+    
+            
+        
+
+
+    
+    
+    
+        
+<div class="box outerWrap  container-fluid bg bg-primary bg bg-angle  "><div class="box innerWrap  container"><div class="gridBox-2parts row"><div class="col left    "><div id="c5726" class="frame default menu_subpages icon-menu"><div class="menu-icons"><div class="row"><div class="col col-xs-6 col-sm-4 col-md-4 col-lg-2 position-relative"><div class="icon-wrap position-relative"><img class="img-responsive" loading="lazy" src="/fileadmin/Daten/Icons/icon-vorlesungsverzeichnis-weiss-transparent.png" width="200" height="200" alt="" /></div><a href="https://www.ash-berlin.eu/qisserver/?state=user&amp;type=8&amp;topitem=lectures&amp;breadCrumbSource=portal" class="stretched-link">Vorlesungsverzeichnis</a></div><!-- col --><div class="col col-xs-6 col-sm-4 col-md-4 col-lg-2 position-relative"><div class="icon-wrap position-relative"><img class="img-responsive" loading="lazy" src="/fileadmin/Daten/Icons/icon-heutige-lehrveranstaltungen-weiss-transparent.png" width="200" height="200" alt="" /></div><a href="https://www.ash-berlin.eu/airport" class="stretched-link">Heutige Lehr­veranstaltungen</a></div><!-- col --><div class="col col-xs-6 col-sm-4 col-md-4 col-lg-2 position-relative"><div class="icon-wrap position-relative"><img class="img-responsive" loading="lazy" src="/fileadmin/Daten/Icons/icon-moodle-weiss-transparent.png" width="200" height="200" alt="" /></div><a href="http://moodle.ash-berlin.eu/" class="stretched-link">Moodle</a></div><!-- col --><div class="col col-xs-6 col-sm-4 col-md-4 col-lg-2 position-relative"><div class="icon-wrap position-relative"><img class="img-responsive" loading="lazy" src="/fileadmin/Daten/Icons/icon-opac-weiss-transparent.png" width="200" height="200" alt="" /></div><a href="https://www.ash-berlin.eu/studium/einrichtungen-fuer-studierende/bibliothek/recherche/" class="stretched-link">Medienrecherche</a></div><!-- col --><div class="col col-xs-6 col-sm-4 col-md-4 col-lg-2 position-relative"><div class="icon-wrap position-relative"><img class="img-responsive" loading="lazy" src="/fileadmin/Daten/Icons/icon-webmail-weiss-transparent.png" width="200" height="200" alt="" /></div><a href="https://office.ash-berlin.eu/appsuite/" class="stretched-link">Online Office</a></div><!-- col --><div class="col col-xs-6 col-sm-4 col-md-4 col-lg-2 position-relative"><div class="icon-wrap position-relative"><img class="img-responsive" loading="lazy" src="/fileadmin/Daten/Icons/icon-moodle-weiss-transparent.png" width="200" height="200" alt="" /></div><a href="https://help.ash-berlin.eu/doku.php/start" class="stretched-link">IT Helpdesk</a></div><!-- col --></div><!-- row --></div><!-- menu-icons --></div></div><!-- col --></div><!-- row --></div><!-- innerWrap --></div><!-- outerWrap -->
+
+    
+
+
+
+
+    
+            
+        
+
+
+    
+    
+    
+        
+<div class="box outerWrap  container-fluid mt-3 "><div class="box innerWrap  container"><header><h2 class="ce-headline-center">
+                Veranstaltungen
+            </h2></header><div class="gridBox-2parts row"><div class="col col1 left  col-xs-12 col-sm-6 col-md-6 col-lg-6  "><div id="c341" class="frame default news_newsliststicky 0"><div class="news"><!--TYPO3SEARCH_end--><div class="news-list-view news-list-view-jumbo-compact"><!--
+	=====================
+		Partials/List/ItemJumboCompact.html
+--><div class="article event-item position-relative articletype-0 topnews" itemscope="itemscope" itemtype="http://schema.org/Article"><!-- header --><h3><span class="news-infos"><!-- date --><span class="news-list-date">
+								Dienstag, 29.09.2026 | 13:30
+						</span><!-- Categories --><!-- categories --><span class="news-list-category"><span class="category-24">
+			
+					Hochschulleben
+				
+		</span></span></span><!-- news-infos --><a class="stretched-link" href="/hochschule/presse-und-newsroom/veranstaltungen/verabschiedung-und-begruessung-des-ash-praesidiums/">
+					Verabschiedung und Begrüßung des ASH-Präsidiums
+				</a></h3><div class="news-img-wrap"><figure><img class="img-responsive" title="Das Präsidium der ASH Berlin" alt="Gruppenfoto ded Präsidiums" src="/fileadmin/_processed_/d/f/csm_Rektorat_ASHBerlin_Copyright_Edgard_Berendsen_1c2a9e408a.jpg" width="750" height="500" /></figure></div><!-- teaser --><p class="teaser-text" itemprop="description">
+				
+						ASH-Hochschulmitglieder sowie Wegbegleiter_innen aus Politik, Gesellschaft, Berufsfeldern und Nachbarschaft sind herzlich eingeladen.
+					
+			</p></div><!--  article = Topnews-item --></div><!--TYPO3SEARCH_begin--></div></div></div><!-- col1 --><div class="col col2 right  col-xs-12 col-sm-6 col-md-6 col-lg-6  "><div id="c342" class="frame default news_newsliststicky 0 mt-4"><div class="news"><!--TYPO3SEARCH_end--><div class="news-list-view news-list-view-compact"><!--
+	=====================
+		Partials/List/ItemCompactTextOnly.html
+--><div class="article event-item position-relative articletype-0" itemscope="itemscope" itemtype="http://schema.org/Article"><!-- header --><h4><span class="news-infos"><!-- date --><span class="news-list-date">
+								Mi., 23.09.2026 | 16:00
+						</span><!-- Categories --><!-- categories --><span class="news-list-category"><span class="category-104">
+			
+					Transfer
+				
+		</span></span></span><!-- news-infos --><a class="stretched-link" title="Mitreden - Mitgestalten. Schaffen die Neubauvorhaben in Marzahn-Hellersdorf bezahlbare Wohnungen?" href="/hochschule/presse-und-newsroom/veranstaltungen/mitreden-mitgestalten-schaffen-die-neubauvorhaben-in-marzahn-hellersdorf-bezahlbare-wohnungen/">
+					Mitreden - Mitgestalten. Schaffen die Neubauvorhaben in Marzahn-Hellersdorf bezahlbare Wohnungen?
+				</a></h4><!-- teaser --><p class="teaser-text small" itemprop="description">
+				
+						Eine Podiumsdiskussion um Wohnungsmangel, bezahlbaren Wohnraum, Wohnungsvergabe, notwendige Infrastruktur und klimagerechtes Bauen. 
+					
+			</p></div><!-- article = listItem--><!--
+	=====================
+		Partials/List/ItemCompactTextOnly.html
+--><div class="article event-item position-relative articletype-0" itemscope="itemscope" itemtype="http://schema.org/Article"><!-- header --><h4><span class="news-infos"><!-- date --><span class="news-list-date">
+								Di., 06.10.2026 | 14:00
+						</span><!-- Categories --><!-- categories --><span class="news-list-category"><span class="category-104">
+			
+					Transfer, 
+				
+		</span><span class="category-24">
+			
+					Hochschulleben
+				
+		</span></span></span><!-- news-infos --><a class="stretched-link" title="Spazierblicke im Wintersemester 2026/27 - mit anschließendem Grillen in der Hellen Oase" href="/hochschule/presse-und-newsroom/veranstaltungen/spazierblicke-im-wintersemester-2026-27-mit-anschliessendem-grillen-in-der-hellen-oase/">
+					Spazierblicke im Wintersemester 2026/27 - mit anschließendem Grillen in der Hellen Oase
+				</a></h4><!-- teaser --><p class="teaser-text small" itemprop="description">
+				
+						Geführte Touren und Spaziergänge durch Hellersdorf und Umgebung - (nicht nur) für Erstsemester und Austauschstudierende!
+					
+			</p></div><!-- article = listItem--><!--
+	=====================
+		Partials/List/ItemCompactTextOnly.html
+--><div class="article event-item position-relative articletype-2" itemscope="itemscope" itemtype="http://schema.org/Article"><!-- header --><h4><span class="news-infos"><!-- date --><span class="news-list-date">
+								Mo., 12.10.2026 | 10:00
+						</span><!-- Categories --></span><!-- news-infos --><a class="stretched-link" title="Einwöchige regenerative Auszeit im Herbst - Bildungszeit nutzen und neue Kraft schöpfen!" target="_blank" href="https://www.ash-berlin.eu/weiterbildung/zentrum-fuer-weiterbildung/kurssuche/einzelansicht-kurs/?atyp=zk&amp;uid=429">
+					Einwöchige regenerative Auszeit im Herbst - Bildungszeit nutzen und neue Kraft schöpfen!
+				</a></h4><!-- teaser --><p class="teaser-text small" itemprop="description">
+				
+						Kompaktwoche für Wissenschaftler_innen und Beschäftigte im sozialen Bereich zum Umgang mit Belastung, zur Wiederentdeckung der Leichtigkeit!
+					
+			</p></div><!-- article = listItem--></div><!--TYPO3SEARCH_begin--></div></div></div><!-- col2 --></div><!-- row --></div><!-- innerWrap --></div><!-- outerWrap -->
+
+    
+
+
+
+
+    
+
+
+    
+        <div id="c108" class="frame default text 0">
+            
+            
+                
+
+
+
+            
+            
+                
+
+    
+
+
+
+            
+            
+
+    <p class="align-center"><a href="/hochschule/presse-und-newsroom/veranstaltungen/" class="btn btn-default btn-rte btn-more">Alle Veranstaltungen zeigen</a></p>
+
+
+            
+                
+
+
+
+            
+            
+                
+
+
+
+            
+        </div>
+    
+    
+    
+
+
+
+
+    
+            
+        
+
+
+    
+    
+    
+        
+<div class="box outerWrap  container-fluid bg bg-warning  "><div class="box innerWrap  container"><div class="gridBox-2parts row"><div class="col left  col-xs-6 col-sm-4 col-xs-offset-3 col-sm-offset-4 "><div id="c10384" class="frame default image 0"><div class="ce-image ce-left ce-above"><div class="ce-gallery" data-ce-columns="1" data-ce-images="1"><div class="ce-row"><div class="ce-column"><figure><img class="img-responsive" alt="Logodatei vom Hochschulmagazin &quot;SAGE und schreibe&quot; der ASH Berlin" src="/fileadmin/Daten/alice-Magazin/Logo_SuS_RGB_rot_schwarz_neu.svg" width="326" height="87" loading="lazy" /></figure></div></div></div></div></div></div><!-- col --></div><!-- row --></div><!-- innerWrap --></div><!-- outerWrap -->
+
+    
+
+
+
+
+    
+            
+        
+
+
+    
+    
+    
+        
+<div class="box outerWrap  container-fluid bg bg-warning  "><div class="box innerWrap  container"><div class="gridBox-2parts row"><div class="col col1 left  col-xs-12 col-sm-6 col-md-6 col-lg-6  "><div id="c10380" class="frame default news_pi1 0"><div class="news"><!--TYPO3SEARCH_end--><div class="news-list-view news-list-view-jumbo-compact"><!--
+	=====================
+		Partials/List/ItemJumboCompact.html
+--><div class="article news-item position-relative articletype-0 topnews" itemscope="itemscope" itemtype="http://schema.org/Article"><!-- header --><h3><span class="news-infos"><!-- Categories --><!-- categories --><span class="news-list-category"><span class="category-8">
+			
+					Seitenwechsel
+				
+		</span></span></span><!-- news-infos --><a class="stretched-link" title="„I feel more inspired now about my academic and professional future than I did before coming here“" target="_blank" href="https://alice.ash-berlin.eu/seitenwechsel/i-feel-more-inspired-now-about-my-academic-and-professional-future-than-i-did-before-coming-here/">
+					„I feel more inspired now about my academic and professional future than I did before coming here“
+				</a></h3><div class="news-img-wrap"><figure><img class="img-responsive" alt="Foto von Bjørk Sørensen auf der Warschauer Brücke" src="/fileadmin/_processed_/0/1/csm_WhatsApp_Image_2026-08-06_at_16.17.19_0759e3dc4f.jpg" width="750" height="500" /></figure></div><!-- teaser --><p class="teaser-text">
+					
+							Interview with Bjørk Sørensen from University College Copenhagen, exchange student at ASH Berlin for one semester
+						
+			</p><p class="news-footer text-muted"><small><!-- date --><span class="news-list-date"><time datetime="2026-09-10">
+							10.09.2026
+							<meta itemprop="datePublished" content="2026-09-10" /></time></span><!-- author -->
+					
+						 | <span class="news-list-author">
+							Helia Fakhri
+						</span></small></p></div><!--  article = Topnews-item --></div><!--TYPO3SEARCH_begin--></div></div></div><!-- col1 --><div class="col col2 right  col-xs-12 col-sm-6 col-md-6 col-lg-6  "><div id="c10381" class="frame default news_pi1 0 mt-3"><div class="news"><!--TYPO3SEARCH_end--><div class="news-list-view news-list-view-compact"><!--
+	=====================
+		Partials/List/ItemCompactTextOnly.html
+--><div class="article position-relative news-item articletype-0 topnews" itemscope="itemscope" itemtype="http://schema.org/Article"><!-- header --><h4><span class="news-infos"><!-- Categories --><!-- categories --><span class="news-list-category"><span class="category-8">
+			
+					Seitenwechsel
+				
+		</span></span></span><!-- news-infos --><a class="stretched-link" target="_blank" href="https://alice.ash-berlin.eu/seitenwechsel/warum-kuba/">
+					Warum Kuba?
+				</a></h4><!-- teaser --><p class="teaser-text small" itemprop="description">
+					
+							Ein Blick zurück auf unsere diesjährige Studienreise mit drei verschiedenen Seminaren der Sozialen Kulturarbeit des Studiengangs Soziale Arbeit
+						
+			</p><p class="news-footer text-muted"><small><!-- date --><span class="news-list-date"><time datetime="2026-09-03">
+							03.09.2026
+							<meta itemprop="datePublished" content="2026-09-03" /></time></span><!-- author -->
+					
+						 | <span class="news-list-author">
+							Johanna Kaiser
+						</span></small></p></div><!-- article = listItem--><!--
+	=====================
+		Partials/List/ItemCompactTextOnly.html
+--><div class="article position-relative news-item articletype-0 topnews" itemscope="itemscope" itemtype="http://schema.org/Article"><!-- header --><h4><span class="news-infos"><!-- Categories --><!-- categories --><span class="news-list-category"><span class="category-8">
+			
+					Seitenwechsel
+				
+		</span></span></span><!-- news-infos --><a class="stretched-link" target="_blank" href="https://alice.ash-berlin.eu/seitenwechsel/i-realized-how-many-opportunities-for-social-work-there-are-in-germany/">
+					„I realized how many opportunities for social work there are in Germany“
+				</a></h4><!-- teaser --><p class="teaser-text small" itemprop="description">
+					
+							Interview with Magia Filippis from the Hellenic Mediterranean University, exchange student at ASH Berlin in summer semester 2026
+						
+			</p><p class="news-footer text-muted"><small><!-- date --><span class="news-list-date"><time datetime="2026-08-31">
+							31.08.2026
+							<meta itemprop="datePublished" content="2026-08-31" /></time></span><!-- author -->
+					
+						 | <span class="news-list-author">
+							Helia Fakhri 
+						</span></small></p></div><!-- article = listItem--><!--
+	=====================
+		Partials/List/ItemCompactTextOnly.html
+--><div class="article position-relative news-item articletype-0 topnews" itemscope="itemscope" itemtype="http://schema.org/Article"><!-- header --><h4><span class="news-infos"><!-- Categories --><!-- categories --><span class="news-list-category"><span class="category-5">
+			
+					Hochschulleben
+				
+		</span></span></span><!-- news-infos --><a class="stretched-link" target="_blank" href="https://alice.ash-berlin.eu/hochschulleben/dienstreise-mit-dem-fahrrad/">
+					Dienstreise mit dem Fahrrad
+				</a></h4><!-- teaser --><p class="teaser-text small" itemprop="description">
+					
+							Eine klimafreundliche Unternehmung gemeinsam mit Studierenden
+						
+			</p><p class="news-footer text-muted"><small><!-- date --><span class="news-list-date"><time datetime="2026-08-27">
+							27.08.2026
+							<meta itemprop="datePublished" content="2026-08-27" /></time></span><!-- author -->
+					
+						 | <span class="news-list-author">
+							Yannick Liedholz
+						</span></small></p></div><!-- article = listItem--></div><!--TYPO3SEARCH_begin--></div></div><div id="c10382" class="frame default text 0"><p class="indent align-right primary"><a href="https://alice.ash-berlin.eu/index/" target="_blank" class="btn btn-default btn-rte btn-more">Alle Artikel zeigen </a></p></div></div><!-- col2 --></div><!-- row --></div><!-- innerWrap --></div><!-- outerWrap -->
+
+    
+
+
+
+
+    
+            
+        
+
+
+    
+    
+    
+        
+<div class="box outerWrap  container-fluid mt-2 mb-2"><div class="box innerWrap  container"><div class="gridBox-4parts row"><div class="col col1 left  col-xs-5 col-sm-5 col-md-2 col-lg-2 col-xs-offset-1 col-sm-offset-1 col-md-offset-1 col-lg-offset-1 "><div id="c14995" class="frame default image 0"><div class="ce-image ce-left ce-above"><div class="ce-gallery" data-ce-columns="1" data-ce-images="1"><div class="ce-row"><div class="ce-column"><figure><a href="http://www.berlin-partner.de" target="_blank" rel="noreferrer"><img class="img-responsive" alt="Logo Berlin Partner" src="/fileadmin/_processed_/c/c/csm_preview_Logo_PfB_hoch_pos_1__b381c3e964_9d0a07c954.png" width="140" height="89" loading="lazy" /></a></figure></div></div></div></div></div><div id="c7837" class="frame default image 0 mt-2"><div class="ce-image ce-left ce-above"><div class="ce-gallery" data-ce-columns="1" data-ce-images="1"><div class="ce-row"><div class="ce-column"><figure><a href="https://www.familie-in-der-hochschule.de/" target="_blank" rel="noreferrer" title="FidH"><img class="img-responsive" alt="Logo der Familie in der Hochschule " title="FidH" src="/fileadmin/_processed_/5/4/csm_FidH_Logo_138f9b77fc.jpg" width="170" height="54" loading="lazy" /></a></figure></div></div></div></div></div><div id="c48356" class="frame default image 0"><div class="ce-image ce-left ce-above"><div class="ce-gallery" data-ce-columns="1" data-ce-images="1"><div class="ce-row"><div class="ce-column"><figure><a href="https://gemeinsam-gegen-sexismus.de/" target="_blank" rel="noreferrer"><img class="img-responsive" alt="Logodatei vom Bündnis Gemeinsam gegen Sexismus" src="/fileadmin/_processed_/f/0/csm_EAF_GGS_Logo_Buendnis_de7a680265.png" width="160" height="108" loading="lazy" /></a></figure></div></div></div></div></div></div><!-- col1 --><div class="col col2 right  col-xs-5 col-sm-5 col-md-2 col-lg-2 col-xs-offset-1 col-sm-offset-1 col-md-offset-1 col-lg-offset-1 "><div id="c15454" class="frame default image 0"><div class="ce-image ce-center ce-above"><div class="ce-gallery" data-ce-columns="1" data-ce-images="1"><div class="ce-outer"><div class="ce-inner"><div class="ce-row"><div class="ce-column"><figure><a href="/hochschule/presse-und-newsroom/ash-news/soziale-verantwortung-unter-einem-dach/"><img class="img-responsive" alt="Logo des SAGE Verbunds " src="/fileadmin/Daten/Veranstaltungen/2019/Logo_SAGE_Berlin_RGB.png" width="100" height="77" loading="lazy" /></a></figure></div></div></div></div></div></div></div><div id="c9853" class="frame default image 0 mt-2"><div class="ce-image ce-center ce-above"><div class="ce-gallery" data-ce-columns="1" data-ce-images="1"><div class="ce-outer"><div class="ce-inner"><div class="ce-row"><div class="ce-column"><figure><a href="https://www.scholarsatrisk.org/" target="_blank" rel="noreferrer"><img class="img-responsive" alt="Logo des Netzwerkes Scholars at Risk" src="/fileadmin/Daten/Profil/Logo_SAR_Germany_Section.PNG" width="369" height="88" loading="lazy" /></a></figure></div></div></div></div></div></div></div><div id="c11318" class="frame default image 0"><div class="ce-image ce-center ce-above"><div class="ce-gallery" data-ce-columns="1" data-ce-images="1"><div class="ce-outer"><div class="ce-inner"><div class="ce-row"><div class="ce-column"><figure><a href="https://www.ash-berlin.eu/studium/beratung-unterstuetzung/studienfinanzierung/deutschlandstipendium-fuer-bewerber-innen/" target="_blank"><img class="img-responsive" alt="Logo des Deutschlandstipendiums" src="/fileadmin/Daten/Navigation_Startseite/Dstip_banner_logo.jpg" width="260" height="110" loading="lazy" /></a></figure></div></div></div></div></div></div></div></div><!-- col2 --><div class="col col3 right  col-xs-5 col-sm-5 col-md-2 col-lg-2 col-xs-offset-1 col-sm-offset-1 col-md-offset-1 col-lg-offset-1 "><div id="c106" class="frame default image 0"><div class="ce-image ce-left ce-above"><div class="ce-gallery" data-ce-columns="1" data-ce-images="1"><div class="ce-row"><div class="ce-column"><figure><img class="img-responsive" alt="Logo Weltoffene Hochschule" src="/fileadmin/Daten/Einrichtungen/_Vorschau/Logo_Weltoffene_Hochschulen_gegen_Fremdenfeindlichkeit_neu.jpg" width="200" height="133" loading="lazy" /></figure></div></div></div></div></div><div id="c21205" class="frame default image 0"><div class="ce-image ce-left ce-above"><div class="ce-gallery" data-ce-columns="1" data-ce-images="1"><div class="ce-row"><div class="ce-column"><figure><a href="https://berlin.lsvd.de/bgh-landingpage/" target="_blank" rel="noreferrer"><img class="img-responsive" alt="Logo vom Berliner Queer-Bündnis" src="/fileadmin/_processed_/3/c/csm_bqb_logo_pixel_farbig_mittel_7b46a61c7b.png" width="160" height="106" loading="lazy" /></a></figure></div></div></div></div></div></div><!-- col3 --><div class="col col4 right  col-xs-5 col-sm-5 col-md-2 col-lg-2 col-xs-offset-1 col-sm-offset-1 col-md-offset-1 col-lg-offset-1 "><div id="c37241" class="frame default image 0"><div class="ce-image ce-left ce-above"><div class="ce-gallery" data-ce-columns="1" data-ce-images="1"><div class="ce-row"><div class="ce-column"><figure><a href="http://www.che.de/rankingsiegel" target="_blank" rel="noreferrer"><img class="img-responsive" alt="Siegel des CHE Ranking" src="/fileadmin/Daten/Gemeinschaftsordner/Downloads_Pressestelle/CHE_Ranking.jpg" width="135" height="236" loading="lazy" /></a></figure></div></div></div></div></div></div><!-- col4 --></div><!-- row --></div><!-- innerWrap --></div><!-- outerWrap -->
+
+    
+
+</main><div class="footer" role="contentinfo">
+
+
+    
+            
+        
+
+
+    
+    
+    
+        
+<div class="box outerWrap  container-fluid bg bg-primary  "><div class="box innerWrap  container"><div class="gridBox-2parts row"><div class="col left    "><div id="c23111" class="frame default menu_pages footer-menu mt-2"><nav class="page-list-menu" aria-label="Seitenübersicht"><div class="row"><div class="col-6 col-sm-6 col-md-2"><h5><a href="/hochschule/">Hochschule</a></h5><p class="small"><a href="/hochschule/sage-profil/ueber-das-sage-profil-der-ash-berlin/">SAGE-Profil</a></p><p class="small"><a href="/hochschule/organisation/">Organisation</a></p><p class="small"><a href="/hochschule/fachbereiche/">Fachbereiche</a></p><p class="small"><a href="/hochschule/vernetzung/">Vernetzung</a></p><p class="small"><a href="/hochschule/job-karriere/">Job & Karriere</a></p><p class="small"><a href="/hochschule/lehrende/">Lehrende</a></p><p class="small"><a href="/hochschule/personen-a-z/">Personen A-Z</a></p><p class="small"><a href="/hochschule/presse-und-newsroom/">Presse und Newsroom</a></p></div><div class="col-6 col-sm-6 col-md-2"><h5><a href="/studium/">Studium</a></h5><p class="small"><a href="/studium/studiengaenge/">Studiengänge</a></p><p class="small"><a href="/studium/studierendenverwaltung/">Studierendenverwaltung</a></p><p class="small"><a href="/studium/einrichtungen-fuer-studierende/">Einrichtungen für Studierende</a></p><p class="small"><a href="/studium/werkstattraeume/">Werkstatträume</a></p><p class="small"><a href="/studium/beratung-unterstuetzung/">Beratung & Unterstützung</a></p><p class="small"><a href="/studium/hochschulleben/">Hochschulleben</a></p><p class="small"><a href="/hochschule/organisation/input/">Arbeitsbereich Intersektionale Praxis und Transformation - InPuT</a></p></div><div class="col-6 col-sm-6 col-md-2"><h5><a href="/forschung/">Forschung</a></h5><p class="small"><a href="/forschung/forschungsprofil/">Forschungsprofil</a></p><p class="small"><a href="/forschung/forschungsprojekte-a-z/">Forschungsprojekte A – Z</a></p><p class="small"><a href="/forschung/forschungsfoerderung/service-des-forschungsreferats/">Forschungsförderung</a></p><p class="small"><a href="/forschung/ethikkommission/">Ethikkommission</a></p><p class="small"><a href="/studium/beratung-unterstuetzung/promotionsfoerderung/">Promotionsförderung</a></p><p class="small"><a href="/hochschule/organisation/ombudspersonen/">Ombudsperson</a></p></div><div class="col-6 col-sm-6 col-md-2"><h5><a href="/weiterbildung/">Weiterbildung</a></h5><p class="small"><a href="/weiterbildung/weiterbildende-masterstudiengaenge/">Weiterbildende Masterstudiengänge</a></p><p class="small"><a href="/weiterbildung/zentrum-fuer-weiterbildung/start/">Zentrum für Weiterbildung</a></p></div><div class="col-6 col-sm-6 col-md-2"><h5><a href="/internationales/">Internationales</a></h5><p class="small"><a href="/internationales/studium-und-praktikum-im-ausland/">Studium und Praktikum im Ausland</a></p><p class="small"><a href="/internationales/incomings/">Incomings</a></p><p class="small"><a href="/internationales/international-vor-ort/">International vor Ort</a></p><p class="small"><a href="/studium/studiengaenge/ash-pre-study-programm/internationale-newcomer/">@internationale Newcomer</a></p><p class="small"><a href="/internationales/partnerhochschulen/">Partnerhochschulen</a></p><p class="small"><a href="/internationales/personalmobilitaet-und-studienfahrten/">Personalmobilität und Studienfahrten</a></p><p class="small"><a href="/internationales/international-office/international-office/">International Office</a></p></div></div></nav></div><div id="c23112" class="frame default menu_subpages icon-menu-small"><div class="menu-icons-small"><div class="text-center"><a href="https://www.facebook.com/ashbln/"><img alt="Facebook" class="img-responsive" loading="lazy" src="/fileadmin/Daten/Icons/Social-Media/045_Facebook.svg" width="50" height="50" /></a><a href="https://www.instagram.com/ash_berlin/"><img alt="Instagram" class="img-responsive" loading="lazy" src="/fileadmin/Daten/Icons/Social-Media/034_Instagram.svg" width="50" height="50" /></a><a href="https://www.linkedin.com/school/alice-salomon-hochschule-berlin/"><img alt="LinkedIn" class="img-responsive" loading="lazy" src="/fileadmin/Daten/Icons/Social-Media/031_Linkedin.svg" width="50" height="50" /></a><a href="https://www.tiktok.com/@ash_berlin"><img alt="tiktok" class="img-responsive" loading="lazy" src="/fileadmin/Daten/Icons/Social-Media/056_TikTok.svg" width="50" height="50" /></a><a href="https://www.youtube.com/channel/UCnDEKBNniYb4HM7bv80f_oQ"><img alt="Youtube" class="img-responsive" loading="lazy" src="/fileadmin/Daten/Icons/Social-Media/002_Youtube.svg" width="50" height="50" /></a><a href="https://soundcloud.com/alicesalomonhochschule"><img alt="Soundcloud" class="img-responsive" loading="lazy" src="/fileadmin/Daten/Icons/Social-Media/020_Soundcloud.svg" width="50" height="50" /></a></div><!-- row --></div><!-- menu-icons --></div></div><!-- col --></div><!-- row --></div><!-- innerWrap --></div><!-- outerWrap -->
+
+    
+
+
+
+
+    
+
+
+    
+        <div id="c23129" class="frame default menu_subpages contact-menu mt-3 mb-3">
+            
+            
+                
+
+
+
+            
+            
+                
+
+
+
+            
+            
+
+    
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	<div class="container footer-contact-menu">
+		<nav class="contact-menu" id="contact">
+			<ul>
+				
+					<li>
+						<small>
+		                    <a href="/kontakt/kontakt-und-anfahrt/">
+		                       Kontakt und Anfahrt
+		                    </a>
+						</small>
+					</li>
+				
+					<li>
+						<small>
+		                    <a href="/kontakt/impressum/">
+		                       Impressum
+		                    </a>
+						</small>
+					</li>
+				
+					<li>
+						<small>
+		                    <a href="/hochschule/datenschutz/datenschutzerklaerung/">
+		                       Datenschutz
+		                    </a>
+						</small>
+					</li>
+				
+					<li>
+						<small>
+		                    <a href="/kontakt/barrierefreiheit/">
+		                       Barrierefreiheit
+		                    </a>
+						</small>
+					</li>
+				
+					<li>
+						<small>
+		                    <a href="/kontakt/hausordnung/">
+		                       Hausordnung
+		                    </a>
+						</small>
+					</li>
+				
+					<li>
+						<small>
+		                    <a href="/kontakt/grundordnung/">
+		                       Grundordnung
+		                    </a>
+						</small>
+					</li>
+				
+					<li>
+						<small>
+		                    <a href="https://www.ash-berlin.eu/intra/">
+		                       Intranet
+		                    </a>
+						</small>
+					</li>
+				
+					<li>
+						<small>
+		                    <a href="https://webmail.ash-berlin.eu">
+		                       Webmailer
+		                    </a>
+						</small>
+					</li>
+				
+					<li>
+						<small>
+		                    <a href="https://help.ash-berlin.eu">
+		                       Onlinehilfe ComZ
+		                    </a>
+						</small>
+					</li>
+				
+					<li>
+						<small>
+		                    <a href="/hochschule/jahreskalender/">
+		                       Jahreskalender
+		                    </a>
+						</small>
+					</li>
+				
+			</ul>
+		</nav>
+    </div><!-- row -->
+
+
+
+
+
+
+    
+
+
+            
+                
+
+
+
+            
+            
+                
+
+
+
+            
+        </div>
+    
+    
+    
+
+<div class="ash-logo-claim container"><a href="https://www.ash-berlin.eu" target="_blank"><img src="/typo3conf/ext/ash/Resources/Public/Images/ash-logo-claim.svg" alt="Logo Alice-Salomon-Hochschule Berlin" aria-hidden="true"><span class="sr-only">Zur ASH-Startseite</span></a></div></div><!-- footer -->
+	<div class="tx-om-cookie-consent">
+		
+		<div class="cookie-panel p-1" data-omcookie-panel="1">
+			<div class="cookie-panel-inner bg-white p-1" role="alert" aria-live="assertive" aria-atomic="true">
+					<div class="cookie-panel-header">
+						<h3>Cookie-Einstellungen</h3>
+					</div>
+					<div class="cookie-panel-body">
+
+								<form>
+									
+										<div class="form-check form-check-inline">
+											<input class="form-check-input cookie-panel__checkbox--state-inactiv" autocomplete="off" data-omcookie-panel-grp="1" id="group-1" type="checkbox" checked=1 data-omcookie-panel-essential="1" disabled="disabled" value="group-1" />
+											<label class="form-check-label" for="group-1">Notwendig</label>
+										</div>
+									
+										<div class="form-check form-check-inline">
+											<input class="form-check-input " autocomplete="off" data-omcookie-panel-grp="1" id="group-2" type="checkbox"  value="group-2" />
+											<label class="form-check-label" for="group-2">Statistik</label>
+										</div>
+									
+								</form>
+
+							<div class="description mt-2 mb-2 small">
+								<p>Wir verwenden Cookies, um Ihnen ein optimales Webseiten-Erlebnis zu bieten. Dazu zählen Cookies, die für den Betrieb der Seite notwendig sind, sowie solche, die lediglich zu anonymen Statistikzwecken, für Komforteinstellungen oder zur Anzeige personalisierter Inhalte genutzt werden. Sie können selbst entscheiden, welche Kategorien Sie zulassen möchten.&nbsp;</p>
+							</div>
+
+								<button data-omcookie-panel-save="all" class="btn btn-sm btn-primary mr-1">Alle akzeptieren</button>
+								<button data-omcookie-panel-save="save" class="btn btn-sm btn-secondary mr-1">Speichern und schließen</button>
+								
+
+							
+								<div class="privacy-link mt-1 mb-1"><a href="/hochschule/datenschutz/datenschutzerklaerung/">Datenschutzerklärung</a></div>
+							
+
+					</div>
+			</div>
+		</div>
+	
+	</div>
+
+<script src="/_assets/b64d04ecd5d9c128a9fc8b46089395df/JavaScript/om_cookie_main.js?1732808629"></script>
+<script src="/_assets/948410ace0dfa9ad00627133d9ca8a23/JavaScript/Powermail/Form.min.js?1787641085" defer="defer"></script>
+
+
+</body>
+</html>

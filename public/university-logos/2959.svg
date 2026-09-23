@@ -1,0 +1,4570 @@
+<!DOCTYPE html>
+<html lang="de" class="no-js">
+
+
+<head>
+
+<meta charset="utf-8">
+<!-- 
+	This website is powered by TYPO3 - inspiring people to share!
+	TYPO3 is a free open source Content Management Framework initially created by Kasper Skaarhoj and licensed under GNU/GPL.
+	TYPO3 is copyright 1998-2026 of Kasper Skaarhoj. Extensions are copyright of their respective owners.
+	Information and contribution at https://typo3.org/
+-->
+
+
+
+<title>Medizinische Hochschule Hannover : MHH</title>
+<meta http-equiv="x-ua-compatible" content="IE=edge" />
+<meta name="generator" content="TYPO3 CMS" />
+<meta name="description" content="Die MHH gehört zu den leistungsfähigsten und forschungsstärksten medizinischen Universitäten Deutschlands. " />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="content-language" content="de" />
+<meta name="twitter:image" content="https://www.mhh.de/fileadmin/_processed_/1/5/csm_2026-09-22_B_Philippi_TeleP-PIN_615c802378.jpg" />
+<meta name="twitter:image:alt" content="Vier Ärzte stehen vor Bildschirmen und unterhalten sich. Auf den Bildschirmen ist ein Krankenhausbett in einer Kinderintensivstation zu sehen, in dem ein Säugling liegt." />
+<meta name="twitter:title" content="Medizinische Hochschule Hannover" />
+<meta name="twitter:description" content="Die MHH gehört zu den leistungsfähigsten und forschungsstärksten medizinischen Universitäten Deutschlands. " />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="copyright" content="Medizinische Hochschule Hannover" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="x-page-uid" content="1" />
+
+<link rel="stylesheet" href="/typo3conf/ext/bra_projectfiles/Resources/Public/Frontend/assets/css/main.css?1786370992" media="all">
+
+
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/typo3conf/ext/bra_projectfiles/Resources/Public/Frontend/assets/img/favicons/mhh/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/typo3conf/ext/bra_projectfiles/Resources/Public/Frontend/assets/img/favicons/mhh/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/typo3conf/ext/bra_projectfiles/Resources/Public/Frontend/assets/img/favicons/mhh/favicon-16x16.png">
+  <link rel="manifest" href="/typo3conf/ext/bra_projectfiles/Resources/Public/Frontend/assets/img/favicons/mhh/manifest.json">
+  <link rel="mask-icon" href="/typo3conf/ext/bra_projectfiles/Resources/Public/Frontend/assets/img/favicons/mhh/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="msapplication-config" content="/typo3conf/ext/bra_projectfiles/Resources/Public/Frontend/assets/img/favicons/mhh/browserconfig.xml">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="HandheldFriendly" content="true" />
+<link rel="canonical" href="https://www.mhh.de/"/>
+
+<link rel="alternate" hreflang="de" href="https://www.mhh.de/"/>
+<link rel="alternate" hreflang="en" href="https://www.mhh.de/en/"/>
+<link rel="alternate" hreflang="x-default" href="https://www.mhh.de/"/>
+<script>if(typeof _paq==="undefined"||!(_paq instanceof Array))var _paq=[];_paq.push(["disableCookies"]);_paq.push(["setDoNotTrack",true]);_paq.push(["trackPageView"]);_paq.push(["enableHeartBeatTimer"]);_paq.push(["enableLinkTracking"]);_paq.push(["enableJSErrorTracking"]);(function(){var u="https://webstat.mhh.de/";_paq.push(["setTrackerUrl",u+"matomo.php"]);_paq.push(["setSiteId",1]);var d=document,g=d.createElement("script"),s=d.getElementsByTagName("script")[0];g.async=true;g.src=u+"matomo.js";s.parentNode.insertBefore(g,s);})();</script>
+</head>
+<body>
+
+    
+
+
+
+
+        
+    
+
+
+
+<a href="#main-content" id="skip-navigation-link" aria-hidden="true">
+    Navigation überspringen
+</a>
+
+<header class="header">
+    <div class="header__meta">
+        
+        
+            <button class="header__meta-search">
+                <svg class="header__meta-search-icon">
+                    <use xlink:href="/typo3conf/ext/bra_projectfiles/Resources/Public/Frontend/assets/svg/sprite.svg#icon-search"></use>
+                </svg>
+            </button>
+        
+        <button class="header__meta-list-toggle">
+            <span class="circle"></span>
+            <span class="circle"></span>
+            <span class="circle"></span>
+        </button>
+        <ul class="header__meta-list">
+            
+                <li class="header__meta-item">
+                    <a href="/die-mhh"
+                       class="header__meta-link ">Die MHH</a>
+                </li>
+             
+                <li class="header__meta-item">
+                    <a href="/exz"
+                       class="header__meta-link ">Exzellenz</a>
+                </li>
+             
+                <li class="header__meta-item">
+                    <a href="/pflege-ist-mehr"
+                       class="header__meta-link ">Pflege ist mehr</a>
+                </li>
+             
+                <li class="header__meta-item">
+                    <a href="/die-mhh/praesidium/spenden-und-foerdern"
+                       class="header__meta-link ">Spenden &amp; Fördern</a>
+                </li>
+             
+                <li class="header__meta-item">
+                    <a href="/international"
+                       class="header__meta-link ">International</a>
+                </li>
+             
+                <li class="header__meta-item">
+                    <a href="https://neubau.mhh.de/"
+                       class="header__meta-link ">Neubau</a>
+                </li>
+             
+                <li class="header__meta-item">
+                    <a href="/presse"
+                       class="header__meta-link ">Presse</a>
+                </li>
+             
+            
+                <li class="header__meta-item">
+                    <a href="/notfallnummern"
+                       class="header__meta-link is-red ">Notfallnummern</a>
+                </li>
+            
+            <li class="header__meta-item">
+                
+    <ul class="header__lang-menu" id="language_menu">
+        
+            <li class="header__lang-menu-item active">
+                
+                        <a
+                            href="/"
+                            hreflang="de"
+                            title="DE"
+                        >
+                            <span>DE</span>
+                        </a>
+                    
+            </li>
+        
+            <li class="header__lang-menu-item">
+                
+                        <a
+                            href="/en/"
+                            hreflang="en"
+                            title="EN"
+                        >
+                            <span>EN</span>
+                        </a>
+                    
+            </li>
+        
+    </ul>
+
+            </li>
+            
+        </ul>
+    </div>
+    <div class="header__main">
+        <div class="header__logo">
+            <a href="/">
+                <svg class="header__logo-svg">
+                    <use xlink:href="/typo3conf/ext/bra_projectfiles/Resources/Public/Frontend/assets/svg/sprite.svg#icon-mhh-logo"></use>
+                </svg>
+            </a>
+        </div>
+
+        <div class="header__navigation">
+            
+                    
+
+<nav aria-hidden="true" role="menu" aria-modal="true" class="nav-main">
+    <div class="nav-main__container">
+        <button class="nav-main__back-btn">
+            <svg class="nav-main__back-btn-icon">
+                <use xlink:href="/typo3conf/ext/bra_projectfiles/Resources/Public/Frontend/assets/svg/sprite.svg#icon-down"></use>
+            </svg>
+        </button>
+        <div class="nav-main__body">
+            <div id="nav-main">
+                
+                    <ul class="nav-main__list">
+                        
+                            
+    <li
+        class="
+            nav-main__item
+            branch
+            
+            
+        "
+    >
+        <a class="nav-main__link" href="/patientenportal">Aufenthalt &amp; Besuch</a>
+        
+            <div class="nav-main__dropdown">
+                <button class="nav-main__dropdown-close">
+                    <svg class="nav-main__dropdown-close-icon">
+                        <use xlink:href="/typo3conf/ext/bra_projectfiles/Resources/Public/Frontend/assets/svg/sprite.svg#icon-close"></use>
+                    </svg>
+                </button>
+                <div class="container nav-main__dropdown-content">
+                    <ul class="nav-main__dropdown-list">
+                        <li class="parent">
+                            <a href="/patientenportal">Aufenthalt &amp; Besuch</a>
+                        </li>
+                        
+                            
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/patientenportal/aufnahme-als-notfall">Aufnahme als Notfall</a>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            branch
+            
+            
+        "
+    >
+        <a href="/patientenportal/stationaere-behandlung">Stationäre Behandlung</a>
+        
+            <ul>
+                <li class="parent">
+                    <a href="/patientenportal/stationaere-behandlung">Stationäre Behandlung</a>
+                </li>
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/patientenportal/stationaere-behandlung/vor-ihrem-aufenthalt">Vor Ihrem Aufenthalt</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/patientenportal/stationaere-behandlung/waehrend-ihres-aufenthaltes">Während Ihres Aufenthaltes</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/patientenportal/stationaere-behandlung/beendigung-ihres-aufenthaltes">Beendigung Ihres Aufenthaltes</a>
+    </li>
+
+                
+            </ul>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/patientenportal/ambulante-aufnahme">Ambulante Behandlung</a>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/patientenportal/allgemeine-informationen/wichtige-fragen-und-antworten">Wichtige Fragen und Antworten</a>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            branch
+            
+            
+        "
+    >
+        <a href="/patientenportal/allgemeine-informationen">Allgemeine Informationen</a>
+        
+            <ul>
+                <li class="parent">
+                    <a href="/patientenportal/allgemeine-informationen">Allgemeine Informationen</a>
+                </li>
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/patientenportal/allgemeine-informationen/demenzbeauftragte">Demenzbeauftragte</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/patientenportal/ladenpassage">Ladenpassage</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/patientenportal/allgemeine-informationen/unterricht-in-der-kinderklinik">Unterricht in der Kinderklinik</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/patientenportal/allgemeine-informationen/anfahrt">Anfahrt</a>
+    </li>
+
+                
+            </ul>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/notfallnummern">Notfallnummern</a>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            branch
+            
+            
+        "
+    >
+        <a href="/patientenportal/patienten-servicecenter-psc">Patienten-Servicecenter PSC</a>
+        
+            <ul>
+                <li class="parent">
+                    <a href="/patientenportal/patienten-servicecenter-psc">Patienten-Servicecenter PSC</a>
+                </li>
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/patientenportal/patienten-servicecenter-psc/kontakt">Kontakt</a>
+    </li>
+
+                
+            </ul>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/die-mhh/ressort-wirtschaftsfuehrung-und-administration/patientenabrechnung/international-patients-office">International Patient Service</a>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/patientenportal/patientenfuersprecher">Patientenfürsprecher</a>
+        
+    </li>
+
+                        
+                    </ul>
+                </div>
+            </div>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            nav-main__item
+            branch
+            
+            
+        "
+    >
+        <a class="nav-main__link" href="/einrichtungen-und-kliniken">Einrichtungen &amp; Kliniken</a>
+        
+            <div class="nav-main__dropdown">
+                <button class="nav-main__dropdown-close">
+                    <svg class="nav-main__dropdown-close-icon">
+                        <use xlink:href="/typo3conf/ext/bra_projectfiles/Resources/Public/Frontend/assets/svg/sprite.svg#icon-close"></use>
+                    </svg>
+                </button>
+                <div class="container nav-main__dropdown-content">
+                    <ul class="nav-main__dropdown-list">
+                        <li class="parent">
+                            <a href="/einrichtungen-und-kliniken">Einrichtungen &amp; Kliniken</a>
+                        </li>
+                        
+                            
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/kliniken-der-mhh">Kliniken der MHH</a>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/institute-der-mhh">Institute der MHH</a>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/kliniken-und-institute-nach-mhh-zentren">Kliniken und Institute nach MHH-Zentren</a>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/interdisziplinaere-zentren">Interdisziplinäre Zentren</a>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/zentrale-einrichtungen">Zentrale Einrichtungen</a>
+        
+    </li>
+
+                        
+                    </ul>
+                </div>
+            </div>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            nav-main__item
+            branch
+            
+            
+        "
+    >
+        <a class="nav-main__link" href="/forschung">Forschung</a>
+        
+            <div class="nav-main__dropdown">
+                <button class="nav-main__dropdown-close">
+                    <svg class="nav-main__dropdown-close-icon">
+                        <use xlink:href="/typo3conf/ext/bra_projectfiles/Resources/Public/Frontend/assets/svg/sprite.svg#icon-close"></use>
+                    </svg>
+                </button>
+                <div class="container nav-main__dropdown-content">
+                    <ul class="nav-main__dropdown-list">
+                        <li class="parent">
+                            <a href="/forschung">Forschung</a>
+                        </li>
+                        
+                            
+    <li
+        class="
+            branch
+            
+            
+        "
+    >
+        <a href="/forschung/forschungsschwerpunkte-netzwerke">Forschung an der MHH und Partnereinrichtungen</a>
+        
+            <ul>
+                <li class="parent">
+                    <a href="/forschung/forschungsschwerpunkte-netzwerke">Forschung an der MHH und Partnereinrichtungen</a>
+                </li>
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/forschung/covid-19">COVID-19</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/forschung/beonet">BeoNet-Register</a>
+    </li>
+
+                
+            </ul>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            branch
+            
+            
+        "
+    >
+        <a href="/forschung/zentrale-forschungseinrichtungen">Zentrale Forschungseinrichtungen</a>
+        
+            <ul>
+                <li class="parent">
+                    <a href="/forschung/zentrale-forschungseinrichtungen">Zentrale Forschungseinrichtungen</a>
+                </li>
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/forschungseinrichtungen/medic">MeDIC</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/institute-zentren-forschungseinrichtungen/hannover-unified-biobank-hub">Hannover Unified Biobank HUB</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/institute-zentren-forschungseinrichtungen/lasermikroskopie">Lasermikroskopie</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/institute-zentren-forschungseinrichtungen/zentrale-forschungseinrichtung-elektronenmikroskopie">Zentrale Forschungseinrichtung Elektronenmikroskopie</a>
+    </li>
+
+                
+            </ul>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            branch
+            
+            
+        "
+    >
+        <a href="/akademische-karriereentwicklung">Akademische Karriereentwicklung</a>
+        
+            <ul>
+                <li class="parent">
+                    <a href="/akademische-karriereentwicklung">Akademische Karriereentwicklung</a>
+                </li>
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/akademische-karriereentwicklung/ansprechpartnerinnen/kontakt">Ansprechpersonen</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/hbrs">Hannover Biomedical Research School (HBRS)</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/akademische-karriereentwicklung/medical-scientists">Für Postdoktorand:innen</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/akademische-karriereentwicklung/clinician-scientists">Für Ärzt:innen</a>
+    </li>
+
+                
+            </ul>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            branch
+            
+            
+        "
+    >
+        <a href="/forschung/beratungsangebote">Beratungsangebote und Services</a>
+        
+            <ul>
+                <li class="parent">
+                    <a href="/forschung/beratungsangebote">Beratungsangebote und Services</a>
+                </li>
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/forschung/dfg">DFG-Vertrauensdozentin</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/ethikkommission">Ethikkommission</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/fwt2">Forschungsförderung, Wissens- und Technologietransfer</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/forschung/beratungsangebote/kef">Kommission zur Ethik sicherheitsrelevanter Forschung</a>
+    </li>
+
+                
+            </ul>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            branch
+            
+            
+        "
+    >
+        <a href="/forschung/forschungsinfrastruktur">Forschungsdatennutzung</a>
+        
+            <ul>
+                <li class="parent">
+                    <a href="/forschung/forschungsinfrastruktur">Forschungsdatennutzung</a>
+                </li>
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="https://www.mhh.de/bibliothek/so-nutzen-sie-die-bibliothek/forschen-berichten/berichtswesen" target="_blank">Berichtswesen</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/forschungseinrichtungen/medic/fdm">Forschungsdatenmanagement</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="https://www.mhh.de/fileadmin/mhh/forschung/downloads/Forschungsdatenpolicy_2023.pdf" target="_blank">Forschungsdatenpolicy</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/forschung/fis">Forschungsinformationssystem</a>
+    </li>
+
+                
+            </ul>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/forschung/forschungsdekan-und-kommission">Dekanin für Forschung und Transfer und Forschungskommission</a>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            branch
+            
+            
+        "
+    >
+        <a href="/forschung/gute-wissenschaftliche-praxis">Gute wissenschaftliche Praxis</a>
+        
+            <ul>
+                <li class="parent">
+                    <a href="/forschung/gute-wissenschaftliche-praxis">Gute wissenschaftliche Praxis</a>
+                </li>
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/forschung/gute-wissenschaftliche-praxis/gwp-kommission">GWP-Kommission</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/forschung/gute-wissenschaftliche-praxis/ombudswesen-und-ombudsperson">Ombudswesen und Ombudsperson</a>
+    </li>
+
+                
+            </ul>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            branch
+            
+            
+        "
+    >
+        <a href="/forschung/promotion-habil-apl">Promotions- und Habilitationsangelegenheiten</a>
+        
+            <ul>
+                <li class="parent">
+                    <a href="/forschung/promotion-habil-apl">Promotions- und Habilitationsangelegenheiten</a>
+                </li>
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/forschung/promotion-habil-apl/promotion-dr-rer-biol-hum">Promotion Dr. rer. biol. hum.</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/forschung/promotion-habil-apl/promotion-dr-med-dent">Promotion Dr. med (dent.)</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/forschung/promotion-habil-apl/promotion-zum-dr-ph">Promotion zum Dr. PH</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/forschung/promotion-zum-dr-rer-nat">Promotion zum Dr. rer. nat.</a>
+    </li>
+
+                
+            </ul>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            branch
+            
+            
+        "
+    >
+        <a href="/forschung/transparenz-in-der-forschung">Transparenz in der Forschung</a>
+        
+            <ul>
+                <li class="parent">
+                    <a href="/forschung/transparenz-in-der-forschung">Transparenz in der Forschung</a>
+                </li>
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/gdng">Nutzung von Gesundheitsdaten (GDNG)</a>
+    </li>
+
+                
+            </ul>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            branch
+            
+            
+        "
+    >
+        <a href="/fwt2">Forschung - Wissen - Translation - Transfer</a>
+        
+            <ul>
+                <li class="parent">
+                    <a href="/fwt2">Forschung - Wissen - Translation - Transfer</a>
+                </li>
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/fwt2/unsere-angebote/partner-netzwerke">Partner:innen &amp; Netzwerke</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/fwt2/fuer-lebenswissenschaftlerinnen">Für Lebenswissenschaftler:innen</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/fwt2/fuer-partner-investorinnen">Für Partner:innen &amp; Investor:innen</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/fwt2/fuer-startups-und-gruenderinnen">Für Startups und Gründer:innen</a>
+    </li>
+
+                
+            </ul>
+        
+    </li>
+
+                        
+                    </ul>
+                </div>
+            </div>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            nav-main__item
+            branch
+            
+            
+        "
+    >
+        <a class="nav-main__link" href="/studium">Studium &amp; Lehre</a>
+        
+            <div class="nav-main__dropdown">
+                <button class="nav-main__dropdown-close">
+                    <svg class="nav-main__dropdown-close-icon">
+                        <use xlink:href="/typo3conf/ext/bra_projectfiles/Resources/Public/Frontend/assets/svg/sprite.svg#icon-close"></use>
+                    </svg>
+                </button>
+                <div class="container nav-main__dropdown-content">
+                    <ul class="nav-main__dropdown-list">
+                        <li class="parent">
+                            <a href="/studium">Studium &amp; Lehre</a>
+                        </li>
+                        
+                            
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/studiengaenge">Studiengänge</a>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            branch
+            
+            
+        "
+    >
+        <a href="/studierendensekretariat">Studierendensekretariat</a>
+        
+            <ul>
+                <li class="parent">
+                    <a href="/studierendensekretariat">Studierendensekretariat</a>
+                </li>
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/studierendensekretariat/studieninteressierte">Studieninteressierte</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/studierendensekretariat/studierende">Studierende</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/studierendensekretariat/termine-fristen">Termine &amp; Fristen</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/studierendensekretariat/kontakt">Kontakt</a>
+    </li>
+
+                
+            </ul>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            branch
+            
+            
+        "
+    >
+        <a href="/akademische-karriereentwicklung">Dekanat für Akademische Karriereentwicklung</a>
+        
+            <ul>
+                <li class="parent">
+                    <a href="/akademische-karriereentwicklung">Dekanat für Akademische Karriereentwicklung</a>
+                </li>
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/akademische-karriereentwicklung/ansprechpartnerinnen/kontakt">Ansprechpersonen</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/hbrs">Hannover Biomedical Research School</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/akademische-karriereentwicklung/medical-scientists">Für Postdoktorand:innen</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/akademische-karriereentwicklung/clinician-scientists">Für Ärzt:innen</a>
+    </li>
+
+                
+            </ul>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/campusleben">Campusleben an der MHH</a>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/sayit">Antidiskriminierungsplattform Sayit</a>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            branch
+            
+            
+        "
+    >
+        <a href="/alumni">MHH-Alumni e.V. - das Ehemaligen-Netzwerk</a>
+        
+            <ul>
+                <li class="parent">
+                    <a href="/alumni">MHH-Alumni e.V. - das Ehemaligen-Netzwerk</a>
+                </li>
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/alumni/veranstaltungen">Veranstaltungen</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/alumni/emil">EM!L</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/hochschulshop">MHH-Hochschulshop</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/alumni/verein-kontakt">Verein und Mitgliedschaft</a>
+    </li>
+
+                
+            </ul>
+        
+    </li>
+
+                        
+                    </ul>
+                </div>
+            </div>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            nav-main__item
+            branch
+            
+            
+        "
+    >
+        <a class="nav-main__link" href="https://karriere.mhh.de/" target="_blank">Karriere</a>
+        
+            <div class="nav-main__dropdown">
+                <button class="nav-main__dropdown-close">
+                    <svg class="nav-main__dropdown-close-icon">
+                        <use xlink:href="/typo3conf/ext/bra_projectfiles/Resources/Public/Frontend/assets/svg/sprite.svg#icon-close"></use>
+                    </svg>
+                </button>
+                <div class="container nav-main__dropdown-content">
+                    <ul class="nav-main__dropdown-list">
+                        <li class="parent">
+                            <a href="https://karriere.mhh.de/" target="_blank">Karriere</a>
+                        </li>
+                        
+                            
+    <li
+        class="
+            branch
+            
+            
+        "
+    >
+        <a href="https://karriere.mhh.de/" target="_blank">Deine Karriere-Chancen im Überblick</a>
+        
+            <ul>
+                <li class="parent">
+                    <a href="https://karriere.mhh.de/" target="_blank">Deine Karriere-Chancen im Überblick</a>
+                </li>
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="https://karriere.mhh.de/" target="_blank">Stellenangebote</a>
+    </li>
+
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/deine-karriere-mhh/arbeitgeber-mhh-vorteile-fuer-mitarbeitende">Benefits</a>
+    </li>
+
+                
+            </ul>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/ausbildungen">MHH Ausbildungen</a>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/mtr">MTR - Unsere Diagnostikspezialist:innen mit Durchblick</a>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            branch
+            
+            
+        "
+    >
+        <a href="/talente-werben">Talente werben - für die Pflege</a>
+        
+            <ul>
+                <li class="parent">
+                    <a href="/talente-werben">Talente werben - für die Pflege</a>
+                </li>
+                
+                    
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/talente-werben/anwerbeformular">Anwerbeformular</a>
+    </li>
+
+                
+            </ul>
+        
+    </li>
+
+                        
+                            
+    <li
+        class="
+            leaf
+            
+            
+        "
+    >
+        <a href="/akademische-karriereentwicklung">Dekanat für Akademische Karriereentwicklung</a>
+        
+    </li>
+
+                        
+                    </ul>
+                </div>
+            </div>
+        
+    </li>
+
+                        
+                    </ul>
+                
+            </div>
+        </div>
+    </div>
+</nav>
+<button class="nav-main__toggle">
+    <div class="nav-main__burger" aria-haspopup="menu" tabindex="0" aria-label="Navigation" role="button">
+        <span class="layer-1"></span>
+        <span class="layer-2"></span>
+        <span class="layer-3"></span>
+    </div>
+    <span class="nav-main__burger-text">
+        Menü
+    </span>
+</button>
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+        </div>
+    </div>
+
+    
+        <div class="header__search">
+            <div class="header__search-input-wrapper">
+                
+
+    <div class="frame frame-default frame-type-list frame-layout-0">
+        <a id="c27969"></a>
+        
+        
+            
+
+
+
+        
+        
+            
+
+
+        
+        
+
+    
+        
+<div class="tx_solr container">
+	<div class="row">
+		<div class="col-md-12">
+			
+    
+
+    <div class="tx-solr-search-form">
+        <div class="header__search-input-wrapper">
+            <form method="get" id="tx-solr-search-form-pi-form-only" action="/suchergebnisseite" data-suggest-header="Top Treffer" accept-charset="utf-8">
+                <div class="input-group">
+                    
+
+                    
+
+                    <input
+                        type="text"
+                        class="tx-solr-q js-solr-q tx-solr-suggest tx-solr-suggest-focus form-control"
+                        name="tx_solr[q]"
+                        value=""
+                        required="required"
+                    />
+                    
+                        <div class="category-select">
+                            <select>
+                                
+                                
+                                    
+                                    
+                                            
+                                                <option data-action="/suchergebnisseite">
+                                                    Alle Inhalte
+                                                </option>
+                                            
+                                        
+                                
+                                    
+                                    
+                                            
+                                                <option data-action="/suchergebnisseite/allgemeine-inhalte">
+                                                    Allgemeine Inhalte
+                                                </option>
+                                            
+                                        
+                                
+                                    
+                                    
+                                            
+                                                <option data-action="/suchergebnisseite/ambulanzen">
+                                                    Ambulanzen
+                                                </option>
+                                            
+                                        
+                                
+                                    
+                                    
+                                            
+                                        
+                                
+                                    
+                                    
+                                            
+                                                <option data-action="/suchergebnisseite/news">
+                                                    News
+                                                </option>
+                                            
+                                        
+                                
+                            </select>
+                        </div>
+                    
+
+                    <span class="input-group-btn">
+                        <button class="tx-solr-submit" type="submit">
+                            <svg class="header__search-input-icon">
+                                <use xlink:href="/typo3conf/ext/bra_projectfiles/Resources/Public/Frontend/assets/svg/sprite.svg#icon-search"></use>
+                            </svg>
+                            
+                        </button>
+                    </span>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+
+		</div>
+	</div>
+</div>
+    
+
+
+        
+            
+
+
+
+        
+        
+            
+
+
+
+        
+    </div>
+
+            </div>
+        </div>
+    
+</header>
+
+
+
+<nav class="nav-bar">
+    <div class="nav-bar__wrapper">
+        
+    </div>
+</nav>
+<noscript>
+    <p><strong>JavaScript scheint in Ihrem Browser deaktiviert zu sein.</strong></p>
+    <p>Sie müssen JavaScript in Ihrem Browser aktivieren um alle Funktionen der Seite nutzen zu können.</p>
+</noscript>
+
+
+
+
+
+    <main id="main" role="main" class="main">
+        <!--TYPO3SEARCH_begin-->
+        <section class="stage stage--is-hidden">
+            
+                
+
+    
+    
+        <svg viewBox="0 0 50 50" class="spinner">
+            <circle class="ring" cx="25" cy="25" r="20"></circle>
+            <circle class="ball" cx="25" cy="5" r="3.5"></circle>
+        </svg>
+        <div class="stage__slider 
+        
+        
+        ">
+            
+      
+          
+            
+                
+      <div class="stage__slider__item">
+        
+      <picture class="stage__slider__img typo3-search-exclude">
+        
+          
+              
+                  
+              
+            
+            <source media="(min-width: 75em)" srcset="/fileadmin/_processed_/1/5/csm_2026-09-22_B_Philippi_TeleP-PIN_86c8425331.jpg"/>
+            <source media="(min-width: 30em)" srcset="/fileadmin/_processed_/1/5/csm_2026-09-22_B_Philippi_TeleP-PIN_86c8425331.jpg"/>
+            <img title="Copyright: Karin Kaiser/MHH" alt="Vier Ärzte stehen vor Bildschirmen und unterhalten sich. Auf den Bildschirmen ist ein Krankenhausbett in einer Kinderintensivstation zu sehen, in dem ein Säugling liegt." src="/fileadmin/_processed_/1/5/csm_2026-09-22_B_Philippi_TeleP-PIN_86c8425331.jpg" width="1438" height="588" />
+          
+        
+      </picture>
+      
+        <div class="stage__slider__info">
+            <div class="stage__slider__text-wrapper">
+                
+                  <h2>
+                   Telemedizin rettet Kinderleben 
+                  </h2>
+                
+                
+                  <p class="stage__slider__text">
+                    Datenaustausch in Echtzeit: Das Netzwerk TelePIN ermöglicht hochqualifizierte Fernbehandlungen.
+                  </p>
+                
+            </div>
+            
+                <a href="https://www.mhh.de/presse-news/telemedizin-rettet-kinderleben-in-echtzeit" target="_blank" class="btn typo3-search-exclude">
+                  
+                      Mehr erfahren
+                    
+                </a>
+            
+        </div>
+      
+      
+    
+      </div>
+    
+              
+          
+            
+                
+      <div class="stage__slider__item">
+        
+      <picture class="stage__slider__img typo3-search-exclude">
+        
+          
+              
+            
+            <source media="(min-width: 75em)" srcset="/fileadmin/_processed_/2/9/csm_2026-09-21_B_EXTEND_bb4f241d06.jpg"/>
+            <source media="(min-width: 30em)" srcset="/fileadmin/_processed_/2/9/csm_2026-09-21_B_EXTEND_bb4f241d06.jpg"/>
+            <img title="Copyright: medJUNGE" alt="Blut- und Urinproben in verschiedenen Laborröhrchen stehen in einem roten Probenhalter, während eine medizinische Fachkraft eine Probe in den Halter stellt. " src="/fileadmin/_processed_/2/9/csm_2026-09-21_B_EXTEND_bb4f241d06.jpg" width="1438" height="588" />
+          
+        
+      </picture>
+      
+        <div class="stage__slider__info">
+            <div class="stage__slider__text-wrapper">
+                
+                  <h2>
+                  Neue Digitalplattform für besser vernetzte Forschungsinfrastruktur
+                  </h2>
+                
+                
+                  <p class="stage__slider__text">
+                    Mit ExTENd entsteht eine zentrale Plattform, die Forschende vernetzt und den Zugang zu Omics-Technologien, Biobanken und Expertise erleichtert.
+                  </p>
+                
+            </div>
+            
+                <a href="https://www.mhh.de/presse-news/neue-digitalplattform-fuer-besser-vernetzte-forschungsinfrastruktur-und-expertise" target="_blank" class="btn typo3-search-exclude">
+                  
+                      Mehr erfahren
+                    
+                </a>
+            
+        </div>
+      
+      
+    
+      </div>
+    
+              
+          
+            
+                
+      <div class="stage__slider__item">
+        
+      <picture class="stage__slider__img typo3-search-exclude">
+        
+          
+              
+            
+            <source media="(min-width: 75em)" srcset="/fileadmin/_processed_/1/b/csm_2026-09-18_Freispruch_im_Mordprozess_da23ab4726.jpg"/>
+            <source media="(min-width: 30em)" srcset="/fileadmin/_processed_/1/b/csm_2026-09-18_Freispruch_im_Mordprozess_da23ab4726.jpg"/>
+            <img title="Copyright: Karin Kaiser/MHH" alt="Stele der MHH an der Haupteinfahrt." src="/fileadmin/_processed_/1/b/csm_2026-09-18_Freispruch_im_Mordprozess_da23ab4726.jpg" width="1238" height="507" />
+          
+        
+      </picture>
+      
+        <div class="stage__slider__info">
+            <div class="stage__slider__text-wrapper">
+                
+                  <h2>
+                  Freispruch im Strafverfahren gegen ehemaligen Arzt der MHH
+                  </h2>
+                
+                
+                  <p class="stage__slider__text">
+                    Landgericht Hannover sieht Vorwurf von Tötungsdelikten als nicht erwiesen an.
+                  </p>
+                
+            </div>
+            
+                <a href="https://www.mhh.de/presse-news/freispruch-im-strafverfahren-gegen-ehemaligen-arzt-der-mhh" target="_blank" class="btn typo3-search-exclude">
+                  
+                      Mehr erfahren
+                    
+                </a>
+            
+        </div>
+      
+      
+    
+      </div>
+    
+              
+          
+            
+                
+      <div class="stage__slider__item">
+        
+      <picture class="stage__slider__img typo3-search-exclude">
+        
+          
+              
+            
+            <source media="(min-width: 75em)" srcset="/fileadmin/_processed_/b/8/csm_2026-09-15_B__Lysosomen-1200px_2eef18deca.jpg"/>
+            <source media="(min-width: 30em)" srcset="/fileadmin/_processed_/b/8/csm_2026-09-15_B__Lysosomen-1200px_2eef18deca.jpg"/>
+            <img title="Copyright: Institut für Neurophysiologie / MHH " alt=" Die molekulare Darstellung zeigt die Doppelfunktion: Für einen reibungslosen Proteinabbau leitet das Protein SLC26A11 als Transporter den Sulfat-Abfall und als Kanal das anfallende Chlorid aus dem Lysosom heraus in das Zellinnere. " src="/fileadmin/_processed_/b/8/csm_2026-09-15_B__Lysosomen-1200px_2eef18deca.jpg" width="1198" height="490" />
+          
+        
+      </picture>
+      
+        <div class="stage__slider__info">
+            <div class="stage__slider__text-wrapper">
+                
+                  <h2>
+                   Wie der Transporter SLC26A11 das Recycling in unseren Zellen ermöglicht 
+                  </h2>
+                
+                
+                  <p class="stage__slider__text">
+                    In unseren Zellen sind Lysosomen zuständig für die Müllverwertung. MHH-Forschende haben herausgefunden, wie die molekulare Maschinerie abläuft. 
+                  </p>
+                
+            </div>
+            
+                <a href="https://www.mhh.de/presse-news/wie-der-transporter-slc26a11-das-recycling-in-unseren-zellen-ermoeglicht" target="_blank" class="btn typo3-search-exclude">
+                  
+                      Mehr erfahren
+                    
+                </a>
+            
+        </div>
+      
+      
+    
+      </div>
+    
+              
+          
+            
+                
+      <div class="stage__slider__item">
+        
+      <picture class="stage__slider__img typo3-search-exclude">
+        
+          
+              
+            
+            <source media="(min-width: 75em)" srcset="/fileadmin/_processed_/3/3/csm_2026-09-11_B_Falk_04_5eb8f1cdbf.jpg"/>
+            <source media="(min-width: 30em)" srcset="/fileadmin/_processed_/3/3/csm_2026-09-11_B_Falk_04_5eb8f1cdbf.jpg"/>
+            <img title="Copyright: Karin Kaiser/MHH" alt="Porträtbild von Prof. Christine Falk" src="/fileadmin/_processed_/3/3/csm_2026-09-11_B_Falk_04_5eb8f1cdbf.jpg" width="1438" height="588" />
+          
+        
+      </picture>
+      
+        <div class="stage__slider__info">
+            <div class="stage__slider__text-wrapper">
+                
+                  <h2>
+                  Der Wissenschaftsrat: Herzstück der deutschen Wissenschaftspolitik
+                  </h2>
+                
+                
+                  <p class="stage__slider__text">
+                    Ein Gespräch mit Prof. Dr. Christine Falk, Direktorin des MHH-Instituts für Transplantationsimmunologie. 
+                  </p>
+                
+            </div>
+            
+                <a href="https://www.mhh.de/presse-news/herzstueck-der-deutschen-wissenschaftspolitik" target="_blank" class="btn typo3-search-exclude">
+                  
+                      Mehr erfahren
+                    
+                </a>
+            
+        </div>
+      
+      
+    
+      </div>
+    
+              
+          
+            
+                
+      <div class="stage__slider__item">
+        
+      <picture class="stage__slider__img typo3-search-exclude">
+        
+          
+              
+            
+            <source media="(min-width: 75em)" srcset="/fileadmin/_processed_/d/6/csm_2026-09-08_B_Brustzentrum-1200px_fda4b39c2f.jpg"/>
+            <source media="(min-width: 30em)" srcset="/fileadmin/_processed_/d/6/csm_2026-09-08_B_Brustzentrum-1200px_fda4b39c2f.jpg"/>
+            <img title="Copyright: Karin Kaiser/MHH/KI generiert" alt="Eine Frau an einem Mammographiegerät." src="/fileadmin/_processed_/d/6/csm_2026-09-08_B_Brustzentrum-1200px_fda4b39c2f.jpg" width="1198" height="490" />
+          
+        
+      </picture>
+      
+        <div class="stage__slider__info">
+            <div class="stage__slider__text-wrapper">
+                
+                  <h2>
+                   MHH-Brustzentrum erweitert Kapazitäten 
+                  </h2>
+                
+                
+                  <p class="stage__slider__text">
+                    Durch zusätzliche OP-Kapazitäten und mehr Personal wird die Versorgung der Brustkrebspatientinnen gesichert.
+                  </p>
+                
+            </div>
+            
+                <a href="https://www.mhh.de/presse-news/mhh-brustzentrum-erweitert-kapazitaeten" target="_blank" class="btn typo3-search-exclude">
+                  
+                      Mehr erfahren
+                    
+                </a>
+            
+        </div>
+      
+      
+    
+      </div>
+    
+              
+          
+      
+    
+        </div>
+    
+
+
+
+    
+    
+        <div class="stage__fast-search typo3-search-exclude 
+        
+        
+        ">
+            
+            <a id="c2"></a>
+            
+            
+                
+
+
+
+            
+            
+        <span class="h3style">
+            
+                Was suchen Sie?
+            
+        </span>
+        <p>
+            
+        </p>
+        <div class="stage__select-wrapper">
+            
+                <select name="">
+                    <option value="default" selected="selected">
+                        Bitte wählen …
+                    </option>
+                    
+                        
+                            <option value="/patientenportal">
+                                
+                                    Patientenportal
+                                
+                            </option>
+                        
+                    
+                        
+                            <option value="/aerzteportal">
+                                
+                                    Ärzteportal
+                                
+                            </option>
+                        
+                    
+                        
+                            <option value="/pflege">
+                                
+                                    Pflege
+                                
+                            </option>
+                        
+                    
+                        
+                            <option value="/einrichtungen-und-kliniken">
+                                
+                                    Kliniken, Institute, andere Einrichtungen
+                                
+                            </option>
+                        
+                    
+                        
+                            <option value="/forschung">
+                                
+                                    Forschung
+                                
+                            </option>
+                        
+                    
+                        
+                            <option value="/exz">
+                                
+                                    Exzellenzstrategie
+                                
+                            </option>
+                        
+                    
+                        
+                            <option value="/studium">
+                                
+                                    Studium
+                                
+                            </option>
+                        
+                    
+                        
+                            <option value="https://karriere.mhh.de/">
+                                
+                                    Jobs und Karriere
+                                
+                            </option>
+                        
+                    
+                        
+                            <option value="/die-mhh/leitung-und-gremien-der-mhh">
+                                
+                                    MHH-Leitung und Gremien
+                                
+                            </option>
+                        
+                    
+                </select>
+            
+        </div>
+        
+            
+                
+                    
+                        <a href="/patientenportal" class="btn">Los geht&#039;s</a>
+                    
+                
+            
+                
+            
+                
+            
+                
+            
+                
+            
+                
+            
+                
+            
+                
+            
+                
+            
+        
+    
+            
+                
+
+
+
+            
+        
+        </div>
+    
+
+
+            
+        </section>
+        
+            
+
+    <div class="frame frame-default frame-type-list frame-layout-0 frame-space-before-large">
+        <a id="c32844"></a>
+        
+        
+            
+
+
+
+        
+        
+            
+
+
+        
+        
+
+    
+        
+<section class="facility-search-solr-standalone">
+    <div class="facility-search-solr-standalone-wrapper">
+        
+    <div class="facility-search-solr-standalone__image">
+        <picture>
+            
+                    
+                        
+                            <source media="(min-width: 30em)" srcset="/fileadmin/_processed_/3/5/csm_hospital-908437_1280-removebg-preview_39fae4b63a.png" />
+                            <img src="/fileadmin/_processed_/3/5/csm_hospital-908437_1280-removebg-preview_39fae4b63a.png" width="1000" height="752" alt="Symbolbild für eine Krankenhaus" />
+                        
+                    
+                        
+                    
+                        
+                    
+                        
+                    
+                
+        </picture>
+    </div>
+
+        <div class="tx_solr container solr-search-facility-standalone">
+            <div class="row">
+                <div class="col-md-12">
+                    
+    
+        
+
+    <div class="tx-solr-search-form-ambulance">
+        <form method="get" onreset="(function(form){ for(var i = 0, element; element = form.elements[i++];) { if (element.dataset.name) { element.setAttribute(&#039;name&#039;, (&#039;&#039; + element.dataset.name)); }}})(this);" onsubmit="(function(form){ for(var i = 0, element; element = form.elements[i++];) { if (element.dataset.name) { element.setAttribute(&#039;name&#039;, &#039;&#039; === (&#039;&#039; + element.value) ? &#039;&#039; : (&#039;&#039; + element.dataset.name)); }}})(this);" id="tx-solr-search-form-ambulance-pi-form-only" action="/ambulanzen" data-suggest-header="Top Treffer" accept-charset="utf-8">
+            <div class="header__search-input-wrapper">
+
+                
+                     <h4>Ambulanz oder Sprechstunde gesucht?</h4>
+                
+
+                <div class="input-group">
+                    
+
+                    
+
+                    <div class="panel">
+                        <div class="panel-heading">
+                            <label for="search-input-ambulance-ambulance">
+                                Stichwortsuche in Ambulanzen
+                            </label>
+                        </div>
+
+                        <input
+                            type="text"
+                            class="tx-solr-q-f js-solr-q-f tx-solr-suggest tx-solr-suggest-focus form-control"
+                            name="ambulance[q]"
+                            data-name="ambulance[q]"
+                            value=""
+                            id="search-input-ambulance-ambulance"
+                        />
+
+                        <span class="input-group-btn">
+                            <button class="tx-solr-submit" type="submit">
+                                <svg>
+                                    <use xlink:href="/typo3conf/ext/bra_projectfiles/Resources/Public/Frontend/assets/svg/sprite.svg#icon-search"></use>
+                                </svg>
+                                
+                            </button>
+                        </span>
+                    </div>
+                </div>
+
+                
+
+                <div class="input-group">
+                    
+    
+    
+            
+                
+    
+
+            
+                
+    
+        <div class="tx-solr-faceting">
+            <div class="facet-area-facility-expertiseareas">
+                <div class="solr-facets-available secondaryContentSection">
+                    <div class="facets">
+                        
+                    
+                        
+    
+        <div class="facet facet-type facet-type-hierarchy panel-group" id="facet-accordion-facility_expertiseareas">
+            
+                            
+
+
+    
+        
+        <div class="panel">
+            <div class="panel-heading">
+                <label for="tx-solr-search-ambulance-filter-1">
+                    Fachgebiet
+                </label>
+            </div>
+            <div class="facet-option-list facet-type-hierarchy fluidfacet list-group panel-collapse collapse" data-facet-name="facility_expertiseareas" data-facet-label="facility_expertiseareas" id="facetfacility_expertiseareas">
+                <select
+                    name="ambulance[filter][1]"
+                    data-name="ambulance[filter][1]"
+                    id="tx-solr-search-ambulance-filter-1"
+                >
+                    
+    
+            
+    
+        
+            
+    
+    
+    
+            <option class="level-0" value="" title="Alle Fachgebiete (keine Ergebnisse)">
+                Alle Fachgebiete
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/70" title="Allgemeinmedizin (keine Ergebnisse)">
+                Allgemeinmedizin
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/85" title="Allgemein-, Viszeral-  und Transplantationschirurgie (keine Ergebnisse)">
+                Allgemein-, Viszeral-  und Transplantationschirurgie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/77" title="Anästhesiologie und Intensivmedizin (keine Ergebnisse)">
+                Anästhesiologie und Intensivmedizin
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/142" title="Anatomie und Zellbiologie (keine Ergebnisse)">
+                Anatomie und Zellbiologie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/75" title="Augenheilkunde (keine Ergebnisse)">
+                Augenheilkunde
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/140" title="Biochemie (keine Ergebnisse)">
+                Biochemie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/141" title="Biometrie (keine Ergebnisse)">
+                Biometrie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/137" title="Chirurgie (keine Ergebnisse)">
+                Chirurgie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/222" title="Covid (keine Ergebnisse)">
+                Covid
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/86" title="Dermatologie, Allergologie und Venerologie (keine Ergebnisse)">
+                Dermatologie, Allergologie und Venerologie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/71" title="Diagnostische und Interventionelle Neuroradiologie (keine Ergebnisse)">
+                Diagnostische und Interventionelle Neuroradiologie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/78" title="Diagnostische und Interventionelle Radiologie (keine Ergebnisse)">
+                Diagnostische und Interventionelle Radiologie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/84" title="Gastroenterologie, Hepatologie, Infektiologie und Endokrinologie (keine Ergebnisse)">
+                Gastroenterologie, Hepatologie, Infektiologie und Endokrinologie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/48" title="Gynäkologie (keine Ergebnisse)">
+                Gynäkologie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/49" title="Hämatologie, Hämostaseologie, Onkologie und Zelltherapie (keine Ergebnisse)">
+                Hämatologie, Hämostaseologie, Onkologie und Zelltherapie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/45" title="Hals-, Nasen- und Ohrenheilkunde (keine Ergebnisse)">
+                Hals-, Nasen- und Ohrenheilkunde
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/96" title="Herz-, Thorax-, Transplantations- und Gefäßchirurgie (keine Ergebnisse)">
+                Herz-, Thorax-, Transplantations- und Gefäßchirurgie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/72" title="Humangenetik (keine Ergebnisse)">
+                Humangenetik
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/135" title="Innere Medizin (keine Ergebnisse)">
+                Innere Medizin
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/50" title="Kardiologie und Angiologie (keine Ergebnisse)">
+                Kardiologie und Angiologie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/52" title="Kieferorthopädie (keine Ergebnisse)">
+                Kieferorthopädie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/46" title="Kinderchirurgie (keine Ergebnisse)">
+                Kinderchirurgie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/136" title="Kinderheilkunde und Jugendmedizin (keine Ergebnisse)">
+                Kinderheilkunde und Jugendmedizin
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/60" title="Kinderkardiologie und Kinderintensivmedizin (keine Ergebnisse)">
+                Kinderkardiologie und Kinderintensivmedizin
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/94" title="Kinderpneumologie, Allergologie und Neonatologie (keine Ergebnisse)">
+                Kinderpneumologie, Allergologie und Neonatologie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/143" title="Laboratoriumsmedizin (keine Ergebnisse)">
+                Laboratoriumsmedizin
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/145" title="Medizinische Informatik (keine Ergebnisse)">
+                Medizinische Informatik
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/55" title="Mund-, Kiefer- und Gesichtschirurgie (keine Ergebnisse)">
+                Mund-, Kiefer- und Gesichtschirurgie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/79" title="Neurochirurgie (keine Ergebnisse)">
+                Neurochirurgie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/56" title="Neurologische Medizin (keine Ergebnisse)">
+                Neurologische Medizin
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/57" title="Nieren- und Hochdruckerkrankungen (keine Ergebnisse)">
+                Nieren- und Hochdruckerkrankungen
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/102" title="Nuklearmedizin (keine Ergebnisse)">
+                Nuklearmedizin
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/139" title="Öffentliche Gesundheitspflege (keine Ergebnisse)">
+                Öffentliche Gesundheitspflege
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/80" title="Onkologie/Krebsmedizin (keine Ergebnisse)">
+                Onkologie/Krebsmedizin
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/131" title="Orthopädie (keine Ergebnisse)">
+                Orthopädie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/58" title="Pädaudologie und Phoniatrie (keine Ergebnisse)">
+                Pädaudologie und Phoniatrie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/92" title="Pädiatrische Hämatologie und Onkologie (keine Ergebnisse)">
+                Pädiatrische Hämatologie und Onkologie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/99" title="Pädiatrische Nieren-, Leber- und Stoffwechselerkrankungen und Neuropädiatrie (keine Ergebnisse)">
+                Pädiatrische Nieren-, Leber- und Stoffwechselerkrankungen und Neuropädiatrie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/81" title="Palliativmedizin (keine Ergebnisse)">
+                Palliativmedizin
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/148" title="Pathologie, Forensik und Genetik (keine Ergebnisse)">
+                Pathologie, Forensik und Genetik
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/144" title="Pharmakologie und Toxikologie (keine Ergebnisse)">
+                Pharmakologie und Toxikologie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/146" title="Physiologie (keine Ergebnisse)">
+                Physiologie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/62" title="Plastische, Ästhetische, Hand- und Wiederherstellungschirurgie (keine Ergebnisse)">
+                Plastische, Ästhetische, Hand- und Wiederherstellungschirurgie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/63" title="Pneumologie und Infektiologie (keine Ergebnisse)">
+                Pneumologie und Infektiologie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/88" title="Psychiatrie, Sozialpsychiatrie und Psychotherapie (keine Ergebnisse)">
+                Psychiatrie, Sozialpsychiatrie und Psychotherapie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/65" title="Psychosomatik und Psychotherapie (keine Ergebnisse)">
+                Psychosomatik und Psychotherapie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/147" title="Radiologie (keine Ergebnisse)">
+                Radiologie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/91" title="Physikalische und Rehabilitative Medizin (keine Ergebnisse)">
+                Physikalische und Rehabilitative Medizin
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/97" title="Rheumatologie und Immunologie (keine Ergebnisse)">
+                Rheumatologie und Immunologie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/138" title="Seelische Gesundheit (keine Ergebnisse)">
+                Seelische Gesundheit
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/98" title="Seltene Erkrankungen/unklare Diagnosen (keine Ergebnisse)">
+                Seltene Erkrankungen/unklare Diagnosen
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/73" title="Sportmedizin (keine Ergebnisse)">
+                Sportmedizin
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/66" title="Strahlentherapie und Spezielle Onkologie (keine Ergebnisse)">
+                Strahlentherapie und Spezielle Onkologie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/67" title="Unfallchirurgie (keine Ergebnisse)">
+                Unfallchirurgie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/68" title="Urologie (keine Ergebnisse)">
+                Urologie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/74" title="Virologie (keine Ergebnisse)">
+                Virologie
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/69" title="Zahnerhaltung, Parodontologie und Präventivzahnmedizin (keine Ergebnisse)">
+                Zahnerhaltung, Parodontologie und Präventivzahnmedizin
+            </option>
+        
+
+        
+            
+    
+    
+    
+            <option class="level-1" value="facility_expertiseareas:/43/132" title="Zahnärztliche Prothetik (keine Ergebnisse)">
+                Zahnärztliche Prothetik
+            </option>
+        
+
+        
+    
+
+        
+
+                </select>
+            </div>
+        </div>
+    
+
+
+
+
+
+
+
+
+
+
+
+                        
+        </div>
+    
+
+                        
+                    
+                
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+
+            
+        
+
+                </div>
+                <div class="input-group">
+                    
+    <div id="tx-solr-facets-in-use">
+        
+    </div>
+
+                </div>
+
+                <button type="submit" class="btn btn_search-submit">
+                    Das Ergebnis anzeigen
+                </button>
+            </div>
+        </form>
+    </div>
+
+
+    
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+    
+
+
+        
+            
+
+
+
+        
+        
+            
+
+
+
+        
+    </div>
+
+
+    <div class="frame frame-default frame-type-news_pi1 frame-layout-0 frame-space-before-large">
+        <a id="c3538"></a>
+        
+        
+            
+
+
+
+        
+        
+            
+
+    
+        <header>
+            
+
+    
+            <h3 class="ce-headline-center">
+                <a href="/presse/mhh-insight">Aktuelle Meldungen - MHH Insights</a>
+            </h3>
+        
+
+
+
+            
+
+
+
+            
+
+
+
+        </header>
+    
+
+
+        
+        
+
+    
+    
+
+<div class="news typo3-search-exclude">
+    
+    <!--TYPO3SEARCH_end-->
+    
+            
+            
+
+            
+            
+                <div class="grid grid--news-events grid--slider" data-type="news-events-slider">
+                    
+                            
+                            <div class="grid__container">
+                                
+                                    
+<article class="news-teaser" itemscope="itemscope" itemtype="http://schema.org/Article">
+    
+    
+        <picture class="news-teaser__image">
+            <a title="Telemedizin rettet Kinderleben" href="/presse-news/telemedizin-rettet-kinderleben-in-echtzeit">
+                
+                    
+                        <source srcset="/fileadmin/_processed_/a/f/csm_2026-09-22_P_Philippi_Tele-Pin_1-1200px_8989d560c0.jpg" media="(min-width: 30rem)" />
+                        <img title="Copyright: Karin Kaiser/MHH" alt="Vier Ärzte stehen vor Bildschirmen und unterhalten sich. Auf den Bildschirmen ist ein Krankenhausbett in einer Kinderintensivstation zu sehen, in dem ein Säugling liegt." src="/fileadmin/_processed_/a/f/csm_2026-09-22_P_Philippi_Tele-Pin_1-1200px_5475552fd5.jpg" width="480" height="272" />
+                    
+                    
+                    
+                
+            </a>
+        </picture>
+    
+    <div class="news-teaser__data">
+        <div class="news-teaser__header">
+            <div class="news-teaser__category">Gesundheit</div>
+            <time class="news-teaser__date" itemprop="datePublished" datetime="2026-09-22">
+                22.09.2026
+            </time>
+        </div>
+        <h3 class="news-teaser__title">
+            <a title="Telemedizin rettet Kinderleben" href="/presse-news/telemedizin-rettet-kinderleben-in-echtzeit">
+                <span itemprop="headline">Telemedizin rettet Kinderleben</span>
+            </a>
+        </h3>
+        
+    </div>
+</article>
+
+                                
+                                    
+<article class="news-teaser" itemscope="itemscope" itemtype="http://schema.org/Article">
+    
+    
+        <picture class="news-teaser__image">
+            <a title="Neue Digitalplattform für besser vernetzte Forschungsinfrastruktur und Expertise" href="/presse-news/neue-digitalplattform-fuer-besser-vernetzte-forschungsinfrastruktur-und-expertise">
+                
+                    
+                        <source srcset="/fileadmin/_processed_/2/9/csm_2026-09-21_B_EXTEND_a0a698fcbb.jpg" media="(min-width: 30rem)" />
+                        <img alt="Blut- und Urinproben in verschiedenen Laborröhrchen stehen in einem roten Probenhalter, während eine medizinische Fachkraft eine Probe in den Halter stellt. " src="/fileadmin/_processed_/2/9/csm_2026-09-21_B_EXTEND_4abdc22934.jpg" width="480" height="272" />
+                    
+                    
+                    
+                
+            </a>
+        </picture>
+    
+    <div class="news-teaser__data">
+        <div class="news-teaser__header">
+            <div class="news-teaser__category">Forschung</div>
+            <time class="news-teaser__date" itemprop="datePublished" datetime="2026-09-21">
+                21.09.2026
+            </time>
+        </div>
+        <h3 class="news-teaser__title">
+            <a title="Neue Digitalplattform für besser vernetzte Forschungsinfrastruktur und Expertise" href="/presse-news/neue-digitalplattform-fuer-besser-vernetzte-forschungsinfrastruktur-und-expertise">
+                <span itemprop="headline">Neue Digitalplattform für besser vernetzte Forschungsinfrastruktur und Expertise</span>
+            </a>
+        </h3>
+        
+    </div>
+</article>
+
+                                
+                                    
+<article class="news-teaser" itemscope="itemscope" itemtype="http://schema.org/Article">
+    
+    
+        <picture class="news-teaser__image">
+            <a title="Freispruch im Strafverfahren gegen ehemaligen Arzt der MHH" href="/presse-news/freispruch-im-strafverfahren-gegen-ehemaligen-arzt-der-mhh">
+                
+                    
+                        <source srcset="/fileadmin/_processed_/1/b/csm_2026-09-18_Freispruch_im_Mordprozess_b183b8846a.jpg" media="(min-width: 30rem)" />
+                        <img title="Copyright: Karin Kaiser/MHH" alt="Die Stele der MHH an der Haupteinfahrt" src="/fileadmin/_processed_/1/b/csm_2026-09-18_Freispruch_im_Mordprozess_0340f63069.jpg" width="480" height="272" />
+                    
+                    
+                    
+                
+            </a>
+        </picture>
+    
+    <div class="news-teaser__data">
+        <div class="news-teaser__header">
+            <div class="news-teaser__category">Aus der MHH</div>
+            <time class="news-teaser__date" itemprop="datePublished" datetime="2026-09-18">
+                18.09.2026
+            </time>
+        </div>
+        <h3 class="news-teaser__title">
+            <a title="Freispruch im Strafverfahren gegen ehemaligen Arzt der MHH" href="/presse-news/freispruch-im-strafverfahren-gegen-ehemaligen-arzt-der-mhh">
+                <span itemprop="headline">Freispruch im Strafverfahren gegen ehemaligen Arzt der MHH</span>
+            </a>
+        </h3>
+        
+    </div>
+</article>
+
+                                
+                                    
+<article class="news-teaser" itemscope="itemscope" itemtype="http://schema.org/Article">
+    
+    
+        <picture class="news-teaser__image">
+            <a title="Wie der Transporter SLC26A11 das Recycling in unseren Zellen ermöglicht" href="/presse-news/wie-der-transporter-slc26a11-das-recycling-in-unseren-zellen-ermoeglicht">
+                
+                    
+                        <source srcset="/fileadmin/_processed_/b/b/csm_2026-09-15_P_Lysosomen-1200px_ba07cb7b4c.jpg" media="(min-width: 30rem)" />
+                        <img title="Copyright: Institut für Neurophysiologie / MHH" alt="Die molekulare Darstellung zeigt die Doppelfunktion: Für einen reibungslosen Proteinabbau leitet das Protein SLC26A11 als Transporter den Sulfat-Abfall und als Kanal das anfallende Chlorid aus dem Lysosom heraus in das Zellinnere." src="/fileadmin/_processed_/b/b/csm_2026-09-15_P_Lysosomen-1200px_c07a9db04f.jpg" width="480" height="272" />
+                    
+                    
+                    
+                
+            </a>
+        </picture>
+    
+    <div class="news-teaser__data">
+        <div class="news-teaser__header">
+            <div class="news-teaser__category">Forschung</div>
+            <time class="news-teaser__date" itemprop="datePublished" datetime="2026-09-15">
+                15.09.2026
+            </time>
+        </div>
+        <h3 class="news-teaser__title">
+            <a title="Wie der Transporter SLC26A11 das Recycling in unseren Zellen ermöglicht" href="/presse-news/wie-der-transporter-slc26a11-das-recycling-in-unseren-zellen-ermoeglicht">
+                <span itemprop="headline">Wie der Transporter SLC26A11 das Recycling in unseren Zellen ermöglicht</span>
+            </a>
+        </h3>
+        
+    </div>
+</article>
+
+                                
+                                    
+<article class="news-teaser" itemscope="itemscope" itemtype="http://schema.org/Article">
+    
+    
+        <picture class="news-teaser__image">
+            <a title="Zelltherapie mit Fresszellen" href="/presse-news/zelltherapie-mit-fresszellen">
+                
+                    
+                        <source srcset="/fileadmin/_processed_/e/d/csm_2026-09-07_P_Makrophagen_Lachmann_Paasch-1200px_e9f2027f67.jpg" media="(min-width: 30rem)" />
+                        <img title="Copyright: Bettina Bandel/MHH" alt="Ein Mann und eine Frau stehen in einem Labor vor einem geöffneten Schrank. Sie halten eine Laborschale in die Kamera." src="/fileadmin/_processed_/e/d/csm_2026-09-07_P_Makrophagen_Lachmann_Paasch-1200px_28dbbb77a1.jpg" width="480" height="272" />
+                    
+                    
+                    
+                
+            </a>
+        </picture>
+    
+    <div class="news-teaser__data">
+        <div class="news-teaser__header">
+            <div class="news-teaser__category">Forschung</div>
+            <time class="news-teaser__date" itemprop="datePublished" datetime="2026-09-15">
+                15.09.2026
+            </time>
+        </div>
+        <h3 class="news-teaser__title">
+            <a title="Zelltherapie mit Fresszellen" href="/presse-news/zelltherapie-mit-fresszellen">
+                <span itemprop="headline">Zelltherapie mit Fresszellen</span>
+            </a>
+        </h3>
+        
+    </div>
+</article>
+
+                                
+                                    
+<article class="news-teaser" itemscope="itemscope" itemtype="http://schema.org/Article">
+    
+    
+        <picture class="news-teaser__image">
+            <a title="Die MHH ist dabei: Hochschulinformationstage" href="/presse-news/die-mhh-ist-dabei-hochschulinformationstage">
+                
+                    
+                        <source srcset="/fileadmin/_processed_/8/a/csm_2026-09-03_P_Hochschulinformationstage-1200px_aa9e5c1fb0.jpg" media="(min-width: 30rem)" />
+                        <img alt="Studierende sitzen in einem MHH-Hörsaal" src="/fileadmin/_processed_/8/a/csm_2026-09-03_P_Hochschulinformationstage-1200px_6a4f6c4c0a.jpg" width="480" height="272" />
+                    
+                    
+                    
+                
+            </a>
+        </picture>
+    
+    <div class="news-teaser__data">
+        <div class="news-teaser__header">
+            <div class="news-teaser__category">Studium und Lehre</div>
+            <time class="news-teaser__date" itemprop="datePublished" datetime="2026-09-14">
+                14.09.2026
+            </time>
+        </div>
+        <h3 class="news-teaser__title">
+            <a title="Die MHH ist dabei: Hochschulinformationstage" href="/presse-news/die-mhh-ist-dabei-hochschulinformationstage">
+                <span itemprop="headline">Die MHH ist dabei: Hochschulinformationstage</span>
+            </a>
+        </h3>
+        
+    </div>
+</article>
+
+                                
+                                    
+<article class="news-teaser" itemscope="itemscope" itemtype="http://schema.org/Article">
+    
+    
+        <picture class="news-teaser__image">
+            <a title="Herzstück der deutschen Wissenschaftspolitik" href="/presse-news/herzstueck-der-deutschen-wissenschaftspolitik">
+                
+                    
+                        <source srcset="/fileadmin/_processed_/2/b/csm_2026-09-11_Wissenschaftsrat_Bundesverdienstkreuz_Falk_2026_04_8b0628737b.jpg" media="(min-width: 30rem)" />
+                        <img title="Copyright: Karin Kaiser/MHH" alt="Eine Frau sitzt an einem Schreibtisch und unterhält sich mit einer anderen Frau." src="/fileadmin/_processed_/2/b/csm_2026-09-11_Wissenschaftsrat_Bundesverdienstkreuz_Falk_2026_04_ecedd6af5f.jpg" width="480" height="272" />
+                    
+                    
+                    
+                
+            </a>
+        </picture>
+    
+    <div class="news-teaser__data">
+        <div class="news-teaser__header">
+            <div class="news-teaser__category">Aus der MHH</div>
+            <time class="news-teaser__date" itemprop="datePublished" datetime="2026-09-11">
+                11.09.2026
+            </time>
+        </div>
+        <h3 class="news-teaser__title">
+            <a title="Herzstück der deutschen Wissenschaftspolitik" href="/presse-news/herzstueck-der-deutschen-wissenschaftspolitik">
+                <span itemprop="headline">Herzstück der deutschen Wissenschaftspolitik</span>
+            </a>
+        </h3>
+        
+    </div>
+</article>
+
+                                
+                                    
+<article class="news-teaser" itemscope="itemscope" itemtype="http://schema.org/Article">
+    
+    
+        <picture class="news-teaser__image">
+            <a title="MHH lädt ein zum Informationstag für Betroffene" href="/presse-news/mhh-laedt-ein-zum-informationstag-fuer-betroffene">
+                
+                    
+                        <source srcset="/fileadmin/_processed_/b/4/csm_AortaWebsite_0c59356e50.png" media="(min-width: 30rem)" />
+                        <img alt="Grafik einer Aorta in orange-rotem Farbverlauf" src="/fileadmin/_processed_/b/4/csm_AortaWebsite_da70cb19ce.png" width="480" height="272" />
+                    
+                    
+                    
+                
+            </a>
+        </picture>
+    
+    <div class="news-teaser__data">
+        <div class="news-teaser__header">
+            <div class="news-teaser__category">Aus der MHH</div>
+            <time class="news-teaser__date" itemprop="datePublished" datetime="2026-09-10">
+                10.09.2026
+            </time>
+        </div>
+        <h3 class="news-teaser__title">
+            <a title="MHH lädt ein zum Informationstag für Betroffene" href="/presse-news/mhh-laedt-ein-zum-informationstag-fuer-betroffene">
+                <span itemprop="headline">MHH lädt ein zum Informationstag für Betroffene</span>
+            </a>
+        </h3>
+        
+    </div>
+</article>
+
+                                
+                                    
+<article class="news-teaser" itemscope="itemscope" itemtype="http://schema.org/Article">
+    
+    
+        <picture class="news-teaser__image">
+            <a title="MHH-Brustzentrum erweitert Kapazitäten" href="/presse-news/mhh-brustzentrum-erweitert-kapazitaeten">
+                
+                    
+                        <source srcset="/fileadmin/_processed_/d/9/csm_2026-09-08_P_Brustzentrum-1200px_18b9a2b2ce.jpg" media="(min-width: 30rem)" />
+                        <img title="Copyright: Karin Kaiser/MHH/KI generiert " alt="Eine Frau an einem Mammographiegerät." src="/fileadmin/_processed_/d/9/csm_2026-09-08_P_Brustzentrum-1200px_79db1b2eab.jpg" width="480" height="272" />
+                    
+                    
+                    
+                
+            </a>
+        </picture>
+    
+    <div class="news-teaser__data">
+        <div class="news-teaser__header">
+            <div class="news-teaser__category">Aus der MHH</div>
+            <time class="news-teaser__date" itemprop="datePublished" datetime="2026-09-09">
+                09.09.2026
+            </time>
+        </div>
+        <h3 class="news-teaser__title">
+            <a title="MHH-Brustzentrum erweitert Kapazitäten" href="/presse-news/mhh-brustzentrum-erweitert-kapazitaeten">
+                <span itemprop="headline">MHH-Brustzentrum erweitert Kapazitäten</span>
+            </a>
+        </h3>
+        
+    </div>
+</article>
+
+                                
+                                    
+<article class="news-teaser" itemscope="itemscope" itemtype="http://schema.org/Article">
+    
+    
+        <picture class="news-teaser__image">
+            <a title="Lungenmedizin mit Perspektive: „Reparieren statt ersetzen“" href="/presse-news/lungenmedizin-mit-perspektive-reparieren-statt-ersetzen">
+                
+                    
+                        <source srcset="/fileadmin/_processed_/9/6/csm_2026-09-08_Hoeper_737b0959a3.jpg" media="(min-width: 30rem)" />
+                        <img title="Copyright: Tom Figiel" alt="Prof. Dr. Marius Hoeper." src="/fileadmin/_processed_/9/6/csm_2026-09-08_Hoeper_2070c28f40.jpg" width="480" height="272" />
+                    
+                    
+                    
+                
+            </a>
+        </picture>
+    
+    <div class="news-teaser__data">
+        <div class="news-teaser__header">
+            <div class="news-teaser__category">Aus der MHH</div>
+            <time class="news-teaser__date" itemprop="datePublished" datetime="2026-09-08">
+                08.09.2026
+            </time>
+        </div>
+        <h3 class="news-teaser__title">
+            <a title="Lungenmedizin mit Perspektive: „Reparieren statt ersetzen“" href="/presse-news/lungenmedizin-mit-perspektive-reparieren-statt-ersetzen">
+                <span itemprop="headline">Lungenmedizin mit Perspektive: „Reparieren statt ersetzen“</span>
+            </a>
+        </h3>
+        
+    </div>
+</article>
+
+                                
+                            </div>
+                            
+                                
+
+
+                            
+                            <div class="button-row">
+                                <button class="flickity-button flickity-prev-next-button previous" type="button" aria-label="Previous">
+                                    <svg class="flickity-button-icon" viewBox="0 0 100 100">
+                                        <path d="M 10,50 L 55,95 L 60,90 L 20,50  L 60,10 L 55,5 Z" class="arrow"></path>
+                                    </svg>
+                                </button>
+                                <button class="flickity-button flickity-prev-next-button next" type="button" aria-label="Next">
+                                    <svg class="flickity-button-icon" viewBox="0 0 100 100">
+                                        <path d="M 10,50 L 55,95 L 60,90 L 20,50  L 60,10 L 55,5 Z" class="arrow" transform="translate(100, 100) rotate(180) "></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        
+                </div>
+            
+
+            
+            
+
+            
+            
+        
+    <!--TYPO3SEARCH_begin-->
+
+</div>
+
+
+
+        
+            
+
+
+
+        
+        
+            
+
+
+
+        
+    </div>
+
+
+    <div class="frame frame-default frame-type-news_pi1 frame-layout-0 frame-space-before-large">
+        <a id="c59046"></a>
+        
+        
+            
+
+
+
+        
+        
+            
+
+    
+        <header>
+            
+
+    
+            <h3 class="ce-headline-center">
+                <a href="/veranstaltungskalender-liste">Veranstaltungen an der MHH</a>
+            </h3>
+        
+
+
+
+            
+
+
+
+            
+
+
+
+        </header>
+    
+
+
+        
+        
+
+    
+    
+
+<div class="news typo3-search-exclude">
+    
+    <!--TYPO3SEARCH_end-->
+    
+            
+            
+
+            
+            
+                <div class="grid grid--news-events grid--slider" data-type="news-events-slider">
+                    
+                            
+                            <div class="grid__container">
+                                
+                                    
+<article class="news-teaser" itemscope="itemscope" itemtype="http://schema.org/Article">
+    
+    
+    <div class="news-teaser__data">
+        <div class="news-teaser__header">
+            <div class="news-teaser__category">Gesundheit &amp; Medizin</div>
+            <time class="news-teaser__date" itemprop="datePublished" datetime="2026-09-02">
+                02.09.2026
+            </time>
+        </div>
+        <h3 class="news-teaser__title">
+            <a title="Hannover Symposium für Hygiene und Infektionsprävention, 1. Tag" href="/veranstaltungskalender-details/hannover-symposium-fuer-hygiene-und-infektionspraevention-1-tag">
+                <span itemprop="headline">Hannover Symposium für Hygiene und Infektionsprävention, 1. Tag</span>
+            </a>
+        </h3>
+        
+    </div>
+</article>
+
+                                
+                                    
+<article class="news-teaser" itemscope="itemscope" itemtype="http://schema.org/Article">
+    
+    
+    <div class="news-teaser__data">
+        <div class="news-teaser__header">
+            <div class="news-teaser__category">Gesundheit &amp; Medizin</div>
+            <time class="news-teaser__date" itemprop="datePublished" datetime="2026-09-23">
+                23.09.2026
+            </time>
+        </div>
+        <h3 class="news-teaser__title">
+            <a title="Reproduktive Gesundheit und (unerfüllter) Kinderwunsch bei Männern" href="/veranstaltungskalender-details/reproduktive-gesundheit-und-unerfuellter-kinderwunsch-bei-maennern">
+                <span itemprop="headline">Reproduktive Gesundheit und (unerfüllter) Kinderwunsch bei Männern</span>
+            </a>
+        </h3>
+        
+    </div>
+</article>
+
+                                
+                                    
+<article class="news-teaser" itemscope="itemscope" itemtype="http://schema.org/Article">
+    
+    
+    <div class="news-teaser__data">
+        <div class="news-teaser__header">
+            <div class="news-teaser__category">Wissenschaft &amp; Forschung</div>
+            <time class="news-teaser__date" itemprop="datePublished" datetime="2026-09-30">
+                30.09.2026
+            </time>
+        </div>
+        <h3 class="news-teaser__title">
+            <a title="Hebammenwissenschaftliches Forschungskolloquium" href="/veranstaltungskalender-details/hebammenwissenschaftliches-forschungskolloquium-8">
+                <span itemprop="headline">Hebammenwissenschaftliches Forschungskolloquium</span>
+            </a>
+        </h3>
+        
+    </div>
+</article>
+
+                                
+                                    
+<article class="news-teaser" itemscope="itemscope" itemtype="http://schema.org/Article">
+    
+    
+    <div class="news-teaser__data">
+        <div class="news-teaser__header">
+            <div class="news-teaser__category">Gesundheit &amp; Medizin</div>
+            <time class="news-teaser__date" itemprop="datePublished" datetime="2026-10-07">
+                07.10.2026
+            </time>
+        </div>
+        <h3 class="news-teaser__title">
+            <a title="Info-Reihe-Krebs: &quot;„Der Fremde im Kopf“ Alltagsbewältigung mit neuroonkologischen Erkrankungen&quot; und &quot;„Bis ins Mark getroffen…“ Alltagsbewältigung bei hämato-onkologischen Erkrankungen&quot;" href="/veranstaltungskalender-details/info-reihe-krebs-der-fremde-im-kopf-alltagsbewaeltigung-mit-neuroonkologischen-erkrankungen-und-bis-ins-mark-getroffen-alltagsbewaeltigung-bei-haemato-onkologischen-erkrankungen">
+                <span itemprop="headline">Info-Reihe-Krebs: &quot;„Der Fremde im Kopf“ Alltagsbewältigung mit neuroonkologischen Erkrankungen&quot; und &quot;„Bis ins Mark getroffen…“ Alltagsbewältigung bei hämato-onkologischen Erkrankungen&quot;</span>
+            </a>
+        </h3>
+        
+    </div>
+</article>
+
+                                
+                                    
+<article class="news-teaser" itemscope="itemscope" itemtype="http://schema.org/Article">
+    
+    
+    <div class="news-teaser__data">
+        <div class="news-teaser__header">
+            <div class="news-teaser__category">Wissenschaft &amp; Forschung</div>
+            <time class="news-teaser__date" itemprop="datePublished" datetime="2026-10-08">
+                08.10.2026
+            </time>
+        </div>
+        <h3 class="news-teaser__title">
+            <a title="VIII. Symposium Familiengesundheit - Psychische Gesundheit von Familien stärken - Impulse aus Forschung und Praxis" href="/veranstaltungskalender-details/viii-symposium-familiengesundheit-psychische-gesundheit-von-familien-staerken-impulse-aus-forschung-und-praxis">
+                <span itemprop="headline">VIII. Symposium Familiengesundheit - Psychische Gesundheit von Familien stärken - Impulse aus Forschung und Praxis</span>
+            </a>
+        </h3>
+        
+    </div>
+</article>
+
+                                
+                                    
+<article class="news-teaser" itemscope="itemscope" itemtype="http://schema.org/Article">
+    
+    
+    <div class="news-teaser__data">
+        <div class="news-teaser__header">
+            <div class="news-teaser__category">Wissenschaft &amp; Forschung</div>
+            <time class="news-teaser__date" itemprop="datePublished" datetime="2026-10-08">
+                08.10.2026
+            </time>
+        </div>
+        <h3 class="news-teaser__title">
+            <a title="Forum Ethik, Digitalisierung und Gesundheit" href="/veranstaltungskalender-details/forum-ethik-digitalisierung-und-gesundheit">
+                <span itemprop="headline">Forum Ethik, Digitalisierung und Gesundheit</span>
+            </a>
+        </h3>
+        
+    </div>
+</article>
+
+                                
+                                    
+<article class="news-teaser" itemscope="itemscope" itemtype="http://schema.org/Article">
+    
+    
+    <div class="news-teaser__data">
+        <div class="news-teaser__header">
+            <div class="news-teaser__category">Gesundheit &amp; Medizin</div>
+            <time class="news-teaser__date" itemprop="datePublished" datetime="2026-10-28">
+                28.10.2026
+            </time>
+        </div>
+        <h3 class="news-teaser__title">
+            <a title="Pflegeethiksymposium - Advance Care Planning - Zwischen Autonomie, Fürsorge und Realität" href="/veranstaltungskalender-details/pflegeethiksymposium-advance-care-planning-zwischen-autonomie-fuersorge-und-realitaet">
+                <span itemprop="headline">Pflegeethiksymposium - Advance Care Planning - Zwischen Autonomie, Fürsorge und Realität</span>
+            </a>
+        </h3>
+        
+    </div>
+</article>
+
+                                
+                                    
+<article class="news-teaser" itemscope="itemscope" itemtype="http://schema.org/Article">
+    
+    
+    <div class="news-teaser__data">
+        <div class="news-teaser__header">
+            <div class="news-teaser__category">Gesundheit &amp; Medizin</div>
+            <time class="news-teaser__date" itemprop="datePublished" datetime="2026-10-28">
+                28.10.2026
+            </time>
+        </div>
+        <h3 class="news-teaser__title">
+            <a title="Aktuelle Diabetologie" href="/veranstaltungskalender-details/aktuelle-diabetologie-1">
+                <span itemprop="headline">Aktuelle Diabetologie</span>
+            </a>
+        </h3>
+        
+    </div>
+</article>
+
+                                
+                                    
+<article class="news-teaser" itemscope="itemscope" itemtype="http://schema.org/Article">
+    
+    
+    <div class="news-teaser__data">
+        <div class="news-teaser__header">
+            <div class="news-teaser__category">Gesundheit &amp; Medizin</div>
+            <time class="news-teaser__date" itemprop="datePublished" datetime="2026-10-28">
+                28.10.2026
+            </time>
+        </div>
+        <h3 class="news-teaser__title">
+            <a title="52. Herzforum" href="/veranstaltungskalender-details/52-herzforum">
+                <span itemprop="headline">52. Herzforum</span>
+            </a>
+        </h3>
+        
+    </div>
+</article>
+
+                                
+                                    
+<article class="news-teaser" itemscope="itemscope" itemtype="http://schema.org/Article">
+    
+    
+    <div class="news-teaser__data">
+        <div class="news-teaser__header">
+            <div class="news-teaser__category">Gesundheit &amp; Medizin</div>
+            <time class="news-teaser__date" itemprop="datePublished" datetime="2026-11-03">
+                03.11.2026
+            </time>
+        </div>
+        <h3 class="news-teaser__title">
+            <a title="Moralischer Stress im Klinikalltag – Grundlagen und Perspektiven" href="/veranstaltungskalender-details/moralischer-stress-im-klinikalltag-grundlagen-und-perspektiven">
+                <span itemprop="headline">Moralischer Stress im Klinikalltag – Grundlagen und Perspektiven</span>
+            </a>
+        </h3>
+        
+    </div>
+</article>
+
+                                
+                            </div>
+                            
+                                
+
+
+                            
+                            <div class="button-row">
+                                <button class="flickity-button flickity-prev-next-button previous" type="button" aria-label="Previous">
+                                    <svg class="flickity-button-icon" viewBox="0 0 100 100">
+                                        <path d="M 10,50 L 55,95 L 60,90 L 20,50  L 60,10 L 55,5 Z" class="arrow"></path>
+                                    </svg>
+                                </button>
+                                <button class="flickity-button flickity-prev-next-button next" type="button" aria-label="Next">
+                                    <svg class="flickity-button-icon" viewBox="0 0 100 100">
+                                        <path d="M 10,50 L 55,95 L 60,90 L 20,50  L 60,10 L 55,5 Z" class="arrow" transform="translate(100, 100) rotate(180) "></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        
+                </div>
+            
+
+            
+            
+
+            
+            
+        
+    <!--TYPO3SEARCH_begin-->
+
+</div>
+
+
+
+        
+            
+
+
+
+        
+        
+            
+
+
+
+        
+    </div>
+
+
+    
+    
+        <section class="teaser typo3-search-exclude 
+         frame-space-before-medium
+        
+        ">
+            
+            <a id="c61654"></a>
+            
+            
+                
+
+
+
+            
+            
+      <div class="teaser__top">
+        <h3 class="teaser__headline">
+          
+              <svg>
+                <use xlink:href="/typo3conf/ext/bra_projectfiles/Resources/Public/Frontend/assets/svg/sprite.svg#icon-microscope"></use>
+              </svg>
+          
+          
+            MHH-Forschung bewegt
+          
+        </h3>
+        
+            
+          
+      </div>
+      <div class="teaser__bg-color">
+        
+          
+      <div class="teaser__wrapper teaser__wrapper--medium js-image-text-slider">
+        
+          
+            
+      <div class="teaser__slide">
+        <div class="teaser__card">
+            
+              
+                  <img title="Copyright: Karin Kaiser/MHH" alt="Zwei Forscher in weißen Kitteln stehen in einem Labor vor einem Rührkessel-Bioreaktor. " src="/fileadmin/_processed_/8/a/csm_2026-08-13_P_INDUZELL-1200px_28e237e58f.jpg" width="1198" height="674" />
+              
+            
+          <div class="teaser__card__text">
+            <h4>Pluripotente Stammzellen im industriellen Maßstab herstellen</h4>
+            
+              <p>MHH-Forschende wollen in Rührkessel-Bioreaktoren eine größere Zellausbeute bei weniger Materialaufwand und geringeren Kosten erreichen.</p>
+            
+            
+              <a href="https://www.mhh.de/presse-news-detailansicht/pluripotente-stammzellen-im-industriellen-massstab-herstellen" target="_blank" class="btn">
+                
+                    Zur News
+                  
+              </a>
+            
+          </div>
+        </div>
+      </div>
+
+    
+          
+            
+      <div class="teaser__slide">
+        <div class="teaser__card">
+            
+              
+                  <img title="Copyright: Karin Kaiser/MHH" alt="Drei Personen stehen neben einem Laborgerät, auf dessen Bildschirm Analyseergebnisse angezeigt werden. " src="/fileadmin/_processed_/c/5/csm_2026-08-xx_P_Brustkrebs-1200px_312122ab62.jpg" width="1198" height="674" />
+              
+            
+          <div class="teaser__card__text">
+            <h4>Neue Erkenntnisse zu familiärem Brust- und Eierstockkrebs</h4>
+            
+              <p>Forschungsteam hat neue Gene und Genvarianten identifiziert, die mit dem vermehrten Auftreten von Brustkrebs in Verbindung stehen.</p>
+            
+            
+              <a href="https://www.mhh.de/presse-news-detailansicht/neue-erkenntnisse-zu-familiaerem-brust-und-eierstockkrebs" target="_blank" class="btn">
+                
+                    Zur News
+                  
+              </a>
+            
+          </div>
+        </div>
+      </div>
+
+    
+          
+            
+      <div class="teaser__slide">
+        <div class="teaser__card">
+            
+              
+                  <img title="Copyright: Karin Kaiser/MHH" alt="Eine Forscherin hält zwei unterschiedliche Membranstrukturen für künstliche Lungen in den Händen. Daneben steht ein ECMO  Unterstützungssystem. " src="/fileadmin/_processed_/d/f/csm_2026-08-18_P_Kuenstliche_Lunge_NEU_1-1200px_2f2db1ef24.jpg" width="1198" height="674" />
+              
+            
+          <div class="teaser__card__text">
+            <h4>3D-Membran aus dem Drucker ebnet den Weg zur Biohybridlunge</h4>
+            
+              <p>MHH-Forschende entwickeln neuartige Membranarchitektur mit verbessertem Gasaustausch für kompaktere ECMO-Systeme und künstliches Lungenimplantat.</p>
+            
+            
+              <a href="https://www.mhh.de/presse-news-detailansicht/3d-membran-aus-dem-drucker-ebnet-den-weg-zur-biohybridlunge" target="_blank" class="btn">
+                
+                    Zur News
+                  
+              </a>
+            
+          </div>
+        </div>
+      </div>
+
+    
+          
+        
+      </div>
+    
+        
+      </div>
+    
+            
+                
+
+
+
+            
+        
+        </section>
+    
+
+
+
+    
+    
+        <section class="card-teaser card-teaser--map typo3-search-exclude 
+         frame-space-before-large
+        
+        ">
+            
+            <a id="c609"></a>
+            
+            
+                
+
+
+
+            
+            
+        <div class="l-inner-container">
+            <h3 class="card-teaser__headline">
+                
+                    
+                        <svg>
+                            <use xlink:href="/typo3conf/ext/bra_projectfiles/Resources/Public/Frontend/assets/svg/sprite.svg#icon-map"></use>
+                        </svg>
+                    
+                        Ihr Weg zur MHH
+                
+            </h3>
+        </div>
+        <div class="card-teaser__wrapper">
+            <div class="card-teaser__container l-inner-container-max">
+                
+        
+                
+                
+                
+                    
+                    
+                
+                <a href="https://www.google.com/maps/place/Medizinische+Hochschule+Hannover/@52.3835765,9.8049919,15z/data=!4m2!3m1!1s0x0:0xb2b1a3a555c8fdb1?sa=X&amp;ved=2ahUKEwi8wPTEg6XkAhUCEVAKHQH2BBQQ_BIwCnoECA0QCA" class="card-teaser__bg-image" target="_blank" style="background-image:url(/fileadmin/_processed_/7/e/csm_Umgebungskarte_MHH1_416578b230.png);" data-has-bg-image="true">
+                    
+                    
+                        <img class="src" title="Link zu Google Maps // Copyright: MHH / Mareike Heger" alt="Grafik von Umgebungskarte der MHH" src="/fileadmin/_processed_/7/e/csm_Umgebungskarte_MHH1_416578b230.png" width="899" height="368" />
+                    
+                
+                </a>
+            
+    
+                
+                    <div class="card-teaser__item-wrapper l-inner-container-wide">
+                        
+                            <div class="card-teaser__item">
+                                <div class="card-teaser__item-inner">
+                                    
+                                        <div class="card-teaser__item-title">
+                                            Anschrift und Anfahrt
+                                        </div>
+                                    
+                                    
+                                        <p>Anschrift<br> Medizinische Hochschule Hannover<br> Carl-Neuberg-Straße 1<br> 30625 Hannover<br> (0511) 532-0</p><br />
+                                    
+                                    
+                                        <a href="/die-mhh/anfahrt-lageplan" class="btn">
+                                            
+                                                    Lageplan und Anfahrt
+                                                
+                                        </a>
+                                    
+                                </div>
+                            </div>
+                        
+                    </div>
+                
+            </div>
+        </div>
+    
+            
+                
+
+
+
+            
+        
+        </section>
+    
+
+
+
+    
+    
+        <section class="teaser typo3-search-exclude 
+         frame-space-before-medium
+        
+        ">
+            
+            <a id="c61792"></a>
+            
+            
+                
+
+
+
+            
+            
+      <div class="teaser__top">
+        <h3 class="teaser__headline">
+          
+          
+            Video &amp; Podcast: MHH bewegt 
+          
+        </h3>
+        
+            
+          
+      </div>
+      <div class="teaser__bg-color">
+        
+          
+      <div class="teaser__wrapper teaser__wrapper--medium js-image-text-slider">
+        
+          
+            
+      <div class="teaser__slide">
+        <div class="teaser__card">
+            
+              
+                  <img title="Bild: Pixabay" alt="Podcast-Mikrofon vor rotem Hintergrund" src="/fileadmin/_processed_/6/5/csm_microphone-6784742_1280_5ad24d6602.jpg" width="1278" height="718" />
+              
+            
+          <div class="teaser__card__text">
+            <h4>MHH Podcasts - Jetzt reinhören! </h4>
+            
+            
+              <a href="/zentrale-webredaktion/podcasts" class="btn">
+                
+                    »» Zur Übersicht 
+                  
+              </a>
+            
+          </div>
+        </div>
+      </div>
+
+    
+          
+            
+      <div class="teaser__slide">
+        <div class="teaser__card">
+            
+              
+                  <img title="Copyright: Gesundheitsregion Hannover" alt="Ein Krankenwagen, aus dem eine Trage mit einer Person gezogen wird." src="/fileadmin/_processed_/c/c/csm_NotaufnahmeKeinFilm_80060d8b0d.jpg" width="1135" height="638" />
+              
+            
+          <div class="teaser__card__text">
+            <h4>Notaufnahmen entlasten: Du bist Teil der Lösung! </h4>
+            
+            
+              <a href="https://youtu.be/XDir7_Lnv50" target="_blank" class="btn" rel="noreferrer">
+                
+                    Zum Video
+                  
+              </a>
+            
+          </div>
+        </div>
+      </div>
+
+    
+          
+        
+      </div>
+    
+        
+      </div>
+    
+            
+                
+
+
+
+            
+        
+        </section>
+    
+
+
+
+    
+    
+        <section class="teaser typo3-search-exclude 
+        
+        
+        ">
+            
+            <a id="c4125"></a>
+            
+            
+                
+
+
+
+            
+            
+      <div class="teaser__top">
+        <h3 class="teaser__headline">
+          
+              <svg>
+                <use xlink:href="/typo3conf/ext/bra_projectfiles/Resources/Public/Frontend/assets/svg/sprite.svg#icon-location"></use>
+              </svg>
+          
+          
+            Rund um die MHH
+          
+        </h3>
+        
+            
+          
+      </div>
+      <div class="teaser__bg-color">
+        
+          
+      <div class="teaser__wrapper teaser__wrapper--small js-image-text-slider">
+        
+          
+            
+      <div class="teaser__slide">
+        <div class="teaser__card">
+            
+              
+                  <img title="Copyright: André Schweigler/MHH" alt="Blick auf das Neubaufeld am Stadtfelddamm" src="/fileadmin/_processed_/c/8/csm_Neubau_4de46ebf44.jpg" width="6396" height="3598" />
+              
+            
+          <div class="teaser__card__text">
+            <h4>Der Klinikneubau</h4>
+            
+              <p>Aktuelle News und Hintergründe zum Großprojekt Klinikneubau der MHH am Stadtfelddamm.</p>
+            
+            
+              <a href="https://neubau.mhh.de/" target="_blank" class="btn">
+                
+                    Mehr
+                  
+              </a>
+            
+          </div>
+        </div>
+      </div>
+
+    
+          
+            
+      <div class="teaser__slide">
+        <div class="teaser__card">
+            
+              
+                  <img title="Copyright: Pixabay.com" alt="Copyright: Pixabay.com" src="/fileadmin/_processed_/c/c/csm_heart-care-1040250_1280_76e3fb2d77.jpg" width="569" height="327" />
+              
+            
+          <div class="teaser__card__text">
+            <h4>Spenden und Fördern</h4>
+            
+              <p>Es gibt verschiedene Möglichkeiten, wie Sie die Arbeit der MHH unterstützen können.</p>
+            
+            
+              <a href="/die-mhh/praesidium/spenden-und-foerdern" class="btn">
+                
+                    Mehr
+                  
+              </a>
+            
+          </div>
+        </div>
+      </div>
+
+    
+          
+            
+      <div class="teaser__slide">
+        <div class="teaser__card">
+            
+              
+                  <img title="Copyright: Karin Kaiser/Stabsstelle Kommunikation/MHH" alt="MHH-Stele. Copyright: Karin Kaiser/Stabsstelle Kommunikation/MHH" src="/fileadmin/_processed_/5/6/csm_Stele_MHH_Herbst_2014-1200px_2994a8e5af.jpg" width="570" height="324" />
+              
+            
+          <div class="teaser__card__text">
+            <h4>Die MHH in Zahlen</h4>
+            
+              <p>Ob Forschung, Krankenversorgung oder Lehre: die Kennzahlen im Überblick.</p>
+            
+            
+              <a href="/die-mhh-in-zahlen" class="btn">
+                
+                    Mehr
+                  
+              </a>
+            
+          </div>
+        </div>
+      </div>
+
+    
+          
+        
+      </div>
+    
+        
+      </div>
+    
+            
+                
+
+
+
+            
+        
+        </section>
+    
+
+
+
+    
+    
+    <section class="typo3-search-exclude 
+        
+        
+        ">
+        
+            <a id="c5"></a>
+            
+            
+                
+
+
+
+            
+            
+    <div class="partner">
+        <div class="container">
+            <div class="partner__wrapper">
+                
+                    
+                        
+                            
+                                
+                                        <a href="/familienservice" target="_blank">
+                                            <img title="Link zur Website vom MHH-Gleichstellungsbüro öffnet im neuen Fenster" src="/fileadmin/mhh/allgemeines/logos/Logo_audit_MHH-Rechteck.svg" width="564" height="297" alt="" />
+                                        </a>
+                                    
+                            
+                        
+                    
+                        
+                            
+                                
+                                        <a href="https://www.charta-der-vielfalt.de/" target="_blank" rel="noreferrer">
+                                            <img title="Link zur Website von Charta der Vielfalt öffnet im neuen Fenster" src="/fileadmin/mhh/allgemeines/logos/06_Charta-der-Vielfalt.svg" width="1536" height="383" alt="" />
+                                        </a>
+                                    
+                            
+                        
+                    
+                        
+                            
+                                
+                                        <a href="https://wissen.hannover.de/" target="_blank" rel="noreferrer">
+                                            <img title="Link zur Website von Initiative Wissenschaft Hannover öffnet im neuen Fenster" src="/fileadmin/_processed_/2/d/csm_08_Initiative_Wissenschaft_71b401bcbd.png" width="266" height="101" alt="" />
+                                        </a>
+                                    
+                            
+                                
+                                        <a href="http://www.mhh.de/plus" target="_blank">
+                                            <img title="Link zur Website von MHH plus öffnet im neuen Fenster" src="/fileadmin/mhh/allgemeines/logos/07_MHH-plus.svg" width="81" height="38" alt="" />
+                                        </a>
+                                    
+                            
+                        
+                    
+                        
+                            
+                                
+                                        <a href="https://www.kks-netzwerk.de/index.php" target="_blank" rel="noreferrer">
+                                            <img src="/fileadmin/mhh/allgemeines/Startseite/image2vector.svg" width="400" height="96" alt="" />
+                                        </a>
+                                    
+                            
+                        
+                    
+                        
+                            
+                                
+                                        <a href="/studium" target="_blank">
+                                            <img title="Link zur Website von Studieren an der MHH öffnet in einem neuen Fenster." src="/fileadmin/mhh/allgemeines/logos/03_Weltoffene_Hochschulen.svg" width="425" height="283" alt="" />
+                                        </a>
+                                    
+                            
+                        
+                    
+                        
+                            
+                                
+                                        <a href="https://www.mhh.de/fileadmin/mhh/betriebsorganisation-biq/Zertifikate/MHH-Zertifikat_gesamt_DE.pdf" target="_blank">
+                                            <img title="Zum TÜV-Nord-Zertifikat" alt="TÜV-Nord-Zertifikat mit weißer Schrift auf blauen Hintergrund" src="/fileadmin/mhh/allgemeines/Bilder_Die_MHH/DIN-EN-ISO-9001_de_regular-RGB__1_.svg" width="284" height="284" />
+                                        </a>
+                                    
+                            
+                        
+                    
+                        
+                            
+                                
+                                        
+                                            <img title="Link zur Website vom MHH-Gender &amp; Diversity Portal öffnet im neuen Fenster" src="/fileadmin/mhh/allgemeines/logos/05_Gender_and_Diversity.svg" width="566" height="191" alt="" />
+                                        
+                                    
+                            
+                        
+                    
+                        
+                            
+                                
+                                        <a href="https://www.aktion-sauberehaende.de/" target="_blank" rel="noreferrer">
+                                            <img title="Link zur Website von Aktion Saubere Hände öffnet im neuen Fenster." alt="Link zur Website von Aktion Saubere Hände öffnet im neuen Fenster." src="/fileadmin/mhh/allgemeines/Startseite/trace.svg" width="4252" height="4252" />
+                                        </a>
+                                    
+                            
+                        
+                    
+                        
+                            
+                                
+                                        <img src="/fileadmin/mhh/presse/MHH_Insight/2023/logo-fahrradfreundlag2023Neu.svg" width="1367" height="802" alt="" />
+                                    
+                            
+                        
+                    
+                        
+                            
+                                
+                                        <a href="https://www.uniklinika.de/" target="_blank" rel="noreferrer">
+                                            <img title="Link zur Webseite des VUD" alt="Das Logo des Verbands der Universitätsklinika Deutschlands" src="/fileadmin/mhh/allgemeines/logos/VUD_Logo_RGB_L.svg" width="1291" height="338" />
+                                        </a>
+                                    
+                            
+                        
+                    
+                
+            </div>
+        </div>
+    </div>
+
+            
+                
+
+
+
+            
+        
+    </section>
+
+
+
+        
+        <!--TYPO3SEARCH_end-->
+    </main>
+
+
+
+    
+
+
+
+    
+
+
+
+
+    
+
+
+
+
+    <footer class="footer">
+    <div class="l-inner-container-wide l-inner-container-wide--no-pad">
+        <div class="footer__upper">
+            <svg class="footer__logo" width="334" height="80">
+                <use xlink:href="/typo3conf/ext/bra_projectfiles/Resources/Public/Frontend/assets/svg/sprite.svg#icon-mhh-logo"></use>
+            </svg>
+            <div class="footer__links">
+                
+                    <a href="/impressum" class="footer__link">Impressum</a>
+                
+                    <a href="https://intranet.mh-hannover.de" class="footer__link">Intranet</a>
+                
+                    <a href="/kontakt" class="footer__link">Kontakt</a>
+                
+                    <a href="/datenschutz" class="footer__link">Datenschutz</a>
+                
+                    <a href="/barrierefreiheit" class="footer__link">Barrierefreiheit</a>
+                
+            </div>
+        </div>
+        <div class="footer__lower">
+            <div class="footer__block-left">
+                <div class="footer__text">
+                    
+
+    
+    
+        <div class="typo3-search-exclude 
+        
+        
+        ">
+            
+            <a id="c4"></a>
+            
+            
+                
+
+
+
+            
+            
+        
+        <address class="footer__address">
+            
+            
+        </address>
+    
+            
+                
+
+
+
+            
+        
+        </div>
+    
+
+
+                </div>
+
+                
+                    <div class="footer__info">
+                        <h4>Auch interessant</h4>
+                        
+                            
+                                <a href="/exz" class="footer__link">Exzellenzstrategie</a>
+                            
+                                <a href="/akademische-karriereentwicklung" class="footer__link">Akademische Karriereentwicklung</a>
+                            
+                                <a href="/hbrs" class="footer__link">Hannover Biomedical Research School</a>
+                            
+                                <a href="/itt/blutspende" class="footer__link">Blutspende-Dienst</a>
+                            
+                                <a href="/gleichstellung" class="footer__link">Gleichstellung</a>
+                            
+                                <a href="/qualitaetsbericht" class="footer__link">Qualitätsbericht der MHH</a>
+                            
+                                <a href="/alumni" class="footer__link">MHH-Alumni e.V.</a>
+                            
+                                <a href="/babygalerie" class="footer__link">Babygalerie</a>
+                            
+                        
+                    </div>
+                
+                    <div class="footer__info">
+                        <h4>Hilfe &amp; Service</h4>
+                        
+                            
+                                <a href="/patientenportal/patienten-servicecenter-psc" class="footer__link">Patienten-Servicecenter</a>
+                            
+                                <a href="/geschaeftsbereich-klinikmanagement/patientendatenanfragen-dsgvo" class="footer__link">Patientendatenanfragen DSGVO</a>
+                            
+                                <a href="/patientenportal/patientenfuersprecher" class="footer__link">Patientenfürsprecher</a>
+                            
+                                <a href="/patientenbeschwerdemanagement" class="footer__link">Feedback- und Beschwerdemanagement</a>
+                            
+                                <a href="https://www.probeweis.de/" class="footer__link">ProBeweis - Vertrauliche Spurensicherung</a>
+                            
+                                <a href="/presse/service-fuer-journalisten/glossar" class="footer__link">Glossar - Fachbegriffe aus der Forschung</a>
+                            
+                                <a href="/campusleben" class="footer__link">Campusleben</a>
+                            
+                                <a href="/fit-for-work-and-life" class="footer__link">Fit for Work and Life</a>
+                            
+                        
+                    </div>
+                
+
+
+                
+            </div>
+
+            <div class="footer__block-right">
+                
+                <div class="footer__about-group">
+                    
+
+    
+    
+        <div class="footer__follow typo3-search-exclude 
+        
+        
+        ">
+            
+            <a id="c53"></a>
+            
+            
+                
+
+
+
+            
+            
+        <h4>
+            
+                Folgen Sie uns auf
+            
+        </h4>
+        
+            
+                
+                     
+        <a href="https://de-de.facebook.com/MHHnova/" target="_blank" class="footer__link" rel="noreferrer">
+            
+        
+                Facebook
+            
+    
+        </a>
+    
+                
+            
+                
+                     
+        <a href="https://www.instagram.com/medizinischehochschule/" target="_blank" class="footer__link" rel="noreferrer">
+            
+        
+                Instagram
+            
+    
+        </a>
+    
+                
+            
+                
+                     
+        <a href="https://www.youtube.com/MHH_nova" target="_blank" class="footer__link" rel="noreferrer">
+            
+        
+                YouTube
+            
+    
+        </a>
+    
+                
+            
+                
+                     
+        <a href="https://www.xing.com/companies/medizinischehochschulehannover" target="_blank" class="footer__link" rel="noreferrer">
+            
+        
+                Xing
+            
+    
+        </a>
+    
+                
+            
+                
+                     
+        <a href="https://www.linkedin.com/school/medizinische-hochschule-hannover" target="_blank" class="footer__link" rel="noreferrer">
+            
+        
+                LinkedIn
+            
+    
+        </a>
+    
+                
+            
+        
+    
+            
+                
+
+
+
+            
+        
+        </div>
+    
+
+
+
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+<div class="footer-copy">
+    <div class="l-inner-container-wide l-inner-container-wide--no-pad">
+        <span>© 2019 - 2026 Medizinische Hochschule Hannover</span>
+    </div>
+</div>
+    <a href="#skip-navigation-link" aria-label="Nach oben scrollen" class="scroll-top">
+    Nach oben scrollen
+    <svg width="40" height="22" viewBox="0 0 40 22" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path
+                d="M0.336349 21.3049C0.123055 21.0915 0.00231172 20.8014 0.000579848 20.4983C-0.00224302 20.1942 0.119213 19.9024 0.33635 19.6916L19.1875 0.670536C19.3985 0.454757 19.6865 0.333294 19.9869 0.333294C20.2874 0.333294 20.5753 0.454757 20.7864 0.670536L39.6415 19.6916C39.9432 19.9764 40.0671 20.4045 39.9646 20.8083C39.8621 21.2122 39.5496 21.5275 39.1494 21.6309C38.7491 21.7343 38.3249 21.6094 38.0426 21.3049L19.9869 3.09052L1.93526 21.3049C1.72367 21.5197 1.43593 21.6405 1.1358 21.6405C0.835674 21.6405 0.547935 21.5197 0.336349 21.3049Z"
+                fill="currentColor" />
+    </svg>
+</a>
+<script src="/typo3conf/ext/bra_projectfiles/Resources/Public/Frontend/assets/js/main.js?1786370992"></script>
+
+
+<noscript><img src="https://webstat.mhh.de/matomo.php?idsite=1&amp;rec=1" style="border:0;" alt=""></noscript>
+</body>
+</html>

@@ -1,0 +1,888 @@
+<!--[if lt IE 7]><html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en-US"><![endif]--><!--[if IE 7]><html class="no-js lt-ie9 lt-ie8" lang="en-US"><![endif]--><!--[if IE 8]><html class="no-js lt-ie9" lang="en-US"	><![endif]--><!--[if gt IE 8]><!--><!DOCTYPE HTML><html class="no-js" lang="en-US"><!--[endif]-->
+   <head>
+      <title>Southwestern College : Chula Vista, California</title>
+      <meta property="og:title" content="Southwestern College : Chula Vista, California">
+      <meta property="og:image" content="/_resources/images/swc/meta/og-image.aspx">
+      
+
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-5WMV4RR');</script>
+<!-- End Google Tag Manager -->
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WLLZBS339P"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-WLLZBS339P');
+</script>
+<!-- End Google Tag Manager -->
+
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '796032872167160');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=796032872167160&ev=PageView&noscript=1"/></noscript>
+<!-- End Meta Pixel Code -->
+
+<!-- Meta Pixel Code --> 
+<script> !function(f,b,e,v,n,t,s) {if(f.fbq)return;n=f.fbq=function(){n.callMethod? n.callMethod.apply(n,arguments):n.queue.push(arguments)}; if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0'; n.queue=[];t=b.createElement(e);t.async=!0; t.src=v;s=b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t,s)}(window, document,'script', 'https://connect.facebook.net/en_US/fbevents.js'); fbq('init', '796032872167160'); fbq('track', 'PageView'); </script> <noscript><img height="1" width="1" style="display:none" src=https://www.facebook.com/tr?id=796032872167160&ev=PageView&noscript=1/></noscript> <!-- End Meta Pixel Code -->
+
+<script async="async" src="https://apply.swccd.edu/ping">/**/</script>
+
+<!-- headcode include -->
+
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+<!-- <link rel="apple-touch-icon" href="/_resources/images/apple-touch-icon.png"/> -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Signika:300,400,600,700&display=swap" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+<script src="/_resources/js/modernizr-2.8.3.min.js"></script>
+
+<link rel="stylesheet" href="/_resources/css/main.css"/>
+<link rel="stylesheet" href="/_resources/css/oustyles.css"/>
+<link rel="stylesheet" href="/_resources/css/swc-v2.css"/>
+<link rel="stylesheet" href="/_resources/css/swc.css"/>
+
+<link href="//cdn.omniupdate.com/jquery-ui/v1.12/jquery-ui.min.css" rel="stylesheet" />
+
+<style>ul.ui-autocomplete {z-index:2500;}</style>
+
+
+      <style>
+			.alignment{
+				position:relative;
+				left:25%;
+				margin-right: 10px !important;
+			} 
+			@media screen and (min-width:426px) and (max-width:555px){
+				.alignment{
+					left:10%;
+				}
+			}
+			@media screen and (min-width:300px) and (max-width:425px){
+				.alignment{
+					left:20%;
+					display:table;
+				}
+			}
+			@media screen and (max-width:299px){
+				.alignment{
+					left:0%;
+					display:table;
+				}
+			}
+			@media screen and (max-width:699px){
+				.alignment{
+					margin-right: 10px !important;
+					margin-top: 10px !important;
+				}
+			}
+			@media screen and (min-width:824px) and (max-width:1023px){
+				.news-article .content h3{
+					line-height: 0.8 !important;
+				}
+			}
+			@media screen and (min-width:700px) and (max-width:823px){
+				.news-article .content h3{
+					line-height: 0.55 !important;
+				}
+			}
+		</style>
+      <style>
+				section.pre-footer.desktop {
+				background-image: url(/_resources/images/home/sock-home.jpg) !important;
+				}			
+				div.mobile {
+				background-image: url(/_resources/images/home/sock-mobile.jpg) !important;
+				}				
+			</style><script type="text/javascript">
+					var page_url="https://www.swccd.edu/index.aspx";
+				</script></head>
+   <body class="home"><!-- OU Search Ignore Start Here --><header id="masthead" role="banner">
+   <div id="search-control" role="search"><button id="toggle-search" title="Search SWC" class="toggle" aria-expanded="false"><span class="icon-search" aria-hidden="true"></span><span class="accessible">Toggle Search</span></button><div class="search-container" aria-hidden="true">
+<!-- search form include -->
+<form  action="/search/index.aspx" id="header-search">
+	<label class="accessible" for="search-field">Search SWC website</label>
+	<input type="search" name="q" id="search-field" placeholder="Search"/>
+	<button type="submit"><span class="icon-search" aria-hidden="true"></span><span class="accessible">Submit Search</span></button>
+</form>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5WMV4RR" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) --></div>
+   </div><a class="skipnav" href="#skpmain" tabindex="1"><span class="skipnav">Skip Navigation</span></a><div class="header-positioner"><a class="logo" href="/" tabindex="1"><span class="accessible">Southwestern College Logo</span></a><div class="header-nav"><button id="main-menu-toggle" class="toggle" aria-expanded="false"><span class="icon-menu" aria-hidden="true"></span><span class="accessible">Menu Toggle</span></button><div class="menus-wrapper" aria-hidden="true">
+            <div class="menu-header">
+               <p><span>Welcome to</span>Southwestern College</p>
+            </div>
+            <nav id="quicklink-nav" role="navigation" aria-label="Quick Links">
+               <ul>
+                  <li><a href="/admissions-and-financial-aid/apply-and-register/index.aspx" title="Apply &amp; Register" data-id="sticky-applytoswc-click" class="ga-click"><span class="icon-files" aria-hidden="true"></span><span class="label">Apply &amp; Register</span></a></li>
+                  <li><a href="/degrees-and-certificates/index.aspx" title="Degrees &amp; Certificates" data-id="sticky-degreescertificates-click" class="ga-click"><span class="icon-degrees" aria-hidden="true"></span><span class="label">Degrees &amp; Certificates</span></a></li>
+                  <li><a href="/student-support/help-center/index.aspx" title="Welcome Center" data-id="sticky-welcomecenter-click" class="ga-click"><span class="icon-VirtualTourIcon" aria-hidden="true"></span><span class="label">Help Center</span></a></li>
+                  <li id="swc-welcome-center"><a href="/index.aspx" title="" data-id="" class=""><span class="icon-WelcomeCenter" aria-hidden="true"></span><span class="label">Home</span></a></li>
+               </ul>
+            </nav>
+            <div class="main-nav-wrapper">
+               <nav id="main-nav" role="navigation" aria-label="Main">
+                  <ul>
+                     <li><a title="About SWC" href="/about-swc/index.aspx">About SWC</a><button class="toggle" aria-expanded="false"><span class="icon-arrow-down" aria-hidden="true"></span><span class="accessible">Toggle Sub Menu</span></button><ul aria-hidden="true">
+                           <li><a title="Accreditation" href="/about-swc/accreditation/index.aspx">Accreditation</a></li>
+                           <li><a title="Annual Report" href="/about-swc/swc-highlights/annual-report.aspx">Annual Report</a></li>
+                           <li><a title="Campus Maps &amp; Directions" href="/about-swc/campus-maps-and-directions/index.aspx">Campus Maps &amp; Directions</a></li>
+                           <li><a title="Faculty &amp; Staff Directory" href="/_showcase/directory/">Faculty &amp; Staff Directory</a></li>
+                           <li><a title="Get In Touch" href="/about-swc/get-in-touch/index.aspx">Get In Touch</a></li>
+                           <li><a title="Governing Board" href="/about-swc/leadership/governing-board/index.aspx">Governing Board</a></li>
+                           <li><a title="Indigenous Communities &amp; Land Acknowledgement" href="/about-swc/indigenous-communities-and-land-acknowledgement/index.aspx">Indigenous Communities &amp; Land Acknowledgement</a></li>
+                           <li><a title="Jaguar Pathways" href="/about-swc/jaguar-pathways/index.aspx">Jaguar Pathways</a></li>
+                           <li><a title="Leadership" href="/about-swc/leadership/index.aspx">Leadership</a></li>
+                           <li><a title="Mission &amp; History" href="/about-swc/mission-statement/index.aspx">Mission &amp; History</a></li>
+                           <li><a title="Schools &amp; Centers" href="/locations/index.aspx">Schools &amp; Centers</a></li>
+                           <li><a title="Sustainable SWC" href="/about-swc/sustainable-swc/index.aspx">Sustainable SWC</a></li>
+                           <li><a title="Virtual Tour" href="/about-swc/virtual-tour/index.aspx">Virtual Tour</a></li>
+                        </ul>
+                     </li>
+                     <li><a title="Programs &amp; Academics" href="/programs-and-academics/index.aspx">Programs &amp; Academics</a><button class="toggle" aria-expanded="false"><span class="icon-arrow-down" aria-hidden="true"></span><span class="accessible">Toggle Sub Menu</span></button><ul aria-hidden="true">
+                           <li><a title="Academic Calendar" href="/classes-and-registration/academic-calendar/index.aspx">Academic Calendar</a></li>
+                           <li><a title="Associate Degrees" href="/degrees-and-certificates/associate-degrees/index.aspx">Associate Degrees</a></li>
+                           <li><a title="Classes &amp; Registration" href="/classes-and-registration/index.aspx">Classes &amp; Registration</a></li>
+                           <li><a title="Continuing Education" href="/programs-and-academics/continuing-education/index.aspx">Continuing Education</a></li>
+                           <li><a title="Degrees &amp; Certificates" href="/degrees-and-certificates/index.aspx">Degrees &amp; Certificates</a></li>
+                           <li><a title="Faculty &amp; Staff Directory" href="/_showcase/directory/">Faculty &amp; Staff Directory</a></li>
+                           <li><a title="Graduation Support" href="/degrees-and-certificates/graduation-support/index.aspx">Graduation Support</a></li>
+                           <li><a title="Online Learning" href="/locations/online-learning/index.aspx">Online Learning</a></li>
+                           <li><a title="Specialty Programs" href="/programs-and-academics/specialty-programs/index.aspx">Specialty Programs</a></li>
+                           <li><a title="SWC Catalog" href="/classes-and-registration/catalog/index.aspx">SWC Catalog</a></li>
+                           <li><a href="/programs-and-academics/university-center/index.aspx">University Center</a></li>
+                        </ul>
+                     </li>
+                     <li><a title="Admissions &amp; Financial Aid" href="/admissions-and-financial-aid/index.aspx">Admissions &amp; Financial Aid</a><button class="toggle" aria-expanded="false"><span class="icon-arrow-down" aria-hidden="true"></span><span class="accessible">Toggle Sub Menu</span></button><ul aria-hidden="true">
+                           <li><a title="Apply &amp; Register" href="/admissions-and-financial-aid/apply-and-register/index.aspx">Apply &amp; Register</a></li>
+                           <li><a title="Financial Aid" href="/admissions-and-financial-aid/financial-aid/index.aspx">Financial Aid</a></li>
+                           <li><a title="High School Programs" href="https://www.swccd.edu/admissions-and-financial-aid/information-for/high-school-students/high-school-special-program.aspx">High School Programs</a></li>
+                           <li><a title="International Students" href="/admissions-and-financial-aid/information-for/international-students/index.aspx">International Students</a></li>
+                           <li><a title="NEW Requirements at SWC" href="/admissions-and-financial-aid/new-requirements-at-swc/index.aspx">NEW Requirements at SWC</a></li>
+                           <li><a title="Priority Registration" href="/admissions-and-financial-aid/priority-registration/index.aspx">Priority Registration</a></li>
+                           <li><a title="Residency Requirements" href="/admissions-and-financial-aid/residency-requirements/index.aspx">Residency Requirements</a></li>
+                           <li><a title="Transfer Students" href="/admissions-and-financial-aid/information-for/transfer-students/index.aspx">Transfer Students</a></li>
+                           <li><a title="Tuition &amp; Fees" href="/admissions-and-financial-aid/tuition-and-fees/index.aspx">Tuition &amp; Fees</a></li>
+                        </ul>
+                     </li>
+                     <li><a title="Student Support" href="/student-support/index.aspx">Student Support</a><button class="toggle" aria-expanded="false"><span class="icon-arrow-down" aria-hidden="true"></span><span class="accessible">Toggle Sub Menu</span></button><ul aria-hidden="true">
+                           <li><a title="Assessment/Testing" href="https://www.swccd.edu/student-support/placement-and-prerequisites/index.aspx">Placement &amp; Prerequisites</a></li>
+                           <li><a title="Bookstore" href="https://www.swcbookstore.com/" target="_blank" rel="noopener">Bookstore</a></li>
+                           <li><a href="/student-support/career-and-transfer-connections/index.aspx">Career &amp; Transfer Connections</a></li>
+                           <li><a title="College Police" href="/student-support/college-police/index.aspx">College Police</a></li>
+                           <li><a title="Counseling" href="/student-support/counseling-and-career-advisement/index.aspx">Counseling</a></li>
+                           <li><a title="Disability Support Services" href="https://www.swccd.edu/student-support/disability-support-services-dss/index.aspx">Disability Support Services</a></li>
+                           <li><a title="Health Services" href="/student-support/health-services/index.aspx">Health Services</a></li>
+                           <li><a title="Library" href="/student-support/library/index.aspx">Library</a></li>
+                           <li><a title="More Services" href="/student-support/students-services-campus-resources/index.aspx">More Services</a></li>
+                           <li><a title="Personal Wellness" href="/student-support/health-services/personal-wellness-mental-health/index.aspx">Personal Wellness</a></li>
+                           <li><a title="Student Equity" href="/administration/office-of-student-equity-programs-and-services/index.aspx">Student Equity</a></li>
+                           <li><a href="https://swccd.instructure.com/courses/49117/pages/family-slash-student-parent" target="_blank" rel="noopener">Student Parent Resources</a></li>
+                           <li><a title="Tutoring" href="/student-support/tutoring/index.aspx">Tutoring</a></li>
+                           <li><a title="Title IX" href="/administration/human-resources/title-ix-and-the-campus-save-act/index.aspx">Title IX</a></li>
+                        </ul>
+                     </li>
+                     <li><a title="Student Life" href="/student-life/index.aspx">Student Life</a><button class="toggle" aria-expanded="false"><span class="icon-arrow-down" aria-hidden="true"></span><span class="accessible">Toggle Sub Menu</span></button><ul aria-hidden="true">
+                           <li><a title="Associated Student Organization" href="/student-life/associated-student-organization-aso/index.aspx">Associated Student Organization</a></li>
+                           <li><a title="Athletics" href="http://www.southwesternjaguars.com/" target="_blank" rel="noopener">Athletics</a></li>
+                           <li><a title="SWC Cares" href="/student-support/swc-cares/index.aspx">SWC Cares</a></li>
+                           <li><a href="/student-life/debate-team/index.aspx">Debate Team</a></li>
+                           <li><a title="Performing Arts Center" href="/locations/chula-vista-campus/school-of-arts-communication-and-social-sciences/performing-arts/index.aspx">Performing Arts Center</a></li>
+                           <li><a title="Learning Communities" href="/student-life/learning-communities/index.aspx">Learning Communities</a></li>
+                           <li><a title="Student Activities" href="/student-life/student-activities/index.aspx">Student Activities</a></li>
+                           <li><a title="Student Rights &amp; Responsibilities" href="/student-support/policies/index.aspx">Student Rights &amp; Responsibilities</a></li>
+                           <li><a title="SWC Sun Newspaper" href="https://swcsun.org/" target="_blank" rel="noopener">SWC Sun Newspaper</a></li>
+                        </ul>
+                     </li>
+                     <li><a title="Community" href="/swc-community/index.aspx">Community</a><button class="toggle" aria-expanded="false"><span class="icon-arrow-down" aria-hidden="true"></span><span class="accessible">Toggle Sub Menu</span></button><ul aria-hidden="true">
+                           <li><a title="Art Gallery" href="/swc-community/art-gallery/index.aspx">Art Gallery</a></li>
+                           <li><a href="/swc-community/propositions-r-and-z/index.aspx">Bond Construction</a></li>
+                           <li><a title="Child Development Center" href="/swc-community/child-development-center/index.aspx">Child Development Center</a></li>
+                           <li><a title="Event Calendar" href="/calendar/">Event Calendar</a></li>
+                           <li><a title="Facilities Rentals" href="/administration/civic-center-facilities-leasing/index.aspx">Facilities Rentals</a></li>
+                           <li><a title="Jaguar Aquatics Wellness &amp; Sports" href="https://swcjaws.com/" target="_blank" rel="noopener">Jaguar Aquatics Wellness &amp; Sports</a></li>
+                           <li><a title="Planetarium" href="/swc-community/planetarium/index.aspx">Planetarium</a></li>
+                           <li><a title="SWC Botanical Garden" href="/swc-community/swc-botanical-garden/index.aspx">SWC Botanical Garden</a></li>
+                           <li><a title="SWC Foundation" href="/swc-community/swc-foundation/index.aspx">SWC Foundation</a></li>
+                           <li><a title="Youth Programs" href="/swc-community/youth-programs/index.aspx">Youth Programs</a></li>
+                        </ul>
+                     </li>
+                     <li><a href="/advance-your-business/index.aspx">Advance Your Business</a><button class="toggle" aria-expanded="false"><span class="icon-arrow-down" aria-hidden="true"></span><span class="accessible">Toggle Sub Menu</span></button><ul aria-hidden="true">
+                           <li><a href="/administration/business-and-financial-affairs/procurement-central-services-risk-management/procurement/doing-business-with-southwestern-community-college-district.aspx">Become a Vendor</a></li>
+                           <li><a title="Center for Business Advancement" href="/swc-community/center-for-business-advancement/index.aspx">Center for Business Advancement</a></li>
+                           <li><a href="/programs-and-academics/continuing-education/customized-training-for-business-and-industry.aspx">Customized Training Services</a></li>
+                           <li><a href="/advance-your-business/get-involved.aspx">Get Involved</a></li>
+                           <li><a href="/programs-and-academics/career-education/index.aspx">Workforce Education</a></li>
+                        </ul>
+                     </li>
+                  </ul>
+               </nav>
+            </div>
+            <div class="utility-nav-wrapper">
+               <nav id="utility-nav" role="navigation" aria-label="Utility">
+                  <ul>
+                     <li><span translate="no"><a title="Login for Canvas &amp; Other Campus Apps" href="https://experience.elluciancloud.com/myswc/" target="_blank" rel="noopener">MySWC<span class="icon-arrow-right" aria-hidden="true"></span></a></span></li>
+                     <li class="dropdown"><button class="toggle" aria-expanded="false">Traducción<span class="icon-arrow-down" aria-hidden="true"></span></button><ul id="googleTranslationList" aria-hidden="true">
+                           <li><a class="lang-select" title="Afrikaans" href="#googtrans(en|af)">Afrikaans</a></li>
+                           <li><a class="lang-select" title="Albanian" href="#googtrans(en|sq)">Albanian</a></li>
+                           <li><a class="lang-select" title="Amharic" href="#googtrans(en|am)">Amharic</a></li>
+                           <li><a class="lang-select" title="Arabic" href="#googtrans(en|ar)">Arabic</a></li>
+                           <li><a class="lang-select" title="Armenian" href="#googtrans(en|hy)">Armenian</a></li>
+                           <li><a class="lang-select" title="Azerbaijani" href="#googtrans(en|az)">Azerbaijani</a></li>
+                           <li><a class="lang-select" title="Basque" href="#googtrans(en|eu)">Basque</a></li>
+                           <li><a class="lang-select" title="Belarusian" href="#googtrans(en|be)">Belarusian</a></li>
+                           <li><a class="lang-select" title="Bengali" href="#googtrans(en|bn)">Bengali</a></li>
+                           <li><a class="lang-select" title="Bosnian" href="#googtrans(en|bs)">Bosnian</a></li>
+                           <li><a class="lang-select" title="Bulgarian" href="#googtrans(en|bg)">Bulgarian</a></li>
+                           <li><a class="lang-select" title="Catalan" href="#googtrans(en|ca)">Catalan</a></li>
+                           <li><a class="lang-select" title="Cebuano" href="#googtrans(en|ceb)">Cebuano</a></li>
+                           <li><a class="lang-select" title="Chichewa" href="#googtrans(en|ny)">Chichewa</a></li>
+                           <li><a class="lang-select" title="Chinese (Simplified)" href="#googtrans(en|zh-CN)">Chinese (Simplified)</a></li>
+                           <li><a class="lang-select" title="Chinese (Traditional)" href="#googtrans(en|zh-TW)">Chinese (Traditional)</a></li>
+                           <li><a class="lang-select" title="Corsican" href="#googtrans(en|co)">Corsican</a></li>
+                           <li><a class="lang-select" title="Croatian" href="#googtrans(en|hr)">Croatian</a></li>
+                           <li><a class="lang-select" title="Czech" href="#googtrans(en|cs)">Czech</a></li>
+                           <li><a class="lang-select" title="Danish" href="#googtrans(en|da)">Danish</a></li>
+                           <li><a class="lang-select" title="Dutch" href="#googtrans(en|nl)">Dutch</a></li>
+                           <li><a class="lang-select" title="English" href="#googtrans(en|en)">English</a></li>
+                           <li><a class="lang-select" title="Esperanto" href="#googtrans(en|eo)">Esperanto</a></li>
+                           <li><a class="lang-select" title="Estonian" href="#googtrans(en|et)">Estonian</a></li>
+                           <li><a class="lang-select" title="Filipino" href="#googtrans(en|tl)">Filipino</a></li>
+                           <li><a class="lang-select" title="Finnish" href="#googtrans(en|fi)">Finnish</a></li>
+                           <li><a class="lang-select" title="French" href="#googtrans(en|fr)">French</a></li>
+                           <li><a class="lang-select" title="Frisian" href="#googtrans(en|fy)">Frisian</a></li>
+                           <li><a class="lang-select" title="Galician" href="#googtrans(en|gl)">Galician</a></li>
+                           <li><a class="lang-select" title="Georgian" href="#googtrans(en|ka)">Georgian</a></li>
+                           <li><a class="lang-select" title="German" href="#googtrans(en|de)">German</a></li>
+                           <li><a class="lang-select" title="Greek" href="#googtrans(en|el)">Greek</a></li>
+                           <li><a class="lang-select" title="Gujarati" href="#googtrans(en|gu)">Gujarati</a></li>
+                           <li><a class="lang-select" title="Haitian Creole" href="#googtrans(en|ht)">Haitian Creole</a></li>
+                           <li><a class="lang-select" title="Hausa" href="#googtrans(en|ha)">Hausa</a></li>
+                           <li><a class="lang-select" title="Hawaiian" href="#googtrans(en|haw)">Hawaiian</a></li>
+                           <li><a class="lang-select" title="Hebrew" href="#googtrans(en|iw)">Hebrew</a></li>
+                           <li><a class="lang-select" title="Hindi" href="#googtrans(en|hi)">Hindi</a></li>
+                           <li><a class="lang-select" title="Hmong" href="#googtrans(en|hmn)">Hmong</a></li>
+                           <li><a class="lang-select" title="Hungarian" href="#googtrans(en|hu)">Hungarian</a></li>
+                           <li><a class="lang-select" title="Icelandic" href="#googtrans(en|is)">Icelandic</a></li>
+                           <li><a class="lang-select" title="Igbo" href="#googtrans(en|ig)">Igbo</a></li>
+                           <li><a class="lang-select" title="Indonesian" href="#googtrans(en|id)">Indonesian</a></li>
+                           <li><a class="lang-select" title="Irish" href="#googtrans(en|ga)">Irish</a></li>
+                           <li><a class="lang-select" title="Italian" href="#googtrans(en|it)">Italian</a></li>
+                           <li><a class="lang-select" title="Japanese" href="#googtrans(en|ja)">Japanese</a></li>
+                           <li><a class="lang-select" title="Javanese" href="#googtrans(en|jw)">Javanese</a></li>
+                           <li><a class="lang-select" title="Kannada" href="#googtrans(en|kn)">Kannada</a></li>
+                           <li><a class="lang-select" title="Kazakh" href="#googtrans(en|kk)">Kazakh</a></li>
+                           <li><a class="lang-select" title="Khmer" href="#googtrans(en|km)">Khmer</a></li>
+                           <li><a class="lang-select" title="Korean" href="#googtrans(en|ko)">Korean</a></li>
+                           <li><a class="lang-select" title="Kurdish (Kurmanji)" href="#googtrans(en|ku)">Kurdish (Kurmanji)</a></li>
+                           <li><a class="lang-select" title="Kyrgyz" href="#googtrans(en|ky)">Kyrgyz</a></li>
+                           <li><a class="lang-select" title="Lao" href="#googtrans(en|lo)">Lao</a></li>
+                           <li><a class="lang-select" title="Latin" href="#googtrans(en|la)">Latin</a></li>
+                           <li><a class="lang-select" title="Latvian" href="#googtrans(en|lv)">Latvian</a></li>
+                           <li><a class="lang-select" title="Lithuanian" href="#googtrans(en|lt)">Lithuanian</a></li>
+                           <li><a class="lang-select" title="Luxembourgish" href="#googtrans(en|lb)">Luxembourgish</a></li>
+                           <li><a class="lang-select" title="Macedonian" href="#googtrans(en|mk)">Macedonian</a></li>
+                           <li><a class="lang-select" title="Malagasy" href="#googtrans(en|mg)">Malagasy</a></li>
+                           <li><a class="lang-select" title="Malay" href="#googtrans(en|ms)">Malay</a></li>
+                           <li><a class="lang-select" title="Malayalam" href="#googtrans(en|ml)">Malayalam</a></li>
+                           <li><a class="lang-select" title="Maltese" href="#googtrans(en|mt)">Maltese</a></li>
+                           <li><a class="lang-select" title="Maori" href="#googtrans(en|mi)">Maori</a></li>
+                           <li><a class="lang-select" title="Marathi" href="#googtrans(en|mr)">Marathi</a></li>
+                           <li><a class="lang-select" title="Mongolian" href="#googtrans(en|mn)">Mongolian</a></li>
+                           <li><a class="lang-select" title="Myanmar (Burmese)" href="#googtrans(en|my)">Myanmar (Burmese)</a></li>
+                           <li><a class="lang-select" title="Nepali" href="#googtrans(en|ne)">Nepali</a></li>
+                           <li><a class="lang-select" title="Norwegian" href="#googtrans(en|no)">Norwegian</a></li>
+                           <li><a class="lang-select" title="Pashto" href="#googtrans(en|ps)">Pashto</a></li>
+                           <li><a class="lang-select" title="Persian" href="#googtrans(en|fa)">Persian</a></li>
+                           <li><a class="lang-select" title="Polish" href="#googtrans(en|pl)">Polish</a></li>
+                           <li><a class="lang-select" title="Portuguese" href="#googtrans(en|pt)">Portuguese</a></li>
+                           <li><a class="lang-select" title="Punjabi" href="#googtrans(en|pa)">Punjabi</a></li>
+                           <li><a class="lang-select" title="Romanian" href="#googtrans(en|ro)">Romanian</a></li>
+                           <li><a class="lang-select" title="Russian" href="#googtrans(en|ru)">Russian</a></li>
+                           <li><a class="lang-select" title="Samoan" href="#googtrans(en|sm)">Samoan</a></li>
+                           <li><a class="lang-select" title="Scots Gaelic" href="#googtrans(en|gd)">Scots Gaelic</a></li>
+                           <li><a class="lang-select" title="Serbian" href="#googtrans(en|sr)">Serbian</a></li>
+                           <li><a class="lang-select" title="Sesotho" href="#googtrans(en|st)">Sesotho</a></li>
+                           <li><a class="lang-select" title="Shona" href="#googtrans(en|sn)">Shona</a></li>
+                           <li><a class="lang-select" title="Sindhi" href="#googtrans(en|sd)">Sindhi</a></li>
+                           <li><a class="lang-select" title="Sinhala" href="#googtrans(en|si)">Sinhala</a></li>
+                           <li><a class="lang-select" title="Slovak" href="#googtrans(en|sk)">Slovak</a></li>
+                           <li><a class="lang-select" title="Slovenian" href="#googtrans(en|sl)">Slovenian</a></li>
+                           <li><a class="lang-select" title="Somali" href="#googtrans(en|so)">Somali</a></li>
+                           <li><a class="lang-select" title="Spanish" href="#googtrans(en|es)">Spanish</a></li>
+                           <li><a class="lang-select" title="Sundanese" href="#googtrans(en|su)">Sundanese</a></li>
+                           <li><a class="lang-select" title="Swahili" href="#googtrans(en|sw)">Swahili</a></li>
+                           <li><a class="lang-select" title="Swedish" href="#googtrans(en|sv)">Swedish</a></li>
+                           <li><a class="lang-select" title="Tajik" href="#googtrans(en|tg)">Tajik</a></li>
+                           <li><a class="lang-select" title="Tamil" href="#googtrans(en|ta)">Tamil</a></li>
+                           <li><a class="lang-select" title="Telugu" href="#googtrans(en|te)">Telugu</a></li>
+                           <li><a class="lang-select" title="Thai" href="#googtrans(en|th)">Thai</a></li>
+                           <li><a class="lang-select" title="Turkish" href="#googtrans(en|tr)">Turkish</a></li>
+                           <li><a class="lang-select" title="Ukrainian" href="#googtrans(en|uk)">Ukrainian</a></li>
+                           <li><a class="lang-select" title="Urdu" href="#googtrans(en|ur)">Urdu</a></li>
+                           <li><a class="lang-select" title="Uzbek" href="#googtrans(en|uz)">Uzbek</a></li>
+                           <li><a class="lang-select" title="Vietnamese" href="#googtrans(en|vi)">Vietnamese</a></li>
+                           <li><a class="lang-select" title="Welsh" href="#googtrans(en|cy)">Welsh</a></li>
+                           <li><a class="lang-select" title="Xhosa" href="#googtrans(en|xh)">Xhosa</a></li>
+                           <li><a class="lang-select" title="Yiddish" href="#googtrans(en|yi)">Yiddish</a></li>
+                           <li><a class="lang-select" title="Yoruba" href="#googtrans(en|yo)">Yoruba</a></li>
+                           <li><a class="lang-select" title="Zulu" href="#googtrans(en|zu)">Zulu</a></li>
+                        </ul>
+                     </li>
+                     <li><a title="Human Resources, Institutional Research &amp; Other Departments" href="/administration/index.aspx">Administration</a></li>
+                     <li><a title="College Police" href="/student-support/college-police/index.aspx">College Police</a></li>
+                     <li><a title="Find a Class" href="/classes-and-registration/class-schedule/index.aspx">Find a Class</a></li>
+                     <li class="dropdown"><button class="toggle" aria-expanded="false">Information For<span class="icon-arrow-down" aria-hidden="true"></span></button><ul aria-hidden="true">
+                           <li><a title="Information for Current Students" href="/admissions-and-financial-aid/information-for/current-students/index.aspx">Current Students</a></li>
+                           <li><a title="Information for High School Counselors" href="/admissions-and-financial-aid/information-for/high-school-counselors/index.aspx">High School Counselors</a></li>
+                           <li><a title="Information for High School Students" href="/admissions-and-financial-aid/information-for/high-school-students/index.aspx">High School Students</a></li>
+                           <li><a title="Information for International Students" href="/admissions-and-financial-aid/information-for/international-students/index.aspx">International Students</a></li>
+                           <li><a title="Middle School Students" href="/admissions-and-financial-aid/information-for/middle-college-students/index.aspx">Middle School Students</a></li>
+                           <li><a title="Information for New Students" href="/admissions-and-financial-aid/information-for/new-students/index.aspx">New Students</a></li>
+                           <li><a title="Information for Parents" href="/admissions-and-financial-aid/information-for/parents/index.aspx">Parents</a></li>
+                           <li><a title="Information for Transfer Students" href="/admissions-and-financial-aid/information-for/transfer-students/index.aspx">Transfer Students</a></li>
+                        </ul>
+                     </li>
+                     <li class="dropdown"><button class="toggle" aria-expanded="false">Locations<span class="icon-arrow-down" aria-hidden="true"></span></button><ul aria-hidden="true">
+                           <li><a title="Chula Vista Campus" href="/locations/chula-vista-campus/index.aspx">Chula Vista</a></li>
+                           <li><a title="Higher Education Center at National City" href="/locations/higher-education-center-at-national-city/index.aspx">National City</a></li>
+                           <li><a title="Higher Education Center at Otay Mesa" href="/locations/higher-education-center-at-otay-mesa/index.aspx">Otay Mesa</a></li>
+                           <li><a title="Higher Education Center at San Ysidro" href="/locations/higher-education-center-at-san-ysidro/index.aspx">San Ysidro</a></li>
+                           <li><a title="Crown Cove Aquatic Center" href="/locations/crown-cove-aquatic-center/index.aspx">Crown Cove</a></li>
+                           <li><a title="Online Learning" href="/locations/online-learning/index.aspx">Online</a></li>
+                        </ul>
+                     </li>
+                  </ul>
+               </nav>
+            </div>
+         </div>
+      </div>
+   </div>
+</header><!-- OU Search Ignore End Here -->
+      <main class="main-content" role="main">
+         <article>
+            <header id="page-title" tabindex="-1">
+               <p id="skpmain"></p>
+               <h1><span class="sub-title">Welcome to</span><span class="title" translate="no">Southwestern College</span></h1>
+               <div class="header-links"><a href="https://catalog.swccd.edu/" class="button black" target="_blank">SWC Catalog</a><span translate="no"><a href="/administration/advancement-and-community-engagement/jaguar-journey.aspx" class="button black">Jaguar Journey</a></span><a href="/about-swc/get-in-touch/index.aspx" class="button black">Get in Touch</a></div>
+            </header>
+            <section class="whats-possible desktop">
+               <div class="skew">
+                  <div class="skew-background" style="background-image: url(/_resources/images/swc/meta/homepage-image.aspx);"><span class="accessible-alt-text">Image of Graduate Holding Diploma</span><div class="mobile" style="background-image: url();"></div>
+                  </div>
+               </div>
+               <div class="geometry">
+                  <div class="left-top"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="100%" height="100%" fill="currentcolor" preserveAspectRatio="none">
+                        <path d="M0 64 L64 64 L64 58 L32 0 L0 0"/></svg></div>
+                  <div class="left-bottom"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="100%" height="100%" fill="currentcolor" preserveAspectRatio="none">
+                        <path d="M0 64 L44 64 L31 0 L0 0"/></svg></div>
+                  <div class="bottom"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="100%" height="100%" fill="currentcolor" preserveAspectRatio="none">
+                        <path d="M0 64 L71 64 L44 22 L0 42"/></svg></div>
+                  <div class="bottom-right"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="100%" height="100%" fill="currentcolor" preserveAspectRatio="none">
+                        <path d="M0 64 L64 64 L64 56 L24 22 L0 38"/></svg></div>
+               </div>
+               <div class="container">
+                  <h2>See what's possible</h2>
+                  <div class="grid-view">
+                     <div class="grid-container">
+                        <div class="square"><button type="button">I'm a high school student<span class="icon-circle-plus" aria-hidden="true"></span></button></div>
+                        <div class="square"><button type="button">I have never been to college, or I don't have a degree yet<span class="icon-circle-plus" aria-hidden="true"></span></button></div>
+                        <div class="square"><button type="button">I want to transfer to a 4-year university<span class="icon-circle-plus" aria-hidden="true"></span></button></div>
+                        <div class="square"><button type="button">I want to prepare for a career or build my professional skills<span class="icon-circle-plus" aria-hidden="true"></span></button></div>
+                        <div class="square"><button type="button">I'm active duty or a veteran<span class="icon-circle-plus" aria-hidden="true"></span></button></div>
+                        <div class="square"><button type="button">I live in the SWC community<span class="icon-circle-plus" aria-hidden="true"></span></button></div>
+                     </div>
+                     <div class="grid-slider-wrapper slider-wrapper">
+                        <div class="grid-slider">
+                           <div class="grid">
+                              <h3>I'm a high school student</h3>
+                              <h4><a title="Information for High School Students" href="/admissions-and-financial-aid/information-for/high-school-students/index.aspx">Information for High School Students<span class="icon-arrow-circle-right" aria-hidden="true"></span></a></h4>
+                              
+                              <p>We would love to meet you! Learn more about what Southwestern can offer high school
+                                 students, and get in touch with one of our counselors.</p>
+                              
+                              <div class="additional-links"><a title="High School Early Admissions" href="/admissions-and-financial-aid/outreach/high-school-early-admissions/">High School Early Admissions<span class="icon-arrow-right" aria-hidden="true"></span></a><a title="High School Special Program" href="/admissions-and-financial-aid/information-for/high-school-students/high-school-special-program.aspx">High School Special Program<span class="icon-arrow-right" aria-hidden="true"></span></a><a title="College Bound Dual Enrollment" href="/admissions-and-financial-aid/outreach/california-college-and-career-access-pathways-ccap.aspx">College Bound Dual Enrollment<span class="icon-arrow-right" aria-hidden="true"></span></a></div>
+                           </div>
+                           <div class="grid">
+                              <h3>I have never been to college, or I don't have a degree yet</h3>
+                              <h4><a title="Information for New Students" href="/admissions-and-financial-aid/information-for/new-students/index.aspx">Information for New Students <span class="icon-arrow-circle-right" aria-hidden="true"></span></a></h4>
+                              
+                              <p>We would love to meet you! Learn more about what Southwestern can offer new students,
+                                 and get in touch with one of our counselors.</p>
+                              
+                              <div class="additional-links"><a title="Residency Requirements" href="/admissions-and-financial-aid/residency-requirements/">Residency Requirements<span class="icon-arrow-right" aria-hidden="true"></span></a><a title="Tuition &amp; Fees" href="/admissions-and-financial-aid/tuition-and-fees/index.aspx">Tuition &amp; Fees<span class="icon-arrow-right" aria-hidden="true"></span></a><a title="Financial Aid" href="/admissions-and-financial-aid/financial-aid/index.aspx">Financial Aid<span class="icon-arrow-right" aria-hidden="true"></span></a></div>
+                           </div>
+                           <div class="grid">
+                              <h3>I want to transfer to a 4-year university</h3>
+                              <h4><a title="Information for Transfer Students" href="/admissions-and-financial-aid/information-for/transfer-students/index.aspx">Information for Transfer Students<span class="icon-arrow-circle-right" aria-hidden="true"></span></a></h4>
+                              
+                              <p>We would love to meet you! Learn more about what Southwestern can offer transfer students,
+                                 and get in touch with one of our counselors.</p>
+                              
+                              <div class="additional-links"><a title="Associate Degree for Transfer" href="/student-support/transfer-connections/associate-degree-for-transfer.aspx">Associate Degree for Transfer<span class="icon-arrow-right" aria-hidden="true"></span></a><a title="Transfer Center" href="/student-support/transfer-connections/index.aspx">Transfer Center<span class="icon-arrow-right" aria-hidden="true"></span></a></div>
+                           </div>
+                           <div class="grid">
+                              <h3>I want to prepare for a career or build my professional skills</h3>
+                              <h4><a title="Information for Career Education Students" href="/programs-and-academics/career-education/index.aspx">Information for Career Education Students<span class="icon-arrow-circle-right" aria-hidden="true"></span></a></h4>
+                              
+                              <p>We would love to meet you! Learn more about what Southwestern can offer career education
+                                 students, and get in touch with one of our counselors.</p>
+                              
+                              <div class="additional-links"><a title="Online Learning" href="/locations/online-learning/index.aspx">Online Learning<span class="icon-arrow-right" aria-hidden="true"></span></a></div>
+                           </div>
+                           <div class="grid">
+                              <h3>I'm active duty or a veteran</h3>
+                              <h4><a title="Information for Veterans" href="/student-support/veterans-services/index.aspx">Information for Veterans<span class="icon-arrow-circle-right" aria-hidden="true"></span></a></h4>
+                              
+                              <p>We would love to meet you! Learn more about what Southwestern can offer military students,
+                                 and get in touch with one of our counselors.</p>
+                              
+                              <div class="additional-links"><a title="Veterans' Services" href="/student-support/veterans-services/index.aspx">Veterans' Services<span class="icon-arrow-right" aria-hidden="true"></span></a><a title="Veterans' Resource Center" href="/student-support/veterans-services/veterans-resource-center/index.aspx">Veterans' Resource Center<span class="icon-arrow-right" aria-hidden="true"></span></a><a title="Student Veterans' Organization" href="/student-life/associated-student-organization-aso/clubs-and-organizations/veterans-student-organization.aspx">Student Veterans' Organization<span class="icon-arrow-right" aria-hidden="true"></span></a></div>
+                           </div>
+                           <div class="grid">
+                              <h3>I live in the SWC community</h3>
+                              <h4><a title="Information for Community Members" href="/swc-community/index.aspx">Information for Community Members<span class="icon-arrow-circle-right" aria-hidden="true"></span></a></h4>
+                              
+                              <p>Learn more about what Southwestern offers the community.</p>
+                              
+                              <div class="additional-links"><a title="Continuing Education" href="/programs-and-academics/continuing-education/index.aspx">Continuing Education<span class="icon-arrow-right" aria-hidden="true"></span></a><a title="Event Calendar" href="/calendar/">Event Calendar<span class="icon-arrow-right" aria-hidden="true"></span></a><a title="Jaguar Aquatics Wellness &amp; Sports" href="https://swcjaws.com/" target="_blank" rel="noopener">Jaguar Aquatics Wellness &amp; Sports<span class="icon-arrow-right" aria-hidden="true"></span></a></div>
+                           </div>
+                           <div class="slide-controls"></div>
+                        </div><button type="button" class="close" id="close-grid"><span class="icon-close" aria-hidden="true"></span><span class="accessible">Close</span></button></div>
+                  </div>
+                  <div id="whats-posible-overlay" class="close"></div>
+               </div>
+            </section>
+            <section class="announcement-banner">
+               <div class="container">
+                  <h2>Second 8-Week Session Begins</h2>
+                  <h3>October 19th</h3><a href="/classes-and-registration/class-schedule/index.aspx" class="button yellow">Register Now</a></div>
+            </section>
+            <!-- 		<table class="ou-announcement-banner-new"><caption>Announcement Banner</caption>
+			<tbody>
+				<tr>
+					<th colspan="2">Heading 1</th>
+					<td colspan="6">
+						<p>Second 8-Week Classes</p>
+					</td>
+				</tr>
+				<tr>
+					<th colspan="2">Heading 2</th>
+					<td colspan="6">
+						<p>Begin April 7th</p>
+					</td>
+				</tr>
+				<tr>
+					<th colspan="2">Call to Action Button</th>
+					<td colspan="6" data-type="link"><a title="Register Now" href="/classes-and-registration/registration-instructions/index.aspx">Register Now</a></td>
+				</tr>
+			</tbody>
+		</table> -->
+            
+            <p>&nbsp;</p>
+            
+            <section class="home-carousel">
+               <h2>&nbsp;</h2>
+               <div class="carousel-slides">
+                  <div class="carousel-slide">
+                     <div class="carousel-image"><img xmlns:ouc="http://omniupdate.com/XSL/Variables" src="/_files/slider/slider_65.png" alt="65th Anniversary logo." width="700" height="467"></div>
+                     <div class="carousel-text">
+                        <h3>Transforming Lives &amp; Communities!</h3>
+                        <p>For 65 years, Southwestern College has been a place where opportunity, community,
+                           and possibility come together. Join us as we celebrate the people, milestones, and
+                           memories that have shaped our college and look toward the next chapter of the Jaguar
+                           legacy.</p><a href="/swc-community/65-anniversary/index.aspx" target="" class="button yellow">65th Anniversary</a></div>
+                  </div>
+                  <div class="carousel-slide">
+                     <div class="carousel-image"><img xmlns:ouc="http://omniupdate.com/XSL/Variables" title="" src="/_files/slider/slider_pac.jpg" alt="Performing Arts Center building" width="700" height="467"></div>
+                     <div class="carousel-text">
+                        <h3>New Course Numbering System!</h3>
+                        <p>Heads up, Jaguars! Starting Fall 2025, some of your courses have new names and numbers
+                           — but don’t worry, they are still the same great classes! Stay in the know and plan
+                           ahead! More updates are coming in future semesters!</p><a href="/admissions-and-financial-aid/new-requirements-at-swc/index.aspx" target="_blank" class="button yellow">New Requirements at SWC</a></div>
+                  </div>
+                  <div class="carousel-slide">
+                     <div class="carousel-image"><img xmlns:ouc="http://omniupdate.com/XSL/Variables" src="/_files/slider/slider_cbe_autotech.jpg" alt="Automotive Technology stock photo of mechanic working on the engine of a car." width="700" height="467"></div>
+                     <div class="carousel-text">
+                        <h3>Accelerated Automotive Technology Program</h3>
+                        <p>Got auto experience or want to learn at your own pace? Our CBE Accelerate Automotive
+                           Technology program lets you move faster based on what you already know, with expert
+                           support every step of the way.</p><a href="/programs-and-academics/competency-based-education-accelerate/index.aspx" target="_blank" class="button yellow">CBE Accelerate</a></div>
+                  </div>
+                  <div class="carousel-slide">
+                     <div class="carousel-image"><img xmlns:ouc="http://omniupdate.com/XSL/Variables" src="/_files/slider/slider_alum_paper_mar_edited.png" alt="Southwestern College Alumni Association logo." width="700" height="467"></div>
+                     <div class="carousel-text">
+                        <h3>Jaguars Unite!</h3>
+                        <p>Join the SWC Alumni Association for networking opportunities, exclusive events, and
+                           special discounts. Rediscover your alma mater and keep the Jaguar spirit alive!</p><a href="/swc-community/swc-foundation/alumni/index.aspx" target="_blank" class="button yellow">SWC Alumni</a></div>
+                  </div>
+               </div>
+            </section>
+            
+            <section class="program-callout">
+               <div class="container">
+                  <h2>Learn About Our Programs &amp; Services</h2>
+                  
+                  <p>With 5 locations, plus several online learning options, Southwestern College provides
+                     you with the best classes for your goals and schedule.</p>
+                  
+                  <div class="home-prog-svcs"><a class="button red" title="Programs &amp; Academics" href="/programs-and-academics/index.aspx">Programs &amp; Academics</a><a class="button red" title="Services &amp; Resources" href="/student-support/students-services-campus-resources/index.aspx">Services &amp; Resources</a></div>
+               </div>
+            </section>
+            
+            <section class="location-grid">
+               <div class="container">
+                  <h2>Our Locations</h2>
+                  <div class="location-grid-wrapper">
+                     <div class="grid-container">
+                        <div class="left-grid"><button style="background-image: url(/_resources/images/home/chula-vista.png)"><span class="accessible-alt-text">Image of Chula Vista Campus</span><span>Chula Vista<span class="icon-circle-plus" aria-hidden="true"></span></span></button></div>
+                        <div class="right-grid">
+                           <div class="top"><button style="background-image: url(/_resources/images/home/national-city.png)"><span class="accessible-alt-text">Image of National City Campus</span><span>National City<span class="icon-circle-plus" aria-hidden="true"></span></span></button><button style="background-image: url(/_resources/images/home/otay-mesa.png)"><span class="accessible-alt-text">Image of Otay Mesa Campus</span><span>Otay Mesa<span class="icon-circle-plus" aria-hidden="true"></span></span></button><button style="background-image: url(/_resources/images/home/san-ysidro.png)"><span class="accessible-alt-text">Image of San Ysidro Campus</span><span>San Ysidro<span class="icon-circle-plus" aria-hidden="true"></span></span></button><button style="background-image: url(/_resources/images/home/crown-cove.png)"><span class="accessible-alt-text">Image of Crown Crove Campus</span><span>Crown Cove<span class="icon-circle-plus" aria-hidden="true"></span></span></button></div>
+                           <div class="bottom"><button style="background-image: url(/_resources/images/home/online.jpg)"><span class="accessible-alt-text">Image of Laptop for Online Learning Services</span><span>Online<span class="icon-circle-plus" aria-hidden="true"></span></span></button></div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </section>
+            <div id="location-panel-wrapper" class="panel-modal-wrapper slider-wrapper">
+               <div class="panel-modal">
+                  <div class="arrows"></div>
+                  <div class="panel">
+                     <div class="skew-image">
+                        <div class="panel-image" style="background-image: url(/_resources/images/home/chula-vista.png)"><span class="accessible-alt-text">Image of Chula Vista Campus</span></div>
+                     </div>
+                     <div class="lower">
+                        <div class="content">
+                           <h3 class="h2">Chula Vista</h3><span class="address">900 Otay Lakes Rd,   Chula Vista, CA 91910 -  (619) 421-6700</span><p>Where you'll find most of Southwestern College's classes and services.</p>
+                           <ul>
+                              <li><a title="Academic Programs" href="/programs-and-academics/index.aspx">Academic Programs<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                              <li><a title="Academic Calendar" href="/classes-and-registration/academic-calendar/index.aspx">Academic Calendar<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                              <li><a title="Student Support" href="/student-support/index.aspx">Student Support<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                              <li><a title="Virtual Tour" href="/about-swc/virtual-tour/index.aspx">Virtual Tour<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                              <li><a title="Campus Maps &amp; Directions" href="/about-swc/campus-maps-and-directions/chula-vista-campus/index.aspx">Campus Maps &amp; Directions<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                              <li><a title="Athletics" href="https://www.southwesternjaguars.com/landing/index" target="_blank" rel="noopener">Athletics<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                           </ul>
+                           <div class="link-nav-wrapper"><a class="button yellow" title="Explore This Campus" href="/locations/chula-vista-campus/index.aspx">Explore This Campus</a><div class="hero-slide-nav"><button type="button" class="slick-prev"><span class="icon-light-arrow-left" aria-hidden="true"></span><span class="accessible">Previous</span></button><button type="button" class="slick-next"><span class="icon-light-arrow-right" aria-hidden="true"></span><span class="accessible">Next</span></button></div>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="panel">
+                     <div class="skew-image">
+                        <div class="panel-image" style="background-image: url(/_resources/images/home/national-city.png)"><span class="accessible-alt-text">Image of National City Campus</span></div>
+                     </div>
+                     <div class="lower">
+                        <div class="content">
+                           <h3 class="h2">National City</h3><span class="address">880 National City Blvd, National City, CA 91950 -  (619) 216-6665</span><p>We're located right off the I-5 freeway, down the street from the 8th Street trolley
+                              station. Here, you can take general education courses and science labs or our dental
+                              hygiene or medical lab technician programs.</p>
+                           <ul>
+                              <li><a title="Academic Programs" href="/locations/higher-education-center-at-national-city/programs/index.aspx">Academic Programs<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                              <li><a title="Academic Calendar" href="/classes-and-registration/academic-calendar/index.aspx">Academic Calendar<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                              <li><a title="Event Calendar" href="/calendar/">Event Calendar<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                              <li><a title="Virtual Tour" href="/about-swc/virtual-tour/index.aspx">Virtual Tour<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                              <li><a title="Campus Maps &amp; Directions" href="/about-swc/campus-maps-and-directions/hec-national-city/index.aspx">Campus Maps &amp; Directions<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                              <li><a title="About HEC at National City" href="/locations/higher-education-center-at-national-city/about-hec-at-national-city/">About HEC at National City<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                           </ul>
+                           <div class="link-nav-wrapper"><a class="button yellow" title="Explore This Campus" href="/locations/higher-education-center-at-national-city/index.aspx">Explore This Campus</a><div class="hero-slide-nav"><button type="button" class="slick-prev"><span class="icon-light-arrow-left" aria-hidden="true"></span><span class="accessible">Previous</span></button><button type="button" class="slick-next"><span class="icon-light-arrow-right" aria-hidden="true"></span><span class="accessible">Next</span></button></div>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="panel">
+                     <div class="skew-image">
+                        <div class="panel-image" style="background-image: url(/_resources/images/home/otay-mesa.png)"><span class="accessible-alt-text">Image of Otay Mesa Campus</span></div>
+                     </div>
+                     <div class="lower">
+                        <div class="content">
+                           <h3 class="h2">Otay Mesa</h3><span class="address">
+                               8100 Gigantic St, San Diego, CA 92154 - (619) 216-6750 
+                              </span><p>Minutes away from the US-Mexico border, Otay Mesa hosts our Police Academy, Nursing,
+                              Fire Science Technology, Paramedic, and Emergency Medical Technician programs</p>
+                           <ul>
+                              <li><a title="Academic Programs" href="/locations/higher-education-center-at-otay-mesa/programs/index.aspx">Academic Programs<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                              <li><a title="Academic Calendar" href="/classes-and-registration/academic-calendar/index.aspx">Academic Calendar<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                              <li><a title="Event Calendar" href="/calendar/">Event Calendar<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                              <li><a title="Virtual Tour" href="/about-swc/virtual-tour/index.aspx">Virtual Tour<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                              <li><a title="Campus Maps &amp; Directions" href="/about-swc/campus-maps-and-directions/hec-otay-mesa/index.aspx">Campus Maps &amp; Directions<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                              <li><a title="About HEC at Otay Mesa" href="/locations/higher-education-center-at-otay-mesa/about-hec-at-otay-mesa/">About HEC at Otay Mesa<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                           </ul>
+                           <div class="link-nav-wrapper"><a class="button yellow" title="Explore This Campus" href="/locations/higher-education-center-at-otay-mesa/index.aspx">Explore This Campus</a><div class="hero-slide-nav"><button type="button" class="slick-prev"><span class="icon-light-arrow-left" aria-hidden="true"></span><span class="accessible">Previous</span></button><button type="button" class="slick-next"><span class="icon-light-arrow-right" aria-hidden="true"></span><span class="accessible">Next</span></button></div>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="panel">
+                     <div class="skew-image">
+                        <div class="panel-image" style="background-image: url(/_resources/images/home/san-ysidro.png)"><span class="accessible-alt-text">Image of San Ysidro Campus</span></div>
+                     </div>
+                     <div class="lower">
+                        <div class="content">
+                           <h3 class="h2">San Ysidro</h3><span class="address">
+                               460 W San Ysidro Blvd, San Ysidro, CA 92173 - (619) 216-6790 
+                              </span><p>San Ysidro, located near the US-Mexico border, offers a range of courses, including
+                              classes in the Family Studies program, Monday through Saturday, days and evenings.</p>
+                           <ul>
+                              <li><a title="Academic Programs" href="/locations/higher-education-center-at-san-ysidro/programs-and-certificates/index.aspx">Academic Programs<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                              <li><a title="Academic Calendar" href="/classes-and-registration/academic-calendar/index.aspx">Academic Calendar<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                              <li><a title="Event Calendar" href="/calendar/">Event Calendar<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                              <li><a title="Virtual Tour" href="/about-swc/virtual-tour/index.aspx">Virtual Tour<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                              <li><a title="Campus Maps &amp; Directions" href="/about-swc/campus-maps-and-directions/hec-san-ysidro/index.aspx">Campus Maps &amp; Directions<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                              <li><a title="About HEC at San Ysidro" href="/locations/higher-education-center-at-san-ysidro/about-hec-at-san-ysidro/">About HEC at San Ysidro<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                           </ul>
+                           <div class="link-nav-wrapper"><a class="button yellow" title="Explore This Campus" href="/locations/higher-education-center-at-san-ysidro/index.aspx">Explore This Campus</a><div class="hero-slide-nav"><button type="button" class="slick-prev"><span class="icon-light-arrow-left" aria-hidden="true"></span><span class="accessible">Previous</span></button><button type="button" class="slick-next"><span class="icon-light-arrow-right" aria-hidden="true"></span><span class="accessible">Next</span></button></div>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="panel">
+                     <div class="skew-image">
+                        <div class="panel-image" style="background-image: url(/_resources/images/home/crown-cove.png)"><span class="accessible-alt-text">Image of Crown Crove Campus</span></div>
+                     </div>
+                     <div class="lower">
+                        <div class="content">
+                           <h3 class="h2">Crown Cove</h3><span class="address">
+                               5000 Highway 75, Coronado, CA 92118 - (619) 575-6176 
+                              </span><p>By partnering with California State Parks &amp; Recreation and California Boating and
+                              Waterways, the Crown Cove Aquatic Center is able to offer classes in canoeing, first
+                              aid, kayaking, safe boating, sailing, stand-up paddling, and surfing.</p>
+                           <ul>
+                              <li><a title="College Activity Courses" href="/locations/crown-cove-aquatic-center/college-activity-courses.aspx">College Activity Courses<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                              <li><a title="Community CPR &amp; First Aid Program" href="/locations/crown-cove-aquatic-center/community-cpr-and-first-aid-program.aspx">Community CPR &amp; First Aid Program<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                              <li><a title="Family Fridays - SWC Family Fun" href="/locations/crown-cove-aquatic-center/family-fridays-swc-family-fun.aspx">Family Fridays - SWC Family Fun<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                              <li><a title="Recreational Paddling, SUP Yoga, Private Lessons &amp; More" href="/locations/crown-cove-aquatic-center/recreational-paddling-sup-yoga-private-lessons-and-more.aspx">Recreational Paddling, SUP Yoga, Private Lessons &amp; More<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                              <li><a title="Youth Camps" href="/locations/crown-cove-aquatic-center/youth-camps.aspx">Youth Camps<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                              <li><a title="About Crown Cove Aquatic Center" href="/locations/crown-cove-aquatic-center/about-crown-cove-aquatic-center/">About Crown Cove Aquatic Center<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                           </ul>
+                           <div class="link-nav-wrapper"><a class="button yellow" title="Explore This Campus" href="/locations/crown-cove-aquatic-center/index.aspx">Explore This Campus</a><div class="hero-slide-nav"><button type="button" class="slick-prev"><span class="icon-light-arrow-left" aria-hidden="true"></span><span class="accessible">Previous</span></button><button type="button" class="slick-next"><span class="icon-light-arrow-right" aria-hidden="true"></span><span class="accessible">Next</span></button></div>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="panel">
+                     <div class="skew-image">
+                        <div class="panel-image" style="background-image: url(/_resources/images/home/online.jpg)"><span class="accessible-alt-text">Image of Laptop for Online Learning Services</span></div>
+                     </div>
+                     <div class="lower">
+                        <div class="content">
+                           <h3 class="h2">Online</h3><span class="address">900 Otay Lakes Rd,   Chula Vista, CA 91910 -  (619) 482-6595</span><p>We'll help you get ready for our online classes through face-to-face, online, or video
+                              orientations, and you can also visit our open lab for support.</p>
+                           <ul>
+                              <li><a title="Programs &amp; Academics" href="/programs-and-academics/index.aspx">Programs &amp; Academics<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                              <li><a title="Academic Calendar" href="/classes-and-registration/academic-calendar/index.aspx">Academic Calendar<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                              <li><a title="Catalog" href="/classes-and-registration/catalog/index.aspx">Catalog<span class="icon-light-arrow-right" aria-hidden="true"></span></a></li>
+                           </ul>
+                           <div class="link-nav-wrapper"><a class="button yellow" title="Explore Online" href="/locations/online-learning/index.aspx">Explore Online</a><div class="hero-slide-nav"><button type="button" class="slick-prev"><span class="icon-light-arrow-left" aria-hidden="true"></span><span class="accessible">Previous</span></button><button type="button" class="slick-next"><span class="icon-light-arrow-right" aria-hidden="true"></span><span class="accessible">Next</span></button></div>
+                           </div>
+                        </div>
+                     </div>
+                  </div><button type="button" class="close close-modal"><span class="icon-close" aria-hidden="true"></span><span class="accessible">Close</span></button></div>
+            </div>
+            <section class="life-at-swc">
+               <div class="geometry">
+                  <div class="left-top"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="100%" height="100%" fill="currentcolor" preserveAspectRatio="none">
+                        <path d="M44 22 L36 0 L0 0 L0 34 Z"/></svg></div>
+                  <div class="left-bottom"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="100%" height="100%" fill="currentcolor" preserveAspectRatio="none">
+                        <path d="M64 36 L64 10 L8 4 L12 32 Z"/></svg></div>
+                  <div class="bottom"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="100%" height="100%" fill="currentcolor" preserveAspectRatio="none">
+                        <path d="M64 64 L64 32 L24 20 L20 54 Z"/></svg></div>
+                  <div class="left"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="100%" height="100%" fill="currentcolor" preserveAspectRatio="none">
+                        <path d="M64 52 L64 26 L0 30 L0 64 Z"/></svg></div>
+               </div>
+               <div class="container">
+                  <h2>Life at SWC</h2>
+                  <div class="news-blocks">
+                     <h3>News Center</h3>
+                     <div class="news-block-slider"><div class="article-slide">	<article class="news-article">		<div class="image-container" style="background-image: url(/_files/slider/slider_65.png);"> 		<span class="accessible-alt-text">65th anniversary log</span>		</div>		<div class="content">			<h3>				<a href="https://www.swccd.edu/administration/advancement-and-community-engagement/news-center/swc-news-article9.aspx">Roaring Into 65 Years at Southwestern College					<span class="icon-arrow-right" aria-hidden="true"></span>				</a>			</h3>		</div>	</article></div><div class="article-slide">	<article class="news-article">		<div class="image-container" style="background-image: url(/administration/advancement-and-community-engagement/_files/news/news_transit_center.jpg);"> 		<span class="accessible-alt-text">Transit Center Ribbon Cutting</span>		</div>		<div class="content">			<h3>				<a href="https://www.swccd.edu/administration/advancement-and-community-engagement/news-center/swc-news-article8.aspx">Connection Starts at the Hub					<span class="icon-arrow-right" aria-hidden="true"></span>				</a>			</h3>		</div>	</article></div><div class="article-slide">	<article class="news-article">		<div class="image-container" style="background-image: url(/administration/advancement-and-community-engagement/_files/news/news_3deans.jpg);"> 		<span class="accessible-alt-text">Deans Don Carlson, Kenya Johnson, and Billy Miller</span>		</div>		<div class="content">			<h3>				<a href="https://www.swccd.edu/administration/advancement-and-community-engagement/news-center/swc-news-article6.aspx">New Faces in Leadership					<span class="icon-arrow-right" aria-hidden="true"></span>				</a>			</h3>		</div>	</article></div></div>
+                  </div>
+                  <div><a href="/administration/advancement-and-community-engagement/news-center/index.aspx" class="button red alignment">View All News</a><a href="https://interland3.donorperfect.net/weblink/weblink.aspx?name=E358293&amp;id=54" class="button red alignment">Sign up for our Newsletter</a></div>
+               </div>
+               <div class="upcoming-event-block content-block">
+                  <div class="container"><h2 id="featured-events">Featured Events</h2><div class="hp-event-slider"><div class="slide-wrapper">    <div class="slide" id="event-76a17ce5-6639-4695-9aac-fbfdba8f5f29" data-eventid="76a17ce5-6639-4695-9aac-fbfdba8f5f29" itemscope itemtype="http://schema.org/Event">        <h4><a href="https://www.swccd.edu/calendar/#event-details/76a17ce5-6639-4695-9aac-fbfdba8f5f29">Deadline to Petition for Fall 2026 Graduation – Students on CSU E-Verification List</a></h4>        <p class="date"><span class="mon">September</span> <span class="day">30</span></p>        <p class="meta">    <span class="start-time">All Day</span>            <span class="cal-location">All Campuses</span>        </p></div></div><div class="slide-wrapper">    <div class="slide" id="event-01cd9d44-e12c-4c42-b6df-9fb3af86b173" data-eventid="01cd9d44-e12c-4c42-b6df-9fb3af86b173" itemscope itemtype="http://schema.org/Event">        <h4><a href="https://www.swccd.edu/calendar/#event-details/01cd9d44-e12c-4c42-b6df-9fb3af86b173">Deadline to Petition for Fall 2026 Graduation</a></h4>        <p class="date"><span class="mon">September</span> <span class="day">30</span></p>        <p class="meta">    <span class="start-time">All Day</span>            <span class="cal-location">All Campuses</span>        </p></div></div><div class="slide-wrapper">    <div class="slide" id="event-8b252450-b85a-47bf-b210-ca7ae12cff1a" data-eventid="8b252450-b85a-47bf-b210-ca7ae12cff1a" itemscope itemtype="http://schema.org/Event">        <h4><a href="https://www.swccd.edu/calendar/#event-details/8b252450-b85a-47bf-b210-ca7ae12cff1a">Second 8 Week Session Begins</a></h4>        <p class="date"><span class="mon">October</span> <span class="day">19</span></p>        <p class="meta">    <span class="start-time">All Day</span>            <span class="cal-location">All Campuses</span>        </p></div></div><div class="slide-wrapper">    <div class="slide" id="event-f4bbeb6d-febb-4fb1-84c0-1dcac52011a8" data-eventid="f4bbeb6d-febb-4fb1-84c0-1dcac52011a8" itemscope itemtype="http://schema.org/Event">        <h4><a href="https://www.swccd.edu/calendar/#event-details/f4bbeb6d-febb-4fb1-84c0-1dcac52011a8">2026 Veteran's Day Ceremony</a></h4>        <p class="date"><span class="mon">November</span> <span class="day">04</span></p>        <p class="meta">    <span class="start-time">12:00 PM - 1:00 PM</span>            <span class="cal-location">Chula Vista Campus</span>        </p></div></div><div class="slide-wrapper">    <div class="slide" id="event-89a73bed-db7b-47aa-a081-c41916c81641" data-eventid="89a73bed-db7b-47aa-a081-c41916c81641" itemscope itemtype="http://schema.org/Event">        <h4><a href="https://www.swccd.edu/calendar/#event-details/89a73bed-db7b-47aa-a081-c41916c81641">Holiday - Veterans Day - Campus Closed</a></h4>        <p class="date"><span class="mon">November</span> <span class="day">11</span></p>        <p class="meta">    <span class="start-time">All Day</span>            <span class="cal-location">All Campuses</span>        </p></div></div><div class="slide-wrapper">    <div class="slide" id="event-6ffd9ef2-6cae-4aca-8e82-80a6ad6720b0" data-eventid="6ffd9ef2-6cae-4aca-8e82-80a6ad6720b0" itemscope itemtype="http://schema.org/Event">        <h4><a href="https://www.swccd.edu/calendar/#event-details/6ffd9ef2-6cae-4aca-8e82-80a6ad6720b0">LAST DAY TO DROP a Fall regular (full 16-week term) session class and receive a “W” on record</a></h4>        <p class="date"><span class="mon">November</span> <span class="day">13</span></p>        <p class="meta">    <span class="start-time">All Day</span>            <span class="cal-location">All Campuses</span>        </p></div></div><div class="slide-wrapper">    <div class="slide" id="event-68ad9f28-cc99-4c81-9c9c-30a1e576c7b5" data-eventid="68ad9f28-cc99-4c81-9c9c-30a1e576c7b5" itemscope itemtype="http://schema.org/Event">        <h4><a href="https://www.swccd.edu/calendar/#event-details/68ad9f28-cc99-4c81-9c9c-30a1e576c7b5">Holiday - Thanksgiving - Campus Closed</a></h4>        <p class="date"><span class="mon">November</span> <span class="day">26</span></p>        <p class="meta">    <span class="start-time">All Day</span>            <span class="cal-location">All Campuses</span>        </p></div></div><div class="slide-wrapper">    <div class="slide" id="event-6715e8b6-7797-4743-801b-678b5f80cd44" data-eventid="6715e8b6-7797-4743-801b-678b5f80cd44" itemscope itemtype="http://schema.org/Event">        <h4><a href="https://www.swccd.edu/calendar/#event-details/6715e8b6-7797-4743-801b-678b5f80cd44">Finals Week</a></h4>        <p class="date"><span class="mon">December</span> <span class="day">07</span></p>        <p class="meta">    <span class="start-time">All Day</span>            <span class="cal-location">All Campuses</span>        </p></div></div><div class="slide-wrapper">    <div class="slide" id="event-290a9ef7-13ac-4a98-a88c-08958e7e50e7" data-eventid="290a9ef7-13ac-4a98-a88c-08958e7e50e7" itemscope itemtype="http://schema.org/Event">        <h4><a href="https://www.swccd.edu/calendar/#event-details/290a9ef7-13ac-4a98-a88c-08958e7e50e7">Fall Regular (16 Week) Session Ends</a></h4>        <p class="date"><span class="mon">December</span> <span class="day">13</span></p>        <p class="meta">    <span class="start-time">All Day</span>            <span class="cal-location">All Campuses</span>        </p></div></div><div class="slide-wrapper">    <div class="slide" id="event-b636b903-43cd-489e-ae1c-f23c233b0fdd" data-eventid="b636b903-43cd-489e-ae1c-f23c233b0fdd" itemscope itemtype="http://schema.org/Event">        <h4><a href="https://www.swccd.edu/calendar/#event-details/b636b903-43cd-489e-ae1c-f23c233b0fdd">Winter Break - Campus Closed</a></h4>        <p class="date"><span class="mon">December</span> <span class="day">21</span></p>        <p class="meta">    <span class="start-time">All Day</span>            <span class="cal-location">All Campuses</span>        </p></div></div><div class="generic-nav" style="display: flex !important;"></div></div><a href="/calendar/index.aspx" target="_blank" class="button red">View All Events</a></div>
+               </div>
+            </section>
+         </article>
+      </main>
+      <section class="pre-footer desktop" style="background-image: url(/_resources/images/home/sock-home.jpg)"><span class="accessible-alt-text">Image of Student about to Graduate Southwestern College</span><div class="mobile" style="background-image: url(/_resources/images/home/sock-mobile.jpg)">
+      <div class="container">
+         <h2>Let's get started.</h2>
+         <div class="pre-footer-links"><a href="/admissions-and-financial-aid/apply-and-register/index.aspx" class="button yellow">Apply</a><a href="/degrees-and-certificates/index.aspx" class="button yellow">Degrees &amp; Certificates</a><a href="/about-swc/get-in-touch/index.aspx" class="button yellow">Get in Touch</a></div>
+      </div>
+   </div>
+   <div class="pre-footer-bottom"><a href="/administration/human-resources/title-ix-and-the-campus-save-act/index.aspx">Title IX Resources <span class="icon-arrow-circle-right" aria-hidden="true"></span></a><a href="/accessibility/index.aspx">Accessibility  <span class="icon-arrow-circle-right" aria-hidden="true"></span></a></div>
+</section><!-- OU Search Ignore Start Here --><footer id="colophon" role="contentinfo">
+   <div class="container">
+      <div class="footer-top"><a href="/" class="footer-logo"><img src="/_resources/css/images/logo-large.png" alt="Southwestern College logo"></a><a href="/" class="footer-logo"><img src="/_resources/css/images/footer-aanhpi-logo.png" alt="Asian American, Native Hawaiian, and Pacific Islander"></a><a href="/" class="footer-logo"><img src="/_resources/css/images/footer-military-friendly-logo.png" alt="Military Friendly"></a><a href="/" class="footer-logo"><img src="/_resources/css/images/footer-hsi-logo.png" alt="Hispanic Serving Institution"></a><nav id="social-nav" role="navigation" aria-label="Social Media" aria-hidden="false">
+            <ul>
+               <li><a href="https://www.facebook.com/SWCcollege"><span class="icon-facebook" aria-hidden="true"></span><span class="accessible">Facebook</span></a></li>
+               <li><a href="https://twitter.com/SWC_college"><span class="icon-x" aria-hidden="true"></span><span class="accessible">X</span></a></li>
+               <li><a href="https://www.instagram.com/swc_college/"><span class="icon-instagram" aria-hidden="true"></span><span class="accessible">Instagram</span></a></li>
+               <li><a href="https://www.youtube.com/southwesterncollege"><span class="icon-youtube" aria-hidden="true"></span><span class="accessible">Youtube</span></a></li>
+               <li><a href="https://www.linkedin.com/school/southwestern-community-college-district/"><span class="icon-linkedin" aria-hidden="true"></span><span class="accessible">Linkedin</span></a></li>
+            </ul>
+         </nav>
+      </div>
+      <div class="footer-links">
+         <ul>
+            <li><a href="/classes-and-registration/academic-calendar/index.aspx">Academic Calendar</a></li>
+            <li><a title="Accreditation" href="/about-swc/accreditation/index.aspx">Accreditation</a></li>
+            <li><a href="/classes-and-registration/class-schedule/index.aspx">Class Schedule</a></li>
+            <li><a title="College Police" href="/student-support/college-police/index.aspx">College Police</a></li>
+            <li><a title="Consumer Information" href="/consumer-information/index.aspx">Consumer Information</a></li>
+            <li><a title="Employee Affinity Groups" href="/administration/employee-affinity-groups/index.aspx">Employee Affinity Groups</a></li>
+            <li><a title="Faculty &amp; Staff Directory" href="/_showcase/directory/">Faculty &amp; Staff Directory</a></li>
+            <li><a title="Get In Touch" href="/about-swc/get-in-touch/index.aspx">Get In Touch</a></li>
+            <li><a title="Give Now" href="/swc-community/swc-foundation/index.aspx">Give Now</a></li>
+            <li><a title="Governing Board Agenda" href="https://swccd.diligent.community/Portal/MeetingInformation.aspx?type=17" target="_blank" rel="noopener">Governing Board Agenda</a></li>
+            <li><a title="Maps &amp; Directions" href="/about-swc/campus-maps-and-directions/index.aspx">Maps &amp; Directions</a></li>
+            <li><a title="News Center" href="/administration/advancement-and-community-engagement/news-center/index.aspx" target="_blank" rel="noopener">News Center</a></li>
+            <li><a title="Non-Discrimination Statement" href="/administration/human-resources/title-ix-and-the-campus-save-act/_files/notice_of_nondiscrimination.pdf" target="_blank" rel="noopener">Non-Discrimination Statement</a></li>
+            <li><a title="Southwestern Pride" href="/administration/office-of-student-equity-programs-and-services/resources/lgbtqia.aspx">Southwestern Pride</a></li>
+            <li><a title="SB98" href="/immigration-information-and-student-policy/index.aspx">Immigration – SB98</a></li>
+         </ul>
+      </div><button id="scroll-top"><span class="icon-arrow-up" aria-hidden="true"></span> Back to Top</button></div>
+   <div class="footer-copy">
+      <div class="container">
+         <p><span id="directedit">© </span><script>document.write(new Date().getFullYear())</script> Southwestern College - 900 Otay Lakes Rd, Chula Vista, CA 91910-7297</p>
+      </div>
+   </div>
+</footer><!-- OU Search Ignore End Here -->
+      <div id="overlay"></div>
+      <!-- OU Search Ignore Start Here -->
+<!-- footcode include -->
+<script src="/_resources/js/slick.min.js"></script>  
+<script src="/_resources/js/tweetie.min.js"></script>   
+<script src="/_resources/js/datatables.min.js"></script>  
+<script src="/_resources/js/jquery.waypoints.min.js"></script>  
+<script src="/_resources/js/main.js"></script>  
+<!-- <script src="/_resources/js/instafeed.min.js"></script> -->
+<script src="//cdn.omniupdate.com/jquery-ui/v1.12/jquery-ui.min.js"></script>
+<script src="/_resources/search/header-search.js"></script>
+<!-- <script src="/_resources/js/instagram.js"></script> -->
+<script src="/_resources/js/direct-edit.js"></script>
+<script type="text/javascript">
+	$(function() {
+		var current = location.pathname;
+		$('#section-nav li a').each(function(){
+			var $this = $(this);
+			if ($this.attr('href').indexOf(current) !== -1) {
+				// $this.parent().addClass('active expanded');
+				$this.siblings('.toggle-menu').trigger('click');
+			}
+		});
+	});
+	//	hide empty paragraphs
+//	$(document).ready(function()
+//	{
+//		$("p").each(function()
+//		{
+//			if($(this).text().trim() == "")
+//			{
+//				$(this).css("display", "none");
+//			}
+//		});
+//	});
+</script>
+<!-- added for ticket # 47093 -->
+<script type="text/javascript"> 
+
+	$('.lang-select').click(function() {
+		window.location = $(this).attr('href');
+		location.reload();
+
+	});
+
+	function googleTranslateElementInit() { 
+		new google.translate.TranslateElement({pageLanguage: 'en', layout: google.translate.TranslateElement.FloatPosition.TOP_LEFT, gaTrack: true, gaId: 'UA-37909311-1'}, 'google_translate_element'); 
+	} 
+</script>
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script><!-- google analytics --> <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
+<script type="text/javascript">// <![CDATA[
+(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=
+	function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;
+	e=o.createElement(i);r=o.getElementsByTagName(i)[0];
+	e.src='//www.google-analytics.com/analytics.js';
+	r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));
+	ga('create','UA-37909311-1','auto');ga('send','pageview');
+// ]]></script>
+<script type="text/javascript">// <![CDATA[
+/**
+* Function that captures a click on an outbound link in Analytics.
+* This function takes a valid URL string as an argument, and uses that URL string
+* as the event label. Setting the transport method to 'beacon' lets the hit be sent
+* using 'navigator.sendBeacon' in browser that support it.
+*/
+var captureOutboundLink = function(click, url) {
+   ga('send', 'event', 'outbound', click, url, {
+     'transport': 'beacon' 
+   });
+	console.log("GA-CLICK >>>> " + click + " : " + url);
+	document.location = url;
+}
+$(document).ready(function()
+{
+	$(".ga-click").click(function()
+	{
+		var theClick = $(this).data("id");
+		var theUrl = $(this).attr("href");
+		captureOutboundLink(theClick, theUrl);
+		return false;
+	});
+})
+// ]]></script><!-- OU Search Ignore End Here -->
+      <div id="hidden" style="display:none;"></div><script>
+			$('.hp-event-slider').each(function(){
+			var slickIndividual = $(this);
+			slickIndividual.slick({		
+			slidesToShow: 3,
+			slidesToScroll: 1,
+			initialSlide: 0,
+			autoplay: false,
+			centerMode: false,
+			dots: true,
+			arrows: true,
+			infinite: true,
+			fade: false,
+			accessibility: true,
+			mobileFirst: false,
+			slide: '.slide-wrapper',
+			adaptiveHeight: false,
+			appendArrows: slickIndividual.children('.upcoming-event-block .generic-nav'),
+			appendDots: slickIndividual.children('.upcoming-event-block .generic-nav'),
+			prevArrow: '<button type="button" class="slick-prev"><span class="icon-light-arrow-left" aria-hidden="true"></span><span class="accessible">Previous</span></button>',
+			nextArrow: '<button type="button" class="slick-next"><span class="icon-light-arrow-right" aria-hidden="true"></span><span class="accessible">Next</span></button>',
+			responsive: 
+			[{	
+			breakpoint: 700,
+			settings: { slidesToShow: 1 }
+			}]
+			});
+			});
+
+			$(".hp-event-slider").on("afterChange", function(){
+			setTimeout(function(){
+			$('ul.slick-dots').find('*').removeAttr('tabindex');
+			$(".hp-event-slider .slide-wrapper").removeAttr('tabindex');
+			}, 1000);
+			});
+		</script></body>
+</html>

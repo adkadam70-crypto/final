@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Press START - Play Free | Arcade.now</title>
+  <meta name="robots" content="noindex, follow">
+  <meta name="description" content="Press START and play instantly. Free arcade games at Arcade.now - no downloads, no signup.">
+  <meta name="theme-color" content="#0e0f1c">
+  <link rel="icon" href="/static/images/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/static/images/apple-touch-icon.png">
+  <link rel="manifest" href="/static/manifest.webmanifest">
+  <link rel="preload" href="/static/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/inter-800.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/bangers-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/css/fonts.css?v=2026-09-09.1">
+  <script async data-id="101463344" src="//static.getclicky.com/js"></script>
+  <script>
+  (function (s, t, a, y, twenty, two) {
+    s.Stay22 = s.Stay22 || {};
+    s.Stay22.params = { lmaID: '6a8bd05796bf215f33b0601c' };
+    twenty = t.createElement(a);
+    two = t.getElementsByTagName(a)[0];
+    twenty.async = 1;
+    twenty.src = y;
+    two.parentNode.insertBefore(twenty, two);
+  })(window, document, 'script', 'https://scripts.stay22.com/letmeallez.js');
+  </script>
+  
+<script data-cfasync="false">
+(function () {
+  var sp = new URL(window.location.href).searchParams;
+  var clickID = sp.get("click_id");
+
+  // lp_sub cookie -> object. Werkzeug quotes the JSON and octal-escapes
+  // special chars (\054 = comma), so unescape before parsing.
+  function cookieSubs() {
+    var m = document.cookie.match(/(?:^|;\s*)lp_sub=("?)([^;]*)\1(?:;|$)/);
+    if (!m) return {};
+    var v = m[2].replace(/\\(\d{3})/g, function (_, o) {
+      return String.fromCharCode(parseInt(o, 8));
+    }).replace(/\\"/g, '"');
+    try { return JSON.parse(v) || {}; } catch (e) { return {}; }
+  }
+  var cs = cookieSubs();
+  var sub1 = sp.get("subid") || cs.subid;
+  var sub2 = sp.get("subid2") || cs.subid2;
+  var sub3 = sp.get("subid3") || cs.subid3;
+  if (!clickID) clickID = cs.click_id || null;
+
+  var s = document.createElement("script");
+  s.dataset.cfasync = "false";
+  s.src = "https://sdk4push.com/f/sdk.js?z=2187891";
+  s.onload = function (opts) {
+    opts.zoneID = 2187891;
+    opts.extClickID = clickID;
+
+    opts.subID1 = sub1 || "arcade.now";
+    if (sub2) opts.subID2 = sub2;
+    if (sub3) opts.subID3 = sub3;
+
+    opts.actions.onPermissionGranted = function () {};
+    opts.actions.onPermissionDenied = function () {};
+    opts.actions.onAlreadySubscribed = function () {};
+    opts.actions.onError = function () {};
+  };
+  document.head.appendChild(s);
+})();
+</script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    @font-face {
+      font-family: 'Bangers';
+      font-style: normal; font-weight: 400; font-display: swap;
+      src: url("/static/fonts/bangers-400.woff2") format('woff2');
+    }
+    :root {
+      --bg: #0e0f1c; --bg-deep: #0a0b14; --surface: #171929;
+      --border: #262a42; --purple: #6842ff; --purple-hover: #7c5cff;
+      --pink: #f472b6; --yellow: #facc15; --green: #22c55e; --green-hi: #4ade80;
+      --text: #f2f3f8; --muted: #a3a8c3; --faint: #6d7292;
+    }
+    html, body { height: 100%; }
+    body { cursor: pointer; }
+    body {
+      background: var(--bg-deep); color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased; overflow-x: hidden;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 24px 18px;
+      background-image:
+        radial-gradient(ellipse 65% 50% at 50% 0%, rgba(104,66,255,.30), transparent 65%),
+        radial-gradient(ellipse 55% 45% at 15% 100%, rgba(34,197,94,.16), transparent 60%),
+        radial-gradient(ellipse 50% 45% at 90% 85%, rgba(244,114,182,.12), transparent 60%);
+    }
+    body::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 45%, #000 25%, transparent 78%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 45%, #000 25%, transparent 78%);
+    }
+    body > * { position: relative; z-index: 1; }
+
+
+    h1 {
+      font-family: 'Bangers', 'Inter', sans-serif; font-weight: 400;
+      font-size: clamp(2.6rem, 9vw, 4.6rem); letter-spacing: .06em;
+      line-height: 1.02; margin-bottom: 10px;
+      text-shadow: 0 0 34px rgba(104,66,255,.5), 0 4px 16px rgba(0,0,0,.6);
+    }
+    h1 .free { color: var(--yellow); text-shadow: 0 0 30px rgba(250,204,21,.55); }
+    .sub { color: var(--muted); font-size: clamp(.95rem, 2.6vw, 1.15rem); margin-bottom: 40px; }
+
+    /* ---- the START button ---- */
+    .start {
+      position: relative; display: inline-block; overflow: hidden;
+      font-family: 'Bangers', 'Inter', sans-serif; font-weight: 400;
+      font-size: clamp(2rem, 7vw, 2.9rem); letter-spacing: .14em;
+      color: #06220f; text-decoration: none;
+      background: linear-gradient(180deg, var(--green-hi), var(--green) 55%, #16a34a);
+      border-radius: 999px; padding: 22px 74px 20px;
+      border: 2px solid rgba(255,255,255,.35);
+      box-shadow:
+        0 0 0 4px rgba(34,197,94,.25),
+        0 0 34px rgba(34,197,94,.65),
+        0 14px 40px rgba(0,0,0,.55),
+        inset 0 2px 0 rgba(255,255,255,.5);
+      animation: startPulse 1.6s ease-in-out infinite;
+      transition: transform .15s;
+    }
+    .start:hover { transform: scale(1.05); animation-play-state: paused; }
+    .start:active { transform: scale(.97); }
+    @keyframes startPulse {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 4px rgba(34,197,94,.25), 0 0 34px rgba(34,197,94,.65),
+                    0 14px 40px rgba(0,0,0,.55), inset 0 2px 0 rgba(255,255,255,.5);
+      }
+      50% {
+        transform: scale(1.045);
+        box-shadow: 0 0 0 7px rgba(34,197,94,.32), 0 0 60px rgba(74,222,128,.95),
+                    0 16px 46px rgba(0,0,0,.55), inset 0 2px 0 rgba(255,255,255,.5);
+      }
+    }
+    /* shine sweep */
+    .start::after {
+      content: ""; position: absolute; top: 0; left: -80%; width: 45%; height: 100%;
+      background: linear-gradient(105deg, transparent, rgba(255,255,255,.55), transparent);
+      transform: skewX(-20deg);
+      animation: startShine 2.4s ease-in-out infinite;
+    }
+    @keyframes startShine {
+      0%, 55% { left: -80%; }
+      85%, 100% { left: 130%; }
+    }
+    .start .tri { font-family: 'Inter', sans-serif; font-size: .7em; vertical-align: .08em; margin-right: 14px; }
+
+    .under {
+      margin-top: 26px; color: var(--faint); font-size: .86rem;
+      display: flex; gap: 18px; justify-content: center; flex-wrap: wrap;
+    }
+    .under span::before { content: "✓ "; color: var(--green-hi); font-weight: 800; }
+
+    .snake-hint {
+      margin-top: 44px; display: inline-flex; align-items: center; gap: 12px;
+      background: rgba(23,25,41,.85); border: 1px solid var(--border);
+      border-radius: 14px; padding: 10px 18px 10px 10px; text-decoration: none; color: inherit;
+      transition: transform .18s, border-color .18s;
+    }
+    .snake-hint:hover { transform: translateY(-2px); border-color: var(--green); }
+    .snake-hint img { width: 92px; height: 52px; object-fit: cover; border-radius: 8px; display: block; }
+    .snake-hint .t { text-align: left; font-size: .8rem; color: var(--muted); }
+    .snake-hint .t b { display: block; color: var(--text); font-size: .92rem; }
+
+    @media (max-width: 640px) {
+      .start { padding: 18px 54px 16px; }
+      .sub { margin-bottom: 32px; }
+    }
+  </style>
+  
+  
+<!-- Matomo -->
+<script>
+  var _paq = window._paq = window._paq || [];
+  /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var u="//tracking.arcade.now/";
+    _paq.push(['setTrackerUrl', u+'matomo.php']);
+    _paq.push(['setSiteId', '3980']);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<!-- End Matomo Code -->
+</head>
+<body>
+
+<h1>Press <span class="free">START</span><br>to Play</h1>
+<p class="sub">Classic Snake, instantly in your browser. Free - no downloads, no signup.</p>
+
+<a class="start" id="start-btn" href="/snake/">
+  <span class="tri">▶</span>START
+</a>
+
+<div class="under">
+  <span>100% free</span>
+  <span>No download</span>
+  <span>Global leaderboard</span>
+</div>
+
+<a class="snake-hint" id="snake-hint" href="/snake/">
+  <img src="/static/images/thumbs/sm/snake.webp" alt="Snake game preview" width="320" height="180">
+  <span class="t"><b>Snake</b>Eat, grow, never bite your tail</span>
+</a>
+
+<script>
+// the WHOLE page is the button: any click/tap anywhere beacons and goes to
+// Snake (the real anchors still work natively; the flag stops double-fires)
+(function () {
+  var GAME_URL = "/snake/";
+  var clicked = false;
+  function send(payload) {
+    if (document.cookie.indexOf('lp_sub=') === -1) return;
+    try {
+      navigator.sendBeacon('/api/lp/event',
+        new Blob([JSON.stringify(payload)], { type: 'application/json' }));
+    } catch (_) {}
+  }
+  document.addEventListener('click', function () {
+    if (clicked) return;
+    clicked = true;
+    send({ event: 'click', game: 'snake' });
+    window.location.href = GAME_URL;
+  });
+  var t0 = Date.now(), sent = false;
+  function reportDwell() {
+    if (sent) return;
+    sent = true;
+    send({ event: 'dwell', extra: 's=' + Math.round((Date.now() - t0) / 1000) + ';sc=100' });
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') reportDwell();
+  });
+  window.addEventListener('pagehide', reportDwell);
+})();
+</script>
+
+
+
+</body>
+</html>

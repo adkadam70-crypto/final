@@ -1,0 +1,14 @@
+<svg width="260" height="261" viewBox="0 0 260 261" xmlns="http://www.w3.org/2000/svg">
+	<style>
+    #faviconfill {
+      fill: black;
+    }
+    @media (prefers-color-scheme: dark) {
+      #faviconfill {
+        fill: white;
+      }
+    }
+  </style>
+<path id="faviconfill" d="M0 0V260H94.129L260 94.129V0H0Z"/>
+<path d="M259.858 260.003V130.137L129.992 260.003H259.858Z" fill="#FFBF0B"/>
+</svg>
