@@ -8,6 +8,26 @@ import { ADMISSIONS_DEADLINES } from '@/lib/admissions-deadlines'
 
 type Tab = 'overview' | 'deadlines'
 
+// Short "formula" badge per country for the hero banner — same honest
+// phrasing already used in components/matches-view.tsx's CONTEXT record
+// (kept consistent across the app rather than reworded here), derived from
+// each country's real `prioritizes`/`extracurriculars` text. Singapore is
+// deliberately NOT given a percentage split: the real data
+// (lib/application-info.ts) says NUS/NTU discontinued their old fixed ~5%
+// CCA weighting in 2007 with nothing numeric replacing it, so a badge like
+// "70% Academic / 30% Rigor" would be a fabricated precise-looking number,
+// not a real fact — same reasoning already applied elsewhere in this file.
+const FORMULA_BADGE: Record<string, string> = {
+  US: '~50% Academic / ~50% Holistic',
+  UK: '~85% Subject Mastery',
+  AU: '~100% Academic Cutoff',
+  HK: 'Academic Index + Direct Gate',
+  IN: 'Merit & Rank Gated',
+  DE: 'Abitur GPA-Driven',
+  FR: 'Track-Dependent (Licence vs. Grandes Écoles)',
+  SG: 'Academic-First',
+}
+
 // Every country's requirements[] mixes real checklist items with one (or,
 // for Germany, two) sentences explaining how international curricula
 // (CBSE/ISC/State Board, IB, A-Levels, etc.) get evaluated — that note
@@ -74,6 +94,24 @@ function parseDeadlineDate(dateStr: string): Date | null {
 // claim (e.g. the US genuinely has no GPA conversion table, but Australia,
 // Germany, and the UK all DO run real conversion processes — a single
 // shared headline claiming "no conversion" would be false for those).
+// Bolds real keywords already present in a checklist item (transcript,
+// essay/personal statement, recommendation letters, test scores, etc.)
+// instead of a wall of uniform-weight text — the words themselves are
+// exactly what's in the underlying data, this just changes which ones
+// render bold, so it can't introduce a fact that isn't already there.
+const KEY_TERM_PATTERN = /(transcript|personal statement|essay|recommendation letters?|counselor recommendation|SAT|ACT|IELTS|TOEFL|APS certificate|AIU|motivation letter|CV\b|predicted grades?|board exam results?|bulletins)/gi
+
+function boldKeyTerms(text: string): React.ReactNode {
+  // String.split with a capturing group always alternates
+  // [unmatched, captured, unmatched, captured, ...] regardless of the
+  // regex's own lastIndex state, so odd indices are reliably the matched
+  // keyword — no need to re-test the (stateful, global) regex here.
+  const parts = text.split(KEY_TERM_PATTERN)
+  return parts.map((part, i) =>
+    i % 2 === 1 ? <strong key={i} className="font-semibold text-foreground">{part}</strong> : part
+  )
+}
+
 function splitLeadSentence(text: string): { lead: string; rest: string } {
   const match = text.match(/^([\s\S]+?[.!?])(\s+([\s\S]*))?$/)
   if (!match) return { lead: text, rest: '' }
@@ -176,6 +214,11 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
           <section className="rounded-2xl bg-card border border-border p-6">
             <div className="flex items-center justify-between gap-3 flex-wrap mb-1">
               <h2 className="text-xl font-bold text-foreground tracking-tight flex items-center gap-2"><Globe className="w-5 h-5 text-primary" /> {info.name} admissions dossier</h2>
+              {FORMULA_BADGE[active] && (
+                <span className="text-[11px] font-mono px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/20 text-emerald-400 whitespace-nowrap">
+                  {FORMULA_BADGE[active]}
+                </span>
+              )}
             </div>
             <div className="mt-3 p-3.5 rounded-xl bg-accent/50 border border-primary/25 flex items-start gap-3">
               <Target className="w-4 h-4 text-primary shrink-0 mt-0.5" />
@@ -351,6 +394,24 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                     </div>
                     <p className="text-sm text-foreground/80 leading-relaxed text-pretty">No universal entrance test for public licence programs. Grandes écoles run their own concours (written + oral, usually after 2 years of classes préparatoires/CPGE), or post-bac exams like SESAME/GEIPI.</p>
                   </div>
+                ) : active === 'UK' ? (
+                  <div className="space-y-2">
+                    <div className="bg-secondary/50 border border-border rounded-xl p-3.5 space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">UCAT (medicine/dentistry)</span>
+                        {/* 2700 is the scale's max, not a stated target
+                            score — the real data never says what's
+                            "competitive," so this shows the scale fact
+                            only, not a fabricated benchmark to hit. */}
+                        <span className="font-mono text-foreground font-semibold">4 sections, scored out of 2700</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">LNAT (law)</span>
+                        <span className="font-mono text-foreground font-semibold">42 MCQ + timed essay</span>
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-foreground/70 leading-relaxed text-pretty">BMAT has been discontinued — UCAT is now the sole admissions test for UK undergraduate medicine and dentistry.</p>
+                  </div>
                 ) : (
                   <p className="text-sm text-foreground/80 leading-relaxed text-pretty">{info.tests}</p>
                 )}
@@ -368,7 +429,7 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                   {checklist.map((r) => (
                     <li key={r} className="flex items-start gap-2 text-sm text-foreground/85">
                       <CircleCheck className="w-3.5 h-3.5 mt-0.5 shrink-0 text-primary" />
-                      <span className="text-pretty">{r}</span>
+                      <span className="text-pretty">{boldKeyTerms(r)}</span>
                     </li>
                   ))}
                 </ul>
@@ -427,6 +488,19 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                     </div>
                     <p className="text-[13px] text-foreground/80 leading-relaxed text-pretty">{info.extracurriculars}</p>
                   </>
+                ) : active === 'UK' ? (
+                  <>
+                    {/* Real fact is "keep generic hobbies under ~20% of
+                        your personal statement" — a writing-space
+                        guideline, not a formal "80% academic / 20%
+                        contextual" admissions weighting. Presenting it as
+                        the latter would overstate what the source says. */}
+                    <div className="bg-secondary/50 border border-border rounded-xl p-3.5 mb-3">
+                      <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider mb-1">Super-curricular focus</div>
+                      <div className="text-xs text-foreground font-semibold">Generic hobbies: keep under ~20% of your personal statement</div>
+                    </div>
+                    <p className="text-[13px] text-foreground/80 leading-relaxed text-pretty">{info.extracurriculars}</p>
+                  </>
                 ) : (
                   <p className="text-sm text-foreground/80 leading-relaxed text-pretty">{info.extracurriculars}</p>
                 )}
@@ -458,7 +532,7 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
             <p className="text-xs text-muted-foreground leading-relaxed text-pretty">{deadlines.system}</p>
           </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className={`grid grid-cols-1 md:grid-cols-2 ${deadlines.rounds.length === 2 ? '' : 'lg:grid-cols-3'} gap-4`}>
             {deadlines.rounds.map((round, i) => {
               const parsed = parseDeadlineDate(round.date)
               const days = parsed ? daysUntil(parsed) : null
