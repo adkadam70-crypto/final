@@ -2,17 +2,18 @@
 
 import { useState, useTransition, useRef, useEffect, useSyncExternalStore } from 'react'
 import { useRouter } from 'next/navigation'
-import { Sparkles, GraduationCap, Wand2, Bookmark, BookmarkCheck, User, ArrowRight } from 'lucide-react'
+import { Sparkles, GraduationCap, Compass, Bookmark, BookmarkCheck, User, ArrowRight } from 'lucide-react'
 import { runMatch } from '@/app/actions/match'
 import { gradeBadge } from '@/lib/grade'
+import { satComposite } from '@/lib/standardized-tests'
 import type { AcademicDetail } from '@/lib/academic-detail'
 import type { MatchResult } from '@/lib/db/schema'
+import type { StandardizedTests } from '@/lib/standardized-tests'
 import { ProbabilityGraph } from '@/components/probability-graph'
 import { UniversityCard } from '@/components/university-card'
 import { TargetUniversityAnalysis, type TargetUniversityAnalysisHandle } from '@/components/target-university-analysis'
 import { LoadingDots } from '@/components/loading-dots'
 import { RevealGroup } from '@/components/reveal-group'
-import { LiquidButton } from '@/components/ui/liquid-glass-button'
 import { ProgressiveFluxLoader, type ProgressiveFluxPhase } from '@/components/ui/progressive-flux-loader'
 import { saveSchool, unsaveSchool, getSavedSchoolIds } from '@/app/actions/saved-schools'
 import { getMatchState, setMatchState, subscribeMatchState, getMatchServerSnapshot } from '@/lib/match-results-store'
@@ -29,21 +30,46 @@ const MATCH_PHASES: ProgressiveFluxPhase[] = [
   { at: 90, label: 'finalizing your matches' },
 ]
 
-const CONTEXT: Record<string, string> = {
-  US: 'US universities weigh your academic baseline (~50%) alongside holistic leadership, essays, and passion projects (~50%).',
-  UK: 'UK universities focus heavily (~85%) on subject mastery and course-relevant academic depth.',
-  AU: 'Australia evaluates applicants almost entirely on academic cutoff thresholds and ATAR equivalents (~100%).',
-  SG: 'Singapore weighs strong academics first, with essays and interviews as secondary factors.',
-  HK: 'Hong Kong blends strong academics with interviews and some holistic review.',
-  IN: 'Holistic Indian universities blend board marks with essays and interviews; IITs are purely exam-driven.',
-  DE: 'Germany admits almost purely on your final secondary-school GPA (Abitur equivalent) — Numerus Clausus subjects have a GPA cutoff, open-admission subjects just need the entry bar met. Extracurriculars and essays barely count.',
-  FR: 'France splits in two: public-university licence programs are essentially non-selective, while grandes écoles and selective programs weigh high-school grades and concours performance heavily (~90%), with the motivation letter secondary.',
+const CONTEXT: Record<string, { formula: string; detail: string }> = {
+  US: {
+    formula: '~50% Academic / ~50% Holistic',
+    detail: 'Weighs your academic baseline alongside holistic leadership, essays, and passion projects.',
+  },
+  UK: {
+    formula: '~85% Subject Mastery',
+    detail: 'Focuses heavily on subject mastery and course-relevant academic depth.',
+  },
+  AU: {
+    formula: '~100% Academic Cutoff',
+    detail: 'Evaluated almost entirely on academic cutoff thresholds and ATAR equivalents.',
+  },
+  SG: {
+    formula: 'Academic-first',
+    detail: 'Strong academics weighed first, with essays and interviews as secondary factors.',
+  },
+  HK: {
+    formula: 'Academics + Interview',
+    detail: 'Blends strong academics with interviews and some holistic review.',
+  },
+  IN: {
+    formula: 'Varies by school',
+    detail: 'Holistic universities blend board marks with essays and interviews; IITs are purely exam-driven.',
+  },
+  DE: {
+    formula: '~100% Final GPA',
+    detail: 'Admits almost purely on your final secondary-school GPA (Abitur equivalent) — extracurriculars and essays barely count.',
+  },
+  FR: {
+    formula: '~90% Grades / Concours',
+    detail: 'Public licence programs are essentially non-selective; grandes écoles weigh grades and concours performance heavily.',
+  },
 }
 
 type ProfileRow = {
   targetCountries: string[]
   curriculum: string
   academicDetail: AcademicDetail | null
+  standardizedTests: StandardizedTests
   preferredClimate: string
   preferredSector: string
   preferredRank: string
@@ -52,20 +78,30 @@ type ProfileRow = {
   apCourses: string[]
 } | null
 
-export function MatchesView({ profile }: { profile: ProfileRow }) {
+export function MatchesView({ profile, catalogScope }: { profile: ProfileRow; catalogScope?: number | null }) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [isRunning, setIsRunning] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const errorRef = useRef<HTMLParagraphElement>(null)
   const targetAnalysisRef = useRef<TargetUniversityAnalysisHandle>(null)
+  // Two distinct journeys ("show me every fit" vs "what are my odds at
+  // this one school") used to be forced into a single stacked page with a
+  // disclaimer explaining why there were two buttons. Both sections stay
+  // mounted at all times (never unmounted) so switching tabs never loses
+  // in-progress search text or a previous deep-dive result — only which
+  // one is visible changes.
+  const [mode, setMode] = useState<'comprehensive' | 'single'>('comprehensive')
 
   // "Get a deeper analysis" on a match card runs the same target-university
-  // analysis above instead of making the student re-type the name, then
-  // scrolls it into view since it lives above the match grid.
+  // analysis instead of making the student re-type the name — switches to
+  // that tab and scrolls it into view once the tab's content is visible.
   function handleDeepAnalysis(universityName: string) {
+    setMode('single')
     targetAnalysisRef.current?.analyzeFor(universityName)
-    document.getElementById('target-university-analysis')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    requestAnimationFrame(() => {
+      document.getElementById('target-university-analysis')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
   }
   // String ids throughout — MatchResult.universityId is a string and
   // getSavedSchoolIds() now returns strings, so `.has()` actually matches.
@@ -157,21 +193,55 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
     }
   }
 
+  const testSummary = profile ? formatCompactTests(profile.standardizedTests) : null
+
   return (
     <main className="max-w-6xl mx-auto px-4 py-8">
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-1">Find Matches</h1>
-        <p className="text-sm text-muted-foreground">Powered by your saved profile.</p>
+        <p className="text-sm text-muted-foreground">Calibrated against your saved profile.</p>
       </div>
 
-      <TargetUniversityAnalysis ref={targetAnalysisRef} hasProfile={!!profile?.academicDetail} />
+      {/* Replaces the old apologetic helper text ("Separate from 'Run match'
+          below...") — that sentence existing at all was a sign the page was
+          forcing two different journeys (broad discovery vs. one-school
+          diagnostic) into a single stack. A segmented switcher makes the
+          split the actual information architecture instead of a footnote. */}
+      <div className="inline-flex bg-secondary border border-border rounded-2xl p-1 mb-6">
+        <button
+          type="button"
+          onClick={() => setMode('comprehensive')}
+          className={`text-xs font-semibold px-4 py-2 rounded-xl transition-colors ${mode === 'comprehensive' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+        >
+          Comprehensive match
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode('single')}
+          className={`text-xs font-semibold px-4 py-2 rounded-xl transition-colors ${mode === 'single' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+        >
+          Target school deep-dive
+        </button>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6">
-        <section className="bg-card border border-border rounded-3xl p-6">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2"><User className="w-4 h-4 text-primary" /> Your profile</h2>
+      {/* Kept permanently mounted (never unmounted) regardless of `mode` so
+          switching tabs never resets an in-progress search or clears a
+          previous result — only visibility toggles. */}
+      <div className={mode === 'single' ? '' : 'hidden'}>
+        <TargetUniversityAnalysis ref={targetAnalysisRef} hasProfile={!!profile?.academicDetail} />
+      </div>
+
+      <div className={mode === 'comprehensive' ? 'grid grid-cols-1 lg:grid-cols-12 gap-5' : 'hidden'}>
+        <section className="lg:col-span-5 bg-card border border-border rounded-3xl p-6">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2"><User className="w-4 h-4 text-primary" /> Active profile snapshot</h2>
           {profile?.academicDetail ? (
             <div className="space-y-3">
+              <div className="p-3 bg-accent/60 border border-primary/25 rounded-2xl flex items-center gap-3">
+                <GraduationCap className="w-5 h-5 text-primary shrink-0" />
+                <div className="text-xs font-mono text-accent-foreground font-semibold">{badge}</div>
+              </div>
               <div className="flex flex-wrap gap-2">
+                {testSummary && <span className="text-[11px] font-mono bg-emerald-950/50 border border-emerald-500/20 text-emerald-400 px-2.5 py-1 rounded-lg">{testSummary}</span>}
                 {profile.targetCountries.map((c) => (
                   <span key={c} className="text-[11px] bg-secondary border border-border px-2.5 py-1 rounded-lg text-foreground/90">{c}</span>
                 ))}
@@ -180,14 +250,26 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
                 {profile.intendedField !== 'No preference' && <span className="text-[11px] bg-secondary border border-border px-2.5 py-1 rounded-lg text-foreground/90">{profile.intendedField}</span>}
                 {profile.preferredRank !== 'No preference' && <span className="text-[11px] bg-secondary border border-border px-2.5 py-1 rounded-lg text-foreground/90">{profile.preferredRank}</span>}
               </div>
-              <div className="p-3 bg-accent/60 border border-primary/25 rounded-2xl flex items-center gap-3">
-                <GraduationCap className="w-5 h-5 text-primary shrink-0" />
-                <div className="text-xs font-mono text-accent-foreground font-semibold">{badge}</div>
-              </div>
+              {/* Compact pills instead of a raw bullet-point paragraph dump
+                  — still the student's real, exact text (never a fabricated
+                  tier/spike classification this app doesn't compute), just
+                  presented as scannable badges instead of a wall of prose. */}
               {profile.extracurriculars.length > 0 && (
-                <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                  {profile.extracurriculars.map((ec, i) => <li key={i}>{ec}</li>)}
-                </ul>
+                <div>
+                  <div className="text-[10px] font-mono text-muted-foreground tracking-wider mb-1.5">ACTIVITIES ({profile.extracurriculars.length})</div>
+                  {/* Full text, wrapped — not truncated with an ellipsis
+                      mid-sentence. There's no stored field splitting these
+                      free-text entries into a clean "activity name" + "tier"
+                      pair, so faking one (e.g. "Roller Hockey [National]")
+                      would mean guessing at a classification this app
+                      doesn't actually have; showing the real, complete text
+                      is the honest version of "not a wall of prose." */}
+                  <div className="space-y-1">
+                    {profile.extracurriculars.map((ec, i) => (
+                      <div key={i} className="text-[11px] bg-secondary border border-border text-foreground/80 px-2.5 py-1.5 rounded-lg leading-snug">{ec}</div>
+                    ))}
+                  </div>
+                </div>
               )}
               {profile.apCourses.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
@@ -206,35 +288,70 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
           )}
         </section>
 
-        <div className="flex flex-col justify-center gap-3">
+        <section className="lg:col-span-7 bg-card border border-border rounded-3xl p-6 flex flex-col">
+          <h2 className="text-sm font-semibold mb-1.5">Admissions pool evaluation</h2>
+          <p className="text-xs text-muted-foreground leading-relaxed text-pretty mb-4">
+            Compares your academic profile and activities against admissions bands across the catalog, sorted into Safety, Target, and Reach tiers.
+          </p>
+          {/* Real, known-before-running facts, styled as a labeled
+              diagnostic box — fills the space between the description and
+              the button with the actual scope of the run instead of empty
+              air. Every row here is a real value already on the profile or
+              a live DB count (catalogScope, computed server-side in
+              app/matches/page.tsx) — deliberately NOT adding an "Odds
+              Calibration: CDS Verified"-style row, since this app doesn't
+              actually cross-reference the Common Data Set specifically;
+              that would be a fabricated methodology claim, not a real one. */}
+          {profile?.academicDetail && (
+            <div className="mb-5 rounded-xl bg-zinc-950/60 border border-white/5 p-3.5 divide-y divide-white/5">
+              <div className="flex items-center justify-between pb-2 text-[11px] font-mono">
+                <span className="text-zinc-500 uppercase tracking-wider">Target regions</span>
+                <span className="text-emerald-400 font-semibold">{targetCountries.join(' · ')}</span>
+              </div>
+              {catalogScope !== null && catalogScope !== undefined && (
+                <div className="flex items-center justify-between py-2 text-[11px] font-mono">
+                  <span className="text-zinc-500 uppercase tracking-wider">Institutional scope</span>
+                  <span className="text-white">{catalogScope} universities</span>
+                </div>
+              )}
+              {(profile.intendedField !== 'No preference' || profile.preferredRank !== 'No preference') && (
+                <div className="flex items-center justify-between pt-2 text-[11px] font-mono">
+                  <span className="text-zinc-500 uppercase tracking-wider">Active filters</span>
+                  <span className="text-zinc-300">{[profile.intendedField !== 'No preference' && profile.intendedField, profile.preferredRank !== 'No preference' && profile.preferredRank].filter(Boolean).join(' · ')}</span>
+                </div>
+              )}
+            </div>
+          )}
+          <div className="mt-auto">
           {isRunning ? (
             <button disabled className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold text-sm py-4 rounded-2xl opacity-60 cursor-not-allowed">
               <LoadingDots /> Analyzing your profile…
             </button>
           ) : (
-            <LiquidButton onClick={handleRun} disabled={!profile?.academicDetail} fullWidth>Run match</LiquidButton>
+            // Was <LiquidButton> (dark gradient pill, teal glow only on
+            // hover) — sitting next to the single-school tab's always-bright
+            // emerald "Analyze" button, it read as inactive/disabled at
+            // rest. Both primary CTAs now share the same emerald treatment.
+            <button
+              onClick={handleRun}
+              disabled={!profile?.academicDetail}
+              className="w-full bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-sm py-3 px-6 rounded-xl transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              Run Match <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           )}
-
-          {error && <p ref={errorRef} tabIndex={-1} className="text-xs text-destructive text-center outline-none" role="alert">{error}</p>}
-          <p className="text-[11px] text-muted-foreground/70 text-center text-pretty">Results are sampled from the catalog — run it 2–3 times to see other strong-fit schools you may have missed.</p>
-        </div>
+          {error && <p ref={errorRef} tabIndex={-1} className="text-xs text-destructive text-center outline-none mt-3" role="alert">{error}</p>}
+          </div>
+        </section>
       </div>
 
       <div className="mt-6 space-y-6">
-        <section className="bg-card border border-border rounded-3xl p-6 space-y-4">
-          {targetCountries.map((c) => (
-            <div key={c}>
-              <div className="text-xs font-semibold text-primary uppercase tracking-widest mb-1.5">Admissions context: {c}</div>
-              <p className="text-xs text-muted-foreground leading-relaxed text-pretty">{CONTEXT[c] ?? 'Standard competitive admissions environment.'}</p>
-            </div>
-          ))}
-        </section>
-
+        <div className={mode === 'comprehensive' ? 'space-y-6' : 'hidden'}>
         {results.length === 0 && !isRunning ? (
           <section className="bg-card border border-border border-dashed rounded-3xl p-12 text-center">
-            <div className="inline-flex bg-secondary p-3 rounded-2xl mb-4"><Wand2 className="w-6 h-6 text-primary" /></div>
+            <div className="inline-flex bg-secondary p-3 rounded-2xl mb-4"><Compass className="w-6 h-6 text-primary" /></div>
             <h3 className="text-base font-bold mb-1">No matches yet</h3>
-            <p className="text-xs text-muted-foreground max-w-xs mx-auto text-pretty">Set your profile and hit <span className="text-foreground font-medium">Run match</span> to get tiered acceptance odds.</p>
+            <p className="text-xs text-muted-foreground max-w-xs mx-auto text-pretty">Your results will populate here once the evaluation finishes.</p>
           </section>
         ) : isRunning && results.length === 0 ? (
           <section className="bg-card border border-border rounded-3xl p-12 text-center">
@@ -282,7 +399,50 @@ export function MatchesView({ profile }: { profile: ProfileRow }) {
             </div>
           </>
         )}
+        </div>
+
+        {/* Only in Comprehensive mode — showing France/Australia/Singapore
+            weighting while auditing one specific US school (single-school
+            mode) made the page feel uncalibrated to what the student was
+            actually doing. Moved below the results (was between the
+            trigger and the results, which pushed a freshly-run match below
+            the fold — a student would click "Run match" and see nothing
+            change at the top, looking stalled). Compact weight-bar rows
+            instead of 4 separate paragraph cards. */}
+        <div className={mode === 'comprehensive' ? '' : 'hidden'}>
+          <section className="bg-zinc-900/30 border border-white/5 rounded-2xl p-4">
+            <h2 className="text-[10px] font-mono text-zinc-500 tracking-wider uppercase mb-3">Regional weighting engine</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {targetCountries.map((c) => {
+                const ctx = CONTEXT[c]
+                return (
+                  <div key={c} className="bg-zinc-950/40 border border-white/5 rounded-xl p-4">
+                    <div className="text-xs font-semibold text-foreground mb-1">{c}</div>
+                    <div className="font-mono text-[11px] text-emerald-400 mb-1.5">{ctx?.formula ?? 'Competitive'}</div>
+                    <div className="text-[11px] text-zinc-400 leading-snug">{ctx?.detail ?? 'Standard competitive admissions environment.'}</div>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        </div>
       </div>
     </main>
   )
+}
+
+// Short pill version of formatStandardizedTests — that helper is written
+// for AI-prompt prose ("SAT 1450/1600 (Math 790, Reading & Writing 660)");
+// this trims to just the composite for a compact badge, falling back to the
+// next-most-relevant real score the student entered. Returns null (renders
+// nothing) rather than a fabricated number when no test is on file.
+function formatCompactTests(t: StandardizedTests): string | null {
+  const composite = satComposite(t)
+  if (composite !== null) return `SAT ${composite} (M:${t.satMath}, R:${t.satReadingWriting})`
+  if (t.act !== undefined) return `ACT ${t.act}/36`
+  if (t.jeePercentile !== undefined) return `JEE ${t.jeePercentile}th pctl`
+  if (t.jeeAdvancedRank !== undefined) return `JEE Adv. AIR ${t.jeeAdvancedRank}`
+  if (t.neetScore !== undefined) return `NEET ${t.neetScore}/720`
+  if (t.clatRank !== undefined) return `CLAT AIR ${t.clatRank}`
+  return null
 }

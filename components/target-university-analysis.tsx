@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react'
-import { Search, TrendingUp, AlertTriangle, ListChecks, Sparkles } from 'lucide-react'
+import { Search, TrendingUp, AlertTriangle, ListChecks } from 'lucide-react'
 import { analyzeTargetUniversity, getUniversityNames, type TargetAnalysisResult } from '@/app/actions/analyze-target-university'
 import { UNIVERSITY_ALIASES } from '@/lib/university-aliases'
 import { tierBadgeClass } from '@/lib/match-tier'
@@ -160,41 +160,51 @@ export const TargetUniversityAnalysis = forwardRef<TargetUniversityAnalysisHandl
 
       <div className="flex flex-col sm:flex-row gap-2">
         <div ref={inputWrapperRef} className="relative flex-1 min-w-0">
-          {/* colorVariant="ocean" is the closest built-in preset to this
-              site's teal, then shifted the rest of the way there with a
-              --beam-hue-base hue-rotate override (ocean's blue/purple sits
-              around 220-260deg). -55deg read as blue, -85deg overshot into
-              plain green — -70deg is the middle ground that actually lands
-              on teal-green, matching --primary's real hue (~178deg). */}
-          <BorderBeam
-            size="line"
-            colorVariant="ocean"
-            theme="dark"
-            duration={6.5}
-            hueRange={5}
-            borderRadius={20}
-            brightness={1.7}
-            saturation={1.6}
-            style={{ '--beam-hue-base': '-70deg' } as React.CSSProperties}
-          >
-            <input
-              type="text"
-              placeholder="e.g. Stanford University"
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value)
-                setShowSuggestions(true)
-              }}
-              onFocus={() => setShowSuggestions(true)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleAnalyze()
-                if (e.key === 'Escape') setShowSuggestions(false)
-              }}
-              disabled={!hasProfile}
-              autoComplete="off"
-              className="w-full bg-secondary border border-border rounded-xl p-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary disabled:opacity-60"
-            />
-          </BorderBeam>
+          {/* The moving glow itself is real and intentional — the bug was
+              that BorderBeam's "line" variant deliberately bleeds its bloom
+              layer 10px past its own box (a soft glow, by design) with
+              overflow:visible, and this wrapper had no clip of its own to
+              contain that bleed to the input's rounded shape. It escaped
+              asymmetrically past the corners as a smear. Wrapping it in a
+              rounded-xl + overflow-hidden container clips the bleed to
+              exactly the input's shape, keeping the animated beam intact. */}
+          <div className="rounded-xl overflow-hidden">
+            {/* colorVariant="ocean" is the closest built-in preset to this
+                site's teal, then shifted the rest of the way there with a
+                --beam-hue-base hue-rotate override (ocean's blue/purple sits
+                around 220-260deg). -55deg read as blue, -85deg overshot into
+                plain green — -70deg is the middle ground that actually lands
+                on teal-green, matching --primary's real hue (~178deg). */}
+            <BorderBeam
+              size="line"
+              colorVariant="ocean"
+              theme="dark"
+              duration={6.5}
+              hueRange={5}
+              borderRadius={20}
+              brightness={1.7}
+              saturation={1.6}
+              style={{ '--beam-hue-base': '-70deg' } as React.CSSProperties}
+            >
+              <input
+                type="text"
+                placeholder="e.g. Stanford University"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value)
+                  setShowSuggestions(true)
+                }}
+                onFocus={() => setShowSuggestions(true)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleAnalyze()
+                  if (e.key === 'Escape') setShowSuggestions(false)
+                }}
+                disabled={!hasProfile}
+                autoComplete="off"
+                className="w-full bg-secondary border border-border rounded-xl p-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary disabled:opacity-60"
+              />
+            </BorderBeam>
+          </div>
           {showSuggestions && suggestions.length > 0 && (
             <ul className="absolute z-20 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-xl shadow-lg max-h-56 overflow-y-auto py-1">
               {suggestions.map((suggestion) => (
@@ -277,8 +287,47 @@ export const TargetUniversityAnalysis = forwardRef<TargetUniversityAnalysisHandl
         </RevealGroup>
       )}
 
-      {!result && !error && (
-        <p className="text-[11px] text-muted-foreground mt-3 flex items-center gap-1.5"><Sparkles className="w-3 h-3 text-primary" /> Separate from "Run match" below — this is a deep dive on one specific school.</p>
+      {/* Before a result exists, this tab was near-empty below the search
+          bar. Filled with what the audit actually produces (matching the
+          three real output categories above — matchTier/probability,
+          strengths/weaknesses, action steps — not invented framework names
+          like "Common Data Set percentile" this app doesn't reference) plus
+          one-click launches for a few well-known catalog schools. */}
+      {!result && !pending && (
+        <div className="mt-6 bg-zinc-900/40 border border-white/10 rounded-2xl p-6">
+          <h3 className="text-[10px] font-mono text-zinc-500 tracking-wider uppercase mb-4">How the audit works</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <div className="text-xs font-semibold text-foreground mb-1 flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5 text-primary" /> Acceptance odds &amp; tier</div>
+              <p className="text-[11px] text-zinc-400 leading-snug">Weighs your academics, tests, and activities against this school's real published or researched acceptance rate to place you in a Safety, Target, or Reach tier.</p>
+            </div>
+            <div>
+              <div className="text-xs font-semibold text-foreground mb-1 flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5 text-chart-2" /> Strengths &amp; gaps</div>
+              <p className="text-[11px] text-zinc-400 leading-snug">Names the specific parts of your profile that help or hurt your odds at this school, cited from your actual grades, scores, and activities.</p>
+            </div>
+            <div>
+              <div className="text-xs font-semibold text-foreground mb-1 flex items-center gap-1.5"><ListChecks className="w-3.5 h-3.5 text-chart-5" /> Concrete action steps</div>
+              <p className="text-[11px] text-zinc-400 leading-snug">What to actually do next to close a gap, not generic advice — tied to this specific school's requirements.</p>
+            </div>
+          </div>
+          {hasProfile && (
+            <div className="mt-5 pt-5 border-t border-white/5">
+              <div className="text-[11px] text-zinc-500 mb-2">Quick audits:</div>
+              <div className="flex flex-wrap gap-2">
+                {['Stanford University', 'University of California, Berkeley', 'National University of Singapore', 'New York University'].map((school) => (
+                  <button
+                    key={school}
+                    type="button"
+                    onClick={() => handleAnalyze(school)}
+                    className="text-[11px] bg-secondary border border-border text-foreground/80 hover:border-primary/40 hover:text-foreground px-2.5 py-1 rounded-lg transition-colors"
+                  >
+                    {school}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       )}
     </section>
   )
