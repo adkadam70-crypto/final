@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { ArrowLeft, ExternalLink, ListChecks, Trophy, FileText, PenLine, Target, Link as LinkIcon, CalendarDays, CircleCheck, Landmark, GraduationCap, Globe } from 'lucide-react'
+import { ArrowLeft, ExternalLink, ListChecks, Trophy, FileText, PenLine, Target, Link as LinkIcon, CalendarDays, CircleCheck, Landmark, GraduationCap, Globe, CalendarPlus } from 'lucide-react'
 import { APPLICATION_INFO, APPLICATION_INFO_COUNTRIES } from '@/lib/application-info'
 import { ADMISSIONS_DEADLINES } from '@/lib/admissions-deadlines'
 
@@ -30,6 +30,59 @@ function splitRequirements(requirements: string[]) {
   const curriculumNotes = requirements.filter((r) => CURRICULUM_NOTE_PATTERN.test(r))
   const checklist = requirements.filter((r) => !CURRICULUM_NOTE_PATTERN.test(r))
   return { curriculumNotes, checklist }
+}
+
+const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december']
+
+// These date strings are real research data, not a clean structured field —
+// they range from "November 1, 2026" (fully parseable) to "Not yet
+// announced", "Varies by term and program", or "July 15" with no year at
+// all (ambiguous — could mean this year or next). A generic countdown badge
+// on all of them would either crash on the unparseable ones or, worse,
+// silently show a wrong/fabricated day count. This only returns a Date for
+// strings it can parse with real confidence (an explicit month + day + a
+// 4-digit year); a range like "January 1–15, 2027" resolves to the LATER
+// date (the actual cutoff), everything else returns null and the caller
+// skips the countdown/calendar UI entirely rather than guessing.
+function parseDeadlineDate(dateStr: string): Date | null {
+  const yearMatch = dateStr.match(/\b(20\d{2})\b/)
+  if (!yearMatch) return null
+  const year = Number(yearMatch[1])
+
+  // Grab every "Month D" occurrence in the string and keep the last one —
+  // for a range ("January 1–15, 2027" or "June 2 – July 11, 2026") that's
+  // the closing date, which is what a countdown/calendar event should
+  // target.
+  const monthDayRe = /([A-Za-z]+)\s+(\d{1,2})/g
+  let lastMatch: RegExpExecArray | null = null
+  let m: RegExpExecArray | null
+  while ((m = monthDayRe.exec(dateStr)) !== null) {
+    const monthIdx = MONTHS.indexOf(m[1].toLowerCase())
+    if (monthIdx !== -1) lastMatch = m
+  }
+  if (!lastMatch) return null
+
+  const monthIdx = MONTHS.indexOf(lastMatch[1].toLowerCase())
+  const day = Number(lastMatch[2])
+  const date = new Date(year, monthIdx, day, 23, 59, 59)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+function daysUntil(date: Date): number {
+  const now = new Date()
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  return Math.ceil((date.getTime() - startOfToday.getTime()) / 86_400_000)
+}
+
+function googleCalendarUrl(title: string, date: Date, details: string): string {
+  const ymd = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: title,
+    dates: `${ymd}/${ymd}`,
+    details,
+  })
+  return `https://www.google.com/calendar/render?${params.toString()}`
 }
 
 export function ApplicationInfoView({ defaultCountries }: { defaultCountries: string[] }) {
@@ -226,19 +279,51 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
           </section>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {deadlines.rounds.map((round, i) => (
-              <section key={round.label} className="bg-card border border-border rounded-2xl p-5">
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <span className="text-[10px] font-mono text-muted-foreground">ROUND {String(i + 1).padStart(2, '0')}</span>
-                  <span className={`text-[10px] font-mono px-2 py-0.5 rounded border whitespace-nowrap ${round.binding ? 'bg-destructive/10 text-destructive border-destructive/20' : 'bg-secondary text-muted-foreground border-border'}`}>
-                    {round.binding ? 'BINDING' : 'NON-BINDING'}
-                  </span>
-                </div>
-                <h3 className="text-sm font-bold text-pretty mb-1">{round.label}</h3>
-                <p className="text-base font-mono font-bold text-primary">{round.date}</p>
-                {round.note && <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed text-pretty">{round.note}</p>}
-              </section>
-            ))}
+            {deadlines.rounds.map((round, i) => {
+              const parsed = parseDeadlineDate(round.date)
+              const days = parsed ? daysUntil(parsed) : null
+              return (
+                <section key={round.label} className="bg-card border border-border rounded-2xl p-5 flex flex-col">
+                  <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+                    <span className="text-[10px] font-mono text-muted-foreground">ROUND {String(i + 1).padStart(2, '0')}</span>
+                    <div className="flex items-center gap-1.5">
+                      {/* Only rendered when parseDeadlineDate actually
+                          resolved a real date — several rounds across the
+                          8 countries are "Not yet announced" or "Varies by
+                          term", which can't honestly produce a day count. */}
+                      {days !== null && (
+                        <span className={`text-[10px] font-mono px-2 py-0.5 rounded border whitespace-nowrap ${days < 0 ? 'bg-secondary text-muted-foreground border-border' : 'bg-emerald-950/60 text-emerald-400 border-emerald-500/20'}`}>
+                          {days < 0 ? 'PASSED' : days === 0 ? 'TODAY' : `T-${days} DAYS`}
+                        </span>
+                      )}
+                      <span className={`text-[10px] font-mono px-2 py-0.5 rounded border whitespace-nowrap ${round.binding ? 'bg-destructive/10 text-destructive border-destructive/20' : 'bg-secondary text-muted-foreground border-border'}`}>
+                        {round.binding ? 'BINDING' : 'NON-BINDING'}
+                      </span>
+                    </div>
+                  </div>
+                  <h3 className="text-sm font-bold text-pretty mb-1">{round.label}</h3>
+                  <p className="text-base font-mono font-bold text-primary">{round.date}</p>
+                  {round.note && <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed text-pretty">{round.note}</p>}
+                  {/* Same gate as the countdown badge — only a real,
+                      parseable date can become a real calendar event; a
+                      button that appeared to work but silently did nothing
+                      for "Not yet announced" rounds would be worse than no
+                      button. */}
+                  {parsed && (
+                    <div className="flex justify-end mt-auto pt-3 border-t border-white/5">
+                      <a
+                        href={googleCalendarUrl(`${deadlines.name}: ${round.label}`, parsed, round.note ?? '')}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[11px] font-mono text-zinc-500 hover:text-emerald-400 flex items-center gap-1.5 transition-colors"
+                      >
+                        <CalendarPlus className="w-3 h-3" /> Add to Cal <ExternalLink className="w-2.5 h-2.5" />
+                      </a>
+                    </div>
+                  )}
+                </section>
+              )
+            })}
           </div>
 
           <section className="bg-card border border-border rounded-3xl p-6">
