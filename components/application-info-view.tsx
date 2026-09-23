@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { ArrowLeft, ExternalLink, ListChecks, Trophy, FileText, PenLine, Target, Link as LinkIcon, CalendarDays, CircleCheck, Landmark, GraduationCap, Globe, CalendarPlus } from 'lucide-react'
+import { ArrowLeft, ExternalLink, ListChecks, Trophy, FileText, PenLine, Target, Link as LinkIcon, CalendarDays, CircleCheck, Landmark, GraduationCap, Globe, CalendarPlus, ChevronDown } from 'lucide-react'
 import { APPLICATION_INFO, APPLICATION_INFO_COUNTRIES } from '@/lib/application-info'
 import { ADMISSIONS_DEADLINES } from '@/lib/admissions-deadlines'
 
@@ -153,6 +153,44 @@ function BulletText({ text, className }: { text: string; className: string }) {
   )
 }
 
+// The real fix for "too much at once, no flow": the page has 7 genuinely
+// dense sections, and rendering all of them permanently open (the old
+// layout) meant every one competed for attention at the same visual
+// weight — nothing told a student what to read first vs. what to check
+// later. This wraps the deeper reference material (curriculum parity,
+// test specifics, extracurricular nuance, essays) as closed-by-default
+// <details> — same pattern already used elsewhere in this app (e.g. the
+// profile form's "What can I add here?" hints) — so the default page is
+// short: TL;DR, then the two things you need to actually act on (how to
+// apply, what to prepare). Nothing is removed for any country; it's one
+// tap away.
+function CollapsibleSection({
+  icon,
+  iconBg,
+  title,
+  defaultOpen = false,
+  children,
+}: {
+  icon: React.ReactNode
+  iconBg: string
+  title: string
+  defaultOpen?: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <details className="group bg-card border border-border rounded-2xl overflow-hidden" open={defaultOpen}>
+      <summary className="list-none cursor-pointer p-5 flex items-center justify-between gap-3">
+        <span className="flex items-center gap-2.5">
+          <span className={`${iconBg} rounded-full p-1.5 shrink-0`}>{icon}</span>
+          <span className="text-base font-bold tracking-tight">{title}</span>
+        </span>
+        <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0 transition-transform group-open:rotate-180" />
+      </summary>
+      <div className="px-5 pb-5 -mt-2">{children}</div>
+    </details>
+  )
+}
+
 function splitLeadSentence(text: string): { lead: string; rest: string } {
   const match = text.match(/^([\s\S]+?[.!?])(\s+([\s\S]*))?$/)
   if (!match) return { lead: text, rest: '' }
@@ -243,24 +281,25 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
         })}
       </div>
 
-      {/* Distinct from the country row above through weight and fill, not
-          a harsh sharp-cornered box — that earlier version (rounded-md,
-          border-2) read as a stiff square slab next to the soft rounded
-          pills above it. Same soft rounded-full family as the country
-          pills, but visually its own thing: a filled track (bg-secondary)
-          with a solid emerald capsule for whichever mode is active. mb-8
-          (was mb-6/mt-2) gives it real breathing room both above and below
-          — it was reading as cramped/congested against the country grid. */}
-      <div id="admissions-calendar" className="inline-flex p-1 rounded-full bg-secondary border border-border mb-8 scroll-mt-6 shadow-sm">
+      {/* Same underline-tab pattern as the Profile page's tab switcher
+          (goals/academics/activities) — the earlier rounded-pill switcher
+          was a one-off shape used nowhere else in the app; matching the
+          established pattern instead keeps navigation controls looking
+          consistent across pages. */}
+      <div id="admissions-calendar" className="mb-8 border-b border-border flex gap-6 scroll-mt-6">
         <button
           onClick={() => setTab('overview')}
-          className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${tab === 'overview' ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:text-foreground'}`}
+          className={`pb-3 pt-1 text-sm font-semibold border-b-2 -mb-px transition-colors whitespace-nowrap ${
+            tab === 'overview' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
         >
           System &amp; Requirements Dossier
         </button>
         <button
           onClick={() => setTab('deadlines')}
-          className={`px-6 py-2.5 rounded-full text-sm font-semibold flex items-center gap-2 transition-all ${tab === 'deadlines' ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:text-foreground'}`}
+          className={`pb-3 pt-1 text-sm font-semibold border-b-2 -mb-px transition-colors whitespace-nowrap flex items-center gap-2 ${
+            tab === 'deadlines' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
         >
           <CalendarDays className="w-4 h-4" /> Deadlines &amp; Timelines
         </button>
@@ -274,7 +313,12 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
               page (the actual weighting logic in plain language), so it
               leads now instead of being the thing 80% of users scroll past
               without reading. */}
-          <section className="rounded-2xl bg-card border border-border p-6">
+          {/* Its own visual tier, not just first in position — a thicker
+              primary-colored border and a soft glow instead of the same
+              flat bg-card/border-border every other section uses, so it
+              reads immediately as "the one thing to actually read" rather
+              than card #1 of 7 that happen to look identical. */}
+          <section className="rounded-2xl bg-card border-2 border-primary/40 shadow-lg shadow-primary/5 p-5">
             <div className="flex items-center justify-between gap-3 flex-wrap mb-1">
               <h2 className="text-xl font-bold text-foreground tracking-tight flex items-center gap-2.5">
                 <span className="bg-primary/15 rounded-full p-2 shrink-0"><Globe className="w-5 h-5 text-primary" /></span>
@@ -295,10 +339,16 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
             </div>
           </section>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-            {/* Left: Platform & Governance */}
-            <div className="lg:col-span-5 space-y-4">
-              <section className="bg-card border border-border rounded-3xl p-6">
+          {/* Linear flow, not a two-column grid of same-weight topic cards —
+              the old layout organized by content TYPE (platform info on the
+              left, requirements on the right) rather than by the order a
+              student actually needs it: know the platform → know what to
+              submit → everything else is reference detail you check once
+              you're already applying. Single column keeps that order
+              honest instead of leaving it to whichever column the reader's
+              eye lands on first. */}
+          <div className="space-y-4">
+              <section className="bg-card border border-border rounded-2xl p-5">
                 <h3 className="text-base font-bold tracking-tight mb-3 flex items-center gap-2.5"><span className="bg-primary/15 rounded-full p-1.5 shrink-0"><LinkIcon className="w-3.5 h-3.5 text-primary" /></span> How to apply</h3>
                 <div className="mb-4"><BulletText text={info.howToApply} className="text-sm text-foreground/85 leading-relaxed text-pretty" /></div>
                 <div className="flex items-center gap-2 mb-2">
@@ -332,11 +382,11 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
               </section>
 
               {curriculumNotes.length > 0 && (
-                <section className="bg-card border border-border rounded-3xl p-6">
-                  <div className="flex items-center gap-2.5 mb-3">
-                    <span className="bg-chart-2/15 rounded-full p-1.5 shrink-0"><Landmark className="w-4 h-4 text-chart-2" /></span>
-                    <h3 className="text-base font-bold tracking-tight">Curriculum parity</h3>
-                  </div>
+                <CollapsibleSection
+                  icon={<Landmark className="w-4 h-4 text-chart-2" />}
+                  iconBg="bg-chart-2/15"
+                  title="Curriculum parity — how your board is read"
+                >
                   {/* Bold lead sentence per note, not a single hardcoded
                       claim — see splitLeadSentence's comment for why: the
                       real policy genuinely differs by country (US reads
@@ -371,14 +421,14 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                       Example only — one HK university sets ~75%+ CBSE/CISCE Standard XII average; thresholds vary by school
                     </div>
                   )}
-                </section>
+                </CollapsibleSection>
               )}
 
-              <section className="bg-card border border-border rounded-3xl p-6">
-                <div className="flex items-center gap-2.5 mb-3">
-                  <span className="bg-chart-5/15 rounded-full p-1.5 shrink-0"><FileText className="w-4 h-4 text-chart-5" /></span>
-                  <h3 className="text-base font-bold tracking-tight">Required tests</h3>
-                </div>
+              <CollapsibleSection
+                icon={<FileText className="w-4 h-4 text-chart-5" />}
+                iconBg="bg-chart-5/15"
+                title="Required tests"
+              >
                 {/* Same reasoning as Extracurriculars below — the US has a
                     genuinely structured, quantifiable set of benchmarks
                     already in the real data (info.tests' own "~1200+ SAT
@@ -481,12 +531,14 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                 ) : (
                   <BulletText text={info.tests} className="text-sm text-foreground/80 leading-relaxed text-pretty" />
                 )}
-              </section>
-            </div>
+              </CollapsibleSection>
 
-            {/* Right: Submission Dossier & Extracurricular Lens */}
-            <div className="lg:col-span-7 space-y-4">
-              <section className="bg-card border border-border rounded-3xl p-6">
+              {/* The other must-read section, right after "How to apply" —
+                  now that you know the platform, this is what you actually
+                  need to gather. Stays open by default like "How to apply"
+                  above it; everything past this point is reference detail
+                  for once you're already in the process. */}
+              <section className="bg-card border border-border rounded-2xl p-5">
                 <div className="flex items-center gap-2.5 mb-3">
                   <span className="bg-primary/15 rounded-full p-1.5 shrink-0"><ListChecks className="w-4 h-4 text-primary" /></span>
                   <h3 className="text-base font-bold tracking-tight">What you&apos;ll need</h3>
@@ -501,11 +553,11 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                 </ul>
               </section>
 
-              <section className="bg-card border border-border rounded-3xl p-6">
-                <div className="flex items-center gap-2.5 mb-3">
-                  <span className="bg-chart-2/15 rounded-full p-1.5 shrink-0"><Trophy className="w-4 h-4 text-chart-2" /></span>
-                  <h3 className="text-base font-bold tracking-tight">Extracurriculars</h3>
-                </div>
+              <CollapsibleSection
+                icon={<Trophy className="w-4 h-4 text-chart-2" />}
+                iconBg="bg-chart-2/15"
+                title="Extracurriculars"
+              >
                 {/* US has a genuinely structured, quantifiable version of
                     this (Common App's 10-slot/150-char cap, well known and
                     real, plus the researched "<30% admit rate schools call
@@ -602,13 +654,13 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                 ) : (
                   <BulletText text={info.extracurriculars} className="text-sm text-foreground/80 leading-relaxed text-pretty" />
                 )}
-              </section>
+              </CollapsibleSection>
 
-              <section className="bg-card border border-border rounded-3xl p-6">
-                <div className="flex items-center gap-2.5 mb-3">
-                  <span className="bg-chart-4/15 rounded-full p-1.5 shrink-0"><PenLine className="w-4 h-4 text-chart-4" /></span>
-                  <h3 className="text-base font-bold tracking-tight">Essays</h3>
-                </div>
+              <CollapsibleSection
+                icon={<PenLine className="w-4 h-4 text-chart-4" />}
+                iconBg="bg-chart-4/15"
+                title="Essays"
+              >
                 <div className="mb-3"><BulletText text={info.essays} className="text-sm text-foreground/80 leading-relaxed text-pretty" /></div>
                 {info.essayResources.length > 0 && (
                   <div className="flex flex-wrap gap-2">
@@ -619,66 +671,89 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                     ))}
                   </div>
                 )}
-              </section>
-            </div>
+              </CollapsibleSection>
           </div>
         </div>
       ) : (
         <div className="space-y-4">
-          <section className="bg-card border border-border rounded-3xl p-6">
+          <section className="bg-card border border-border rounded-2xl p-5">
             <h2 className="text-xl font-bold tracking-tight mb-1">{deadlines.name} — admissions calendar</h2>
             <p className="text-xs text-muted-foreground leading-relaxed text-pretty">{deadlines.system}</p>
           </section>
 
-          <div className={`grid grid-cols-1 md:grid-cols-2 ${deadlines.rounds.length === 2 ? '' : 'lg:grid-cols-3'} gap-4`}>
-            {deadlines.rounds.map((round, i) => {
+          {(() => {
+            // Same principle as the Overview tab's hero dossier card: the
+            // single most actionable fact (whichever real deadline is
+            // soonest) should look different from the rest, not carry the
+            // same flat bg-card/border-border every round shares by
+            // default. Only counts rounds with a real parsed date that
+            // hasn't already passed — "Varies by term" or already-passed
+            // rounds can't be "the next deadline."
+            const parsedRounds = deadlines.rounds.map((round) => {
               const parsed = parseDeadlineDate(round.date)
-              const days = parsed ? daysUntil(parsed) : null
-              return (
-                <section key={round.label} className="bg-card border border-border rounded-2xl p-5 flex flex-col">
-                  <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
-                    <span className="text-[10px] font-mono text-muted-foreground">ROUND {String(i + 1).padStart(2, '0')}</span>
-                    <div className="flex items-center gap-1.5">
-                      {/* Only rendered when parseDeadlineDate actually
-                          resolved a real date — several rounds across the
-                          8 countries are "Not yet announced" or "Varies by
-                          term", which can't honestly produce a day count. */}
-                      {days !== null && (
-                        <span className={`text-[10px] font-mono px-2 py-0.5 rounded border whitespace-nowrap ${days < 0 ? 'bg-secondary text-muted-foreground border-border' : 'bg-emerald-950/60 text-emerald-400 border-emerald-500/20'}`}>
-                          {days < 0 ? 'PASSED' : days === 0 ? 'TODAY' : `T-${days} DAYS`}
-                        </span>
-                      )}
-                      <span className={`text-[10px] font-mono px-2 py-0.5 rounded border whitespace-nowrap ${round.binding ? 'bg-destructive/10 text-destructive border-destructive/20' : 'bg-secondary text-muted-foreground border-border'}`}>
-                        {round.binding ? 'BINDING' : 'NON-BINDING'}
-                      </span>
-                    </div>
-                  </div>
-                  <h3 className="text-base font-bold tracking-tight text-pretty mb-1">{round.label}</h3>
-                  <p className="text-base font-mono font-bold text-primary">{round.date}</p>
-                  {round.note && <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed text-pretty">{round.note}</p>}
-                  {/* Same gate as the countdown badge — only a real,
-                      parseable date can become a real calendar event; a
-                      button that appeared to work but silently did nothing
-                      for "Not yet announced" rounds would be worse than no
-                      button. */}
-                  {parsed && (
-                    <div className="flex justify-end mt-auto pt-3 border-t border-white/5">
-                      <a
-                        href={googleCalendarUrl(`${deadlines.name}: ${round.label}`, parsed, round.note ?? '')}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-[11px] font-mono text-zinc-500 hover:text-emerald-400 flex items-center gap-1.5 transition-colors"
-                      >
-                        <CalendarPlus className="w-3 h-3" /> Add to Cal <ExternalLink className="w-2.5 h-2.5" />
-                      </a>
-                    </div>
-                  )}
-                </section>
-              )
-            })}
-          </div>
+              return { round, parsed, days: parsed ? daysUntil(parsed) : null }
+            })
+            const upcoming = parsedRounds.filter((r) => r.days !== null && r.days >= 0)
+            const nextDeadlineLabel = upcoming.length > 0 ? upcoming.reduce((a, b) => (b.days! < a.days! ? b : a)).round.label : null
 
-          <section className="bg-card border border-border rounded-3xl p-6">
+            return (
+              <div className={`grid grid-cols-1 md:grid-cols-2 ${deadlines.rounds.length === 2 ? '' : 'lg:grid-cols-3'} gap-4`}>
+                {parsedRounds.map(({ round, parsed, days }, i) => {
+                  const isNext = round.label === nextDeadlineLabel
+                  return (
+                    <section
+                      key={round.label}
+                      className={`rounded-2xl p-5 flex flex-col ${
+                        isNext ? 'bg-card border-2 border-primary/40 shadow-lg shadow-primary/5' : 'bg-card border border-border'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+                        <span className="text-[10px] font-mono text-muted-foreground">
+                          {isNext ? 'NEXT DEADLINE' : `ROUND ${String(i + 1).padStart(2, '0')}`}
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          {/* Only rendered when parseDeadlineDate actually
+                              resolved a real date — several rounds across the
+                              8 countries are "Not yet announced" or "Varies by
+                              term", which can't honestly produce a day count. */}
+                          {days !== null && (
+                            <span className={`text-[10px] font-mono px-2 py-0.5 rounded border whitespace-nowrap ${days < 0 ? 'bg-secondary text-muted-foreground border-border' : 'bg-emerald-950/60 text-emerald-400 border-emerald-500/20'}`}>
+                              {days < 0 ? 'PASSED' : days === 0 ? 'TODAY' : `T-${days} DAYS`}
+                            </span>
+                          )}
+                          <span className={`text-[10px] font-mono px-2 py-0.5 rounded border whitespace-nowrap ${round.binding ? 'bg-destructive/10 text-destructive border-destructive/20' : 'bg-secondary text-muted-foreground border-border'}`}>
+                            {round.binding ? 'BINDING' : 'NON-BINDING'}
+                          </span>
+                        </div>
+                      </div>
+                      <h3 className="text-base font-bold tracking-tight text-pretty mb-1">{round.label}</h3>
+                      <p className="text-base font-mono font-bold text-primary">{round.date}</p>
+                      {round.note && <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed text-pretty">{round.note}</p>}
+                      {/* Same gate as the countdown badge — only a real,
+                          parseable date can become a real calendar event; a
+                          button that appeared to work but silently did nothing
+                          for "Not yet announced" rounds would be worse than no
+                          button. */}
+                      {parsed && (
+                        <div className="flex justify-end mt-auto pt-3 border-t border-white/5">
+                          <a
+                            href={googleCalendarUrl(`${deadlines.name}: ${round.label}`, parsed, round.note ?? '')}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-[11px] font-mono text-muted-foreground hover:text-emerald-400 flex items-center gap-1.5 transition-colors"
+                          >
+                            <CalendarPlus className="w-3 h-3" /> Add to Cal <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                        </div>
+                      )}
+                    </section>
+                  )
+                })}
+              </div>
+            )
+          })()}
+
+          <section className="bg-card border border-border rounded-2xl p-5">
             <div className="flex items-center gap-2.5 mb-3">
               <span className="bg-primary/15 rounded-full p-1.5 shrink-0"><GraduationCap className="w-4 h-4 text-primary" /></span>
               <h3 className="text-base font-bold tracking-tight">What must be submitted by then</h3>

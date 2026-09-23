@@ -1055,7 +1055,7 @@ export function ProfileForm({
             key={key}
             type="button"
             onClick={() => setActiveTab(key)}
-            className={`shrink-0 pb-3 pt-1 text-xs font-semibold border-b-2 -mb-px transition-colors whitespace-nowrap ${
+            className={`shrink-0 pb-3 pt-1 text-sm font-semibold border-b-2 -mb-px transition-colors whitespace-nowrap ${
               activeTab === key ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
