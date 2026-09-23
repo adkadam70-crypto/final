@@ -99,7 +99,10 @@ function parseDeadlineDate(dateStr: string): Date | null {
 // instead of a wall of uniform-weight text — the words themselves are
 // exactly what's in the underlying data, this just changes which ones
 // render bold, so it can't introduce a fact that isn't already there.
-const KEY_TERM_PATTERN = /(transcript|personal statement|essay|recommendation letters?|counselor recommendation|SAT|ACT|IELTS|TOEFL|APS certificate|AIU|motivation letter|CV\b|predicted grades?|board exam results?|bulletins)/gi
+// \b around the short acronyms (SAT/ACT/CV/AIU) — without it, the
+// case-insensitive "ACT" matched inside ordinary words like "actually" and
+// bolded a stray "act" mid-word.
+const KEY_TERM_PATTERN = /(transcript|personal statement|essay|recommendation letters?|counselor recommendation|\bSAT\b|\bACT\b|IELTS|TOEFL|APS certificate|\bAIU\b|motivation letter|\bCV\b|predicted grades?|board exam results?|bulletins)/gi
 
 function boldKeyTerms(text: string): React.ReactNode {
   // String.split with a capturing group always alternates
@@ -506,6 +509,38 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
                     <div className="bg-secondary/50 border border-border rounded-xl p-3.5 mb-3">
                       <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider mb-1">Super-curricular focus</div>
                       <div className="text-xs text-foreground font-semibold">Generic hobbies: keep under ~20% of your personal statement</div>
+                    </div>
+                    <p className="text-[13px] text-foreground/80 leading-relaxed text-pretty">{info.extracurriculars}</p>
+                  </>
+                ) : active === 'DE' ? (
+                  <>
+                    <div className="bg-secondary/50 border border-border rounded-xl p-3.5 mb-3">
+                      <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider mb-1">Public NC admissions</div>
+                      <div className="text-xs text-foreground font-semibold">Essentially not considered — Abitur-equivalent GPA decides</div>
+                    </div>
+                    <p className="text-[13px] text-foreground/80 leading-relaxed text-pretty">{info.extracurriculars}</p>
+                  </>
+                ) : active === 'IN' ? (
+                  <>
+                    <div className="bg-secondary/50 border border-border rounded-xl p-3.5 mb-3">
+                      <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider mb-1">Merit-based admission</div>
+                      <div className="text-xs text-foreground font-semibold">Minimal weight — exceptions: Ashoka, Krea run US-style holistic review</div>
+                    </div>
+                    <p className="text-[13px] text-foreground/80 leading-relaxed text-pretty">{info.extracurriculars}</p>
+                  </>
+                ) : active === 'FR' ? (
+                  <>
+                    <div className="bg-secondary/50 border border-border rounded-xl p-3.5 mb-3">
+                      <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider mb-1">Fiche Avenir</div>
+                      <div className="text-xs text-foreground font-semibold">Teacher-assessed autonomy/initiative — feeds selective programs, never replaces grades</div>
+                    </div>
+                    <p className="text-[13px] text-foreground/80 leading-relaxed text-pretty">{info.extracurriculars}</p>
+                  </>
+                ) : active === 'HK' ? (
+                  <>
+                    <div className="bg-secondary/50 border border-border rounded-xl p-3.5 mb-3">
+                      <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider mb-1">OEA / OLE mechanism</div>
+                      <div className="text-xs text-foreground font-semibold">Traditionally secondary to core subjects — weight varies by university</div>
                     </div>
                     <p className="text-[13px] text-foreground/80 leading-relaxed text-pretty">{info.extracurriculars}</p>
                   </>
