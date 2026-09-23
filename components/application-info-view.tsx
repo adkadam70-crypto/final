@@ -221,7 +221,7 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
               aria-pressed={isActive}
               className={`pl-2.5 pr-5 py-2.5 rounded-2xl text-sm font-medium border transition-all flex items-center gap-2 ${isActive ? 'bg-accent border-primary text-accent-foreground' : 'bg-secondary border-border text-muted-foreground hover:border-foreground/20'}`}
             >
-              <span className={`text-[11px] font-mono font-bold px-1.5 py-0.5 rounded ${isActive ? 'bg-primary text-primary-foreground' : 'bg-card text-foreground/70'}`}>{code}</span>
+              <span className={`text-xs font-mono font-bold min-w-[26px] text-center px-1.5 py-1 rounded-lg ${isActive ? 'bg-primary text-primary-foreground' : 'bg-card text-foreground/70'}`}>{code}</span>
               {APPLICATION_INFO[code].name}
               {isDefault && <span className="w-1.5 h-1.5 rounded-full bg-primary" aria-label="one of your target countries" />}
             </button>
@@ -229,24 +229,23 @@ export function ApplicationInfoView({ defaultCountries }: { defaultCountries: st
         })}
       </div>
 
-      {/* Deliberately NOT the same rounded-pill shape as the country row
-          above (was rounded-xl/rounded-lg, same family as the country
-          pills' rounded-2xl — reading as "more of the same control" instead
-          of a different one). Sharp-ish corners (rounded-md) and a colored
-          border give it its own visual identity as the page's primary mode
-          switch, not a second row of country-style filters. Real vertical
-          gap (mt-2) separates it from the country row instead of both
-          sitting flush against each other. */}
-      <div id="admissions-calendar" className="inline-flex p-1.5 rounded-md bg-card border-2 border-primary/30 mb-6 mt-2 scroll-mt-6">
+      {/* Distinct from the country row above through weight and fill, not
+          a harsh sharp-cornered box — that earlier version (rounded-md,
+          border-2) read as a stiff square slab next to the soft rounded
+          pills above it. Same soft rounded-full family as the country
+          pills, but visually its own thing: a filled track (bg-secondary)
+          with a solid emerald capsule for whichever mode is active, plus
+          real vertical gap (mt-2) separating it from the country row. */}
+      <div id="admissions-calendar" className="inline-flex p-1 rounded-full bg-secondary border border-border mb-6 mt-2 scroll-mt-6 shadow-sm">
         <button
           onClick={() => setTab('overview')}
-          className={`px-6 py-2.5 rounded text-sm font-semibold transition-colors ${tab === 'overview' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+          className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${tab === 'overview' ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:text-foreground'}`}
         >
           System &amp; Requirements Dossier
         </button>
         <button
           onClick={() => setTab('deadlines')}
-          className={`px-6 py-2.5 rounded text-sm font-semibold flex items-center gap-2 transition-colors ${tab === 'deadlines' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+          className={`px-6 py-2.5 rounded-full text-sm font-semibold flex items-center gap-2 transition-all ${tab === 'deadlines' ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:text-foreground'}`}
         >
           <CalendarDays className="w-4 h-4" /> Deadlines &amp; Timelines
         </button>
