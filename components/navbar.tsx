@@ -50,27 +50,31 @@ export function Navbar({ userName, userEmail }: { userName: string; userEmail: s
         // px scaling by breakpoint anchors the logo/account to the true
         // screen edges on any size, while staying identical on a
         // laptop-width viewport (padding, not a cap, is what scales).
-        className="w-full items-center px-6 lg:px-10 2xl:px-20 h-16 flex justify-between"
+        //
+        // 3-column grid, not flex justify-between — justify-between only
+        // spaces adjacent siblings evenly, it doesn't center the middle
+        // one in the bar as a whole. The logo ("Shortlisted") and the
+        // right-side cluster (badge/theme/account) are different widths,
+        // so the nav links visually drifted toward whichever side was
+        // narrower. A 1fr/auto/1fr grid gives the two side columns equal
+        // width no matter their content, which keeps the center column
+        // genuinely centered.
+        className="w-full items-center px-6 lg:px-10 2xl:px-20 h-16 grid grid-cols-[1fr_auto_1fr]"
         style={{
           maskImage: 'linear-gradient(to bottom, black 75%, transparent 100%)',
           WebkitMaskImage: 'linear-gradient(to bottom, black 75%, transparent 100%)',
         }}
       >
-        <Link href="/dashboard" className="flex items-center gap-2.5 shrink-0 justify-self-start mr-6">
+        <Link href="/dashboard" className="flex items-center gap-2.5 shrink-0 justify-self-start">
           <AppLogo className="h-9 w-auto 2xl:h-10" />
           <span className="text-lg 2xl:text-xl font-bold tracking-tight">Shortlisted</span>
         </Link>
 
         <div className="hidden lg:block min-w-0">
-          {/* Parent is a flex row with justify-between, so the nav sits
-              exactly centered between the logo and the right-side icons,
-              with equal gaps on both sides — 6 links (including "Build
-              Your Dream") is what makes this bar wide enough to need the
-              compact sizing in the first place. */}
           <NavBar items={NAV_LINKS.map((l) => ({ name: l.label, url: l.href, icon: l.icon }))} compact />
         </div>
 
-        <div className="flex items-center gap-2 2xl:gap-3 justify-self-end ml-6">
+        <div className="flex items-center gap-2 2xl:gap-3 justify-self-end">
           <EmeraldBadgeSmall />
           <ThemeToggle />
           <div className="hidden sm:block">
