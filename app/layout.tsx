@@ -41,8 +41,13 @@ export const metadata: Metadata = {
     // icon-dark/light-32x32.png files below have their own rounded dark
     // badge baked in, which is right for the iOS home-screen icon but reads
     // as an unwanted box around the mark in a browser tab.
+    // Google's own favicon-in-search-results guidelines want at least
+    // 48x48 (32x32 only meets their bare 8x8 minimum) — added alongside
+    // the existing 32x32 rather than replacing it, so browsers/OSes that
+    // specifically want the smaller tab-icon size still get it.
     icon: [
       { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-48.png', sizes: '48x48', type: 'image/png' },
     ],
     // Explicit rel="shortcut icon" — Safari's habit of silently fetching
     // /favicon.ico from the site root with no <link> tag at all turned out
