@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react'
-import { Search, TrendingUp, AlertTriangle, ListChecks } from 'lucide-react'
+import { Search, TrendingUp, AlertTriangle, ListChecks, CalendarDays, CircleCheck, ExternalLink, CalendarPlus } from 'lucide-react'
 import { analyzeTargetUniversity, getUniversityNames, type TargetAnalysisResult } from '@/app/actions/analyze-target-university'
 import { UNIVERSITY_ALIASES } from '@/lib/university-aliases'
 import { tierBadgeClass } from '@/lib/match-tier'
@@ -11,6 +11,8 @@ import { EarlyAdmissionPanel } from '@/components/early-admission-panel'
 import { ProgressiveFluxLoader, type ProgressiveFluxPhase } from '@/components/ui/progressive-flux-loader'
 import { AcceptanceRateLine } from '@/components/acceptance-rate-line'
 import { BorderBeam } from '@/components/ui/border-beam-search'
+import { ADMISSIONS_DEADLINES } from '@/lib/admissions-deadlines'
+import { parseDeadlineDate, daysUntil, googleCalendarUrl } from '@/lib/deadline-date-utils'
 
 // Mirrors the actual stages analyzeTargetUniversity() goes through
 // server-side (see app/actions/analyze-target-university.ts) — catalog-only
@@ -24,6 +26,107 @@ const ANALYSIS_PHASES: ProgressiveFluxPhase[] = [
 // Longest common catalog name is well under this; a query longer than it
 // can't possibly still be narrowing toward a real match.
 const MAX_SUGGESTIONS = 8
+
+// This is the country's general admissions calendar/requirements (from the
+// same static, no-web-search data that backs the Build Your Dream
+// "admissions calendar" tab — see lib/admissions-deadlines.ts and
+// lib/application-info.ts), not a university-specific lookup: we don't
+// store per-university deadlines, and most schools within a country do
+// follow that country's shared platform/dates (Common App, UCAS, etc.), so
+// this is labeled honestly as the country's system rather than implied to
+// be this exact school's own page.
+function DeadlinesAndRequirements({ country, requirements }: { country: string; requirements: string[] }) {
+  const deadlines = ADMISSIONS_DEADLINES[country]
+  if (!deadlines) return null
+
+  const parsedRounds = deadlines.rounds.map((round) => {
+    const parsed = parseDeadlineDate(round.date)
+    return { round, parsed, days: parsed ? daysUntil(parsed) : null }
+  })
+  const upcoming = parsedRounds.filter((r) => r.days !== null && r.days >= 0)
+  const nextDeadlineLabel = upcoming.length > 0 ? upcoming.reduce((a, b) => (b.days! < a.days! ? b : a)).round.label : null
+
+  return (
+    <div className="pt-4 border-t border-border">
+      <div className="text-[11px] font-semibold text-foreground uppercase tracking-wider mb-1 flex items-center gap-1.5">
+        <CalendarDays className="w-3.5 h-3.5 text-primary" /> Deadlines &amp; requirements
+      </div>
+      <p className="text-[11px] text-muted-foreground mb-3 leading-relaxed text-pretty">
+        Deadlines below are {deadlines.name}&apos;s general admissions calendar — most {deadlines.name} universities follow these shared dates, but always confirm against this specific school&apos;s own page. Requirements are this school&apos;s own, from our catalog.
+      </p>
+
+      <div className={`grid grid-cols-1 sm:grid-cols-2 ${parsedRounds.length >= 3 ? 'lg:grid-cols-3' : ''} gap-3 mb-4`}>
+        {parsedRounds.map(({ round, parsed, days }, i) => {
+          const isNext = round.label === nextDeadlineLabel
+          return (
+            <div
+              key={round.label}
+              className={`rounded-xl p-3 flex flex-col ${isNext ? 'bg-accent/40 border-2 border-primary/40' : 'bg-secondary/50 border border-border'}`}
+            >
+              <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
+                <span className="text-[9px] font-mono text-muted-foreground">
+                  {isNext ? 'NEXT DEADLINE' : `ROUND ${String(i + 1).padStart(2, '0')}`}
+                </span>
+                {days !== null && (
+                  <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded border whitespace-nowrap ${days < 0 ? 'bg-secondary text-muted-foreground border-border' : 'bg-emerald-950/60 text-emerald-400 border-emerald-500/20'}`}>
+                    {days < 0 ? 'PASSED' : days === 0 ? 'TODAY' : `T-${days}D`}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs font-bold text-pretty">{round.label}</p>
+              <p className="text-xs font-mono font-semibold text-primary">{round.date}</p>
+              {round.note && <p className="text-[10px] text-muted-foreground mt-1 leading-snug text-pretty">{round.note}</p>}
+              {parsed && (
+                <a
+                  href={googleCalendarUrl(`${deadlines.name}: ${round.label}`, parsed, round.note ?? '')}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[10px] font-mono text-muted-foreground hover:text-emerald-400 flex items-center gap-1 mt-auto pt-2"
+                >
+                  <CalendarPlus className="w-2.5 h-2.5" /> Add to Cal
+                </a>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">What {deadlines.name} applicants generally submit</div>
+          <ul className="space-y-1">
+            {deadlines.checklist.map((item) => (
+              <li key={item} className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
+                <CircleCheck className="w-3 h-3 mt-0.5 shrink-0 text-primary" />
+                <span className="text-pretty">{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">This school&apos;s own requirements</div>
+          {requirements.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5">
+              {requirements.map((req, i) => (
+                <span key={i} className="text-[11px] bg-secondary border border-border text-foreground/90 px-2 py-1 rounded-lg">{req}</span>
+              ))}
+            </div>
+          ) : (
+            <p className="text-[11px] text-muted-foreground">None on file for this school yet — see the general checklist alongside.</p>
+          )}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2 mt-3">
+        {deadlines.sources.map((l) => (
+          <a key={l.url} href={l.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[10px] bg-secondary border border-border text-primary px-2 py-1 rounded-lg hover:border-primary/40 transition-colors">
+            {l.label} <ExternalLink className="w-2.5 h-2.5" />
+          </a>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 export type TargetUniversityAnalysisHandle = {
   /** Fills the search box with `universityName` and runs the analysis
@@ -284,6 +387,8 @@ export const TargetUniversityAnalysis = forwardRef<TargetUniversityAnalysisHandl
               </ul>
             </div>
           </div>
+
+          <DeadlinesAndRequirements country={result.country} requirements={result.requirements} />
         </RevealGroup>
       )}
 
@@ -296,7 +401,7 @@ export const TargetUniversityAnalysis = forwardRef<TargetUniversityAnalysisHandl
       {!result && !pending && (
         <div className="mt-6 bg-zinc-900/40 border border-white/10 rounded-2xl p-6">
           <h3 className="text-[10px] font-mono text-zinc-500 tracking-wider uppercase mb-4">How the audit works</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <div className="text-xs font-semibold text-foreground mb-1 flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5 text-primary" /> Acceptance odds &amp; tier</div>
               <p className="text-[11px] text-zinc-400 leading-snug">Weighs your academics, tests, and activities against this school's real published or researched acceptance rate to place you in a Safety, Target, or Reach tier.</p>
@@ -308,6 +413,10 @@ export const TargetUniversityAnalysis = forwardRef<TargetUniversityAnalysisHandl
             <div>
               <div className="text-xs font-semibold text-foreground mb-1 flex items-center gap-1.5"><ListChecks className="w-3.5 h-3.5 text-chart-5" /> Concrete action steps</div>
               <p className="text-[11px] text-zinc-400 leading-snug">What to actually do next to close a gap, not generic advice — tied to this specific school's requirements.</p>
+            </div>
+            <div>
+              <div className="text-xs font-semibold text-foreground mb-1 flex items-center gap-1.5"><CalendarDays className="w-3.5 h-3.5 text-primary" /> Deadlines &amp; requirements</div>
+              <p className="text-[11px] text-zinc-400 leading-snug">This school's own on-file requirements, plus its country's general admissions calendar and submission checklist.</p>
             </div>
           </div>
           {hasProfile && (

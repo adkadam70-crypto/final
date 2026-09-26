@@ -62,6 +62,8 @@ function buildResultFromRow(
     universityId: matched.id,
     imageUrl: matched.imageUrl,
     link: matched.link,
+    country: matched.country,
+    requirements: matched.requirements,
     matchTier: row.matchTier as MatchResult['matchTier'],
     acceptanceProbability: row.acceptanceProbability ?? 0,
     admissionChanceSummary: row.admissionChanceSummary,
@@ -130,6 +132,14 @@ export type TargetAnalysisResult = {
   // thumbnail and a direct link without a join back to the catalog.
   imageUrl: string | null
   link: string
+  // Drives the deadlines lookup in the result view — purely a key into
+  // ADMISSIONS_DEADLINES (static, no web search), never sent to the AI
+  // prompt itself. Deadlines have no per-university field in the catalog
+  // (only the country-wide calendar), unlike `requirements` below.
+  country: string
+  // This school's own real requirements on file (same field university-card.tsx
+  // renders as pills) — genuinely per-university, not the generic country text.
+  requirements: string[]
   matchTier: MatchResult['matchTier']
   acceptanceProbability: number
   admissionChanceSummary: string
@@ -520,6 +530,8 @@ Provide an honest tier + probability, a summary that names the concrete number/f
       universityId: matched.id,
       imageUrl: matched.imageUrl,
       link: matched.link,
+      country: matched.country,
+      requirements: matched.requirements,
       matchTier,
       acceptanceProbability,
       admissionChanceSummary,
